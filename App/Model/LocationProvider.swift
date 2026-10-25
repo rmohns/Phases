@@ -8,17 +8,21 @@ import Observation
 final class LocationProvider: NSObject, CLLocationManagerDelegate {
   private(set) var coordinate: SolarCalculator.Coordinate?
   private(set) var authorizationStatus: CLAuthorizationStatus
+  private(set) var lastUpdated: Date?
+  private(set) var isUpdating = false
   /// Called on the main actor whenever the coordinate changes.
   @ObservationIgnored var onChange: (() -> Void)?
 
   @ObservationIgnored private let manager = CLLocationManager()
   private static let coordinateKey = "lastCoordinate"
+  private static let lastUpdatedKey = "lastLocationUpdate"
 
   override init() {
     authorizationStatus = manager.authorizationStatus
     if let data = UserDefaults.standard.data(forKey: Self.coordinateKey) {
       coordinate = try? JSONDecoder().decode(SolarCalculator.Coordinate.self, from: data)
     }
+    lastUpdated = UserDefaults.standard.object(forKey: Self.lastUpdatedKey) as? Date
     super.init()
     manager.delegate = self
     manager.desiredAccuracy = kCLLocationAccuracyKilometer
@@ -40,6 +44,7 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
     case .denied, .restricted:
       break
     default:
+      isUpdating = true
       manager.requestLocation()
     }
   }
@@ -48,7 +53,10 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
     let status = manager.authorizationStatus
     MainActor.assumeIsolated {
       authorizationStatus = status
-      if isAuthorized { manager.requestLocation() }
+      if isAuthorized {
+        isUpdating = true
+        manager.requestLocation()
+      }
     }
   }
 
@@ -59,6 +67,9 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
       longitude: location.coordinate.longitude
     )
     MainActor.assumeIsolated {
+      isUpdating = false
+      lastUpdated = Date()
+      UserDefaults.standard.set(lastUpdated, forKey: Self.lastUpdatedKey)
       // Ignore jitter under ~1 km; it moves dawn/dusk by seconds.
       if let coordinate,
         abs(coordinate.latitude - newCoordinate.latitude) < 0.01,
@@ -74,5 +85,6 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
 
   nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
     NSLog("Phases: location error: \(error)")
+    MainActor.assumeIsolated { isUpdating = false }
   }
 }

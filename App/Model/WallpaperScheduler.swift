@@ -35,6 +35,11 @@ final class WallpaperScheduler {
     didSet { Self.save(appliedState, forKey: Keys.appliedState) }
   }
 
+  /// The wallpaper from before Phases changed anything; restored on quit.
+  private(set) var restorePoint: RestorePoint? {
+    didSet { Self.save(restorePoint, forKey: Keys.restorePoint) }
+  }
+
   private(set) var activePhase: Phase?
   private(set) var nextChange: NextChange?
   private(set) var isDarkMode = WallpaperScheduler.systemIsDark()
@@ -54,6 +59,7 @@ final class WallpaperScheduler {
     static let displayMode = "displayMode"
     static let isPaused = "isPaused"
     static let appliedState = "appliedState"
+    static let restorePoint = "restorePoint"
   }
 
   init() {
@@ -63,6 +69,9 @@ final class WallpaperScheduler {
     displayMode = defaults.string(forKey: Keys.displayMode).flatMap(DisplayMode.init) ?? .sameOnAll
     isPaused = defaults.bool(forKey: Keys.isPaused)
     appliedState = Self.load(AppliedState.self, forKey: Keys.appliedState)
+    // Keep an existing restore point: one left over from a crash still holds
+    // the true original, while capturing now would record Phases' own image.
+    restorePoint = Self.load(RestorePoint.self, forKey: Keys.restorePoint) ?? RestorePoint.capture()
 
     location.onChange = { [weak self] in self?.evaluate() }
     if needsLocation { location.refresh() }
@@ -293,7 +302,17 @@ final class WallpaperScheduler {
       (local, local.addObserver(forName: .NSSystemClockDidChange, object: nil, queue: .main, using: now)),
       (local, local.addObserver(forName: .NSSystemTimeZoneDidChange, object: nil, queue: .main, using: now)),
       (local, local.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main, using: screens)),
+      (local, local.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: .main) { [weak self] _ in
+        MainActor.assumeIsolated { self?.restoreOriginalWallpaper() }
+      }),
     ]
+  }
+
+  /// Puts back the pre-launch wallpaper. Called only on an actual quit.
+  private func restoreOriginalWallpaper() {
+    timer?.invalidate()
+    restorePoint?.restore()
+    restorePoint = nil
   }
 
   private static func systemIsDark() -> Bool {

@@ -1,4 +1,4 @@
-# Phases — Specification (draft 2)
+# Phases — Specification (draft 3)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -101,6 +101,8 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
 
 - Uses Location Services. Permission is requested only when a phase first uses
   a dawn/dusk trigger, not at launch.
+- Settings shows the current location, today's civil dawn and dusk, when the
+  location was last updated, and an **Update Now** button.
 - Uses low-accuracy, infrequent updates. The last known location is saved so
   dawn/dusk still work offline or after a restart.
 - If permission is denied: dawn/dusk phases are disabled and marked with a
@@ -147,6 +149,22 @@ No Dock icon. The app runs as a menu bar accessory.
 - Turning it off unregisters it. If the user removes it in System Settings, the
   preference updates to match.
 
+## 8a. Restore original wallpaper on quit
+
+- At launch, before changing anything, Phases records each display's current
+  wallpaper (image file plus fill/scaling options), keyed by display ID.
+- The record is saved to disk and kept until it's been restored. After a crash
+  or Force Quit, the next launch reuses it instead of recording Phases' own image.
+- On an actual **Quit**, Phases restores each display's original and clears the
+  record. Logout, shutdown, and **Pause** leave the current image in place.
+  (Logout/shutdown also quit the app, so in practice they restore too; see
+  open question in §12.)
+- **Aerials and other system wallpapers:** Phases reads (never writes) macOS's
+  wallpaper store to detect them. The public API can't restore them, so those
+  displays are left alone on quit instead of getting a still frame.
+- Displays that were disconnected in the meantime are skipped. If the original
+  image file no longer exists, that display is skipped.
+
 ## 9. Platform notes and limitations
 
 - `NSWorkspace.setDesktopImageURL(_:for:options:)` sets the image **per screen**,
@@ -175,3 +193,9 @@ applied phase, last location) are stored in UserDefaults as Codable data.
 
 - Unreproduced: the desktop once turned black. Source folder is local storage
   (not a cloud-synced folder). No change until it can be reproduced.
+- Restoring an Aerial isn't supported yet (see §8a). Possible approach: back up
+  and restore macOS's wallpaper store file and restart the wallpaper process.
+  Undocumented, so it needs explicit approval before building.
+- macOS quits apps at logout and shutdown, which would also trigger a restore.
+  Telling a real Quit apart from logout is possible (the app is notified of
+  power-off) and is pending a decision.

@@ -11,7 +11,12 @@ struct SettingsView: View {
         LabeledContent("Folder") {
           HStack {
             if let url = scheduler.library.folderURL {
-              Label(url.lastPathComponent, systemImage: "folder")
+              Image(systemName: "folder")
+                .foregroundStyle(.secondary)
+              Text(url.lastPathComponent)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .layoutPriority(1)
                 .help(url.path(percentEncoded: false))
             } else {
               Text("None chosen")
@@ -60,7 +65,6 @@ struct SettingsView: View {
     }
     .formStyle(.grouped)
     .frame(width: 500)
-    .fixedSize(horizontal: false, vertical: true)
     .fileImporter(isPresented: $isChoosingFolder, allowedContentTypes: [.folder]) { result in
       if case .success(let url) = result {
         scheduler.library.setFolder(url)
@@ -125,6 +129,7 @@ private struct LocationStatusView: View {
         .monospacedDigit()
       }
       SolarTimesView(coordinate: coordinate)
+      LocationUpdateRow(location: location)
     } else if scheduler.needsLocation {
       HStack {
         Text("Waiting for location…")
@@ -134,6 +139,29 @@ private struct LocationStatusView: View {
     } else {
       Text("Location is requested when you add a dawn or dusk phase.")
         .foregroundStyle(.secondary)
+    }
+  }
+}
+
+private struct LocationUpdateRow: View {
+  var location: LocationProvider
+
+  var body: some View {
+    LabeledContent {
+      HStack {
+        if location.isUpdating {
+          ProgressView()
+            .controlSize(.small)
+        }
+        Button("Update Now") { location.refresh() }
+          .disabled(location.isUpdating)
+      }
+    } label: {
+      if let lastUpdated = location.lastUpdated {
+        Text("Updated \(lastUpdated, format: .relative(presentation: .named))")
+      } else {
+        Text("Updated")
+      }
     }
   }
 }
