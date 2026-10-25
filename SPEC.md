@@ -51,8 +51,9 @@ image when there's more than one choice.
 - **App preference:** a single image folder, chosen with a standard folder picker.
 - Top-level files only (not subfolders). Supported formats: JPEG, PNG, HEIC, TIFF.
 - Access to the folder persists across launches (security-scoped bookmark).
-- The phase editor shows the folder as a **thumbnail grid**. Click to select,
-  ⌘-click / ⇧-click for multi-select, plus Select All / Deselect All buttons.
+- The phase editor shows the folder as a **thumbnail grid**. Click toggles an
+  image in or out of the selection, ⇧-click selects a range, plus Select All /
+  Select None buttons.
 - If a selected image is later deleted or renamed, it's skipped and the phase
   editor marks it as missing. A phase with no available images is skipped
   (the wallpaper stays as it is).
@@ -69,8 +70,11 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
 
 1. Works out which phase should be active right now.
 2. If it differs from the last phase it applied, switches to it immediately.
-3. If the same phase is active but a rotation came due while asleep, rotates once
-   (it doesn't replay every missed rotation).
+3. If the same phase is active but one or more rotations came due while asleep,
+   it applies only the **most recent** missed rotation: the image that would be
+   showing now had the Mac stayed awake. For In order, that means skipping ahead
+   by the number of missed rotations; for Random, a single new random pick. The
+   rotation clock stays aligned to the original schedule.
 
 ## 6. Location
 

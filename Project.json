@@ -12,15 +12,19 @@
     "CODE_SIGN_IDENTITY": "-"
   },
   "targets": {
-    "New Project": {
+    "Wallpaper Scheduler": {
       "deploymentTarget": "26.0",
       "info": {
         "path": "App\/Info.plist",
         "properties": {
-          "CFBundleDisplayName": "New Project",
+          "CFBundleDisplayName": "Wallpaper Scheduler",
           "CFBundleShortVersionString": "1.0",
           "CFBundleVersion": "1",
-          "ITSAppUsesNonExemptEncryption": false
+          "ITSAppUsesNonExemptEncryption": false,
+          "LSApplicationCategoryType": "public.app-category.utilities",
+          "LSUIElement": true,
+          "NSLocationUsageDescription": "Wallpaper Scheduler uses your location to calculate local dawn and dusk times.",
+          "NSLocationWhenInUseUsageDescription": "Wallpaper Scheduler uses your location to calculate local dawn and dusk times."
         }
       },
       "platform": "macOS",
