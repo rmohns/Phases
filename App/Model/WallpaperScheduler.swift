@@ -46,6 +46,8 @@ final class WallpaperScheduler {
 
   @ObservationIgnored private var timer: Timer?
   @ObservationIgnored private var appearanceObservation: NSKeyValueObservation?
+  /// Set at logout, restart, or shutdown, so only a real Quit restores.
+  @ObservationIgnored private var isPoweringOff = false
   @ObservationIgnored private var observers: [(NotificationCenter, NSObjectProtocol)] = []
 
   struct NextChange: Equatable {
@@ -297,6 +299,9 @@ final class WallpaperScheduler {
     observers = [
       (workspace, workspace.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main, using: afterWake)),
       (workspace, workspace.addObserver(forName: NSWorkspace.screensDidWakeNotification, object: nil, queue: .main, using: afterWake)),
+      (workspace, workspace.addObserver(forName: NSWorkspace.willPowerOffNotification, object: nil, queue: .main) { [weak self] _ in
+        MainActor.assumeIsolated { self?.isPoweringOff = true }
+      }),
       (workspace, workspace.addObserver(forName: NSWorkspace.sessionDidBecomeActiveNotification, object: nil, queue: .main, using: now)),
       (distributed, distributed.addObserver(forName: .init("com.apple.screenIsUnlocked"), object: nil, queue: .main, using: now)),
       (local, local.addObserver(forName: .NSSystemClockDidChange, object: nil, queue: .main, using: now)),
@@ -308,9 +313,12 @@ final class WallpaperScheduler {
     ]
   }
 
-  /// Puts back the pre-launch wallpaper. Called only on an actual quit.
+  /// Puts back the pre-launch wallpaper on an actual Quit. At logout or
+  /// shutdown the restore point is kept, so the next launch still knows the
+  /// true original.
   private func restoreOriginalWallpaper() {
     timer?.invalidate()
+    guard !isPoweringOff else { return }
     restorePoint?.restore()
     restorePoint = nil
   }

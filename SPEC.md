@@ -156,9 +156,8 @@ No Dock icon. The app runs as a menu bar accessory.
 - The record is saved to disk and kept until it's been restored. After a crash
   or Force Quit, the next launch reuses it instead of recording Phases' own image.
 - On an actual **Quit**, Phases restores each display's original and clears the
-  record. Logout, shutdown, and **Pause** leave the current image in place.
-  (Logout/shutdown also quit the app, so in practice they restore too; see
-  open question in §12.)
+  record. Logout, restart, shutdown, and **Pause** leave the current image in
+  place; at logout the record is kept for the next launch.
 - **Aerials and other system wallpapers:** Phases reads (never writes) macOS's
   wallpaper store to detect them. The public API can't restore them, so those
   displays are left alone on quit instead of getting a still frame.
@@ -196,6 +195,3 @@ applied phase, last location) are stored in UserDefaults as Codable data.
 - Restoring an Aerial isn't supported yet (see §8a). Possible approach: back up
   and restore macOS's wallpaper store file and restart the wallpaper process.
   Undocumented, so it needs explicit approval before building.
-- macOS quits apps at logout and shutdown, which would also trigger a restore.
-  Telling a real Quit apart from logout is possible (the app is notified of
-  power-off) and is pending a decision.
