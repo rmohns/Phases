@@ -4,6 +4,7 @@ import SwiftUI
 struct MenuContent: View {
   @Bindable var scheduler: WallpaperScheduler
   @Environment(\.openSettings) private var openSettings
+  @Environment(\.openWindow) private var openWindow
 
   var body: some View {
     Group {
@@ -37,13 +38,19 @@ struct MenuContent: View {
 
     Divider()
 
+    Button("Schedule…") {
+      NSApp.activate()
+      openWindow(id: ScheduleView.windowID)
+    }
+    .keyboardShortcut("e")
+
     Button("Settings…") {
       NSApp.activate()
       openSettings()
     }
     .keyboardShortcut(",")
 
-    Button("Quit Wallpaper Scheduler") {
+    Button("Quit Phases") {
       NSApp.terminate(nil)
     }
     .keyboardShortcut("q")

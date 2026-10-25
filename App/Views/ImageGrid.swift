@@ -11,7 +11,7 @@ struct ImageGrid: View {
 
   var body: some View {
     if library.folderURL == nil {
-      Text("Choose an image folder in the General tab.")
+      Text("Choose an image folder in Settings.")
         .foregroundStyle(.secondary)
     } else if library.imageNames.isEmpty {
       Text("No JPEG, PNG, HEIC, or TIFF images in this folder.")
@@ -37,21 +37,37 @@ struct ImageGrid: View {
         }
       }
 
-      LazyVGrid(columns: columns, spacing: 12) {
-        ForEach(library.imageNames, id: \.self) { name in
-          let isSelected = selection.contains(name)
-          Button {
-            toggle(name, extendingRange: NSEvent.modifierFlags.contains(.shift))
-          } label: {
-            ThumbnailCell(library: library, name: name, isSelected: isSelected)
+      let groups = library.groups
+      LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+        ForEach(groups, id: \.folder) { group in
+          Section {
+            ForEach(group.names, id: \.self) { name in
+              cell(for: name)
+            }
+          } header: {
+            if groups.count > 1 {
+              Label(group.folder.isEmpty ? "Top Level" : group.folder, systemImage: "folder")
+                .font(.headline)
+                .padding(.top, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
           }
-          .buttonStyle(.plain)
-          .accessibilityLabel(name)
-          .accessibilityAddTraits(isSelected ? .isSelected : [])
         }
       }
       .padding(.vertical, 4)
     }
+  }
+
+  private func cell(for name: String) -> some View {
+    let isSelected = selection.contains(name)
+    return Button {
+      toggle(name, extendingRange: NSEvent.modifierFlags.contains(.shift))
+    } label: {
+      ThumbnailCell(library: library, name: name, isSelected: isSelected)
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel(name)
+    .accessibilityAddTraits(isSelected ? .isSelected : [])
   }
 
   private var selectedCount: Int {
@@ -119,7 +135,7 @@ private struct ThumbnailCell: View {
           }
         }
 
-      Text(name)
+      Text(ImageLibrary.fileName(of: name))
         .font(.caption)
         .lineLimit(1)
         .truncationMode(.middle)

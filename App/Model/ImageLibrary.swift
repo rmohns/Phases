@@ -3,18 +3,32 @@ import Observation
 import QuickLookThumbnailing
 import UniformTypeIdentifiers
 
-/// The user's wallpaper folder and the images in it (top level only).
+/// The user's wallpaper folder and the images in it, optionally including
+/// subfolders. Images are identified by their path relative to the folder.
 @MainActor
 @Observable
 final class ImageLibrary {
   private(set) var folderURL: URL?
-  /// Image file names, sorted the way Finder sorts them.
-  private(set) var imageNames: [String] = []
+  /// Relative image paths: top-level files first, then each subfolder, sorted
+  /// the way Finder sorts them.
+  private(set) var imageNames: [String] = [] {
+    didSet { imageNameSet = Set(imageNames) }
+  }
+  @ObservationIgnored private var imageNameSet: Set<String> = []
+
+  var includesSubfolders: Bool {
+    didSet {
+      UserDefaults.standard.set(includesSubfolders, forKey: Self.subfoldersKey)
+      reload()
+    }
+  }
 
   private static let bookmarkKey = "imageFolderBookmark"
+  private static let subfoldersKey = "includesSubfolders"
   private static let supportedTypes: [UTType] = [.jpeg, .png, .heic, .tiff]
 
   init() {
+    includesSubfolders = UserDefaults.standard.bool(forKey: Self.subfoldersKey)
     restoreBookmark()
     reload()
   }
@@ -28,23 +42,63 @@ final class ImageLibrary {
   }
 
   func reload() {
-    guard let folderURL,
-      let urls = try? FileManager.default.contentsOfDirectory(
-        at: folderURL,
-        includingPropertiesForKeys: [.contentTypeKey],
-        options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants]
-      )
-    else {
+    guard let folderURL else {
       imageNames = []
       return
     }
-    imageNames = urls
-      .filter { url in
-        guard let type = try? url.resourceValues(forKeys: [.contentTypeKey]).contentType else { return false }
-        return Self.supportedTypes.contains { type.conforms(to: $0) }
+    var options: FileManager.DirectoryEnumerationOptions = [.skipsHiddenFiles, .skipsPackageDescendants]
+    if !includesSubfolders { options.insert(.skipsSubdirectoryDescendants) }
+    guard let enumerator = FileManager.default.enumerator(
+      at: folderURL,
+      includingPropertiesForKeys: [.contentTypeKey],
+      options: options
+    ) else {
+      imageNames = []
+      return
+    }
+
+    let basePath = folderURL.standardizedFileURL.path(percentEncoded: false)
+    let prefix = basePath.hasSuffix("/") ? basePath : basePath + "/"
+    var names: [String] = []
+    for case let url as URL in enumerator {
+      guard let type = try? url.resourceValues(forKeys: [.contentTypeKey]).contentType,
+        Self.supportedTypes.contains(where: { type.conforms(to: $0) })
+      else { continue }
+      let path = url.standardizedFileURL.path(percentEncoded: false)
+      guard path.hasPrefix(prefix) else { continue }
+      names.append(String(path.dropFirst(prefix.count)))
+    }
+    imageNames = names.sorted { lhs, rhs in
+      let l = Self.folder(of: lhs), r = Self.folder(of: rhs)
+      if l != r {
+        if l.isEmpty || r.isEmpty { return l.isEmpty }
+        return l.localizedStandardCompare(r) == .orderedAscending
       }
-      .map(\.lastPathComponent)
-      .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+      return lhs.localizedStandardCompare(rhs) == .orderedAscending
+    }
+  }
+
+  /// Images grouped by subfolder ("" for the top level), in display order.
+  var groups: [(folder: String, names: [String])] {
+    var result: [(folder: String, names: [String])] = []
+    for name in imageNames {
+      let folder = Self.folder(of: name)
+      if result.last?.folder == folder {
+        result[result.count - 1].names.append(name)
+      } else {
+        result.append((folder, [name]))
+      }
+    }
+    return result
+  }
+
+  /// The subfolder part of a relative path, or "" for a top-level file.
+  static func folder(of name: String) -> String {
+    (name as NSString).deletingLastPathComponent
+  }
+
+  static func fileName(of name: String) -> String {
+    (name as NSString).lastPathComponent
   }
 
   func url(for name: String) -> URL? {
@@ -52,7 +106,7 @@ final class ImageLibrary {
   }
 
   func contains(_ name: String) -> Bool {
-    imageNames.contains(name)
+    imageNameSet.contains(name)
   }
 
   /// The phase's selected images that still exist, in library order.

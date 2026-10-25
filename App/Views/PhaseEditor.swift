@@ -14,10 +14,16 @@ struct PhaseEditor: View {
       Section("Starts") {
         TriggerEditor(trigger: phase.trigger)
         if phase.wrappedValue.trigger == .always && scheduler.phases.count > 1 {
-          Text("An “Always” phase is used only when no timed phase applies.")
+          Text("An “Always” phase is used only when no timed phase applies. Use “Only in” to switch between Always phases with Light and Dark Mode.")
             .font(.caption)
             .foregroundStyle(.secondary)
         }
+        Picker("Only in", selection: phase.appearance) {
+          ForEach(AppearanceCondition.allCases) { condition in
+            Text(condition.title).tag(condition)
+          }
+        }
+        .pickerStyle(.segmented)
         if phase.wrappedValue.trigger.usesLocation && scheduler.location.isDenied {
           Label("Location access is off, so this phase is skipped.", systemImage: "exclamationmark.triangle")
             .foregroundStyle(.orange)

@@ -73,6 +73,6 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
   }
 
   nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-    NSLog("Wallpaper Scheduler: location error: \(error)")
+    NSLog("Phases: location error: \(error)")
   }
 }

@@ -4,6 +4,7 @@ import Foundation
 struct ScheduleEngine {
   var phases: [Phase]
   var location: SolarCalculator.Coordinate?
+  var isDarkMode = false
   var calendar: Calendar = .current
 
   struct ActivePhase: Equatable {
@@ -12,9 +13,15 @@ struct ScheduleEngine {
     var start: Date?
   }
 
-  /// The phase whose start trigger fired most recently at or before `now`.
-  /// Falls back to the first "Always" phase when no timed phase applies.
+  /// Phases whose appearance condition matches the current appearance.
+  private var eligiblePhases: [Phase] {
+    phases.filter { $0.appearance.matches(isDarkMode: isDarkMode) }
+  }
+
+  /// Among eligible phases, the one whose start trigger fired most recently at
+  /// or before `now`. Falls back to the first eligible "Always" phase.
   func activePhase(at now: Date) -> ActivePhase? {
+    let phases = eligiblePhases
     var best: ActivePhase?
     for phase in phases {
       for dayOffset in -2...0 {
@@ -30,10 +37,10 @@ struct ScheduleEngine {
     return phases.first { $0.trigger == .always }.map { ActivePhase(phase: $0, start: nil) }
   }
 
-  /// The next time any timed phase starts, strictly after `now`.
+  /// The next time any eligible timed phase starts, strictly after `now`.
   func nextPhaseStart(after now: Date) -> (phase: Phase, date: Date)? {
     var best: (phase: Phase, date: Date)?
-    for phase in phases {
+    for phase in eligiblePhases {
       for dayOffset in 0...2 {
         guard let date = occurrence(of: phase.trigger, dayOffset: dayOffset, from: now),
           date > now

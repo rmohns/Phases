@@ -13,7 +13,7 @@ final class WallpaperScheduler {
     didSet {
       Self.save(phases, forKey: Keys.phases)
       if needsLocation && location.coordinate == nil { location.refresh() }
-      evaluate()
+      evaluate(reloadingLibrary: false)
     }
   }
 
@@ -37,8 +37,10 @@ final class WallpaperScheduler {
 
   private(set) var activePhase: Phase?
   private(set) var nextChange: NextChange?
+  private(set) var isDarkMode = WallpaperScheduler.systemIsDark()
 
   @ObservationIgnored private var timer: Timer?
+  @ObservationIgnored private var appearanceObservation: NSKeyValueObservation?
   @ObservationIgnored private var observers: [(NotificationCenter, NSObjectProtocol)] = []
 
   struct NextChange: Equatable {
@@ -119,14 +121,14 @@ final class WallpaperScheduler {
   // MARK: - Scheduling
 
   private var engine: ScheduleEngine {
-    ScheduleEngine(phases: phases, location: location.coordinate)
+    ScheduleEngine(phases: phases, location: location.coordinate, isDarkMode: isDarkMode)
   }
 
   /// Brings the wallpaper up to date. Safe to call any time: it only changes
   /// the wallpaper if a phase change or rotation is due (or was missed).
-  func evaluate() {
+  func evaluate(reloadingLibrary: Bool = true) {
     let now = Date()
-    library.reload()
+    if reloadingLibrary { library.reload() }
     launchAtLogin.refresh()
 
     guard let active = engine.activePhase(at: now) else {
@@ -257,6 +259,17 @@ final class WallpaperScheduler {
     let distributed = DistributedNotificationCenter.default()
     let local = NotificationCenter.default
 
+    // Re-evaluate when Light/Dark Mode changes, including Auto switching.
+    appearanceObservation = NSApplication.shared.observe(\.effectiveAppearance) { [weak self] _, _ in
+      Task { @MainActor in
+        guard let self else { return }
+        let isDark = Self.systemIsDark()
+        guard isDark != self.isDarkMode else { return }
+        self.isDarkMode = isDark
+        self.evaluate()
+      }
+    }
+
     // Give displays a moment to come back before changing the wallpaper.
     let afterWake: @Sendable (Notification) -> Void = { [weak self] _ in
       Task { @MainActor in
@@ -281,6 +294,10 @@ final class WallpaperScheduler {
       (local, local.addObserver(forName: .NSSystemTimeZoneDidChange, object: nil, queue: .main, using: now)),
       (local, local.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main, using: screens)),
     ]
+  }
+
+  private static func systemIsDark() -> Bool {
+    NSApplication.shared.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
   }
 
   // MARK: - Persistence

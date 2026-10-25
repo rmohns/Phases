@@ -10,10 +10,59 @@ struct Phase: Identifiable, Codable, Hashable {
   var order: ImageOrder = .inOrder
   var isRotating = false
   var rotation = RotationInterval(value: 30, unit: .minutes)
+  var appearance: AppearanceCondition = .any
 
   /// The rotation interval in seconds, or nil when rotation is off.
   var rotationSeconds: TimeInterval? {
     isRotating ? rotation.seconds : nil
+  }
+}
+
+extension Phase {
+  /// Decodes leniently so phases saved by older versions (without newer
+  /// fields) keep loading.
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    id = try container.decode(UUID.self, forKey: .id)
+    name = try container.decode(String.self, forKey: .name)
+    trigger = try container.decode(PhaseTrigger.self, forKey: .trigger)
+    imageNames = try container.decodeIfPresent([String].self, forKey: .imageNames) ?? []
+    order = try container.decodeIfPresent(ImageOrder.self, forKey: .order) ?? .inOrder
+    isRotating = try container.decodeIfPresent(Bool.self, forKey: .isRotating) ?? false
+    rotation = try container.decodeIfPresent(RotationInterval.self, forKey: .rotation)
+      ?? RotationInterval(value: 30, unit: .minutes)
+    appearance = try container.decodeIfPresent(AppearanceCondition.self, forKey: .appearance) ?? .any
+  }
+}
+
+/// Restricts a phase to Light or Dark Mode.
+enum AppearanceCondition: String, Codable, CaseIterable, Identifiable {
+  case any, light, dark
+
+  var id: Self { self }
+
+  var title: String {
+    switch self {
+    case .any: "Any"
+    case .light: "Light"
+    case .dark: "Dark"
+    }
+  }
+
+  var systemImage: String? {
+    switch self {
+    case .any: nil
+    case .light: "sun.max"
+    case .dark: "moon"
+    }
+  }
+
+  func matches(isDarkMode: Bool) -> Bool {
+    switch self {
+    case .any: true
+    case .light: !isDarkMode
+    case .dark: isDarkMode
+    }
   }
 }
 

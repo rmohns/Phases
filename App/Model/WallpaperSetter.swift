@@ -13,7 +13,7 @@ enum WallpaperSetter {
       do {
         try NSWorkspace.shared.setDesktopImageURL(url, for: screen, options: options)
       } catch {
-        NSLog("Wallpaper Scheduler: couldn't set \(url.lastPathComponent) on \(screen.localizedName): \(error)")
+        NSLog("Phases: couldn't set \(url.lastPathComponent) on \(screen.localizedName): \(error)")
       }
     }
   }

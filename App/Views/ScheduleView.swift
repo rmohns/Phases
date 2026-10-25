@@ -1,7 +1,9 @@
 import SwiftUI
 
-/// Phase list on the left, editor for the selected phase on the right.
-struct PhasesSettingsView: View {
+/// The Schedule window: phase list on the left, editor on the right.
+struct ScheduleView: View {
+  static let windowID = "schedule"
+
   var scheduler: WallpaperScheduler
   @State private var selection: Phase.ID?
 
@@ -33,7 +35,7 @@ struct PhasesSettingsView: View {
         .buttonStyle(.borderless)
         .padding(6)
       }
-      .frame(width: 230)
+      .frame(width: 240)
 
       Divider()
 
@@ -71,9 +73,15 @@ private struct PhaseRow: View {
               .foregroundStyle(.tint)
           }
         }
-        Text(phase.trigger.summary)
-          .font(.caption)
-          .foregroundStyle(.secondary)
+        HStack(spacing: 4) {
+          Text(phase.trigger.summary)
+          if let symbol = phase.appearance.systemImage {
+            Image(systemName: symbol)
+              .accessibilityLabel("\(phase.appearance.title) Mode only")
+          }
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
       }
     } icon: {
       Image(systemName: phase.trigger.kind.systemImage)
