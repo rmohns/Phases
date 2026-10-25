@@ -12,7 +12,7 @@
     "CODE_SIGN_IDENTITY": "-"
   },
   "targets": {
-    "Wallpaper Scheduler": {
+    "Phases": {
       "deploymentTarget": "26.0",
       "info": {
         "path": "App/Info.plist",
