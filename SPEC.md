@@ -1,4 +1,4 @@
-# Wallpaper Scheduler — Specification (draft 1)
+# Phases — Specification (draft 2)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -16,10 +16,13 @@ Each phase has:
 | Images | One or more images chosen from the image library (multi-select) |
 | Order | Random or In order |
 | Rotation | Optional: change to the next image every N minutes or hours while the phase is active |
+| Appearance | Only in: **Any** (default), **Light**, or **Dark** mode (see §2a) |
 
-**Which phase is active:** the one whose start trigger fired most recently,
-looking back through today and yesterday. So if "Night" starts at dusk and
-"Day" starts at dawn, at 2 am "Night" is active.
+**Which phase is active:** among phases whose appearance condition matches the
+current system appearance, the one whose start trigger fired most recently
+(looking back up to two days). So if "Night" starts at dusk and "Day" starts at
+dawn, at 2 am "Night" is active. If no timed phase qualifies, the first matching
+"Always" phase is used.
 
 **Pure periodic changes** (no time-of-day switching) is just a single phase with
 the "Always" trigger plus a rotation interval.
@@ -35,7 +38,7 @@ image when there's more than one choice.
 
 | Trigger | Example |
 |---|---|
-| Always | The only phase; used for pure rotation |
+| Always | Used when no timed phase applies; for pure rotation or appearance-only setups |
 | Clock time | 3:30 pm, every day |
 | Civil dawn | Sun 6° below horizon, morning |
 | Civil dusk | Sun 6° below horizon, evening |
@@ -46,14 +49,32 @@ image when there's more than one choice.
 - If civil dawn or dusk doesn't happen on a given day (far north or south), that
   trigger is skipped that day and the previous phase stays active.
 
+## 2a. Light and Dark Mode
+
+- Each phase has an **Only in** setting: Any, Light, or Dark.
+- The app listens for system appearance changes (including Auto switching) and
+  re-evaluates immediately. If the switch makes a different phase active, the
+  wallpaper changes right away; otherwise nothing happens.
+- Examples:
+  - *Dark images whenever Dark Mode is on:* two "Always" phases, one Light and one Dark.
+  - *Dusk pictures, darker ones in Dark Mode:* two dusk phases, one Light and one Dark.
+- The phase list shows a light/dark badge on phases with a condition.
+
 ## 3. Image library
 
 - **App preference:** a single image folder, chosen with a standard folder picker.
-- Top-level files only (not subfolders). Supported formats: JPEG, PNG, HEIC, TIFF.
-- Access to the folder persists across launches (security-scoped bookmark).
-- The phase editor shows the folder as a **thumbnail grid**. Click toggles an
-  image in or out of the selection, ⇧-click selects a range, plus Select All /
-  Select None buttons.
+- **App preference: Include subfolders** (off by default). When on, the folder is
+  scanned recursively, skipping hidden folders and packages (app bundles, Photos
+  libraries, etc.).
+- Supported formats: JPEG, PNG, HEIC, TIFF.
+- Images are identified by their path relative to the folder (e.g.
+  `Winter/snow.jpg`), so top-level selections stay valid when subfolders are
+  turned on. Turning subfolders off makes subfolder images show as missing
+  rather than silently dropping them.
+- Access to the folder persists across launches (bookmark).
+- The Schedule window shows the library as a **thumbnail grid**, grouped under a
+  heading per subfolder when subfolders are on. Click toggles an image in or out
+  of the selection, ⇧-click selects a range, plus Select All / Select None buttons.
 - If a selected image is later deleted or renamed, it's skipped and the phase
   editor marks it as missing. A phase with no available images is skipped
   (the wallpaper stays as it is).
@@ -92,15 +113,24 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
 - Icon: SF Symbol (e.g. `photo.on.rectangle`)
 - Active phase name and current image name
 - "Next change: Dusk phase at 6:12 pm" (or the next rotation time)
-- **Change Now**: advances to the next image in the active phase
+- **Change Now** (⌘N): advances to the next image in the active phase
 - **Pause / Resume** scheduling (saved across launches)
-- **Settings…**
-- **Quit**
+- **Schedule…** (⌘E): opens the Schedule window
+- **Settings…** (⌘,)
+- **Quit Phases** (⌘Q)
+
+### Schedule window (used most often)
+- Its own resizable window.
+- Phase list on the left, sorted by start time (add, remove), with the active
+  phase marked.
+- Editor for the selected phase: name, trigger, offset, appearance condition,
+  order, rotation, and the thumbnail grid.
 
 ### Settings window
-- **General:** image folder, display mode, Launch at Login, location status
-- **Phases:** list of phases (add, remove, reorder by start time) and an editor
-  for the selected phase: name, trigger, offset, thumbnail grid, order, rotation
+- Image folder and Include subfolders
+- Display mode
+- Launch at Login
+- Location status, with today's civil dawn and dusk
 
 No Dock icon. The app runs as a menu bar accessory.
 
@@ -108,7 +138,7 @@ No Dock icon. The app runs as a menu bar accessory.
 
 - Preference **Launch at Login**, **off by default**.
 - The app never turns it on by itself. Turning it on shows a confirmation that
-  explains what it does ("Adds Wallpaper Scheduler to System Settings › General ›
+  explains what it does ("Adds Phases to System Settings › General ›
   Login Items") before anything is registered.
 - Implemented with `SMAppService.mainApp`, which registers the app itself as a
   standard Login Item. It does **not** install a LaunchAgent plist or any daemon,
@@ -126,7 +156,8 @@ No Dock icon. The app runs as a menu bar accessory.
 - With "Displays have separate Spaces" on (the macOS default), each display has
   its own current Space, and the app sets each one.
 - Scheduling uses a single timer aimed at the next event, recalculated after
-  every change, wake, or settings edit. No polling loop.
+  every change, wake, or settings edit, with an hourly re-check as a safety net
+  against clock drift. No polling loop.
 
 ## 10. Persistence
 
@@ -136,6 +167,11 @@ applied phase, last location) are stored in UserDefaults as Codable data.
 ## 11. Out of scope (v1)
 
 - Different schedules per weekday
-- Subfolders, multiple folders, or online image sources
+- Multiple folders or online image sources
 - Different wallpaper per Space
 - Scaling/fill options (uses the current macOS fill setting)
+
+## 12. Known issues
+
+- Unreproduced: the desktop once turned black. Source folder is local storage
+  (not a cloud-synced folder). No change until it can be reproduced.
