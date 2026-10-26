@@ -270,5 +270,6 @@ applied phase, last location) are stored in UserDefaults as Codable data.
   were switched, not when the wallpaper changed. Bug or design decision is
   unknown. Phases could force a restyle by briefly activating itself, but that
   would steal focus from the user's app, so it deliberately doesn't.
+    - Submitted Feedback to apple, ticket FB25326597
 - Bartender (menu bar manager) caused additional odd menu bar behavior during
   testing. Not a Phases issue.
