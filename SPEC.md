@@ -1,4 +1,4 @@
-# Phases — Specification (draft 4.1)
+# Phases — Specification (draft 5)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -90,33 +90,56 @@ image when there's more than one choice.
 - **App preference: Transition**: None or **Crossfade** (default).
 - **App preference: Duration**: 0.5 to 3 seconds (default 1 second), shown
   only when Crossfade is selected.
-- macOS has no transition for wallpapers set by apps, so Phases does it itself:
-  1. **Cover:** on each screen, a borderless, click-through window shows the
-     *outgoing* wallpaper. It sits just above the desktop picture and below the
-     desktop icons, so icons and windows don't flicker.
-  2. **Switch:** once the cover is confirmed on screen (drawn and composited),
-     the new wallpaper is set behind it. Setting it any earlier can briefly
-     show the new image before the fade.
-  3. **Fade:** after a short settle delay (0.5 s, tuned on real hardware) to let
-     macOS finish drawing the new wallpaper, the cover fades out over the chosen
-     duration and is removed.
-- The cover draws the outgoing image the way macOS does, using that screen's
-  current scaling (fill, fit, stretch, or center) and fill color, so the fade
-  starts without a visible jump.
-- The cover must appear at exactly the screen's full size (including under the
-  menu bar) with no window-appearance animation, so the outgoing image doesn't
-  shift or resize when the cover appears.
+- macOS has no transition for wallpapers set by apps, so Phases does it itself
+  by **fading the new image in over the old wallpaper**:
+  1. **Cover:** on each screen whose image is changing, a borderless,
+     click-through window shows the *incoming* image, fully transparent. It
+     sits just above the desktop picture and below the desktop icons, so icons
+     and windows don't flicker. It covers the full screen, including under the
+     menu bar.
+  2. **Fade in:** the cover fades to fully opaque over the chosen duration.
+     The real wallpaper hasn't changed yet.
+  3. **Switch:** the new wallpaper is set behind the now-opaque cover, which
+     shows the identical image.
+  4. **Remove:** after a short settle delay (0.5 s) to let macOS finish drawing
+     the new wallpaper, the cover is removed. This is invisible, since the
+     cover and the wallpaper match.
+- The cover draws the incoming image the way macOS will, using that screen's
+  scaling (fill, fit, stretch, or center) and fill color.
 - The cover is drawn from the image file. No screenshots and no Screen
   Recording permission.
 - **No fade (instant switch) when:**
   - Transition is set to None
   - Reduce Motion is on (System Settings › Accessibility › Display)
-  - The outgoing wallpaper is an Aerial or other system wallpaper, or its file
-    can't be read
+  - The incoming image file can't be read (that screen only)
   - A screen's image isn't actually changing (that screen only)
   - Restoring the original wallpaper on quit (§8a)
 - If another change starts while a fade is running, the running fade finishes
-  instantly and the new change starts its own fade.
+  instantly (its wallpaper is set and its cover removed) and the new change
+  starts its own fade.
+
+### Why fade in, not fade out (design history)
+
+Draft 4 did the reverse: it covered the screen with the *outgoing* image, set the
+new wallpaper immediately, and faded the cover out. Testing found two problems:
+
+1. **Flash and twitch.** The new wallpaper could reach the screen before the
+   cover did, briefly showing the new image (and macOS's own wallpaper-change
+   motion) before the fade. Draft 4.1 worked around this by waiting for the
+   cover to be on screen and suppressing window resize/appear animations.
+2. **Menu bar blink.** macOS picks the menu bar's text color and shadow from
+   the *actual* wallpaper, ignoring windows above it. Setting the wallpaper at
+   the start of the fade switched the menu bar immediately, while the screen
+   still showed the old image (most visible going from light to dark).
+
+Fading the new image in and setting the wallpaper at the end fixes both: the
+wallpaper changes behind an identical image, and the menu bar switches once, at
+the end, just as it does when changing wallpaper in System Settings. The menu
+bar's own switch is still instant; macOS doesn't animate it. The draft 4.1
+workarounds were removed as no longer needed.
+
+A side benefit: the old wallpaper is never redrawn, so crossfades now work when
+the outgoing wallpaper is an Aerial.
 
 ## 5. Missed changes: sleep, wake, unlock
 
@@ -148,11 +171,16 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
 - Icon: SF Symbol (e.g. `photo.on.rectangle`)
 - Active phase name and current image name
 - "Next change: Dusk phase at 6:12 pm" (or the next rotation time)
-- **Change Now** (⌘N): advances to the next image in the active phase
+- **Change Now**: advances to the next image in the active phase
 - **Pause / Resume** scheduling (saved across launches)
-- **Schedule…** (⌘E): opens the Schedule window
-- **Settings…** (⌘,)
+- **Schedule…**: opens the Schedule window
+- **Settings…**
 - **Quit Phases** (⌘Q)
+
+Only Quit has a keyboard shortcut. Shortcuts in a menu bar extra's menu work
+only while that menu is open, so others would be mostly decoration; Apple's own
+menu bar extras don't show them. ⌘Q stays as a familiar convention. No global
+hotkey.
 
 ### Schedule window (used most often)
 - Its own resizable window.
