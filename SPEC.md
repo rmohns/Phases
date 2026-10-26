@@ -1,4 +1,4 @@
-# Phases — Specification (draft 4)
+# Phases — Specification (draft 4.1)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -94,13 +94,18 @@ image when there's more than one choice.
   1. **Cover:** on each screen, a borderless, click-through window shows the
      *outgoing* wallpaper. It sits just above the desktop picture and below the
      desktop icons, so icons and windows don't flicker.
-  2. **Switch:** the new wallpaper is set behind the cover.
+  2. **Switch:** once the cover is confirmed on screen (drawn and composited),
+     the new wallpaper is set behind it. Setting it any earlier can briefly
+     show the new image before the fade.
   3. **Fade:** after a short settle delay (0.5 s, tuned on real hardware) to let
      macOS finish drawing the new wallpaper, the cover fades out over the chosen
      duration and is removed.
 - The cover draws the outgoing image the way macOS does, using that screen's
   current scaling (fill, fit, stretch, or center) and fill color, so the fade
   starts without a visible jump.
+- The cover must appear at exactly the screen's full size (including under the
+  menu bar) with no window-appearance animation, so the outgoing image doesn't
+  shift or resize when the cover appears.
 - The cover is drawn from the image file. No screenshots and no Screen
   Recording permission.
 - **No fade (instant switch) when:**
