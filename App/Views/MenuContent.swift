@@ -31,7 +31,6 @@ struct MenuContent: View {
     Button("Change Now", systemImage: "arrow.forward") {
       scheduler.changeNow()
     }
-    .keyboardShortcut("n")
     .disabled(scheduler.activePhase == nil)
 
     Toggle("Pause Schedule", isOn: $scheduler.isPaused)
@@ -42,13 +41,11 @@ struct MenuContent: View {
       NSApp.activate()
       openWindow(id: ScheduleView.windowID)
     }
-    .keyboardShortcut("e")
 
     Button("Settings…") {
       NSApp.activate()
       openSettings()
     }
-    .keyboardShortcut(",")
 
     Button("Quit Phases") {
       NSApp.terminate(nil)

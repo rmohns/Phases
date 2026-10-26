@@ -265,11 +265,9 @@ final class WallpaperScheduler {
       names = randomPick(from: available, count: count, avoiding: appliedState?.imageNames ?? [])
     }
 
-    let previousURLs = Set((appliedState?.imageNames ?? []).compactMap(library.url(for:)))
     crossfade.apply(
       names.compactMap(library.url(for:)),
-      duration: transitionStyle == .crossfade ? crossfadeDuration : nil,
-      phasesURLs: previousURLs
+      duration: transitionStyle == .crossfade ? crossfadeDuration : nil
     )
     appliedState = AppliedState(
       phaseID: phase.id, phaseStart: start, rotationSlot: slot, manualSteps: manualSteps, imageNames: names

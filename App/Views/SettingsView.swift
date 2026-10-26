@@ -68,7 +68,7 @@ struct SettingsView: View {
             }
           }
         }
-        Text("Changes are instant when Reduce Motion is on, or when the current wallpaper is an Aerial.")
+        Text("Changes are instant when Reduce Motion is on.")
           .font(.caption)
           .foregroundStyle(.secondary)
       }
