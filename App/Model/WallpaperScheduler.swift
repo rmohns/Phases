@@ -24,6 +24,15 @@ final class WallpaperScheduler {
     }
   }
 
+  var transitionStyle: TransitionStyle {
+    didSet { UserDefaults.standard.set(transitionStyle.rawValue, forKey: Keys.transitionStyle) }
+  }
+
+  /// Crossfade length in seconds, within `TransitionStyle.durationRange`.
+  var crossfadeDuration: Double {
+    didSet { UserDefaults.standard.set(crossfadeDuration, forKey: Keys.crossfadeDuration) }
+  }
+
   var isPaused: Bool {
     didSet {
       UserDefaults.standard.set(isPaused, forKey: Keys.isPaused)
@@ -45,6 +54,7 @@ final class WallpaperScheduler {
   private(set) var isDarkMode = WallpaperScheduler.systemIsDark()
 
   @ObservationIgnored private var timer: Timer?
+  @ObservationIgnored private let crossfade = CrossfadeController()
   @ObservationIgnored private var appearanceObservation: NSKeyValueObservation?
   /// Set at logout, restart, or shutdown, so only a real Quit restores.
   @ObservationIgnored private var isPoweringOff = false
@@ -62,6 +72,8 @@ final class WallpaperScheduler {
     static let isPaused = "isPaused"
     static let appliedState = "appliedState"
     static let restorePoint = "restorePoint"
+    static let transitionStyle = "transitionStyle"
+    static let crossfadeDuration = "crossfadeDuration"
   }
 
   init() {
@@ -70,6 +82,9 @@ final class WallpaperScheduler {
       ?? [Phase(name: "All Day", trigger: .always)]
     displayMode = defaults.string(forKey: Keys.displayMode).flatMap(DisplayMode.init) ?? .sameOnAll
     isPaused = defaults.bool(forKey: Keys.isPaused)
+    transitionStyle = defaults.string(forKey: Keys.transitionStyle).flatMap(TransitionStyle.init) ?? .crossfade
+    let duration = defaults.object(forKey: Keys.crossfadeDuration) as? Double ?? TransitionStyle.defaultDuration
+    crossfadeDuration = min(max(duration, TransitionStyle.durationRange.lowerBound), TransitionStyle.durationRange.upperBound)
     appliedState = Self.load(AppliedState.self, forKey: Keys.appliedState)
     // Keep an existing restore point: one left over from a crash still holds
     // the true original, while capturing now would record Phases' own image.
@@ -250,7 +265,12 @@ final class WallpaperScheduler {
       names = randomPick(from: available, count: count, avoiding: appliedState?.imageNames ?? [])
     }
 
-    WallpaperSetter.apply(names.compactMap(library.url(for:)))
+    let previousURLs = Set((appliedState?.imageNames ?? []).compactMap(library.url(for:)))
+    crossfade.apply(
+      names.compactMap(library.url(for:)),
+      duration: transitionStyle == .crossfade ? crossfadeDuration : nil,
+      phasesURLs: previousURLs
+    )
     appliedState = AppliedState(
       phaseID: phase.id, phaseStart: start, rotationSlot: slot, manualSteps: manualSteps, imageNames: names
     )
@@ -318,6 +338,7 @@ final class WallpaperScheduler {
   /// true original.
   private func restoreOriginalWallpaper() {
     timer?.invalidate()
+    crossfade.finishRunningFade()
     guard !isPoweringOff else { return }
     restorePoint?.restore()
     restorePoint = nil

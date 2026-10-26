@@ -44,6 +44,35 @@ struct SettingsView: View {
           .foregroundStyle(.secondary)
       }
 
+      Section("Transition") {
+        Picker("Transition", selection: $scheduler.transitionStyle) {
+          ForEach(TransitionStyle.allCases) { style in
+            Text(style.title).tag(style)
+          }
+        }
+        .pickerStyle(.segmented)
+        if scheduler.transitionStyle == .crossfade {
+          LabeledContent("Duration") {
+            HStack {
+              Slider(value: $scheduler.crossfadeDuration, in: TransitionStyle.durationRange) {
+                Text("Duration")
+              } minimumValueLabel: {
+                Text("0.5 s")
+              } maximumValueLabel: {
+                Text("3 s")
+              }
+              .labelsHidden()
+              Text("\(scheduler.crossfadeDuration, format: .number.precision(.fractionLength(1))) s")
+                .monospacedDigit()
+                .frame(width: 44, alignment: .trailing)
+            }
+          }
+        }
+        Text("Changes are instant when Reduce Motion is on, or when the current wallpaper is an Aerial.")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+
       Section("Startup") {
         Toggle("Launch at Login", isOn: launchAtLoginBinding)
         if scheduler.launchAtLogin.needsApproval {
