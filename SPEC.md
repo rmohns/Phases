@@ -258,3 +258,9 @@ applied phase, last location) are stored in UserDefaults as Codable data.
 - Restoring an Aerial isn't supported yet (see §8a). Possible approach: back up
   and restore macOS's wallpaper store file and restart the wallpaper process.
   Undocumented, so it needs explicit approval before building.
+- Menu bar blanks for about 0.1 s at the end of a crossfade (both light→dark and
+  dark→light), at the moment the real wallpaper is set, then returns with the
+  new styling. Confirmed from a frame-by-frame screen recording (2026-10-26).
+  During the fade the menu bar stays steady, as designed. Suspected to be
+  macOS's own menu bar re-styling on any wallpaper change; to be confirmed by
+  comparing with a change made in System Settings.
