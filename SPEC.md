@@ -111,7 +111,8 @@ image when there's more than one choice.
 - **No fade (instant switch) when:**
   - Transition is set to None
   - Reduce Motion is on (System Settings › Accessibility › Display)
-  - The incoming image file can't be read (that screen only)
+  - The incoming image file can't be read (that screen only: it switches
+    without a fade, at the same moment as the other screens finish fading)
   - A screen's image isn't actually changing (that screen only)
   - Restoring the original wallpaper on quit (§8a)
 - If another change starts while a fade is running, the running fade finishes
