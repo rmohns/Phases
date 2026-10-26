@@ -258,9 +258,17 @@ applied phase, last location) are stored in UserDefaults as Codable data.
 - Restoring an Aerial isn't supported yet (see §8a). Possible approach: back up
   and restore macOS's wallpaper store file and restart the wallpaper process.
   Undocumented, so it needs explicit approval before building.
-- Menu bar blanks for about 0.1 s at the end of a crossfade (both light→dark and
-  dark→light), at the moment the real wallpaper is set, then returns with the
-  new styling. Confirmed from a frame-by-frame screen recording (2026-10-26).
-  During the fade the menu bar stays steady, as designed. Suspected to be
-  macOS's own menu bar re-styling on any wallpaper change; to be confirmed by
-  comparing with a change made in System Settings.
+- **Menu bar blanks for about 0.1 s when the wallpaper changes (macOS behavior,
+  confirmed 2026-10-26).** Frame-by-frame recordings of a change made in System
+  Settings show the same thing: the menu bar keeps its old styling for a couple
+  of frames, disappears for 2–3 frames, then returns restyled. Phases' fade-in
+  design keeps the menu bar steady during the fade and limits this to the one
+  blink at the end. Not fixable by Phases.
+- **macOS sometimes doesn't restyle the menu bar after a wallpaper change until
+  the frontmost app changes** (macOS 27.0.1). In a recording of System
+  Settings' own 5-second shuffle, the menu bar's styling changed when apps
+  were switched, not when the wallpaper changed. Bug or design decision is
+  unknown. Phases could force a restyle by briefly activating itself, but that
+  would steal focus from the user's app, so it deliberately doesn't.
+- Bartender (menu bar manager) caused additional odd menu bar behavior during
+  testing. Not a Phases issue.
