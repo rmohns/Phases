@@ -1,4 +1,4 @@
-# Phases — Specification (draft 3)
+# Phases — Specification (draft 4)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -85,6 +85,34 @@ image when there's more than one choice.
   display** (each display draws its own pick from the active phase's images).
 - Changes apply to the current Space on each display (macOS limitation; see §9).
 
+## 4a. Transitions
+
+- **App preference: Transition**: None or **Crossfade** (default).
+- **App preference: Duration**: 0.5 to 3 seconds (default 1 second), shown
+  only when Crossfade is selected.
+- macOS has no transition for wallpapers set by apps, so Phases does it itself:
+  1. **Cover:** on each screen, a borderless, click-through window shows the
+     *outgoing* wallpaper. It sits just above the desktop picture and below the
+     desktop icons, so icons and windows don't flicker.
+  2. **Switch:** the new wallpaper is set behind the cover.
+  3. **Fade:** after a short settle delay (0.5 s, tuned on real hardware) to let
+     macOS finish drawing the new wallpaper, the cover fades out over the chosen
+     duration and is removed.
+- The cover draws the outgoing image the way macOS does, using that screen's
+  current scaling (fill, fit, stretch, or center) and fill color, so the fade
+  starts without a visible jump.
+- The cover is drawn from the image file. No screenshots and no Screen
+  Recording permission.
+- **No fade (instant switch) when:**
+  - Transition is set to None
+  - Reduce Motion is on (System Settings › Accessibility › Display)
+  - The outgoing wallpaper is an Aerial or other system wallpaper, or its file
+    can't be read
+  - A screen's image isn't actually changing (that screen only)
+  - Restoring the original wallpaper on quit (§8a)
+- If another change starts while a fade is running, the running fade finishes
+  instantly and the new change starts its own fade.
+
 ## 5. Missed changes: sleep, wake, unlock
 
 On launch, wake from sleep, screen unlock, and time zone / clock changes, the app:
@@ -131,6 +159,7 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
 ### Settings window
 - Image folder and Include subfolders
 - Display mode
+- Transition and duration
 - Launch at Login
 - Location status, with today's civil dawn and dusk
 
