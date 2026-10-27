@@ -1,4 +1,4 @@
-# Phases — Specification (draft 5)
+# Phases — Specification (draft 6)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -13,7 +13,8 @@ Each phase has:
 |---|---|
 | Name | e.g. "Morning", "Night" |
 | Start trigger | When the phase begins (see §2) |
-| Images | One or more images chosen from the image library (multi-select) |
+| Images | One or more images chosen from the image library (multi-select), for **All Displays** |
+| Display images | Optional: a separate image selection for a specific display (see §4) |
 | Order | Random or In order |
 | Rotation | Optional: change to the next image every N minutes or hours while the phase is active |
 | Appearance | Only in: **Any** (default), **Light**, or **Dark** mode (see §2a) |
@@ -72,7 +73,7 @@ image when there's more than one choice.
   turned on. Turning subfolders off makes subfolder images show as missing
   rather than silently dropping them.
 - Access to the folder persists across launches (bookmark).
-- The Schedule window shows the library as a **thumbnail grid**, grouped under a
+- The Phases window shows the library as a **thumbnail grid**, grouped under a
   heading per subfolder when subfolders are on. Click toggles an image in or out
   of the selection, ⇧-click selects a range, plus Select All / Select None buttons.
 - If a selected image is later deleted or renamed, it's skipped and the phase
@@ -81,8 +82,39 @@ image when there's more than one choice.
 
 ## 4. Displays
 
-- Preference: **Same image on all displays** (default) or **Different image per
-  display** (each display draws its own pick from the active phase's images).
+### Per-display images
+- Each phase has one image selection for **All Displays**, plus optional
+  selections for specific displays. Schedule, order, and rotation are shared:
+  every display changes at the same moments.
+- In the phase editor's Images section, a **Display** picker lists All Displays
+  plus each known display. It appears only when more than one display is known,
+  so single-display setups look and behave as before.
+- Choosing a specific display shows a **Use different images on this display**
+  toggle. When on, that display gets its own thumbnail grid and draws only from
+  its own selection (e.g. ultrawide images for an ultrawide monitor, portrait
+  images for a portrait one). When off, it uses the All Displays selection.
+- If a display has its own selection but none of those images are available,
+  that display keeps its current wallpaper; it does not fall back to All Displays.
+- Turning the toggle off discards that display's selection for that phase.
+
+### Display identity
+- Displays are identified by their hardware UUID, so settings survive
+  unplugging, reconnecting, and rearranging. Phases remembers each display's
+  name. Disconnected displays stay in the picker, marked "(not connected)", and
+  keep their selections.
+
+### Displays sharing the All Displays images
+- Preference, applying only to displays **without** their own images in the
+  active phase: **Same image everywhere** (default) or **Different picks per
+  display** (each draws its own pick from the All Displays images).
+- In order: each display's selection (or the shared one) advances in step. With
+  Different picks, sharing displays are offset by one from each other.
+
+### Not included
+- Automatic matching of images to each display's shape (portrait, ultrawide,
+  standard). Considered and rejected: "ultrawide" vs. "wide" is fuzzy, and
+  wrong guesses would surprise; explicit per-display choices are predictable.
+
 - Changes apply to the current Space on each display (macOS limitation; see §9).
 
 ## 4a. Transitions
@@ -174,8 +206,7 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
 - "Next change: Dusk phase at 6:12 pm" (or the next rotation time)
 - **Change Now**: advances to the next image in the active phase
 - **Pause / Resume** scheduling (saved across launches)
-- **Schedule…**: opens the Schedule window
-- **Settings…**
+- **Open Phases…**: opens the Phases window
 - **Quit Phases** (⌘Q)
 
 Only Quit has a keyboard shortcut. Shortcuts in a menu bar extra's menu work
@@ -183,19 +214,18 @@ only while that menu is open, so others would be mostly decoration; Apple's own
 menu bar extras don't show them. ⌘Q stays as a familiar convention. No global
 hotkey.
 
-### Schedule window (used most often)
-- Its own resizable window.
-- Phase list on the left, sorted by start time (add, remove), with the active
-  phase marked.
-- Editor for the selected phase: name, trigger, offset, appearance condition,
-  order, rotation, and the thumbnail grid.
-
-### Settings window
-- Image folder and Include subfolders
-- Display mode
-- Transition and duration
-- Launch at Login
-- Location status, with today's civil dawn and dusk
+### Phases window (one window for everything)
+- A single resizable window with a sidebar. There is no separate Settings
+  window: with two windows, the wrong one kept getting opened (draft 3 split
+  them; draft 6 merged them back).
+- **Sidebar:** the phase list, sorted by start time, with the active phase
+  marked and + / − buttons to add and remove phases. A **Settings** row (gear
+  icon) is pinned below the phases.
+- **Phase selected:** editor with name, trigger, offset, appearance condition,
+  order, rotation, and the Images section (Display picker and thumbnail grid).
+- **Settings selected:** image folder and Include subfolders; display sharing
+  preference (§4); transition and duration; Launch at Login; location status
+  with today's civil dawn and dusk and Update Now.
 
 No Dock icon. The app runs as a menu bar accessory.
 
@@ -241,8 +271,10 @@ No Dock icon. The app runs as a menu bar accessory.
 
 ## 10. Persistence
 
-All settings (folder bookmark, phases, preferences, in-order positions, last
-applied phase, last location) are stored in UserDefaults as Codable data.
+All settings (folder bookmark, phases including per-display selections,
+preferences, in-order positions, last applied phase and image per display, known
+displays and their names, last location) are stored in UserDefaults as Codable
+data. Phases saved by earlier versions load unchanged (no per-display images).
 
 ## 11. Out of scope (v1)
 
