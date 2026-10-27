@@ -11,16 +11,19 @@ struct PhasesWindow: View {
   var body: some View {
     NavigationSplitView {
       List(selection: $selection) {
+        Section("App") {
+          Label("Settings", systemImage: "gearshape")
+            .tag(SidebarItem.settings)
+        }
         Section("Phases") {
           ForEach(scheduler.phasesByTime) { phase in
             PhaseRow(phase: phase, isActive: phase.id == scheduler.activePhase?.id)
               .tag(SidebarItem.phase(phase.id))
           }
         }
-        Section {
-          Label("Settings", systemImage: "gearshape")
-            .tag(SidebarItem.settings)
-        }
+      }
+      .safeAreaInset(edge: .top, spacing: 0) {
+        SidebarBranding()
       }
       .safeAreaInset(edge: .bottom, spacing: 0) {
         VStack(spacing: 0) {
@@ -57,6 +60,15 @@ struct PhasesWindow: View {
         )
       }
     }
+    .background {
+      // ⌘Q while this window is active (spec §7). Phases has no app menu, so
+      // nothing else provides it.
+      Button("Quit Phases") { NSApp.terminate(nil) }
+        .keyboardShortcut("q")
+        .opacity(0)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
     .onAppear {
       scheduler.library.reload()
       if selection == nil {
@@ -67,6 +79,24 @@ struct PhasesWindow: View {
 
   private var selectedPhaseID: Phase.ID? {
     if case .phase(let id) = selection { id } else { nil }
+  }
+}
+
+/// Decorative app icon and name at the top of the sidebar.
+private struct SidebarBranding: View {
+  var body: some View {
+    HStack(spacing: 8) {
+      Image(nsImage: NSApp.applicationIconImage)
+        .resizable()
+        .frame(width: 28, height: 28)
+        .accessibilityHidden(true)
+      Text("Phases")
+        .font(.title3.weight(.semibold))
+      Spacer()
+    }
+    .padding(.horizontal, 14)
+    .padding(.vertical, 8)
+    .accessibilityElement(children: .combine)
   }
 }
 

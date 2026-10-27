@@ -91,6 +91,15 @@ struct SettingsView: View {
       Section("Location") {
         LocationStatusView(scheduler: scheduler)
       }
+
+      Section {
+        LabeledContent {
+          Button("Quit Phases") { NSApp.terminate(nil) }
+        } label: {
+          Text("Quit Phases")
+          Text("Restores your original wallpaper. ⌘Q also quits while this window is active.")
+        }
+      }
     }
     .formStyle(.grouped)
     .navigationTitle("Settings")

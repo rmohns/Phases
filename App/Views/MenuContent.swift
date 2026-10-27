@@ -6,33 +6,18 @@ struct MenuContent: View {
   @Environment(\.openWindow) private var openWindow
 
   var body: some View {
-    Group {
-      if let phase = scheduler.activePhase {
-        Text("Phase: \(phase.name)")
-      } else {
-        Text("No active phase")
-      }
-      if let image = scheduler.currentImageName {
-        Text(image)
-      }
-      if scheduler.isPaused {
-        Text("Paused")
-      } else if let next = scheduler.nextChange {
-        Text(nextChangeDescription(next))
-      }
+    Section(statusLine) {
       if scheduler.needsLocation && scheduler.location.isDenied {
         Text("Location access is off; dawn and dusk phases are skipped.")
       }
+
+      Button("Change Now", systemImage: "arrow.forward") {
+        scheduler.changeNow()
+      }
+      .disabled(scheduler.activePhase == nil)
+
+      Toggle("Pause Schedule", isOn: $scheduler.isPaused)
     }
-
-    Divider()
-
-    Button("Change Now", systemImage: "arrow.forward") {
-      scheduler.changeNow()
-    }
-    .disabled(scheduler.activePhase == nil)
-
-    Toggle("Pause Schedule", isOn: $scheduler.isPaused)
 
     Divider()
 
@@ -40,20 +25,19 @@ struct MenuContent: View {
       NSApp.activate()
       openWindow(id: PhasesWindow.windowID)
     }
-
-    Button("Quit Phases") {
-      NSApp.terminate(nil)
-    }
-    .keyboardShortcut("q")
   }
 
-  private func nextChangeDescription(_ next: WallpaperScheduler.NextChange) -> String {
-    let time = next.date.formatted(Calendar.current.isDateInToday(next.date)
+  /// One compact line (spec §7), e.g. "Dusk · until 7:13 PM".
+  private var statusLine: String {
+    guard let phase = scheduler.activePhase else { return "No active phase" }
+    if scheduler.isPaused { return "\(phase.name) · Paused" }
+    guard let ends = scheduler.activePhaseEnds else { return phase.name }
+    return "\(phase.name) · until \(formatted(ends))"
+  }
+
+  private func formatted(_ date: Date) -> String {
+    date.formatted(Calendar.current.isDateInToday(date)
       ? .dateTime.hour().minute()
       : .dateTime.weekday(.abbreviated).hour().minute())
-    if let name = next.phaseName {
-      return "Next: \(name) at \(time)"
-    }
-    return "Next image at \(time)"
   }
 }

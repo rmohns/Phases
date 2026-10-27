@@ -57,6 +57,8 @@ final class WallpaperScheduler {
 
   private(set) var activePhase: Phase?
   private(set) var nextChange: NextChange?
+  /// When the next phase starts, ending the active one (nil if none is scheduled).
+  private(set) var activePhaseEnds: Date?
   private(set) var isDarkMode = WallpaperScheduler.systemIsDark()
 
   @ObservationIgnored private var timer: Timer?
@@ -280,7 +282,9 @@ final class WallpaperScheduler {
     timer?.invalidate()
     timer = nil
 
-    var next = engine.nextPhaseStart(after: now).map { NextChange(date: $0.date, phaseName: $0.phase.name) }
+    let nextPhase = engine.nextPhaseStart(after: now)
+    activePhaseEnds = nextPhase?.date
+    var next = nextPhase.map { NextChange(date: $0.date, phaseName: $0.phase.name) }
     if let active = activePhase, let interval = active.rotationSeconds, let state = appliedState,
       state.phaseID == active.id
     {
