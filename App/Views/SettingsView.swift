@@ -39,7 +39,7 @@ struct SettingsView: View {
         }
         .pickerStyle(.radioGroup)
         .labelsHidden()
-        Text("Changes apply to the current Space on each display.")
+        Text("Applies to displays that don't have their own images in a phase. Changes apply to the current Space on each display.")
           .font(.caption)
           .foregroundStyle(.secondary)
       }
@@ -93,7 +93,7 @@ struct SettingsView: View {
       }
     }
     .formStyle(.grouped)
-    .frame(width: 500)
+    .navigationTitle("Settings")
     .fileImporter(isPresented: $isChoosingFolder, allowedContentTypes: [.folder]) { result in
       if case .success(let url) = result {
         scheduler.library.setFolder(url)

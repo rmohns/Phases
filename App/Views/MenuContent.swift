@@ -3,7 +3,6 @@ import SwiftUI
 /// The menu shown from the menu bar icon.
 struct MenuContent: View {
   @Bindable var scheduler: WallpaperScheduler
-  @Environment(\.openSettings) private var openSettings
   @Environment(\.openWindow) private var openWindow
 
   var body: some View {
@@ -37,14 +36,9 @@ struct MenuContent: View {
 
     Divider()
 
-    Button("Schedule…") {
+    Button("Open Phases…") {
       NSApp.activate()
-      openWindow(id: ScheduleView.windowID)
-    }
-
-    Button("Settings…") {
-      NSApp.activate()
-      openSettings()
+      openWindow(id: PhasesWindow.windowID)
     }
 
     Button("Quit Phases") {

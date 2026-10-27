@@ -1,19 +1,22 @@
 import AppKit
 
+/// One display's new wallpaper.
+struct WallpaperAssignment {
+  var screen: NSScreen
+  var url: URL
+}
+
 /// Applies images to the current Space on each display.
 @MainActor
 enum WallpaperSetter {
-  /// Sets `urls[i]` on screen `i`, reusing the last URL if there are fewer
-  /// URLs than screens. Keeps each screen's existing fill/scaling options.
-  static func apply(_ urls: [URL]) {
-    guard let fallback = urls.last else { return }
-    for (index, screen) in NSScreen.screens.enumerated() {
-      let url = index < urls.count ? urls[index] : fallback
-      let options = NSWorkspace.shared.desktopImageOptions(for: screen) ?? [:]
+  /// Keeps each screen's existing fill/scaling options.
+  static func apply(_ assignments: [WallpaperAssignment]) {
+    for assignment in assignments {
+      let options = NSWorkspace.shared.desktopImageOptions(for: assignment.screen) ?? [:]
       do {
-        try NSWorkspace.shared.setDesktopImageURL(url, for: screen, options: options)
+        try NSWorkspace.shared.setDesktopImageURL(assignment.url, for: assignment.screen, options: options)
       } catch {
-        NSLog("Phases: couldn't set \(url.lastPathComponent) on \(screen.localizedName): \(error)")
+        NSLog("Phases: couldn't set \(assignment.url.lastPathComponent) on \(assignment.screen.localizedName): \(error)")
       }
     }
   }

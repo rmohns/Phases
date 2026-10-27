@@ -109,9 +109,9 @@ final class ImageLibrary {
     imageNameSet.contains(name)
   }
 
-  /// The phase's selected images that still exist, in library order.
-  func availableImages(for phase: Phase) -> [String] {
-    let selected = Set(phase.imageNames)
+  /// The selected images that still exist, in library order.
+  func availableImages(_ selection: [String]) -> [String] {
+    let selected = Set(selection)
     return imageNames.filter(selected.contains)
   }
 

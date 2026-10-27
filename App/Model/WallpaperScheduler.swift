@@ -49,6 +49,12 @@ final class WallpaperScheduler {
     didSet { Self.save(restorePoint, forKey: Keys.restorePoint) }
   }
 
+  /// Every display seen so far, connected or not (spec §4, Display identity).
+  private(set) var knownDisplays: [KnownDisplay] {
+    didSet { Self.save(knownDisplays, forKey: Keys.knownDisplays) }
+  }
+  private(set) var connectedDisplayUUIDs: Set<String> = []
+
   private(set) var activePhase: Phase?
   private(set) var nextChange: NextChange?
   private(set) var isDarkMode = WallpaperScheduler.systemIsDark()
@@ -72,6 +78,7 @@ final class WallpaperScheduler {
     static let isPaused = "isPaused"
     static let appliedState = "appliedState"
     static let restorePoint = "restorePoint"
+    static let knownDisplays = "knownDisplays"
     static let transitionStyle = "transitionStyle"
     static let crossfadeDuration = "crossfadeDuration"
   }
@@ -86,10 +93,12 @@ final class WallpaperScheduler {
     let duration = defaults.object(forKey: Keys.crossfadeDuration) as? Double ?? TransitionStyle.defaultDuration
     crossfadeDuration = min(max(duration, TransitionStyle.durationRange.lowerBound), TransitionStyle.durationRange.upperBound)
     appliedState = Self.load(AppliedState.self, forKey: Keys.appliedState)
+    knownDisplays = Self.load([KnownDisplay].self, forKey: Keys.knownDisplays) ?? []
     // Keep an existing restore point: one left over from a crash still holds
     // the true original, while capturing now would record Phases' own image.
     restorePoint = Self.load(RestorePoint.self, forKey: Keys.restorePoint) ?? RestorePoint.capture()
 
+    refreshDisplays()
     location.onChange = { [weak self] in self?.evaluate() }
     if needsLocation { location.refresh() }
     observeSystemEvents()
@@ -102,8 +111,40 @@ final class WallpaperScheduler {
     phases.contains { $0.trigger.usesLocation }
   }
 
+  /// The image on the main display, or any display if that's unknown.
   var currentImageName: String? {
-    appliedState?.imageNames.first
+    guard let images = appliedState?.imagesByDisplay else { return nil }
+    return NSScreen.main?.displayUUID.flatMap { images[$0] } ?? images.values.first
+  }
+
+  /// Known displays, connected ones first, for the phase editor's picker.
+  var displaysForPicker: [KnownDisplay] {
+    knownDisplays.sorted { lhs, rhs in
+      let l = connectedDisplayUUIDs.contains(lhs.uuid), r = connectedDisplayUUIDs.contains(rhs.uuid)
+      if l != r { return l }
+      return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
+    }
+  }
+
+  func isConnected(_ display: KnownDisplay) -> Bool {
+    connectedDisplayUUIDs.contains(display.uuid)
+  }
+
+  /// Records connected displays and their current names.
+  private func refreshDisplays() {
+    var known = knownDisplays
+    var connected: Set<String> = []
+    for screen in NSScreen.screens {
+      guard let uuid = screen.displayUUID else { continue }
+      connected.insert(uuid)
+      if let index = known.firstIndex(where: { $0.uuid == uuid }) {
+        known[index].name = screen.localizedName
+      } else {
+        known.append(KnownDisplay(uuid: uuid, name: screen.localizedName))
+      }
+    }
+    if known != knownDisplays { knownDisplays = known }
+    connectedDisplayUUIDs = connected
   }
 
   // MARK: - Actions
@@ -170,12 +211,9 @@ final class WallpaperScheduler {
 
     let start = resolvedStart(for: active, now: now)
     let slot = slot(for: active.phase, start: start, now: now)
-    let available = library.availableImages(for: active.phase)
 
     if let state = appliedState, isSameOccurrence(state, phase: active.phase, start: start) {
-      let imagesStillValid = state.imageNames.allSatisfy(available.contains)
-      let imagesNewlyAvailable = state.imageNames.isEmpty && !available.isEmpty
-      if state.rotationSlot != slot || !imagesStillValid || imagesNewlyAvailable {
+      if state.rotationSlot != slot || !imagesMatchSelections(state, phase: active.phase) {
         // Jumps straight to the most recent missed rotation.
         apply(active.phase, start: start, slot: slot, manualSteps: state.manualSteps)
       } else if state.phaseStart != start {
@@ -209,6 +247,27 @@ final class WallpaperScheduler {
 
   private func slot(for phase: Phase, start: Date, now: Date) -> Int {
     phase.rotationSeconds.map { ScheduleEngine.rotationSlot(start: start, interval: $0, now: now) } ?? 0
+  }
+
+  /// Whether every connected display shows an image from its current pool,
+  /// and displays with no image have nothing to show. Catches edited
+  /// selections, deleted files, and newly connected displays.
+  private func imagesMatchSelections(_ state: AppliedState, phase: Phase) -> Bool {
+    for uuid in connectedDisplayUUIDs {
+      let pool = imagePool(for: uuid, in: phase)
+      if let shown = state.imagesByDisplay[uuid] {
+        if !pool.contains(shown) { return false }
+      } else if !pool.isEmpty {
+        return false
+      }
+    }
+    return true
+  }
+
+  /// The available images a display draws from: its own selection if it has
+  /// one (even if empty), otherwise the All Displays selection.
+  private func imagePool(for uuid: String, in phase: Phase) -> [String] {
+    library.availableImages(phase.displayImageNames[uuid] ?? phase.imageNames)
   }
 
   /// A phase occurs at most once a day, so a small shift in its start time
@@ -245,33 +304,69 @@ final class WallpaperScheduler {
 
   // MARK: - Applying
 
+  /// Picks and applies an image for each connected display. Displays with
+  /// nothing available keep their current wallpaper; the state is still
+  /// recorded so the scheduler doesn't retry every evaluation.
   private func apply(_ phase: Phase, start: Date, slot: Int, manualSteps: Int) {
-    let available = library.availableImages(for: phase)
-    guard !available.isEmpty else {
-      // Nothing to show; remember the phase so we don't retry every evaluation.
-      appliedState = AppliedState(
-        phaseID: phase.id, phaseStart: start, rotationSlot: slot, manualSteps: manualSteps, imageNames: []
-      )
-      return
+    refreshDisplays()
+    let picks = pickImages(for: phase, step: slot + manualSteps)
+    let assignments = NSScreen.screens.compactMap { screen -> WallpaperAssignment? in
+      guard let uuid = screen.displayUUID, let name = picks[uuid], let url = library.url(for: name) else { return nil }
+      return WallpaperAssignment(screen: screen, url: url)
     }
-
-    let count = displayMode == .sameOnAll ? 1 : max(NSScreen.screens.count, 1)
-    let names: [String]
-    switch phase.order {
-    case .inOrder:
-      let base = slot + manualSteps
-      names = (0..<count).map { available[(base + $0) % available.count] }
-    case .random:
-      names = randomPick(from: available, count: count, avoiding: appliedState?.imageNames ?? [])
+    if !assignments.isEmpty {
+      crossfade.apply(assignments, duration: transitionStyle == .crossfade ? crossfadeDuration : nil)
     }
-
-    crossfade.apply(
-      names.compactMap(library.url(for:)),
-      duration: transitionStyle == .crossfade ? crossfadeDuration : nil
-    )
     appliedState = AppliedState(
-      phaseID: phase.id, phaseStart: start, rotationSlot: slot, manualSteps: manualSteps, imageNames: names
+      phaseID: phase.id, phaseStart: start, rotationSlot: slot, manualSteps: manualSteps, imagesByDisplay: picks
     )
+  }
+
+  /// Display UUID → image. Displays with their own selection draw from it;
+  /// the rest share the All Displays selection per the display mode (spec §4).
+  private func pickImages(for phase: Phase, step: Int) -> [String: String] {
+    let previous = appliedState?.imagesByDisplay ?? [:]
+    let connected = NSScreen.screens.compactMap(\.displayUUID)
+    var picks: [String: String] = [:]
+    var sharing: [String] = []
+
+    for uuid in connected {
+      guard phase.displayImageNames[uuid] != nil else {
+        sharing.append(uuid)
+        continue
+      }
+      let pool = imagePool(for: uuid, in: phase)
+      if let name = pick(from: pool, count: 1, order: phase.order, step: step, avoiding: [previous[uuid]].compactMap { $0 }).first {
+        picks[uuid] = name
+      }
+    }
+
+    let shared = library.availableImages(phase.imageNames)
+    if !sharing.isEmpty, !shared.isEmpty {
+      let current = sharing.compactMap { previous[$0] }
+      switch displayMode {
+      case .sameOnAll:
+        if let name = pick(from: shared, count: 1, order: phase.order, step: step, avoiding: current).first {
+          for uuid in sharing { picks[uuid] = name }
+        }
+      case .differentPerDisplay:
+        let names = pick(from: shared, count: sharing.count, order: phase.order, step: step, avoiding: current)
+        for (uuid, name) in zip(sharing, names) { picks[uuid] = name }
+      }
+    }
+    return picks
+  }
+
+  /// In order: consecutive images starting at `step`. Random: distinct where
+  /// possible, preferring ones not currently showing.
+  private func pick(from pool: [String], count: Int, order: ImageOrder, step: Int, avoiding current: [String]) -> [String] {
+    guard !pool.isEmpty, count > 0 else { return [] }
+    switch order {
+    case .inOrder:
+      return (0..<count).map { pool[(step + $0) % pool.count] }
+    case .random:
+      return randomPick(from: pool, count: count, avoiding: current)
+    }
   }
 
   /// Distinct images where possible, preferring ones not currently showing.
@@ -311,7 +406,10 @@ final class WallpaperScheduler {
       Task { @MainActor in self?.evaluate() }
     }
     let screens: @Sendable (Notification) -> Void = { [weak self] _ in
-      Task { @MainActor in self?.reapplyCurrentPhase() }
+      Task { @MainActor in
+        self?.refreshDisplays()
+        self?.reapplyCurrentPhase()
+      }
     }
 
     observers = [

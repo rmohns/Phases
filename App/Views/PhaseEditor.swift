@@ -3,6 +3,8 @@ import SwiftUI
 struct PhaseEditor: View {
   var scheduler: WallpaperScheduler
   var phaseID: Phase.ID
+  /// Which display's images are being edited; nil for All Displays.
+  @State private var display: String?
 
   var body: some View {
     let phase = phaseBinding
@@ -61,10 +63,52 @@ struct PhaseEditor: View {
       }
 
       Section("Images") {
-        ImageGrid(library: scheduler.library, selection: phase.imageNames)
+        let displays = scheduler.displaysForPicker
+        if displays.count > 1 {
+          Picker("Display", selection: $display) {
+            Text("All Displays").tag(nil as String?)
+            ForEach(displays) { known in
+              Text(scheduler.isConnected(known) ? known.name : "\(known.name) (not connected)")
+                .tag(Optional(known.uuid))
+            }
+          }
+        }
+        if let display, displays.contains(where: { $0.uuid == display }) {
+          Toggle("Use different images on this display", isOn: usesOwnImages(display, in: phase))
+          if let own = ownImages(display, in: phase) {
+            ImageGrid(library: scheduler.library, selection: own)
+              .id(display)
+          } else {
+            Text("This display uses the All Displays images.")
+              .foregroundStyle(.secondary)
+          }
+        } else {
+          ImageGrid(library: scheduler.library, selection: phase.imageNames)
+            .id("all")
+        }
       }
     }
     .formStyle(.grouped)
+    .navigationTitle(phase.wrappedValue.name)
+  }
+
+  /// On: the display gets its own (initially empty) selection. Off: its
+  /// selection for this phase is discarded (spec §4).
+  private func usesOwnImages(_ uuid: String, in phase: Binding<Phase>) -> Binding<Bool> {
+    Binding {
+      phase.wrappedValue.displayImageNames[uuid] != nil
+    } set: { isOn in
+      phase.wrappedValue.displayImageNames[uuid] = isOn ? [] : nil
+    }
+  }
+
+  private func ownImages(_ uuid: String, in phase: Binding<Phase>) -> Binding<[String]>? {
+    guard phase.wrappedValue.displayImageNames[uuid] != nil else { return nil }
+    return Binding {
+      phase.wrappedValue.displayImageNames[uuid] ?? []
+    } set: { names in
+      phase.wrappedValue.displayImageNames[uuid] = names
+    }
   }
 
   private var phaseBinding: Binding<Phase> {

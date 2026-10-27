@@ -9,14 +9,10 @@ struct AppDefinition: App {
       MenuContent(scheduler: scheduler)
     }
 
-    Window("Schedule", id: ScheduleView.windowID) {
-      ScheduleView(scheduler: scheduler)
+    Window("Phases", id: PhasesWindow.windowID) {
+      PhasesWindow(scheduler: scheduler)
     }
-    .defaultSize(width: 900, height: 640)
+    .defaultSize(width: 960, height: 680)
     .defaultLaunchBehavior(.suppressed)
-
-    Settings {
-      SettingsView(scheduler: scheduler)
-    }
   }
 }

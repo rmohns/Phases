@@ -1,4 +1,3 @@
-import ColorSync
 import CoreGraphics
 import Foundation
 
@@ -22,7 +21,7 @@ enum SystemWallpaperInspector {
 
     var result: Set<CGDirectDisplayID> = []
     for displayID in displayIDs {
-      guard let uuid = uuidString(for: displayID) else { continue }
+      guard let uuid = DisplayIdentity.uuid(for: displayID) else { continue }
       let entries = desktopEntries(in: store, displayUUID: uuid)
       let latest = entries.max { $0.lastUse < $1.lastUse }
       if let provider = latest?.provider, provider != imageProvider {
@@ -55,10 +54,5 @@ enum SystemWallpaperInspector {
       let lastUse = desktop["LastUse"] as? Date ?? desktop["LastSet"] as? Date ?? .distantPast
       return DesktopEntry(provider: provider, lastUse: lastUse)
     }
-  }
-
-  private static func uuidString(for displayID: CGDirectDisplayID) -> String? {
-    guard let uuid = CGDisplayCreateUUIDFromDisplayID(displayID)?.takeRetainedValue() else { return nil }
-    return CFUUIDCreateString(nil, uuid) as String?
   }
 }

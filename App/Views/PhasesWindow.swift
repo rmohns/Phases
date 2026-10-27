@@ -1,61 +1,78 @@
 import SwiftUI
 
-/// The Schedule window: phase list on the left, editor on the right.
-struct ScheduleView: View {
-  static let windowID = "schedule"
+/// The single Phases window (spec §7): phases and Settings in the sidebar,
+/// the selected item's editor in the detail area.
+struct PhasesWindow: View {
+  static let windowID = "phases"
 
   var scheduler: WallpaperScheduler
-  @State private var selection: Phase.ID?
+  @State private var selection: SidebarItem?
 
   var body: some View {
-    HStack(spacing: 0) {
-      VStack(spacing: 0) {
-        List(selection: $selection) {
+    NavigationSplitView {
+      List(selection: $selection) {
+        Section("Phases") {
           ForEach(scheduler.phasesByTime) { phase in
             PhaseRow(phase: phase, isActive: phase.id == scheduler.activePhase?.id)
-              .tag(phase.id)
+              .tag(SidebarItem.phase(phase.id))
           }
         }
-        .listStyle(.sidebar)
-
-        Divider()
-
-        HStack(spacing: 0) {
-          Button("Add Phase", systemImage: "plus") {
-            selection = scheduler.addPhase().id
-          }
-          Button("Delete Phase", systemImage: "minus") {
-            if let selection { scheduler.deletePhase(id: selection) }
-            selection = scheduler.phasesByTime.first?.id
-          }
-          .disabled(selection == nil)
-          Spacer()
+        Section {
+          Label("Settings", systemImage: "gearshape")
+            .tag(SidebarItem.settings)
         }
-        .labelStyle(.iconOnly)
-        .buttonStyle(.borderless)
-        .padding(6)
       }
-      .frame(width: 240)
-
-      Divider()
-
-      if let selection, scheduler.phases.contains(where: { $0.id == selection }) {
-        PhaseEditor(scheduler: scheduler, phaseID: selection)
-          .id(selection)
-      } else {
+      .safeAreaInset(edge: .bottom, spacing: 0) {
+        VStack(spacing: 0) {
+          Divider()
+          HStack(spacing: 0) {
+            Button("Add Phase", systemImage: "plus") {
+              selection = .phase(scheduler.addPhase().id)
+            }
+            Button("Delete Phase", systemImage: "minus") {
+              if case .phase(let id) = selection { scheduler.deletePhase(id: id) }
+              selection = scheduler.phasesByTime.first.map { .phase($0.id) }
+            }
+            .disabled(selectedPhaseID == nil)
+            Spacer()
+          }
+          .labelStyle(.iconOnly)
+          .buttonStyle(.borderless)
+          .padding(6)
+        }
+      }
+      .navigationSplitViewColumnWidth(min: 220, ideal: 240)
+    } detail: {
+      switch selection {
+      case .settings:
+        SettingsView(scheduler: scheduler)
+      case .phase(let id) where scheduler.phases.contains(where: { $0.id == id }):
+        PhaseEditor(scheduler: scheduler, phaseID: id)
+          .id(id)
+      default:
         ContentUnavailableView(
           "No Phase Selected",
           systemImage: "sun.horizon",
           description: Text("Select a phase, or add one with the + button.")
         )
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
     }
     .onAppear {
       scheduler.library.reload()
-      if selection == nil { selection = scheduler.activePhase?.id ?? scheduler.phasesByTime.first?.id }
+      if selection == nil {
+        selection = (scheduler.activePhase ?? scheduler.phasesByTime.first).map { .phase($0.id) } ?? .settings
+      }
     }
   }
+
+  private var selectedPhaseID: Phase.ID? {
+    if case .phase(let id) = selection { id } else { nil }
+  }
+}
+
+private enum SidebarItem: Hashable {
+  case phase(Phase.ID)
+  case settings
 }
 
 private struct PhaseRow: View {

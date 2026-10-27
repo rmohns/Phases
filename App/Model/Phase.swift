@@ -5,8 +5,11 @@ struct Phase: Identifiable, Codable, Hashable {
   var id = UUID()
   var name: String
   var trigger: PhaseTrigger
-  /// File names (not paths) of the selected images in the library folder.
+  /// Selected images for All Displays, as paths relative to the library folder.
   var imageNames: [String] = []
+  /// Separate selections for specific displays, keyed by display UUID. A
+  /// display with an entry here draws only from it (spec §4).
+  var displayImageNames: [String: [String]] = [:]
   var order: ImageOrder = .inOrder
   var isRotating = false
   var rotation = RotationInterval(value: 30, unit: .minutes)
@@ -27,6 +30,7 @@ extension Phase {
     name = try container.decode(String.self, forKey: .name)
     trigger = try container.decode(PhaseTrigger.self, forKey: .trigger)
     imageNames = try container.decodeIfPresent([String].self, forKey: .imageNames) ?? []
+    displayImageNames = try container.decodeIfPresent([String: [String]].self, forKey: .displayImageNames) ?? [:]
     order = try container.decodeIfPresent(ImageOrder.self, forKey: .order) ?? .inOrder
     isRotating = try container.decodeIfPresent(Bool.self, forKey: .isRotating) ?? false
     rotation = try container.decodeIfPresent(RotationInterval.self, forKey: .rotation)

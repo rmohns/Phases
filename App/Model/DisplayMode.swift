@@ -7,8 +7,8 @@ enum DisplayMode: String, Codable, CaseIterable, Identifiable {
 
   var title: String {
     switch self {
-    case .sameOnAll: "Same image on all displays"
-    case .differentPerDisplay: "Different image on each display"
+    case .sameOnAll: "Same image everywhere"
+    case .differentPerDisplay: "Different picks per display"
     }
   }
 }

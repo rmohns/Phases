@@ -18,26 +18,23 @@ final class CrossfadeController {
   private var covers: [NSWindow] = []
   private var fadeTask: Task<Void, Never>?
   /// Wallpaper to set when the running fade completes or is interrupted.
-  private var pendingURLs: [URL]?
+  private var pendingAssignments: [WallpaperAssignment]?
 
-  /// Applies `urls` (one per screen, as in `WallpaperSetter.apply`). Pass a nil
-  /// duration for an instant switch.
-  func apply(_ urls: [URL], duration: TimeInterval?) {
+  /// Applies the assignments. Pass a nil duration for an instant switch.
+  func apply(_ assignments: [WallpaperAssignment], duration: TimeInterval?) {
     finishRunningFade()
 
-    guard let duration, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
-      let fallback = urls.last
-    else {
-      WallpaperSetter.apply(urls)
+    guard let duration, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else {
+      WallpaperSetter.apply(assignments)
       return
     }
 
-    for (index, screen) in NSScreen.screens.enumerated() {
-      let incoming = index < urls.count ? urls[index] : fallback
+    for assignment in assignments {
+      let screen = assignment.screen
       if let current = NSWorkspace.shared.desktopImageURL(for: screen),
-        current.standardizedFileURL == incoming.standardizedFileURL
+        current.standardizedFileURL == assignment.url.standardizedFileURL
       { continue }
-      if let cover = makeCover(for: screen, showing: incoming) {
+      if let cover = makeCover(for: screen, showing: assignment.url) {
         cover.alphaValue = 0
         cover.orderFrontRegardless()
         covers.append(cover)
@@ -45,11 +42,11 @@ final class CrossfadeController {
     }
 
     guard !covers.isEmpty else {
-      WallpaperSetter.apply(urls)
+      WallpaperSetter.apply(assignments)
       return
     }
 
-    pendingURLs = urls
+    pendingAssignments = assignments
     let fading = covers
     fadeTask = Task { [weak self] in
       await NSAnimationContext.runAnimationGroup { context in
@@ -74,9 +71,9 @@ final class CrossfadeController {
   }
 
   private func setPendingWallpaper() {
-    guard let urls = pendingURLs else { return }
-    pendingURLs = nil
-    WallpaperSetter.apply(urls)
+    guard let assignments = pendingAssignments else { return }
+    pendingAssignments = nil
+    WallpaperSetter.apply(assignments)
   }
 
   private func removeCovers() {
