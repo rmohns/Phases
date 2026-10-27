@@ -13,8 +13,8 @@ Each phase has:
 |---|---|
 | Name | e.g. "Morning", "Night" |
 | Start trigger | When the phase begins (see §2) |
-| Images | One or more images chosen from the image library (multi-select), for **All Displays** |
-| Display images | Optional: a separate image selection for a specific display (see §4) |
+| Images (All Displays) | Images chosen from the library (multi-select). Used by every display that doesn't have its own selection (see §4) |
+| Images (per display) | Optional: a separate selection for a specific display, used instead of the All Displays images on that display (see §4) |
 | Order | Random or In order |
 | Rotation | Optional: change to the next image every N minutes or hours while the phase is active |
 | Appearance | Only in: **Any** (default), **Light**, or **Dark** mode (see §2a) |
@@ -28,11 +28,12 @@ dawn, at 2 am "Night" is active. If no timed phase qualifies, the first matching
 **Pure periodic changes** (no time-of-day switching) is just a single phase with
 the "Always" trigger plus a rotation interval.
 
-**When a phase starts**, the wallpaper changes immediately to that phase's first
-image (in order) or a random one. Rotation then continues within the phase.
+**When a phase starts**, each display changes immediately to the first image
+(in order) or a random one from the selection it uses: its own, or All
+Displays. Rotation then continues within the phase.
 
-**In order** cycles through the phase's selected images in filename order and
-remembers its position across launches. **Random** avoids repeating the current
+**In order** cycles through each selection in filename order and remembers its
+position across launches. **Random** avoids repeating the current
 image when there's more than one choice.
 
 ## 2. Start triggers
