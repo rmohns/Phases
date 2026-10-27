@@ -1,4 +1,4 @@
-# Phases — Specification (draft 6)
+# Phases — Specification (draft 7)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -201,34 +201,60 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
 
 ## 7. Interface
 
-### Menu bar menu
-- Icon: SF Symbol (e.g. `photo.on.rectangle`)
-- Active phase name and current image name
-- "Next change: Dusk phase at 6:12 pm" (or the next rotation time)
-- **Change Now**: advances to the next image in the active phase
-- **Pause / Resume** scheduling (saved across launches)
-- **Open Phases…**: opens the Phases window
-- **Quit Phases** (⌘Q)
+### Icons
+- **App icon:** the supplied artwork (landscape in a circle between two lunar
+  crescents, blue gradient).
+- **Menu bar icon:** the supplied 24×24 SVG line drawing, a simplified version
+  of the app icon. Rendered as a template image so macOS colors it for light
+  and dark menu bars, and sized to fit the menu bar.
 
-Only Quit has a keyboard shortcut. Shortcuts in a menu bar extra's menu work
-only while that menu is open, so others would be mostly decoration; Apple's own
-menu bar extras don't show them. ⌘Q stays as a familiar convention. No global
-hotkey.
+### Menu bar menu
+Kept short. Status is a single section header, not separate dimmed items,
+following the pattern of Apple's own menu bar extras (e.g. Time Machine's
+"Latest backup" line).
+
+- **Status header**, one line:
+  - "Dusk · until 7:13 PM": active phase and when the next phase starts
+    (weekday added if it's not today)
+  - "All Day": an active phase with no upcoming phase change
+  - "Dusk · Paused" while paused; "No active phase" if none applies
+- **Change Now**: advances to the next image in the active phase
+- **Pause Schedule** (checkmark when paused; saved across launches)
+- **Open Phases…**: opens the Phases window
+- If location access is denied and a phase needs it, one extra dimmed line
+  says so (§6).
+
+The current image's filename is not shown in the menu. There is no Quit item
+in the menu; Quit lives in the Phases window (below).
+
+No keyboard shortcuts in the menu. Shortcuts in a menu bar extra's menu work
+only while that menu is open, so they'd be decoration; Apple's own menu bar
+extras don't show them. No global hotkey.
 
 ### Phases window (one window for everything)
 - A single resizable window with a sidebar. There is no separate Settings
   window: with two windows, the wrong one kept getting opened (draft 3 split
   them; draft 6 merged them back).
-- **Sidebar:** the phase list, sorted by start time, with the active phase
-  marked and + / − buttons to add and remove phases. A **Settings** row (gear
-  icon) is pinned below the phases.
+- **Sidebar, top to bottom:**
+  1. **Branding** (decorative): the app icon and the name "Phases".
+  2. **"App" section:** a **Settings** row (gear icon). It sits at the top so
+     it's always visible however many phases there are; the HIG advises
+     against putting important items at the bottom of a sidebar, since window
+     bottoms often end up offscreen.
+  3. **"Phases" section:** the phase list, sorted by start time, with the
+     active phase marked. Phase rows are two lines (name plus trigger), which
+     also sets them apart from the one-line Settings row.
+  - + / − buttons below the list add and remove phases.
 - **Phase selected:** editor with name, trigger, offset, appearance condition,
   order, rotation, and the Images section (Display picker and thumbnail grid).
 - **Settings selected:** image folder and Include subfolders; display sharing
   preference (§4); transition and duration; Launch at Login; location status
-  with today's civil dawn and dusk and Update Now.
+  with today's civil dawn and dusk and Update Now; and a **Quit Phases** button
+  at the bottom, noting that quitting restores the original wallpaper (§8a).
+- **⌘Q** quits Phases whenever the Phases window is active.
 
-No Dock icon. The app runs as a menu bar accessory.
+No Dock icon. The app runs as a menu bar accessory, so it has no app menu;
+that's why Quit needs a home in the window.
 
 ## 8. Launch at login: explicit consent only
 
