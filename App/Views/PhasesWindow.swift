@@ -11,6 +11,12 @@ struct PhasesWindow: View {
   var body: some View {
     NavigationSplitView {
       List(selection: $selection) {
+        // First list item, so it scrolls away with long phase lists (spec §7).
+        SidebarBranding(scheduler: scheduler)
+          .selectionDisabled()
+          .listRowSeparator(.hidden)
+          .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 8, trailing: 8))
+
         Section("App") {
           Label("Settings", systemImage: "gearshape")
             .tag(SidebarItem.settings)
@@ -21,9 +27,6 @@ struct PhasesWindow: View {
               .tag(SidebarItem.phase(phase.id))
           }
         }
-      }
-      .safeAreaInset(edge: .top, spacing: 0) {
-        SidebarBranding()
       }
       .safeAreaInset(edge: .bottom, spacing: 0) {
         VStack(spacing: 0) {
@@ -82,21 +85,59 @@ struct PhasesWindow: View {
   }
 }
 
-/// Decorative app icon and name at the top of the sidebar.
+/// Decorative "mini screen" at the top of the sidebar: the app icon and name
+/// over the current wallpaper, or the icon's gradient before any is applied.
 private struct SidebarBranding: View {
+  var scheduler: WallpaperScheduler
+  @State private var wallpaper: NSImage?
+  @Environment(\.displayScale) private var displayScale
+
   var body: some View {
-    HStack(spacing: 8) {
-      Image(nsImage: NSApp.applicationIconImage)
-        .resizable()
-        .frame(width: 28, height: 28)
-        .accessibilityHidden(true)
-      Text("Phases")
-        .font(.title3.weight(.semibold))
-      Spacer()
-    }
-    .padding(.horizontal, 14)
-    .padding(.vertical, 8)
-    .accessibilityElement(children: .combine)
+    let shape = RoundedRectangle(cornerRadius: 10)
+    Color.clear
+      .aspectRatio(16 / 10, contentMode: .fit)
+      .frame(maxWidth: .infinity)
+      .background {
+        if let wallpaper {
+          Image(nsImage: wallpaper)
+            .resizable()
+            .scaledToFill()
+            .overlay(.black.opacity(0.35))
+        } else {
+          LinearGradient(
+            colors: [Color(red: 0.19, green: 0.53, blue: 0.94), Color(red: 0.29, green: 0.25, blue: 0.88)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+          )
+          .opacity(0.85)
+        }
+      }
+      .overlay {
+        VStack(spacing: 6) {
+          Image(nsImage: NSApp.applicationIconImage)
+            .resizable()
+            .frame(width: 64, height: 64)
+            .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+          Text("Phases")
+            .font(.title3.weight(.semibold))
+            .foregroundStyle(.white)
+            .shadow(color: .black.opacity(0.5), radius: 3, y: 1)
+        }
+      }
+      .clipShape(shape)
+      .overlay(shape.strokeBorder(.separator))
+      .animation(.smooth, value: wallpaper)
+      .task(id: scheduler.currentImageName) {
+        guard let name = scheduler.currentImageName else {
+          wallpaper = nil
+          return
+        }
+        if let image = await scheduler.library.thumbnail(for: name, size: CGSize(width: 240, height: 150), scale: displayScale) {
+          wallpaper = image
+        }
+      }
+      .accessibilityElement(children: .ignore)
+      .accessibilityLabel("Phases")
   }
 }
 
