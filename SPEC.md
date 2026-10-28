@@ -1,4 +1,4 @@
-# Phases — Specification (draft 15)
+# Phases — Specification (draft 16)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -306,6 +306,15 @@ extras don't show them. No global hotkey.
      also sets them apart from the one-line Settings row.
   - + / − buttons below the list add and remove phases. − removes the
     selected phase and is dimmed when no phase is selected.
+  - `[D-delete-selects-next]` **After deleting a phase, the next phase down
+    is selected.** That is the phase that moves into the deleted one's
+    place in the time-sorted list. If the deleted phase was last, the one
+    above it is selected; if no phases are left, Settings is selected.
+    - *Why:* draft 15 always jumped to the first phase, which threw away
+      the user's place in the list (found in testing, 2026-10-28). Mail and
+      Finder select the next item after a delete (recalled, not tested).
+      The HIG has no explicit rule about this; matching those apps follows
+      its general call for familiar, consistent behavior.
   - `[D-sidebar-footer-style]` **+ / − layout matches System Settings.**
     Reference: System Settings › General › Login Items & Extensions, the
     + / − under "Open at Login" (macOS 27). Measured from a screenshot
