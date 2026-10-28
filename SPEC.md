@@ -315,7 +315,7 @@ extras don't show them. No global hotkey.
     default size (about 9 pt wide, matching the reference).
     - *Why:* draft 14 placed the two icons side by side with no gap ("+−"),
       making them small, crowded targets. The pressed state is left as the
-      system draws it; see §13.
+      system draws it; see "Platform quirks".
   - `[D-sidebar-footer-view]` The + / − buttons are their own view, bound
     to the sidebar selection, not inline in the window's body.
     - *Why:* in draft 13, − did nothing (found in testing, 2026-10-28). The
