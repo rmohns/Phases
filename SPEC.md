@@ -328,9 +328,12 @@ extras don't show them. No global hotkey.
   - `[D-footer-ax-labels]` **+ and − carry explicit accessibility labels**
     ("Add Phase", "Delete Phase"), set on the buttons themselves, so
     VoiceOver and other assistive tools can name them.
-    - *Why:* in draft 16 both buttons reached Accessibility with no title or
-      description; VoiceOver would announce each as just "button" (found in
-      testing, 2026-10-28). See "Platform quirks".
+    - *Why:* a 2026-10-28 test suggested the draft 16 buttons had no
+      accessibility name, but that reading came from System Events, which
+      turned out not to see these descriptions at all (see "Platform
+      quirks"). So the original gap is unconfirmed. The explicit labels stay
+      as cheap insurance; with them, the AX API reports "Add Phase" and
+      "Delete Phase" (verified 2026-10-28).
   - `[D-sidebar-footer-view]` The + / − buttons are their own view, bound
     to the sidebar selection, not inline in the window's body.
     - *Why:* in draft 13, − did nothing (found in testing, 2026-10-28). The
@@ -500,13 +503,15 @@ they shaped.
   stayed disabled; moving the bar into its own view with a binding fixed it
   (fix verified by the author, 2026-10-28). Shaped
   `[D-sidebar-footer-view]`.
-- **SwiftUI: an icon-only `Label` wrapped in `.frame`/`.contentShape`
-  inside a `Button` loses its title in Accessibility (macOS 27).** *Verified*
-  2026-10-28 by reading the AX tree: the + / − buttons had no AXTitle,
-  AXDescription, or children. The cause is *recalled*, not verified: the
-  wrapped content may no longer be treated as a `Label`, so nothing passes
-  the hidden title to the button. An explicit `.accessibilityLabel` on the
-  `Button` sidesteps it `[D-footer-ax-labels]`.
+- **System Events (AppleScript) doesn't report SwiftUI button
+  descriptions (macOS 27).** *Verified* 2026-10-28: for the + / − buttons,
+  System Events' `description` returned only "button" and found no
+  AXDescription, while the AX API (`AXUIElementCopyAttributeValue`) read
+  "Add Phase" / "Delete Phase" from the same buttons. Check accessibility
+  labels with the AX API or Accessibility Inspector, not System Events.
+  Whether an icon-only `Label` wrapped in `.frame`/`.contentShape` loses its
+  title on its own is *unverified*; `[D-footer-ax-labels]` sets the label
+  explicitly either way.
 - **SwiftUI: borderless buttons show their pressed state only by darkening
   the icon (macOS 27).** *Verified* 2026-10-28 by holding the mouse down
   and measuring screenshots: Phases' + went from 0.53 to 0.18 gray; System
