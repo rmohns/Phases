@@ -15,7 +15,7 @@
     "Phases": {
       "deploymentTarget": "26.0",
       "info": {
-        "path": "App\/Info.plist",
+        "path": "App/Info.plist",
         "properties": {
           "CFBundleDisplayName": "Phases",
           "CFBundleShortVersionString": "1.0",
@@ -42,7 +42,42 @@
           "path": "App"
         }
       ],
-      "type": "application"
+      "type": "application",
+      "scheme": {
+        "testTargets": [
+          "PhasesTests"
+        ]
+      }
+    },
+    "PhasesTests": {
+      "type": "bundle.unit-test",
+      "platform": "macOS",
+      "deploymentTarget": "26.0",
+      "sources": [
+        {
+          "path": "Tests"
+        },
+        {
+          "path": "App/Model/Phase.swift"
+        },
+        {
+          "path": "App/Model/ScheduleEngine.swift"
+        },
+        {
+          "path": "App/Model/SolarCalculator.swift"
+        },
+        {
+          "path": "App/Model/PhaseListSelection.swift"
+        },
+        {
+          "path": "App/Views/ImageGridNavigation.swift"
+        }
+      ],
+      "settings": {
+        "GENERATE_INFOPLIST_FILE": "YES",
+        "PRODUCT_BUNDLE_IDENTIFIER": "app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268.tests",
+        "SWIFT_VERSION": "5.0"
+      }
     }
   }
 }

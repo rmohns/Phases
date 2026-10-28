@@ -109,10 +109,9 @@ private struct SidebarFooter: View {
           guard let id = selectedPhaseID else { return }
           // [D-delete-selects-next] Select the phase that takes the deleted
           // one's place, or the one above if it was last.
-          let index = scheduler.phasesByTime.firstIndex { $0.id == id } ?? 0
+          let next = PhaseListSelection.afterDeleting(id, from: scheduler.phasesByTime.map(\.id))
           scheduler.deletePhase(id: id)
-          let remaining = scheduler.phasesByTime
-          selection = remaining.isEmpty ? .settings : .phase(remaining[min(index, remaining.count - 1)].id)
+          selection = next.map { .phase($0) } ?? .settings
         } label: {
           cell("Delete Phase", systemImage: "minus")
         }
