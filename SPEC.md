@@ -1,4 +1,4 @@
-# Phases — Specification (draft 21)
+# Phases — Specification (draft 22)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -158,6 +158,24 @@ image when there's more than one choice.
 
 - Changes apply to the current Space on each display (macOS limitation; see §9).
 
+### When displays change
+- `[D-screen-change-no-reroll]` When macOS reports a display change
+  (connect, disconnect, resolution, arrangement, or anything else that
+  changes screen geometry), Phases updates its list of known displays and
+  then runs its normal check (the same one used after wake). The wallpaper
+  changes only if something no longer fits: a newly connected display has
+  no image yet, or a display's image isn't in its selection. Otherwise
+  nothing changes. A screen change never by itself picks new images.
+  - *Why:* draft 21 re-applied the active phase on every display change.
+    With Random order, that picked a new image each time. macOS sends the
+    same notification when the Dock is hidden or shown and when "Show menu
+    bar background" is toggled, so those started a crossfade to a new
+    image (found in testing, 2026-10-28, on macOS 27.2; see "Platform
+    quirks").
+  - When a change is needed, the whole phase is re-applied, so with Random
+    a newly connected display can also give the other displays new picks.
+    Unchanged from earlier drafts.
+
 ## 4a. Transitions
 
 - **App preference: Transition**: None or **Crossfade** (default).
@@ -176,9 +194,17 @@ image when there's more than one choice.
      The real wallpaper hasn't changed yet.
   3. **Switch:** the new wallpaper is set behind the now-opaque cover, which
      shows the identical image.
-  4. **Remove:** after a short settle delay (0.5 s) to let macOS finish drawing
-     the new wallpaper, the cover is removed. This is invisible, since the
+  4. **Remove:** `[D-cover-settle]` after a settle delay of **1.5 s**, to let
+     macOS finish drawing the new wallpaper (including its own brief
+     change motion), the cover is removed. This is invisible, since the
      cover and the wallpaper match.
+     - *Why 1.5 s:* macOS shows an app-set wallpaper about 0.55–0.65 s
+       after Phases sets it, then plays about 0.13 s of its own motion
+       (see "Platform quirks"). Draft 5's 0.5 s delay removed the cover
+       right as that motion played, bringing the twitch back (see "The
+       twitch returns" below). 1.5 s leaves about 0.7 s of margin. A
+       longer-lived cover can't be seen, because it shows the same image
+       as the wallpaper behind it.
 - The cover draws the incoming image the way macOS will, using that screen's
   scaling (fill, fit, stretch, or center) and fill color.
 - `[D-no-screenshots]` The cover is drawn from the image file. No screenshots and no Screen
@@ -216,6 +242,31 @@ workarounds were removed as no longer needed.
 
 A side benefit: the old wallpaper is never redrawn, so crossfades now work when
 the outgoing wallpaper is an Aerial.
+
+### The twitch returns (2026-10-28, draft 22)
+
+The twitch came back on macOS 27.2, on one display or two. A frame-by-frame
+analysis of a screen recording (seven changes) showed:
+
+- The fade itself is smooth, and the cover matches the final wallpaper
+  exactly (before and after differ only at noise level). So the cover's
+  image and geometry aren't the cause.
+- The twitch is about 0.13 s of the image shifting and settling back. It
+  starts 0.55–0.65 s after the fade ends, in the same frames as the menu
+  bar restyle: that's when macOS actually shows the new wallpaper.
+- The cover was removed 0.5 s after the fade ended `[D-cover-settle]`, just
+  before macOS's own motion, so the motion showed through.
+
+The crossfade code's timing hadn't changed since draft 5. The author
+believes (not certain) the original fix was tested on macOS 27.1, so
+macOS 27.2 may have made wallpaper changes slower. That's unconfirmed; the
+draft 5 timing may also have been marginal from the start. The fix is a
+longer settle delay (1.5 s), not a new mechanism. See "Platform quirks" for
+the measured macOS behavior.
+
+The same recording showed a second, separate problem: turning System
+Settings' "Show menu bar background" on or off started a crossfade to a new
+image. See `[D-screen-change-no-reroll]` (§4).
 
 ## 5. Missed changes: sleep, wake, unlock
 
@@ -606,6 +657,24 @@ date) or is **recalled** (believed from past knowledge, not tested here).
 Add new quirks here when they're found; link them from the `[D-…]` decision
 they shaped.
 
+- **macOS: an app-set wallpaper appears about 0.55–0.65 s after
+  `setDesktopImageURL` returns, followed by about 0.13 s of macOS's own
+  motion (macOS 27.2).** *Measured* 2026-10-28 from a 30 fps screen
+  recording of seven Phases changes on one display: the menu bar restyle
+  and a brief shift-and-settle of the wallpaper image both land
+  0.55–0.65 s after the fade ends, which is when Phases sets the
+  wallpaper. Whether macOS 27.1 was faster is *unknown*: the draft 5 fix
+  worked then with a 0.5 s delay, and the author believes (not certain)
+  that was on 27.1. Shapes `[D-cover-settle]`; history in "The twitch
+  returns" (§4a). If the twitch comes back again, measure this delay
+  first, the same way.
+- **AppKit: `NSApplication.didChangeScreenParametersNotification` fires
+  for more than display changes (macOS 27.2).** *Verified* 2026-10-28 by
+  the author: hiding or showing the Dock, and toggling System Settings ›
+  Menu Bar › "Show menu bar background", each started a Phases crossfade,
+  which only that notification could trigger. The likely reason, that
+  these change each screen's visible frame, is *recalled*, not checked.
+  Display UUIDs don't change. Shapes `[D-screen-change-no-reroll]` (§4).
 - **SwiftUI: a window with no toolbar items gets no toolbar at all, so
   `.windowToolbarStyle(.unified)` has no effect and the title bar stays
   short (macOS 27).** *Verified* 2026-10-28: after removing the sidebar
@@ -732,7 +801,7 @@ were found in the commit history, not in this spec.
 | Found | What broke | Fix | Guarded by |
 |---|---|---|---|
 | 2026-10-25 | Long image folder names in Settings were truncated badly (*git only*, commit 4e86957) | Middle truncation, full path in a tooltip | Nothing yet; visual only (AX reports the full name), so a screenshot check |
-| 2026-10-26 (draft 4) | Crossfade flashed the new image and twitched before fading; menu bar blinked to the new styling at the start | Fade the new image in and set the wallpaper at the end `[D-fade-in]` | Not suited to XCUITest (frame timing); checked with frame-by-frame recordings |
+| 2026-10-26 (draft 4) | Crossfade flashed the new image and twitched before fading; menu bar blinked to the new styling at the start | Fade the new image in and set the wallpaper at the end `[D-fade-in]` | Not suited to XCUITest (frame timing); checked with frame-by-frame recordings. Twitch returned on macOS 27.2 (see the draft 21 row below) |
 | 2026-10-27 (draft 10) | Branding tagline cut off after its first line, because sidebar rows default to one line (*git only*, commit 58555d3) | Allow two lines on the tagline | Nothing yet; visual only (the panel's AX label is fixed text), so a screenshot check |
 | 2026-10-28 | Dragging the sidebar divider past its minimum collapsed the sidebar, with no way to reopen it; the first fix flickered and broke the 240 pt minimum | Non-collapsible split view item `[D-sidebar-always-visible]` | **UI test:** drag the divider far left; the sidebar stays at least 240 pt wide |
 | 2026-10-28 (draft 13) | − did nothing: it started disabled and never re-enabled when a phase was selected | +/− bar as its own view bound to the selection `[D-sidebar-footer-view]` | **UI test:** select a phase, click Delete Phase; the phase is gone |
@@ -741,3 +810,5 @@ were found in the commit history, not in this spec.
 | 2026-10-28 (draft 19) | Tab visited only the on-screen thumbnails, didn't scroll, then jumped back to the sidebar | Grid is one Tab stop with an arrow-key cursor `[D-grid-one-tab-stop]` | Unit test for arrow movement (Layer 1); **UI test:** Tab enters and leaves the grid in one stop, and arrowing down past the visible rows scrolls |
 | 2026-10-28 | Title bar became short and crowded after the sidebar toggle was removed; then the fix made it 66 pt tall | Hand-made empty unified toolbar, icon-only `[D-tall-toolbar]` | Nothing yet; a screenshot check (toolbar 52 pt). Cause of the 66 pt only theorized |
 | 2026-10-28 | Sidebar could be dragged far below 240 pt and far above 320 pt again, right after the toolbar helper was added | One helper, toolbar first, then sidebar limits `[D-window-helper-order]` | **UI test:** drag the divider both ways; width stays 240–320. Appears fixed; cause not proven, never caught in a log |
+| 2026-10-28 (draft 21, macOS 27.2) | The crossfade twitch returned: the cover was removed while macOS was still showing the new wallpaper | Settle delay raised from 0.5 s to 1.5 s `[D-cover-settle]`; see "The twitch returns" (§4a) | Not suited to XCUITest (frame timing); checked with frame-by-frame recordings |
+| 2026-10-28 (draft 21) | Hiding the Dock or toggling "Show menu bar background" crossfaded to a new image | Screen changes run the normal check instead of re-applying `[D-screen-change-no-reroll]` | Nothing yet; a unit test would need the scheduler's check pulled out of `WallpaperScheduler` |
