@@ -17,6 +17,9 @@ struct AppDefinition: App {
       PhasesWindow(scheduler: scheduler)
     }
     .defaultSize(width: 960, height: 680)
+    // [D-tall-toolbar] Tall unified toolbar over the detail pane, even with
+    // no toolbar buttons.
+    .windowToolbarStyle(.unified)
     .defaultLaunchBehavior(.suppressed)
   }
 
