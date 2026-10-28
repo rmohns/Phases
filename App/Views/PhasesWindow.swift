@@ -17,7 +17,9 @@ struct PhasesWindow: View {
         SidebarBranding(scheduler: scheduler)
           .selectionDisabled()
           .listRowSeparator(.hidden)
-          .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 8, trailing: 8))
+          // [D-brand-inset] Negative insets cancel the list's own row
+          // padding so the panel's edges match the selection highlight.
+          .listRowInsets(EdgeInsets(top: 4, leading: -6, bottom: 8, trailing: -6))
 
         // [D-settings-at-top] Above the phases, so it's never pushed offscreen.
         Section("App") {
