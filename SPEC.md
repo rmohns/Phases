@@ -320,6 +320,19 @@ extras don't show them. No global hotkey.
     branding panel's fixed-size icon and text looked lost in a huge panel
     (found in testing, 2026-10-27). 320 pt leaves room for long phase names
     while keeping the editor the primary area.
+- `[D-sidebar-always-visible]` **The sidebar can't be hidden.** There is no
+  sidebar toggle button, and dragging the divider past the minimum width
+  doesn't collapse it.
+  - *Why:* the sidebar is the window's only navigation (Settings and every
+    phase), so hiding it leaves an editor with no visible way to anything
+    else. As a menu bar accessory, Phases has no View › Show Sidebar menu item
+    to recover with. The editor is a form, so hiding a ≤ 320 pt sidebar gains
+    nothing.
+  - The `[D-sidebar-width]` minimum does **not** prevent collapsing: macOS
+    snaps a sidebar shut when its divider is dragged past the minimum, and
+    since the sidebar opens at its minimum, a short leftward drag closed it
+    (reproduced 2026-10-28). Removing the toggle alone would have made that
+    unrecoverable except by dragging the window's edge.
 - **Phase selected:** editor with name, trigger, offset, appearance condition,
   order, rotation, and the Images section (Display picker and thumbnail grid).
 - **Settings selected:** image folder and Include subfolders; display sharing
