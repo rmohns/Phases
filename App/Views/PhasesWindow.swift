@@ -92,6 +92,9 @@ private struct SidebarFooter: View {
         } label: {
           cell("Add Phase", systemImage: "plus")
         }
+        // [D-footer-ax-labels] The wrapped icon-only Label doesn't pass its
+        // title through, so name the button explicitly.
+        .accessibilityLabel("Add Phase")
         Rectangle()
           .fill(.separator)
           .frame(width: 1, height: 16)
@@ -106,6 +109,7 @@ private struct SidebarFooter: View {
         } label: {
           cell("Delete Phase", systemImage: "minus")
         }
+        .accessibilityLabel("Delete Phase")
         .disabled(selectedPhaseID == nil)
         Spacer()
       }
