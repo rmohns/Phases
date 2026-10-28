@@ -1,4 +1,4 @@
-# Phases — Specification (draft 7)
+# Phases — Specification (draft 8)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -204,9 +204,15 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
 ### Icons
 - **App icon:** the supplied artwork (landscape in a circle between two lunar
   crescents, blue gradient).
-- **Menu bar icon:** the supplied 24×24 SVG line drawing, a simplified version
-  of the app icon. Rendered as a template image so macOS colors it for light
-  and dark menu bars, and sized to fit the menu bar.
+- **Menu bar icon:** a simplified version of the app icon, drawn for legibility
+  at menu bar size: a bold photo circle (about two-thirds of the width) with a
+  filled sun and filled mountains clipped inside, flanked by two solid
+  crescents set close to the ring. Rendered as a template image so macOS colors
+  it for light and dark menu bars, drawn at 20 pt.
+  - *Why:* the first version (draft 7) used thin outlines throughout; at 20 pt
+    the inner landscape became a squiggle and the outlined crescents blurred.
+    Solid shapes and a larger central circle fixed it, checked by rendering
+    both at actual menu bar pixel sizes.
 
 ### Menu bar menu
 Kept short. Status is a single section header, not separate dimmed items,
@@ -236,7 +242,16 @@ extras don't show them. No global hotkey.
   window: with two windows, the wrong one kept getting opened (draft 3 split
   them; draft 6 merged them back).
 - **Sidebar, top to bottom:**
-  1. **Branding** (decorative): the app icon and the name "Phases".
+  1. **Branding panel** (decorative): a rounded panel in a 16:10 aspect ratio,
+     like a laptop screen, spanning the sidebar's width (about 215 × 135 pt at
+     the default width). The app icon (about 64 pt) is centered, with "Phases"
+     centered underneath in a semibold title font.
+     - **Background:** a soft blue-to-indigo gradient taken from the app icon
+       until Phases has applied a wallpaper; after that, the wallpaper
+       currently on the main display, dimmed so the icon and name stay
+       legible. It updates when the wallpaper changes.
+     - It's the first item in the sidebar list, so it **scrolls away** when
+       there are enough phases to scroll; it's never pinned.
   2. **"App" section:** a **Settings** row (gear icon). It sits at the top so
      it's always visible however many phases there are; the HIG advises
      against putting important items at the bottom of a sidebar, since window
