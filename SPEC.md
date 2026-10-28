@@ -1,4 +1,4 @@
-# Phases — Specification (draft 16)
+# Phases — Specification (draft 17)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -325,6 +325,12 @@ extras don't show them. No global hotkey.
     - *Why:* draft 14 placed the two icons side by side with no gap ("+−"),
       making them small, crowded targets. The pressed state is left as the
       system draws it; see "Platform quirks".
+  - `[D-footer-ax-labels]` **+ and − carry explicit accessibility labels**
+    ("Add Phase", "Delete Phase"), set on the buttons themselves, so
+    VoiceOver and other assistive tools can name them.
+    - *Why:* in draft 16 both buttons reached Accessibility with no title or
+      description; VoiceOver would announce each as just "button" (found in
+      testing, 2026-10-28). See "Platform quirks".
   - `[D-sidebar-footer-view]` The + / − buttons are their own view, bound
     to the sidebar selection, not inline in the window's body.
     - *Why:* in draft 13, − did nothing (found in testing, 2026-10-28). The
@@ -494,6 +500,13 @@ they shaped.
   stayed disabled; moving the bar into its own view with a binding fixed it
   (fix verified by the author, 2026-10-28). Shaped
   `[D-sidebar-footer-view]`.
+- **SwiftUI: an icon-only `Label` wrapped in `.frame`/`.contentShape`
+  inside a `Button` loses its title in Accessibility (macOS 27).** *Verified*
+  2026-10-28 by reading the AX tree: the + / − buttons had no AXTitle,
+  AXDescription, or children. The cause is *recalled*, not verified: the
+  wrapped content may no longer be treated as a `Label`, so nothing passes
+  the hidden title to the button. An explicit `.accessibilityLabel` on the
+  `Button` sidesteps it `[D-footer-ax-labels]`.
 - **SwiftUI: borderless buttons show their pressed state only by darkening
   the icon (macOS 27).** *Verified* 2026-10-28 by holding the mouse down
   and measuring screenshots: Phases' + went from 0.53 to 0.18 gray; System
