@@ -43,7 +43,8 @@ struct PhasesWindow: View {
       // [D-sidebar-width] Opens at the 240 pt minimum; widens to 320 pt.
       .navigationSplitViewColumnWidth(min: 240, ideal: 240, max: 320)
       .background {
-        SidebarSplitItemConfigurator(minWidth: 240, maxWidth: 320)
+        // [D-window-helper-order] Toolbar, then sidebar limits, in one helper.
+        WindowLayoutConfigurator(sidebarMinWidth: 240, sidebarMaxWidth: 320)
       }
       // [D-sidebar-always-visible] No toggle button; the configurator above
       // stops drags from collapsing it.
@@ -62,10 +63,6 @@ struct PhasesWindow: View {
           description: Text("Select a phase, or add one with the + button.")
         )
       }
-    }
-    .background {
-      // [D-tall-toolbar] SwiftUI makes no toolbar when there are no items.
-      WindowToolbarConfigurator()
     }
     .background {
       // [D-quit-in-window] ⌘Q while this window is active. Phases has no app
