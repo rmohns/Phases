@@ -1,5 +1,6 @@
 import SwiftUI
 import Testing
+@testable import PhasesLogic
 
 /// Arrow-key movement in the thumbnail grid `[D-grid-one-tab-stop]`.
 /// Three columns; rows are [a b c] [d e] in the top folder, then [f g] under

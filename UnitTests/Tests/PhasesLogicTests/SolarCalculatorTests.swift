@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+@testable import PhasesLogic
 
 /// Expected times are recalled almanac values for the Boston area; see
 /// SPEC.md "Testing" for why the tolerance is ±10 minutes.

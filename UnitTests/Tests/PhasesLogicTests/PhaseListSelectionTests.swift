@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+@testable import PhasesLogic
 
 /// Selection after deleting a phase `[D-delete-selects-next]`.
 struct PhaseListSelectionTests {

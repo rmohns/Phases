@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+@testable import PhasesLogic
 
 struct ScheduleEngineTests {
   private let morning = Phase(name: "Morning", trigger: .clockTime(minutes: 7 * 60))
