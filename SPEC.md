@@ -1,4 +1,4 @@
-# Phases — Specification (draft 12)
+# Phases — Specification (draft 13)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -324,8 +324,9 @@ extras don't show them. No global hotkey.
   order, rotation, and the Images section (Display picker and thumbnail grid).
 - **Settings selected:** image folder and Include subfolders; display sharing
   preference (§4); transition and duration; Launch at Login; location status
-  with today's civil dawn and dusk and Update Now; and a **Quit Phases** button
-  at the bottom, noting that quitting restores the original wallpaper (§8a).
+  with today's civil dawn and dusk and Update Now; and, at the bottom, a
+  **Quit** section with the **Restore original wallpaper when quitting** toggle
+  and a **Quit Phases** button whose note says what quitting will do (§8a).
 - `[D-quit-in-window]` **⌘Q** quits Phases whenever the Phases window is
   active, and Settings has the Quit Phases button (above).
 
@@ -353,9 +354,18 @@ that's why Quit needs a home in the window.
   wallpaper (image file plus fill/scaling options), keyed by display ID.
 - The record is saved to disk and kept until it's been restored. After a crash
   or Force Quit, the next launch reuses it instead of recording Phases' own image.
-- `[D-restore-on-quit]` On an actual **Quit**, Phases restores each display's original and clears the
-  record. Logout, restart, shutdown, and **Pause** leave the current image in
-  place; at logout the record is kept for the next launch.
+- `[D-restore-on-quit]` **App preference: Restore original wallpaper when
+  quitting**, **on by default**. When on, an actual **Quit** restores each
+  display's original and clears the record. When off, Quit leaves Phases'
+  current image in place and clears the record, so the kept image becomes the
+  "original" the next launch records.
+  - *Why a preference:* restoring is what the author expects (Phases' images
+    belong to Phases), but someone else may expect the wallpaper to stay as
+    it is after the app quits. Both are valid ways to use the app. Draft 12
+    and earlier always restored.
+  - Logout, restart, shutdown, and **Pause** leave the current image in
+    place regardless of the setting; at logout the record is kept for the
+    next launch.
 - `[D-aerials-untouched]` **Aerials and other system wallpapers:** Phases
   reads (never writes) macOS's
   wallpaper store to detect them. The public API can't restore them, so those
