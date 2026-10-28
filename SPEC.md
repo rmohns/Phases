@@ -1,4 +1,4 @@
-# Phases — Specification (draft 13)
+# Phases — Specification (draft 14)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -304,7 +304,16 @@ extras don't show them. No global hotkey.
   3. **"Phases" section:** the phase list, sorted by start time, with the
      active phase marked. Phase rows are two lines (name plus trigger), which
      also sets them apart from the one-line Settings row.
-  - + / − buttons below the list add and remove phases.
+  - + / − buttons below the list add and remove phases. − removes the
+    selected phase and is dimmed when no phase is selected.
+  - `[D-sidebar-footer-view]` The + / − buttons are their own view, bound
+    to the sidebar selection, not inline in the window's body.
+    - *Why:* in draft 13, − did nothing (found in testing, 2026-10-28). The
+      buttons sit in a bar pinned below the sidebar list, and macOS SwiftUI
+      doesn't reliably refresh that bar when the selection changes. The
+      window opens with nothing selected, so − started disabled and stayed
+      that way. A separate view with its own binding to the selection is
+      refreshed whenever the selection changes, and reads it at click time.
 - `[D-sidebar-width]` **Sidebar width:** resizable from **240 pt** (minimum and default) to
   **320 pt** (maximum). The sidebar opens at its narrowest and can only be
   widened.
