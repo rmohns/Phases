@@ -31,23 +31,9 @@ struct PhasesWindow: View {
         }
       }
       .safeAreaInset(edge: .bottom, spacing: 0) {
-        VStack(spacing: 0) {
-          Divider()
-          HStack(spacing: 0) {
-            Button("Add Phase", systemImage: "plus") {
-              selection = .phase(scheduler.addPhase().id)
-            }
-            Button("Delete Phase", systemImage: "minus") {
-              if case .phase(let id) = selection { scheduler.deletePhase(id: id) }
-              selection = scheduler.phasesByTime.first.map { .phase($0.id) }
-            }
-            .disabled(selectedPhaseID == nil)
-            Spacer()
-          }
-          .labelStyle(.iconOnly)
-          .buttonStyle(.borderless)
-          .padding(6)
-        }
+        // [D-sidebar-footer-view] Its own view with a binding, so it
+        // refreshes when the selection changes.
+        SidebarFooter(scheduler: scheduler, selection: $selection)
       }
       // [D-sidebar-width] Opens at the 240 pt minimum; widens to 320 pt.
       .navigationSplitViewColumnWidth(min: 240, ideal: 240, max: 320)
@@ -86,6 +72,33 @@ struct PhasesWindow: View {
       if selection == nil {
         selection = (scheduler.activePhase ?? scheduler.phasesByTime.first).map { .phase($0.id) } ?? .settings
       }
+    }
+  }
+}
+
+/// The + / − bar pinned below the sidebar list.
+private struct SidebarFooter: View {
+  var scheduler: WallpaperScheduler
+  @Binding var selection: SidebarItem?
+
+  var body: some View {
+    VStack(spacing: 0) {
+      Divider()
+      HStack(spacing: 0) {
+        Button("Add Phase", systemImage: "plus") {
+          selection = .phase(scheduler.addPhase().id)
+        }
+        Button("Delete Phase", systemImage: "minus") {
+          guard let id = selectedPhaseID else { return }
+          scheduler.deletePhase(id: id)
+          selection = scheduler.phasesByTime.first.map { .phase($0.id) } ?? .settings
+        }
+        .disabled(selectedPhaseID == nil)
+        Spacer()
+      }
+      .labelStyle(.iconOnly)
+      .buttonStyle(.borderless)
+      .padding(6)
     }
   }
 
