@@ -514,7 +514,9 @@ they shaped.
   focusing the first text field when the window opens (macOS 27).**
   *Verified* 2026-10-28 by the author, across several relaunches: with
   `.focused` + `.defaultFocus` on the List, the phase's Name field still
-  opened focused with its text selected. Cause not yet known. Shapes
+  opened focused with its text selected. The AX API confirmed it: the
+  focused element is the Name text field, with all of its text selected
+  (2026-10-28). Why `.defaultFocus` loses is not yet known. Shapes
   `[D-initial-focus-sidebar]`.
 - **System Events (AppleScript) doesn't report SwiftUI button
   descriptions (macOS 27).** *Verified* 2026-10-28: for the + / − buttons,
