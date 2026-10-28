@@ -1,4 +1,4 @@
-# Phases — Specification (draft 9)
+# Phases — Specification (draft 10)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -243,11 +243,18 @@ extras don't show them. No global hotkey.
   them; draft 6 merged them back).
 - **Sidebar, top to bottom:**
   1. **Branding panel** (decorative): a rounded panel in a 16:10 aspect ratio,
-     like a laptop screen, spanning the sidebar's width (about 215 × 135 pt at
-     the default width). The app icon (about 64 pt) is centered, with "Phases"
-     centered underneath in a semibold title font, and the tagline "Wallpaper
-     sets for every phase of your day" centered below that in a small font
-     (wrapping to two lines if the sidebar is narrow).
+     like a laptop screen, spanning the sidebar's width (about 191 × 119 pt at
+     the default sidebar width, measured from the running app). Centered, top
+     to bottom:
+     - the app icon, about 52 pt
+     - "Phases" in a semibold title font
+     - the tagline in two balanced lines, 12 pt light, with a deliberate break:
+       "Wallpaper for every / phase of your day"
+     - *Why:* the first tagline ("Wallpaper sets for every phase of your
+       day", 10 pt) wrapped awkwardly and was hard to read; with a 64 pt icon
+       the contents filled the whole panel height. Shorter text, a chosen line
+       break, and a smaller icon fixed both (compared in mockups at the
+       panel's real size).
      - **Background:** a soft blue-to-indigo gradient taken from the app icon
        until Phases has applied a wallpaper; after that, the wallpaper
        currently on the main display. It updates when the wallpaper changes.
