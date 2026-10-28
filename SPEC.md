@@ -255,6 +255,12 @@ extras don't show them. No global hotkey.
        the contents filled the whole panel height. Shorter text, a chosen line
        break, and a smaller icon fixed both (compared in mockups at the
        panel's real size).
+     - **Fixed text sizes:** the name (15 pt semibold) and tagline (12 pt
+       light) use fixed point sizes, not system text styles, so the panel
+       looks the same at every Sidebar icon size and Text size setting. It's
+       a fixed-shape decorative graphic with no room for text to grow; the
+       rest of the window scales normally. VoiceOver reads the name and
+       tagline from the panel's accessibility label.
      - **Background:** a soft blue-to-indigo gradient taken from the app icon
        until Phases has applied a wallpaper; after that, the wallpaper
        currently on the main display. It updates when the wallpaper changes.
