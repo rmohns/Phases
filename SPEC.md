@@ -333,6 +333,14 @@ extras don't show them. No global hotkey.
     since the sidebar opens at its minimum, a short leftward drag closed it
     (reproduced 2026-10-28). Removing the toggle alone would have made that
     unrecoverable except by dragging the window's edge.
+  - *How:* the sidebar's underlying AppKit split view item is marked as
+    not collapsible, with its minimum and maximum thickness set from
+    `[D-sidebar-width]`, so dragging stops at 240 pt.
+  - *Design history:* the first version (2026-10-28) let the sidebar
+    collapse and reopened it right away. In testing, the sidebar flickered
+    closed and open on every mouse move during the drag, and the 240 pt
+    minimum stopped working (it shrank to about 90 pt). Replaced with the
+    non-collapsible split view item.
 - **Phase selected:** editor with name, trigger, offset, appearance condition,
   order, rotation, and the Images section (Display picker and thumbnail grid).
 - **Settings selected:** image folder and Include subfolders; display sharing
