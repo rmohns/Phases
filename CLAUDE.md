@@ -16,3 +16,6 @@
   decisions"). Before changing tagged code, re-read the decision; if the
   change contradicts it, say so and update the spec first. Tag new deliberate
   choices when adding them to the spec.
+- **Platform quirks:** framework/OS quirks live in SPEC.md §13, each marked
+  verified (with date) or recalled. Check there before blaming or working
+  around SwiftUI/AppKit behavior, and add new quirks there when found.

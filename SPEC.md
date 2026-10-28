@@ -1,4 +1,4 @@
-# Phases — Specification (draft 14)
+# Phases — Specification (draft 15)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -306,6 +306,16 @@ extras don't show them. No global hotkey.
      also sets them apart from the one-line Settings row.
   - + / − buttons below the list add and remove phases. − removes the
     selected phase and is dimmed when no phase is selected.
+  - `[D-sidebar-footer-style]` **+ / − layout matches System Settings.**
+    Reference: System Settings › General › Login Items & Extensions, the
+    + / − under "Open at Login" (macOS 27). Measured from a screenshot
+    (2026-10-28): each button is a 24 × 23 pt cell, with a 1 pt vertical
+    divider, 16 pt tall and centered, between the two; the whole cell is
+    clickable. The divider uses the system separator color. Glyphs stay the
+    default size (about 9 pt wide, matching the reference).
+    - *Why:* draft 14 placed the two icons side by side with no gap ("+−"),
+      making them small, crowded targets. The pressed state is left as the
+      system draws it; see §13.
   - `[D-sidebar-footer-view]` The + / − buttons are their own view, bound
     to the sidebar selection, not inline in the window's body.
     - *Why:* in draft 13, − did nothing (found in testing, 2026-10-28). The
@@ -460,3 +470,30 @@ data. Phases saved by earlier versions load unchanged (no per-display images).
   Reported to Apple: **FB25326597** (2026-10-27).
 - Bartender (menu bar manager) caused additional odd menu bar behavior during
   testing. Not a Phases issue.
+
+## 13. Platform quirks
+
+Framework and OS behavior that affects Phases' code and is easy to trip
+over. Each entry says whether it was **verified** (tested or measured, with
+date) or is **recalled** (believed from past knowledge, not tested here).
+Add new quirks here when they're found; link them from the `[D-…]` decision
+they shaped.
+
+- **SwiftUI: content in a List's `.safeAreaInset` may not refresh when the
+  parent view's state changes (macOS).** *Recalled*, not verified against
+  Apple documentation or a bug report. Matches the draft 13 bug where −
+  stayed disabled; moving the bar into its own view with a binding fixed it
+  (fix verified by the author, 2026-10-28). Shaped
+  `[D-sidebar-footer-view]`.
+- **SwiftUI: borderless buttons show their pressed state only by darkening
+  the icon (macOS 27).** *Verified* 2026-10-28 by holding the mouse down
+  and measuring screenshots: Phases' + went from 0.53 to 0.18 gray; System
+  Settings' Login Items + went from 0.52 to 0.35. There's no background or
+  whole-area highlight, and the change sits under the mouse pointer, so
+  it's easy to miss. Earlier macOS versions highlighted the whole button
+  more clearly (author's recollection). Same as Apple's own +/− bars, so
+  Phases matches it for now `[D-sidebar-footer-style]`.
+  - **Possible future TODO:** revisit (a) a custom pressed state that
+    highlights the whole 24 × 23 pt cell, and (b) how the system style
+    behaves on earlier macOS versions Phases supports (deployment target is
+    macOS 26; only macOS 27 was tested).
