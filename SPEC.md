@@ -289,9 +289,21 @@ extras don't show them. No global hotkey.
   them; draft 6 merged them back).
 - **Sidebar, top to bottom:**
   1. **Branding panel** (decorative): a rounded panel in a 16:10 aspect ratio,
-     like a laptop screen, spanning the sidebar's width (about 191 × 119 pt at
-     the default sidebar width, measured from the running app). Centered, top
-     to bottom:
+     like a laptop screen, spanning the sidebar's width (about 219 × 137 pt at
+     the default sidebar width, expected from the inset change below; was
+     191 × 119 pt, measured from the running app). Centered, top to bottom:
+     - `[D-brand-inset]` **Edges line up with the selection highlight.** The
+       panel's left and right edges match the system's blue selection pill
+       on the rows below it (about 11 pt from the window's left edge).
+       - *Why:* the panel used an arbitrary 8 pt row inset that put it about
+         25 pt from the edge, matching nothing else in the sidebar (found in
+         review, 2026-10-28). The selection pill is the strongest vertical
+         line in the sidebar, and the other edges (headers, icons, traffic
+         lights) are system-drawn and can't be aligned to each other anyway.
+       - *How:* the row inset is −6 pt on each side, because the system list
+         adds about 14 pt of its own padding inside a row's insets (measured
+         from a 2× screenshot, not from documentation). Recheck if a macOS
+         update moves the selection pill.
      - the app icon, about 52 pt
      - "Phases" in a semibold title font
      - the tagline in two balanced lines, 12 pt light, with a deliberate break:
