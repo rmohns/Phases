@@ -8,7 +8,7 @@ struct Phase: Identifiable, Codable, Hashable {
   /// Selected images for All Displays, as paths relative to the library folder.
   var imageNames: [String] = []
   /// Separate selections for specific displays, keyed by display UUID. A
-  /// display with an entry here draws only from it (spec §4).
+  /// display with an entry here draws only from it (spec "Per-display images").
   var displayImageNames: [String: [String]] = [:]
   var order: ImageOrder = .inOrder
   var isRotating = false

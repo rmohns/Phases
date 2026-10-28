@@ -54,7 +54,7 @@ final class WallpaperScheduler {
     didSet { Self.save(restorePoint, forKey: Keys.restorePoint) }
   }
 
-  /// Every display seen so far, connected or not (spec §4, Display identity).
+  /// Every display seen so far, connected or not (spec "Display identity").
   private(set) var knownDisplays: [KnownDisplay] {
     didSet { Self.save(knownDisplays, forKey: Keys.knownDisplays) }
   }
@@ -338,7 +338,7 @@ final class WallpaperScheduler {
   }
 
   /// Display UUID → image. Displays with their own selection draw from it;
-  /// the rest share the All Displays selection per the display mode (spec §4).
+  /// the rest share the All Displays selection per the display mode (spec "Displays sharing the All Displays images").
   private func pickImages(for phase: Phase, step: Int) -> [String: String] {
     let previous = appliedState?.imagesByDisplay ?? [:]
     let connected = NSScreen.screens.compactMap(\.displayUUID)

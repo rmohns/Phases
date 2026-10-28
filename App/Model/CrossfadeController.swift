@@ -1,7 +1,7 @@
 import AppKit
 import ImageIO
 
-/// [D-fade-in] Crossfades wallpaper changes (spec §4a). macOS has no transition for
+/// [D-fade-in] Crossfades wallpaper changes (spec "Transitions"). macOS has no transition for
 /// app-set wallpapers, so this fades the incoming image in over the old
 /// wallpaper using a click-through window (above the desktop picture, below
 /// the desktop icons), then sets the real wallpaper behind the now-identical

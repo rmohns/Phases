@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The single Phases window (spec §7): phases and Settings in the sidebar,
+/// The single Phases window [D-one-window]: phases and Settings in the sidebar,
 /// the selected item's editor in the detail area.
 struct PhasesWindow: View {
   static let windowID = "phases"

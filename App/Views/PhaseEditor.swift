@@ -95,7 +95,7 @@ struct PhaseEditor: View {
   }
 
   /// On: the display gets its own (initially empty) selection. Off: its
-  /// selection for this phase is discarded (spec §4).
+  /// selection for this phase is discarded (spec "Per-display images").
   private func usesOwnImages(_ uuid: String, in phase: Binding<Phase>) -> Binding<Bool> {
     Binding {
       phase.wrappedValue.displayImageNames[uuid] != nil
