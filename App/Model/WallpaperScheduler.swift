@@ -33,6 +33,11 @@ final class WallpaperScheduler {
     didSet { UserDefaults.standard.set(crossfadeDuration, forKey: Keys.crossfadeDuration) }
   }
 
+  /// [D-restore-on-quit] Whether Quit puts back the pre-launch wallpaper.
+  var restoresWallpaperOnQuit: Bool {
+    didSet { UserDefaults.standard.set(restoresWallpaperOnQuit, forKey: Keys.restoresWallpaperOnQuit) }
+  }
+
   var isPaused: Bool {
     didSet {
       UserDefaults.standard.set(isPaused, forKey: Keys.isPaused)
@@ -83,6 +88,7 @@ final class WallpaperScheduler {
     static let knownDisplays = "knownDisplays"
     static let transitionStyle = "transitionStyle"
     static let crossfadeDuration = "crossfadeDuration"
+    static let restoresWallpaperOnQuit = "restoresWallpaperOnQuit"
   }
 
   init() {
@@ -91,6 +97,7 @@ final class WallpaperScheduler {
       ?? [Phase(name: "All Day", trigger: .always)]
     displayMode = defaults.string(forKey: Keys.displayMode).flatMap(DisplayMode.init) ?? .sameOnAll
     isPaused = defaults.bool(forKey: Keys.isPaused)
+    restoresWallpaperOnQuit = defaults.object(forKey: Keys.restoresWallpaperOnQuit) as? Bool ?? true
     transitionStyle = defaults.string(forKey: Keys.transitionStyle).flatMap(TransitionStyle.init) ?? .crossfade
     let duration = defaults.object(forKey: Keys.crossfadeDuration) as? Double ?? TransitionStyle.defaultDuration
     crossfadeDuration = min(max(duration, TransitionStyle.durationRange.lowerBound), TransitionStyle.durationRange.upperBound)
@@ -439,14 +446,15 @@ final class WallpaperScheduler {
     ]
   }
 
-  /// [D-restore-on-quit] Puts back the pre-launch wallpaper on an actual Quit. At logout or
-  /// shutdown the restore point is kept, so the next launch still knows the
-  /// true original.
+  /// [D-restore-on-quit] Puts back the pre-launch wallpaper on an actual Quit,
+  /// if the preference is on; otherwise the current image stays and becomes
+  /// the next launch's original. At logout or shutdown the restore point is
+  /// kept, so the next launch still knows the true original.
   private func restoreOriginalWallpaper() {
     timer?.invalidate()
     crossfade.finishRunningFade()
     guard !isPoweringOff else { return }
-    restorePoint?.restore()
+    if restoresWallpaperOnQuit { restorePoint?.restore() }
     restorePoint = nil
   }
 

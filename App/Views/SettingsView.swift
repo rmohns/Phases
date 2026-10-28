@@ -92,13 +92,19 @@ struct SettingsView: View {
         LocationStatusView(scheduler: scheduler)
       }
 
-      Section {
+      Section("Quit") {
+        // [D-restore-on-quit]
+        Toggle("Restore original wallpaper when quitting", isOn: $scheduler.restoresWallpaperOnQuit)
         LabeledContent {
           // [D-quit-in-window]
           Button("Quit Phases") { NSApp.terminate(nil) }
         } label: {
           Text("Quit Phases")
-          Text("Restores your original wallpaper. ⌘Q also quits while this window is active.")
+          Text(
+            scheduler.restoresWallpaperOnQuit
+              ? "Restores your original wallpaper. ⌘Q also quits while this window is active."
+              : "Keeps the current wallpaper. ⌘Q also quits while this window is active."
+          )
         }
       }
     }
