@@ -433,7 +433,38 @@ extras don't show them. No global hotkey.
     SwiftUI gives the window no toolbar at all when it has no items (see
     "Platform quirks"). The window's AppKit `NSToolbar` is therefore
     created by hand, empty, with the unified style, when SwiftUI hasn't
-    made one.
+    made one. It's set to icon-only display, which brought the title area
+    from 66 pt down to the standard 52 pt (verified from diagnostic
+    logging and a screenshot, 2026-10-28).
+  - **Status: appears fixed, cause not proven.** Icon-only fixed the
+    height, which fits the theory that the default display mode reserves
+    a row for item labels. Nobody confirmed that theory in Apple
+    documentation. If the toolbar grows tall again, first check (by
+    logging `frame.height − contentLayoutRect.height`) whether the toolbar
+    is still icon-only and whether SwiftUI has replaced it with its own.
+  - `[D-window-helper-order]` **One helper, in a fixed order.** A single
+    AppKit helper (`App/Views/WindowLayoutConfigurator.swift`) attaches the
+    toolbar first, then, one run-loop pass later, sets the sidebar's split
+    view limits (`[D-sidebar-width]`, `[D-sidebar-always-visible]`).
+    - *Why:* with two separate helpers, the order they ran in varied by
+      launch. Suspected (not proven): when the sidebar limits went on
+      first, attaching the toolbar rebuilt the split view and wiped them,
+      so the sidebar could be dragged to any width (regression found in
+      review, 2026-10-28; didn't reproduce in a logged run where the
+      toolbar went first). The run-loop pass covers the rebuild happening
+      after the toolbar is attached.
+    - **Status: appears fixed, cause not proven.** With the merged helper,
+      one logged launch kept the limits on a single split view through
+      520 resizes, with drags stopping at exactly 240 and 320 pt
+      (2026-10-28). The original failure was never caught in a log, so
+      the ordering theory is unconfirmed: the fix may have worked for a
+      different reason, or the bug may be intermittent and just didn't
+      happen. **If the sidebar width limits vanish again,** don't retry
+      the ordering fix. Instead, log the split view controller's identity
+      at launch and on each resize, to see whether SwiftUI swaps in a new
+      one later, and log the item's `minimumThickness`/`maximumThickness`
+      to see what resets them. The untried fallback is re-applying the
+      limits whenever the split view resizes.
 - `[D-sidebar-always-visible]` **The sidebar can't be hidden.** There is no
   sidebar toggle button, and dragging the divider past the minimum width
   doesn't collapse it.
@@ -456,7 +487,8 @@ extras don't show them. No global hotkey.
     changes that controller's sidebar item. This relies on undocumented
     internals and **may break in a future macOS update**. If it does, the
     sidebar simply becomes collapsible again (nothing worse). All of it is in
-    `App/Views/SidebarSplitItemConfigurator.swift`; check there first if the
+    `App/Views/WindowLayoutConfigurator.swift` (`[D-window-helper-order]`);
+    check there first if the
     sidebar starts collapsing after an OS update.
   - *Design history:* the first version (2026-10-28) let the sidebar
     collapse and reopened it right away. In testing, the sidebar flickered
@@ -584,8 +616,10 @@ they shaped.
   (macOS 27).** *Verified* 2026-10-28 from diagnostic logging: the window's
   title area went from 32 pt (no toolbar) to 66 pt the moment an empty
   `NSToolbar` with `.unified` style was attached, and stayed there. That's
-  taller than Notes' toolbar (about 50 pt in a screenshot). Why it's 66 is
-  unknown. Affects `[D-tall-toolbar]`.
+  taller than Notes' toolbar (about 50 pt in a screenshot). Setting the
+  toolbar's `displayMode` to `.iconOnly` brought it to 52 pt (verified
+  2026-10-28). The label-row explanation is a theory, not confirmed.
+  Affects `[D-tall-toolbar]`.
 - **SwiftUI: content in a List's `.safeAreaInset` may not refresh when the
   parent view's state changes (macOS).** *Recalled*, not verified against
   Apple documentation or a bug report. Matches the draft 13 bug where −
@@ -705,3 +739,5 @@ were found in the commit history, not in this spec.
 | 2026-10-28 (draft 15) | Deleting a phase always selected the first phase | Select the next phase down `[D-delete-selects-next]` | Unit test (Layer 1); **UI test:** delete a middle phase; the one below is selected |
 | 2026-10-28 (draft 17; draft 18's fix didn't work) | The Name field had focus with its text selected when the window opened, so any keypress renamed the phase | Move focus to the sidebar a run-loop pass after the window appears `[D-initial-focus-sidebar]` | **UI test:** open the window, type a letter; the phase name is unchanged |
 | 2026-10-28 (draft 19) | Tab visited only the on-screen thumbnails, didn't scroll, then jumped back to the sidebar | Grid is one Tab stop with an arrow-key cursor `[D-grid-one-tab-stop]` | Unit test for arrow movement (Layer 1); **UI test:** Tab enters and leaves the grid in one stop, and arrowing down past the visible rows scrolls |
+| 2026-10-28 | Title bar became short and crowded after the sidebar toggle was removed; then the fix made it 66 pt tall | Hand-made empty unified toolbar, icon-only `[D-tall-toolbar]` | Nothing yet; a screenshot check (toolbar 52 pt). Cause of the 66 pt only theorized |
+| 2026-10-28 | Sidebar could be dragged far below 240 pt and far above 320 pt again, right after the toolbar helper was added | One helper, toolbar first, then sidebar limits `[D-window-helper-order]` | **UI test:** drag the divider both ways; width stays 240–320. Appears fixed; cause not proven, never caught in a log |
