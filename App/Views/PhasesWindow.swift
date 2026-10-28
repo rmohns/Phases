@@ -11,12 +11,14 @@ struct PhasesWindow: View {
   var body: some View {
     NavigationSplitView {
       List(selection: $selection) {
-        // First list item, so it scrolls away with long phase lists (spec §7).
+        // [D-brand-scrolls] First list item, so it scrolls away with long
+        // phase lists; never pinned.
         SidebarBranding(scheduler: scheduler)
           .selectionDisabled()
           .listRowSeparator(.hidden)
           .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 8, trailing: 8))
 
+        // [D-settings-at-top] Above the phases, so it's never pushed offscreen.
         Section("App") {
           Label("Settings", systemImage: "gearshape")
             .tag(SidebarItem.settings)
@@ -47,6 +49,7 @@ struct PhasesWindow: View {
           .padding(6)
         }
       }
+      // [D-sidebar-width] Opens at the 240 pt minimum; widens to 320 pt.
       .navigationSplitViewColumnWidth(min: 240, ideal: 240, max: 320)
     } detail: {
       switch selection {
@@ -64,8 +67,8 @@ struct PhasesWindow: View {
       }
     }
     .background {
-      // ⌘Q while this window is active (spec §7). Phases has no app menu, so
-      // nothing else provides it.
+      // [D-quit-in-window] ⌘Q while this window is active. Phases has no app
+      // menu, so nothing else provides it.
       Button("Quit Phases") { NSApp.terminate(nil) }
         .keyboardShortcut("q")
         .opacity(0)
@@ -99,7 +102,8 @@ private struct SidebarBranding: View {
       .frame(maxWidth: .infinity)
       .background {
         if let wallpaper {
-          // No overall dimming; a gradient behind the text only (spec §7).
+          // [D-brand-legibility] No overall dimming; a gradient behind the
+          // text only.
           Image(nsImage: wallpaper)
             .resizable()
             .scaledToFill()
@@ -120,12 +124,13 @@ private struct SidebarBranding: View {
         }
       }
       .overlay {
+        // [D-brand-layout] 52 pt icon, two-line tagline with a chosen break.
         VStack(spacing: 4) {
           Image(nsImage: NSApp.applicationIconImage)
             .resizable()
             .frame(width: 52, height: 52)
             .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
-          // Fixed sizes: a decorative, fixed-shape panel (spec §7).
+          // [D-brand-fixed-text] Fixed sizes: a decorative, fixed-shape panel.
           Text("Phases")
             .font(.system(size: 15, weight: .semibold))
           // Sidebar list rows default to one line, which would cut this off

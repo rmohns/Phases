@@ -109,6 +109,8 @@ final class WallpaperScheduler {
 
   // MARK: - Derived state
 
+  /// [D-location-on-demand] Location is requested only once a phase uses
+  /// dawn or dusk, never at launch otherwise.
   var needsLocation: Bool {
     phases.contains { $0.trigger.usesLocation }
   }
@@ -216,7 +218,8 @@ final class WallpaperScheduler {
 
     if let state = appliedState, isSameOccurrence(state, phase: active.phase, start: start) {
       if state.rotationSlot != slot || !imagesMatchSelections(state, phase: active.phase) {
-        // Jumps straight to the most recent missed rotation.
+        // [D-missed-latest-only] Jumps straight to the most recent missed
+        // rotation.
         apply(active.phase, start: start, slot: slot, manualSteps: state.manualSteps)
       } else if state.phaseStart != start {
         appliedState?.phaseStart = start
@@ -296,7 +299,8 @@ final class WallpaperScheduler {
     nextChange = isPaused ? nil : next
 
     guard let next = nextChange else { return }
-    // Re-check at least hourly as a safety net against clock drift.
+    // [D-single-timer] One timer aimed at the next event, re-checking at
+    // least hourly as a safety net against clock drift. No polling.
     let fireDate = min(next.date.addingTimeInterval(0.5), now.addingTimeInterval(3600))
     let timer = Timer(fire: fireDate, interval: 0, repeats: false) { [weak self] _ in
       MainActor.assumeIsolated { self?.evaluate() }
@@ -335,6 +339,8 @@ final class WallpaperScheduler {
     var sharing: [String] = []
 
     for uuid in connected {
+      // [D-own-images-no-fallback] A display with its own selection never
+      // falls back to All Displays, even if none of its images are available.
       guard phase.displayImageNames[uuid] != nil else {
         sharing.append(uuid)
         continue
@@ -433,7 +439,7 @@ final class WallpaperScheduler {
     ]
   }
 
-  /// Puts back the pre-launch wallpaper on an actual Quit. At logout or
+  /// [D-restore-on-quit] Puts back the pre-launch wallpaper on an actual Quit. At logout or
   /// shutdown the restore point is kept, so the next launch still knows the
   /// true original.
   private func restoreOriginalWallpaper() {

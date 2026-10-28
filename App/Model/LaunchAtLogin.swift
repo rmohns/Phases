@@ -1,7 +1,7 @@
 import Observation
 import ServiceManagement
 
-/// Wraps SMAppService.mainApp, which registers this app as a standard Login
+/// [D-login-consent] Wraps SMAppService.mainApp, which registers this app as a standard Login
 /// Item. It installs no LaunchAgent plist, daemon, or helper. Nothing here
 /// runs unless the user explicitly turns it on and confirms.
 @MainActor

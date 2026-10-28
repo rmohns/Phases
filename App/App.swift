@@ -12,6 +12,7 @@ struct AppDefinition: App {
         .accessibilityLabel("Phases")
     }
 
+    // [D-one-window] Everything, Settings included, lives in this one window.
     Window("Phases", id: PhasesWindow.windowID) {
       PhasesWindow(scheduler: scheduler)
     }
@@ -19,8 +20,8 @@ struct AppDefinition: App {
     .defaultLaunchBehavior(.suppressed)
   }
 
-  /// The supplied 24×24 line drawing, scaled to fit the menu bar and drawn as
-  /// a template so macOS colors it for light and dark menu bars.
+  /// [D-menubar-icon] Solid shapes, drawn at 20 pt as a template so macOS
+  /// colors it for light and dark menu bars.
   private static let menuBarIcon: NSImage = {
     let image = NSImage(named: "MenuBarIcon") ?? NSImage()
     image.size = NSSize(width: 20, height: 20)

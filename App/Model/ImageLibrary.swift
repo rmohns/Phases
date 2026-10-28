@@ -4,7 +4,8 @@ import QuickLookThumbnailing
 import UniformTypeIdentifiers
 
 /// The user's wallpaper folder and the images in it, optionally including
-/// subfolders. Images are identified by their path relative to the folder.
+/// subfolders. [D-relative-paths] Images are identified by their path
+/// relative to the folder.
 @MainActor
 @Observable
 final class ImageLibrary {

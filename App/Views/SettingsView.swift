@@ -94,6 +94,7 @@ struct SettingsView: View {
 
       Section {
         LabeledContent {
+          // [D-quit-in-window]
           Button("Quit Phases") { NSApp.terminate(nil) }
         } label: {
           Text("Quit Phases")
@@ -129,6 +130,8 @@ struct SettingsView: View {
   }
 
   /// Turning on asks first; turning off takes effect right away.
+  /// [D-login-consent] Turning it on only asks; registering waits for the
+  /// confirmation alert.
   private var launchAtLoginBinding: Binding<Bool> {
     Binding {
       scheduler.launchAtLogin.isEnabled

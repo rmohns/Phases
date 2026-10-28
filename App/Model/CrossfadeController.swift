@@ -1,7 +1,7 @@
 import AppKit
 import ImageIO
 
-/// Crossfades wallpaper changes (spec §4a). macOS has no transition for
+/// [D-fade-in] Crossfades wallpaper changes (spec §4a). macOS has no transition for
 /// app-set wallpapers, so this fades the incoming image in over the old
 /// wallpaper using a click-through window (above the desktop picture, below
 /// the desktop icons), then sets the real wallpaper behind the now-identical
@@ -24,6 +24,7 @@ final class CrossfadeController {
   func apply(_ assignments: [WallpaperAssignment], duration: TimeInterval?) {
     finishRunningFade()
 
+    // [D-no-fade-cases] None, Reduce Motion, unreadable file, unchanged screen.
     guard let duration, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else {
       WallpaperSetter.apply(assignments)
       return
@@ -93,9 +94,11 @@ final class CrossfadeController {
     // Centered images are shown at their own size; everything else only needs
     // enough pixels to fill the screen.
     let maxPixels = gravity == .center ? nil : max(screen.frame.width, screen.frame.height) * screen.backingScaleFactor
+    // [D-no-screenshots] Drawn from the file; no Screen Recording permission.
     guard let image = Self.loadImage(url, maxPixelSize: maxPixels) else { return nil }
 
     let window = NSWindow(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
+    // [D-cover-level] Above the desktop picture, below the desktop icons.
     window.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopWindow)) + 1)
     window.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
     window.ignoresMouseEvents = true

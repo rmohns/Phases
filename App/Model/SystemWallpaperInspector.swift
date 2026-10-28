@@ -1,7 +1,7 @@
 import CoreGraphics
 import Foundation
 
-/// Reads (never writes) macOS's wallpaper store to tell whether a display is
+/// [D-aerials-untouched] Reads (never writes) macOS's wallpaper store to tell whether a display is
 /// showing an image or a system wallpaper such as an Aerial. The public API
 /// only reports a file path, which for Aerials is a still frame.
 ///

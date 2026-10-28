@@ -1,6 +1,8 @@
 import SwiftUI
 
 /// The menu shown from the menu bar icon.
+///
+/// [D-menu-no-shortcuts] No keyboard shortcuts, no filename, and no Quit item.
 struct MenuContent: View {
   @Bindable var scheduler: WallpaperScheduler
   @Environment(\.openWindow) private var openWindow
@@ -27,7 +29,7 @@ struct MenuContent: View {
     }
   }
 
-  /// One compact line (spec §7), e.g. "Dusk · until 7:13 PM".
+  /// [D-menu-status-header] One compact line, e.g. "Dusk · until 7:13 PM".
   private var statusLine: String {
     guard let phase = scheduler.activePhase else { return "No active phase" }
     if scheduler.isPaused { return "\(phase.name) · Paused" }

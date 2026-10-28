@@ -1,7 +1,7 @@
 import AppKit
 import ColorSync
 
-/// Stable identifiers for displays. The hardware UUID survives unplugging,
+/// [D-display-uuid] Stable identifiers for displays. The hardware UUID survives unplugging,
 /// reconnecting, and rearranging; the numeric display ID does not.
 enum DisplayIdentity {
   static func uuid(for displayID: CGDirectDisplayID) -> String? {
