@@ -520,7 +520,10 @@ they shaped.
   `.focused` + `.defaultFocus` on the List, the phase's Name field still
   opened focused with its text selected. The AX API confirmed it: the
   focused element is the Name text field, with all of its text selected
-  (2026-10-28). Why `.defaultFocus` loses is not yet known. Shapes
+  (2026-10-28). Moving focus one run-loop pass after `onAppear` works:
+  the AX API then reports the sidebar outline as focused (verified
+  2026-10-28). That fits a timing cause (the editor appears after SwiftUI
+  applies default focus), but the cause itself is unproven. Shapes
   `[D-initial-focus-sidebar]`.
 - **System Events (AppleScript) doesn't report SwiftUI button
   descriptions (macOS 27).** *Verified* 2026-10-28: for the + / − buttons,
