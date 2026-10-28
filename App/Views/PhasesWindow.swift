@@ -128,8 +128,11 @@ private struct SidebarBranding: View {
           // Fixed sizes: a decorative, fixed-shape panel (spec §7).
           Text("Phases")
             .font(.system(size: 15, weight: .semibold))
+          // Sidebar list rows default to one line, which would cut this off
+          // at the line break; allow both lines explicitly.
           Text("Wallpaper for every\nphase of your day")
             .font(.system(size: 12, weight: .light))
+            .lineLimit(2)
             .multilineTextAlignment(.center)
             .fixedSize()
         }
