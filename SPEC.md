@@ -112,6 +112,10 @@ image when there's more than one choice.
     every image a Tab stop would fix that but cost one keypress per image to
     get past a large folder. One Tab stop with arrow keys matches macOS
     collection views and adds arrow-key movement.
+  - *Verified* 2026-10-28 by the author: Tab enters and leaves the grid in
+    one stop, arrows (including up/down column math) and ⇧-Space work, and
+    the window scrolls to follow the cursor (`ScrollViewReader` around the
+    grouped Form).
 - If a selected image is later deleted or renamed, it's skipped and the phase
   editor marks it as missing. A phase with no available images is skipped
   (the wallpaper stays as it is).
