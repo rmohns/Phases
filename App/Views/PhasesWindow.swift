@@ -36,10 +36,8 @@ struct PhasesWindow: View {
         // refreshes when the selection changes.
         SidebarFooter(scheduler: scheduler, selection: $selection)
       }
-      // [D-initial-focus-sidebar] Otherwise macOS focuses the phase's Name
-      // field on open and selects its text.
+      // [D-initial-focus-sidebar] Set in onAppear below.
       .focused($sidebarFocused)
-      .defaultFocus($sidebarFocused, true)
       // [D-sidebar-width] Opens at the 240 pt minimum; widens to 320 pt.
       .navigationSplitViewColumnWidth(min: 240, ideal: 240, max: 320)
       .background {
@@ -77,6 +75,10 @@ struct PhasesWindow: View {
       if selection == nil {
         selection = (scheduler.activePhase ?? scheduler.phasesByTime.first).map { .phase($0.id) } ?? .settings
       }
+      // [D-initial-focus-sidebar] Otherwise macOS focuses the phase's Name
+      // field on open and selects its text. Deferred a pass so the editor
+      // exists first; `.defaultFocus` alone lost to the field.
+      DispatchQueue.main.async { sidebarFocused = true }
     }
   }
 }
