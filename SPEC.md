@@ -336,6 +336,14 @@ extras don't show them. No global hotkey.
   - *How:* the sidebar's underlying AppKit split view item is marked as
     not collapsible, with its minimum and maximum thickness set from
     `[D-sidebar-width]`, so dragging stops at 240 pt.
+  - **Works around SwiftUI on purpose.** SwiftUI has no way to stop a
+    sidebar from collapsing, so Phases reaches past `NavigationSplitView` to
+    the AppKit `NSSplitViewController` SwiftUI happens to use for it, and
+    changes that controller's sidebar item. This relies on undocumented
+    internals and **may break in a future macOS update**. If it does, the
+    sidebar simply becomes collapsible again (nothing worse). All of it is in
+    `App/Views/SidebarSplitItemConfigurator.swift`; check there first if the
+    sidebar starts collapsing after an OS update.
   - *Design history:* the first version (2026-10-28) let the sidebar
     collapse and reopened it right away. In testing, the sidebar flickered
     closed and open on every mouse move during the drag, and the 240 pt
