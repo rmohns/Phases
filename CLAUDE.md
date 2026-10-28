@@ -11,3 +11,8 @@
 - **Design principle:** keep a clear separation between content and tools.
   Controls must never blend into the content behind them; don't follow
   Liquid Glass-style translucency where it costs legibility or findability.
+- **Tagged decisions:** deliberate choices carry a `[D-…]` tag in SPEC.md and
+  in a comment on the code that enforces them (see SPEC.md "Design
+  decisions"). Before changing tagged code, re-read the decision; if the
+  change contradicts it, say so and update the spec first. Tag new deliberate
+  choices when adding them to the spec.

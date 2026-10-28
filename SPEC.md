@@ -1,7 +1,22 @@
-# Phases — Specification (draft 11)
+# Phases — Specification (draft 12)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
+
+## Design decisions
+
+Deliberate choices that would be easy to "fix" by accident are tagged in
+this spec, e.g. `[D-sidebar-width]`. The code that enforces each one carries
+the same tag in a comment. Search for `[D-` to list them all, in the spec and
+in the code.
+
+- The reasoning lives here, next to the tag, not in the code comment.
+- Before changing tagged code, re-read its decision. If the change
+  contradicts it, update the decision here first (with the new reason),
+  then the code.
+- When a decision is replaced, keep a short note of what it replaced and
+  why, as the existing *Why* and design-history notes do.
+- New deliberate choices get a tag when they're added to the spec.
 
 ## 1. Core model: phases plus rotation
 
@@ -69,7 +84,7 @@ image when there's more than one choice.
   scanned recursively, skipping hidden folders and packages (app bundles, Photos
   libraries, etc.).
 - Supported formats: JPEG, PNG, HEIC, TIFF.
-- Images are identified by their path relative to the folder (e.g.
+- `[D-relative-paths]` Images are identified by their path relative to the folder (e.g.
   `Winter/snow.jpg`), so top-level selections stay valid when subfolders are
   turned on. Turning subfolders off makes subfolder images show as missing
   rather than silently dropping them.
@@ -94,12 +109,13 @@ image when there's more than one choice.
   toggle. When on, that display gets its own thumbnail grid and draws only from
   its own selection (e.g. ultrawide images for an ultrawide monitor, portrait
   images for a portrait one). When off, it uses the All Displays selection.
-- If a display has its own selection but none of those images are available,
+- `[D-own-images-no-fallback]` If a display has its own selection but none
+  of those images are available,
   that display keeps its current wallpaper; it does not fall back to All Displays.
 - Turning the toggle off discards that display's selection for that phase.
 
 ### Display identity
-- Displays are identified by their hardware UUID, so settings survive
+- `[D-display-uuid]` Displays are identified by their hardware UUID, so settings survive
   unplugging, reconnecting, and rearranging. Phases remembers each display's
   name. Disconnected displays stay in the picker, marked "(not connected)", and
   keep their selections.
@@ -112,7 +128,7 @@ image when there's more than one choice.
   Different picks, sharing displays are offset by one from each other.
 
 ### Not included
-- Automatic matching of images to each display's shape (portrait, ultrawide,
+- `[D-no-shape-matching]` Automatic matching of images to each display's shape (portrait, ultrawide,
   standard). Considered and rejected: "ultrawide" vs. "wide" is fuzzy, and
   wrong guesses would surprise; explicit per-display choices are predictable.
 
@@ -124,10 +140,12 @@ image when there's more than one choice.
 - **App preference: Duration**: 0.5 to 3 seconds (default 1 second), shown
   only when Crossfade is selected.
 - macOS has no transition for wallpapers set by apps, so Phases does it itself
-  by **fading the new image in over the old wallpaper**:
+  by **fading the new image in over the old wallpaper** `[D-fade-in]`
+  (see design history below):
   1. **Cover:** on each screen whose image is changing, a borderless,
-     click-through window shows the *incoming* image, fully transparent. It
-     sits just above the desktop picture and below the desktop icons, so icons
+     click-through window shows the *incoming* image, fully transparent.
+     `[D-cover-level]` It sits just above the desktop picture and below the
+     desktop icons, so icons
      and windows don't flicker. It covers the full screen, including under the
      menu bar.
   2. **Fade in:** the cover fades to fully opaque over the chosen duration.
@@ -139,9 +157,9 @@ image when there's more than one choice.
      cover and the wallpaper match.
 - The cover draws the incoming image the way macOS will, using that screen's
   scaling (fill, fit, stretch, or center) and fill color.
-- The cover is drawn from the image file. No screenshots and no Screen
+- `[D-no-screenshots]` The cover is drawn from the image file. No screenshots and no Screen
   Recording permission.
-- **No fade (instant switch) when:**
+- `[D-no-fade-cases]` **No fade (instant switch) when:**
   - Transition is set to None
   - Reduce Motion is on (System Settings › Accessibility › Display)
   - The incoming image file can't be read (that screen only: it switches
@@ -177,7 +195,8 @@ the outgoing wallpaper is an Aerial.
 
 ## 5. Missed changes: sleep, wake, unlock
 
-On launch, wake from sleep, screen unlock, and time zone / clock changes, the app:
+On launch, wake from sleep, screen unlock, and time zone / clock changes, the app
+`[D-missed-latest-only]`:
 
 1. Works out which phase should be active right now.
 2. If it differs from the last phase it applied, switches to it immediately.
@@ -189,7 +208,8 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
 
 ## 6. Location
 
-- Uses Location Services. Permission is requested only when a phase first uses
+- `[D-location-on-demand]` Uses Location Services. Permission is requested
+  only when a phase first uses
   a dawn/dusk trigger, not at launch.
 - Settings shows the current location, today's civil dawn and dusk, when the
   location was last updated, and an **Update Now** button.
@@ -204,7 +224,7 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
 ### Icons
 - **App icon:** the supplied artwork (landscape in a circle between two lunar
   crescents, blue gradient).
-- **Menu bar icon:** a simplified version of the app icon, drawn for legibility
+- `[D-menubar-icon]` **Menu bar icon:** a simplified version of the app icon, drawn for legibility
   at menu bar size: a bold photo circle (about two-thirds of the width) with a
   filled sun and filled mountains clipped inside, flanked by two solid
   crescents set close to the ring. Rendered as a template image so macOS colors
@@ -215,7 +235,7 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
     both at actual menu bar pixel sizes.
 
 ### Menu bar menu
-Kept short. Status is a single section header, not separate dimmed items,
+`[D-menu-status-header]` Kept short. Status is a single section header, not separate dimmed items,
 following the pattern of Apple's own menu bar extras (e.g. Time Machine's
 "Latest backup" line).
 
@@ -230,7 +250,8 @@ following the pattern of Apple's own menu bar extras (e.g. Time Machine's
 - If location access is denied and a phase needs it, one extra dimmed line
   says so (§6).
 
-The current image's filename is not shown in the menu. There is no Quit item
+`[D-menu-no-shortcuts]` The current image's filename is not shown in the
+menu. There is no Quit item
 in the menu; Quit lives in the Phases window (below).
 
 No keyboard shortcuts in the menu. Shortcuts in a menu bar extra's menu work
@@ -238,7 +259,8 @@ only while that menu is open, so they'd be decoration; Apple's own menu bar
 extras don't show them. No global hotkey.
 
 ### Phases window (one window for everything)
-- A single resizable window with a sidebar. There is no separate Settings
+- `[D-one-window]` A single resizable window with a sidebar. There is no
+  separate Settings
   window: with two windows, the wrong one kept getting opened (draft 3 split
   them; draft 6 merged them back).
 - **Sidebar, top to bottom:**
@@ -250,12 +272,12 @@ extras don't show them. No global hotkey.
      - "Phases" in a semibold title font
      - the tagline in two balanced lines, 12 pt light, with a deliberate break:
        "Wallpaper for every / phase of your day"
-     - *Why:* the first tagline ("Wallpaper sets for every phase of your
+     - `[D-brand-layout]` *Why:* the first tagline ("Wallpaper sets for every phase of your
        day", 10 pt) wrapped awkwardly and was hard to read; with a 64 pt icon
        the contents filled the whole panel height. Shorter text, a chosen line
        break, and a smaller icon fixed both (compared in mockups at the
        panel's real size).
-     - **Fixed text sizes:** the name (15 pt semibold) and tagline (12 pt
+     - `[D-brand-fixed-text]` **Fixed text sizes:** the name (15 pt semibold) and tagline (12 pt
        light) use fixed point sizes, not system text styles, so the panel
        looks the same at every Sidebar icon size and Text size setting. It's
        a fixed-shape decorative graphic with no room for text to grow; the
@@ -264,7 +286,7 @@ extras don't show them. No global hotkey.
      - **Background:** a soft blue-to-indigo gradient taken from the app icon
        until Phases has applied a wallpaper; after that, the wallpaper
        currently on the main display. It updates when the wallpaper changes.
-     - **Legibility:** the wallpaper is not dimmed overall. A soft black
+     - `[D-brand-legibility]` **Legibility:** the wallpaper is not dimmed overall. A soft black
        gradient rises from the bottom edge, behind the name and tagline only;
        the top of the image keeps its full brightness. The icon needs no help
        (it has its own solid tile).
@@ -272,9 +294,10 @@ extras don't show them. No global hotkey.
          wallpapers grey and lifeless. A brightness-adaptive gradient was
          considered and deferred; add it only if light images prove hard to
          read.
-     - It's the first item in the sidebar list, so it **scrolls away** when
+     - `[D-brand-scrolls]` It's the first item in the sidebar list, so it
+       **scrolls away** when
        there are enough phases to scroll; it's never pinned.
-  2. **"App" section:** a **Settings** row (gear icon). It sits at the top so
+  2. `[D-settings-at-top]` **"App" section:** a **Settings** row (gear icon). It sits at the top so
      it's always visible however many phases there are; the HIG advises
      against putting important items at the bottom of a sidebar, since window
      bottoms often end up offscreen.
@@ -282,7 +305,7 @@ extras don't show them. No global hotkey.
      active phase marked. Phase rows are two lines (name plus trigger), which
      also sets them apart from the one-line Settings row.
   - + / − buttons below the list add and remove phases.
-- **Sidebar width:** resizable from **240 pt** (minimum and default) to
+- `[D-sidebar-width]` **Sidebar width:** resizable from **240 pt** (minimum and default) to
   **320 pt** (maximum). The sidebar opens at its narrowest and can only be
   widened.
   - *Why the minimum:* draft 10 allowed 220 pt, but at that width the
@@ -303,12 +326,15 @@ extras don't show them. No global hotkey.
   preference (§4); transition and duration; Launch at Login; location status
   with today's civil dawn and dusk and Update Now; and a **Quit Phases** button
   at the bottom, noting that quitting restores the original wallpaper (§8a).
-- **⌘Q** quits Phases whenever the Phases window is active.
+- `[D-quit-in-window]` **⌘Q** quits Phases whenever the Phases window is
+  active, and Settings has the Quit Phases button (above).
 
 No Dock icon. The app runs as a menu bar accessory, so it has no app menu;
 that's why Quit needs a home in the window.
 
 ## 8. Launch at login: explicit consent only
+
+`[D-login-consent]`
 
 - Preference **Launch at Login**, **off by default**.
 - The app never turns it on by itself. Turning it on shows a confirmation that
@@ -327,10 +353,11 @@ that's why Quit needs a home in the window.
   wallpaper (image file plus fill/scaling options), keyed by display ID.
 - The record is saved to disk and kept until it's been restored. After a crash
   or Force Quit, the next launch reuses it instead of recording Phases' own image.
-- On an actual **Quit**, Phases restores each display's original and clears the
+- `[D-restore-on-quit]` On an actual **Quit**, Phases restores each display's original and clears the
   record. Logout, restart, shutdown, and **Pause** leave the current image in
   place; at logout the record is kept for the next launch.
-- **Aerials and other system wallpapers:** Phases reads (never writes) macOS's
+- `[D-aerials-untouched]` **Aerials and other system wallpapers:** Phases
+  reads (never writes) macOS's
   wallpaper store to detect them. The public API can't restore them, so those
   displays are left alone on quit instead of getting a still frame.
 - Displays that were disconnected in the meantime are skipped. If the original
@@ -344,7 +371,7 @@ that's why Quit needs a home in the window.
   keep their own wallpaper. There is no public API to set every Space.
 - With "Displays have separate Spaces" on (the macOS default), each display has
   its own current Space, and the app sets each one.
-- Scheduling uses a single timer aimed at the next event, recalculated after
+- `[D-single-timer]` Scheduling uses a single timer aimed at the next event, recalculated after
   every change, wake, or settings edit, with an hourly re-check as a safety net
   against clock drift. No polling loop.
 
@@ -380,7 +407,8 @@ data. Phases saved by earlier versions load unchanged (no per-display images).
   Settings' own 5-second shuffle, the menu bar's styling changed when apps
   were switched, not when the wallpaper changed. Bug or design decision is
   unknown. Phases could force a restyle by briefly activating itself, but that
-  would steal focus from the user's app, so it deliberately doesn't.
+  would steal focus from the user's app, so it deliberately doesn't
+  `[D-no-focus-steal]`.
   Reported to Apple: **FB25326597** (2026-10-27).
 - Bartender (menu bar manager) caused additional odd menu bar behavior during
   testing. Not a Phases issue.
