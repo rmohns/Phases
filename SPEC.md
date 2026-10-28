@@ -510,6 +510,12 @@ they shaped.
   stayed disabled; moving the bar into its own view with a binding fixed it
   (fix verified by the author, 2026-10-28). Shaped
   `[D-sidebar-footer-view]`.
+- **SwiftUI: `.defaultFocus` on the sidebar List doesn't stop macOS from
+  focusing the first text field when the window opens (macOS 27).**
+  *Verified* 2026-10-28 by the author, across several relaunches: with
+  `.focused` + `.defaultFocus` on the List, the phase's Name field still
+  opened focused with its text selected. Cause not yet known. Shapes
+  `[D-initial-focus-sidebar]`.
 - **System Events (AppleScript) doesn't report SwiftUI button
   descriptions (macOS 27).** *Verified* 2026-10-28: for the + / − buttons,
   System Events' `description` returned only "button" and found no
