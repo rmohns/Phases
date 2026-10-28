@@ -47,7 +47,7 @@ struct PhasesWindow: View {
           .padding(6)
         }
       }
-      .navigationSplitViewColumnWidth(min: 220, ideal: 240)
+      .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 320)
     } detail: {
       switch selection {
       case .settings:
