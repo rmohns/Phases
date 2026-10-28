@@ -123,15 +123,15 @@ private struct SidebarBranding: View {
         VStack(spacing: 4) {
           Image(nsImage: NSApp.applicationIconImage)
             .resizable()
-            .frame(width: 64, height: 64)
+            .frame(width: 52, height: 52)
             .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+          // Fixed sizes: a decorative, fixed-shape panel (spec §7).
           Text("Phases")
-            .font(.title3.weight(.semibold))
-          Text("Wallpaper sets for every phase of your day")
-            .font(.caption)
-            .lineLimit(2)
+            .font(.system(size: 15, weight: .semibold))
+          Text("Wallpaper for every\nphase of your day")
+            .font(.system(size: 12, weight: .light))
             .multilineTextAlignment(.center)
-            .fixedSize(horizontal: false, vertical: true)
+            .fixedSize()
         }
         .foregroundStyle(.white)
         .shadow(color: .black.opacity(0.5), radius: 3, y: 1)
@@ -150,7 +150,7 @@ private struct SidebarBranding: View {
         }
       }
       .accessibilityElement(children: .ignore)
-      .accessibilityLabel("Phases. Wallpaper sets for every phase of your day")
+      .accessibilityLabel("Phases. Wallpaper for every phase of your day")
   }
 }
 
