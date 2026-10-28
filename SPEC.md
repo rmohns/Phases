@@ -1,4 +1,4 @@
-# Phases — Specification (draft 10)
+# Phases — Specification (draft 11)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -282,10 +282,16 @@ extras don't show them. No global hotkey.
      active phase marked. Phase rows are two lines (name plus trigger), which
      also sets them apart from the one-line Settings row.
   - + / − buttons below the list add and remove phases.
-- **Sidebar width:** resizable from **220 pt** (minimum) to **320 pt**
-  (maximum), default 240 pt.
-  - *Why the minimum:* below about 220 pt, phase names and trigger times
-    truncate and the branding panel gets too small for its icon and text.
+- **Sidebar width:** resizable from **240 pt** (minimum and default) to
+  **320 pt** (maximum). The sidebar opens at its narrowest and can only be
+  widened.
+  - *Why the minimum:* draft 10 allowed 220 pt, but at that width the
+    branding panel was cramped (found in testing, 2026-10-28). 240 pt also
+    leaves headroom for phase rows at the Large sidebar icon size (System
+    Settings › General), where row text grows and names and trigger times
+    truncate sooner. The HIG gives no numeric sidebar widths; it asks only
+    for reasonable pane minimums and maximums (Split views) and notes that
+    sidebar text scales with the icon size setting (Sidebars, macOS).
   - *Why the maximum:* without one, the sidebar could be dragged across nearly
     the whole window, squeezing the editor into an unusable column, and the
     branding panel's fixed-size icon and text looked lost in a huge panel
