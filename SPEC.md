@@ -1,4 +1,4 @@
-# Phases — Specification (draft 22)
+# Phases — Specification (draft 23)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -17,8 +17,16 @@ in the code.
 - When a decision is replaced, keep a short note of what it replaced and
   why, as the existing *Why* and design-history notes do.
 - New deliberate choices get a tag when they're added to the spec.
+- `[D-refs-by-id]` **Cross-references use a `[D-…]` tag or a section
+  title, never a section number,** in this spec and in code comments.
+  Sections aren't numbered, so adding one never breaks a reference.
+  Prefer the tag when a decision covers the point; otherwise quote the
+  section title, e.g. see "Platform quirks".
+  - *Why:* drafts up to 22 numbered sections (§4a and so on) and cited
+    them by number, which breaks whenever a section is added or moved
+    (author's rule, 2026-10-28).
 
-## 1. Core model: phases plus rotation
+## Core model: phases plus rotation
 
 The schedule is a list of **phases**. Exactly one phase is active at any moment.
 
@@ -27,12 +35,12 @@ Each phase has:
 | Field | Description |
 |---|---|
 | Name | e.g. "Morning", "Night" |
-| Start trigger | When the phase begins (see §2) |
-| Images (All Displays) | Images chosen from the library (multi-select). Used by every display that doesn't have its own selection (see §4) |
-| Images (per display) | Optional: a separate selection for a specific display, used instead of the All Displays images on that display (see §4) |
+| Start trigger | When the phase begins (see "Start triggers") |
+| Images (All Displays) | Images chosen from the library (multi-select). Used by every display that doesn't have its own selection (see "Per-display images") |
+| Images (per display) | Optional: a separate selection for a specific display, used instead of the All Displays images on that display (see "Per-display images") |
 | Order | Random or In order |
 | Rotation | Optional: change to the next image every N minutes or hours while the phase is active |
-| Appearance | Only in: **Any** (default), **Light**, or **Dark** mode (see §2a) |
+| Appearance | Only in: **Any** (default), **Light**, or **Dark** mode (see "Light and Dark Mode") |
 
 **Which phase is active:** among phases whose appearance condition matches the
 current system appearance, the one whose start trigger fired most recently
@@ -51,7 +59,7 @@ Displays. Rotation then continues within the phase.
 position across launches. **Random** avoids repeating the current
 image when there's more than one choice.
 
-## 2. Start triggers
+## Start triggers
 
 | Trigger | Example |
 |---|---|
@@ -66,7 +74,7 @@ image when there's more than one choice.
 - If civil dawn or dusk doesn't happen on a given day (far north or south), that
   trigger is skipped that day and the previous phase stays active.
 
-## 2a. Light and Dark Mode
+## Light and Dark Mode
 
 - Each phase has an **Only in** setting: Any, Light, or Dark.
 - The app listens for system appearance changes (including Auto switching) and
@@ -77,7 +85,7 @@ image when there's more than one choice.
   - *Dusk pictures, darker ones in Dark Mode:* two dusk phases, one Light and one Dark.
 - The phase list shows a light/dark badge on phases with a condition.
 
-## 3. Image library
+## Image library
 
 - **App preference:** a single image folder, chosen with a standard folder picker.
 - **App preference: Include subfolders** (off by default). When on, the folder is
@@ -120,7 +128,7 @@ image when there's more than one choice.
   editor marks it as missing. A phase with no available images is skipped
   (the wallpaper stays as it is).
 
-## 4. Displays
+## Displays
 
 ### Per-display images
 - Each phase has one image selection for **All Displays**, plus optional
@@ -156,7 +164,7 @@ image when there's more than one choice.
   standard). Considered and rejected: "ultrawide" vs. "wide" is fuzzy, and
   wrong guesses would surprise; explicit per-display choices are predictable.
 
-- Changes apply to the current Space on each display (macOS limitation; see §9).
+- Changes apply to the current Space on each display (macOS limitation; see "Platform notes and limitations").
 
 ### When displays change
 - `[D-screen-change-no-reroll]` When macOS reports a display change
@@ -176,7 +184,7 @@ image when there's more than one choice.
     a newly connected display can also give the other displays new picks.
     Unchanged from earlier drafts.
 
-## 4a. Transitions
+## Transitions
 
 - **App preference: Transition**: None or **Crossfade** (default).
 - **App preference: Duration**: 0.5 to 3 seconds (default 1 second), shown
@@ -205,6 +213,11 @@ image when there's more than one choice.
        twitch returns" below). 1.5 s leaves about 0.7 s of margin. A
        longer-lived cover can't be seen, because it shows the same image
        as the wallpaper behind it.
+     - *Cost:* the menu bar's background restyles when the cover is
+       removed, not when the wallpaper is set (verified by the author
+       with draft 22, 2026-10-28). So it now lags the fade by about
+       1.5 s instead of 0.5 s. The menu bar's text and icon color lag as
+       before (see "Known issues").
 - The cover draws the incoming image the way macOS will, using that screen's
   scaling (fill, fit, stretch, or center) and fill color.
 - `[D-no-screenshots]` The cover is drawn from the image file. No screenshots and no Screen
@@ -215,7 +228,7 @@ image when there's more than one choice.
   - The incoming image file can't be read (that screen only: it switches
     without a fade, at the same moment as the other screens finish fading)
   - A screen's image isn't actually changing (that screen only)
-  - Restoring the original wallpaper on quit (§8a)
+  - Restoring the original wallpaper on quit `[D-restore-on-quit]`
 - If another change starts while a fade is running, the running fade finishes
   instantly (its wallpaper is set and its cover removed) and the new change
   starts its own fade.
@@ -266,9 +279,9 @@ the measured macOS behavior.
 
 The same recording showed a second, separate problem: turning System
 Settings' "Show menu bar background" on or off started a crossfade to a new
-image. See `[D-screen-change-no-reroll]` (§4).
+image. See `[D-screen-change-no-reroll]`.
 
-## 5. Missed changes: sleep, wake, unlock
+## Missed changes: sleep, wake, unlock
 
 On launch, wake from sleep, screen unlock, and time zone / clock changes, the app
 `[D-missed-latest-only]`:
@@ -281,7 +294,7 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
    by the number of missed rotations; for Random, a single new random pick. The
    rotation clock stays aligned to the original schedule.
 
-## 6. Location
+## Location
 
 - `[D-location-on-demand]` Uses Location Services. Permission is requested
   only when a phase first uses
@@ -294,7 +307,7 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
   warning, and the menu explains how to turn it on in System Settings. Clock and
   "Always" phases keep working.
 
-## 7. Interface
+## Interface
 
 ### Icons
 - **App icon:** the supplied artwork (landscape in a circle between two lunar
@@ -323,7 +336,7 @@ following the pattern of Apple's own menu bar extras (e.g. Time Machine's
 - **Pause Schedule** (checkmark when paused; saved across launches)
 - **Open Phases…**: opens the Phases window
 - If location access is denied and a phase needs it, one extra dimmed line
-  says so (§6).
+  says so (see "Location").
 
 `[D-menu-no-shortcuts]` The current image's filename is not shown in the
 menu. There is no Quit item
@@ -516,6 +529,18 @@ extras don't show them. No global hotkey.
       one later, and log the item's `minimumThickness`/`maximumThickness`
       to see what resets them. The untried fallback is re-applying the
       limits whenever the split view resizes.
+    - **Regressed 2026-10-28 (draft 22 build).** The sidebar again drags
+      from very narrow to very wide (found by the author). No window or
+      sidebar code changed since the merged helper; that build only
+      touched the crossfade and scheduler. So the bug is intermittent,
+      and the ordering fix didn't remove it. The unit tests all pass but
+      can't see this. Under investigation, following the plan above.
+      - A new suspect, from reading the code (not yet logged): if the
+        helper's delayed pass runs before its view is inside the split
+        view, or before the split view's delegate is the controller, it
+        returns without doing anything and never tries again. Nothing
+        reports that failure, so a launch can silently go without limits.
+        The diagnostic logging should record when this happens.
 - `[D-sidebar-always-visible]` **The sidebar can't be hidden.** There is no
   sidebar toggle button, and dragging the divider past the minimum width
   doesn't collapse it.
@@ -549,17 +574,31 @@ extras don't show them. No global hotkey.
 - **Phase selected:** editor with name, trigger, offset, appearance condition,
   order, rotation, and the Images section (Display picker and thumbnail grid).
 - **Settings selected:** image folder and Include subfolders; display sharing
-  preference (§4); transition and duration; Launch at Login; location status
+  preference (see "Displays sharing the All Displays images"); transition and duration; Launch at Login; location status
   with today's civil dawn and dusk and Update Now; and, at the bottom, a
   **Quit** section with the **Restore original wallpaper when quitting** toggle
-  and a **Quit Phases** button whose note says what quitting will do (§8a).
+  and a **Quit Phases** button whose note says what quitting will do `[D-restore-on-quit]`.
+- `[D-version-in-settings]` **About section,** last in Settings, below
+  Quit, one line each:
+  - **Version:** the app's version and build number, e.g. "1.0 (1)".
+  - **Spec:** the SPEC.md draft the build was made against, e.g. "Draft 23".
+  - **Built:** the date and time this copy of the app was built (taken
+    from the app's executable file).
+  - *Why:* during testing, the author needs to tell which build is
+    running. The version and build number never change for a personal
+    app, so the spec draft and build time are what actually tell builds
+    apart.
+  - *How:* the draft number is a constant in the code
+    (`App/Model/AppVersion.swift`). A unit test reads SPEC.md's title and
+    fails if the constant doesn't match it, so the number can't drift
+    from the spec `[D-tests-carry-tags]`. Bump it with each new draft.
 - `[D-quit-in-window]` **⌘Q** quits Phases whenever the Phases window is
   active, and Settings has the Quit Phases button (above).
 
 No Dock icon. The app runs as a menu bar accessory, so it has no app menu;
 that's why Quit needs a home in the window.
 
-## 8. Launch at login: explicit consent only
+## Launch at login: explicit consent only
 
 `[D-login-consent]`
 
@@ -574,7 +613,7 @@ that's why Quit needs a home in the window.
 - Turning it off unregisters it. If the user removes it in System Settings, the
   preference updates to match.
 
-## 8a. Restore original wallpaper on quit
+## Restore original wallpaper on quit
 
 - At launch, before changing anything, Phases records each display's current
   wallpaper (image file plus fill/scaling options), keyed by display ID.
@@ -599,7 +638,7 @@ that's why Quit needs a home in the window.
 - Displays that were disconnected in the meantime are skipped. If the original
   image file no longer exists, that display is skipped.
 
-## 9. Platform notes and limitations
+## Platform notes and limitations
 
 - `NSWorkspace.setDesktopImageURL(_:for:options:)` sets the image **per screen**,
   so different images per display are supported.
@@ -611,25 +650,25 @@ that's why Quit needs a home in the window.
   every change, wake, or settings edit, with an hourly re-check as a safety net
   against clock drift. No polling loop.
 
-## 10. Persistence
+## Persistence
 
 All settings (folder bookmark, phases including per-display selections,
 preferences, in-order positions, last applied phase and image per display, known
 displays and their names, last location) are stored in UserDefaults as Codable
 data. Phases saved by earlier versions load unchanged (no per-display images).
 
-## 11. Out of scope (v1)
+## Out of scope (v1)
 
 - Different schedules per weekday
 - Multiple folders or online image sources
 - Different wallpaper per Space
 - Scaling/fill options (uses the current macOS fill setting)
 
-## 12. Known issues
+## Known issues
 
 - Unreproduced: the desktop once turned black. Source folder is local storage
   (not a cloud-synced folder). No change until it can be reproduced.
-- Restoring an Aerial isn't supported yet (see §8a). Possible approach: back up
+- Restoring an Aerial isn't supported yet (see `[D-aerials-untouched]`). Possible approach: back up
   and restore macOS's wallpaper store file and restart the wallpaper process.
   Undocumented, so it needs explicit approval before building.
 - **Menu bar blanks for about 0.1 s when the wallpaper changes (macOS behavior,
@@ -649,7 +688,7 @@ data. Phases saved by earlier versions load unchanged (no per-display images).
 - Bartender (menu bar manager) caused additional odd menu bar behavior during
   testing. Not a Phases issue.
 
-## 13. Platform quirks
+## Platform quirks
 
 Framework and OS behavior that affects Phases' code and is easy to trip
 over. Each entry says whether it was **verified** (tested or measured, with
@@ -657,24 +696,37 @@ date) or is **recalled** (believed from past knowledge, not tested here).
 Add new quirks here when they're found; link them from the `[D-…]` decision
 they shaped.
 
-- **macOS: an app-set wallpaper appears about 0.55–0.65 s after
-  `setDesktopImageURL` returns, followed by about 0.13 s of macOS's own
-  motion (macOS 27.2).** *Measured* 2026-10-28 from a 30 fps screen
-  recording of seven Phases changes on one display: the menu bar restyle
-  and a brief shift-and-settle of the wallpaper image both land
-  0.55–0.65 s after the fade ends, which is when Phases sets the
-  wallpaper. Whether macOS 27.1 was faster is *unknown*: the draft 5 fix
-  worked then with a 0.5 s delay, and the author believes (not certain)
-  that was on 27.1. Shapes `[D-cover-settle]`; history in "The twitch
-  returns" (§4a). If the twitch comes back again, measure this delay
-  first, the same way.
+- **macOS: after an app sets the wallpaper, macOS plays about 0.13 s of
+  its own motion (a shift that settles back) somewhere within the next
+  1.5 s (macOS 27.2).** *Measured* 2026-10-28 from a 30 fps screen
+  recording of seven Phases changes on one display: the motion landed
+  0.55–0.65 s after the wallpaper was set, just as draft 21's cover came
+  off. With the cover held 1.5 s, the twitch is gone (verified by the
+  author, 2026-10-28), so the motion finishes within that time. Whether
+  macOS 27.1 was faster is *unknown*: the draft 5 fix worked then with a
+  0.5 s delay, and the author believes (not certain) that was on 27.1.
+  Shapes `[D-cover-settle]`; history in "The twitch returns" (under "Transitions"). If
+  the twitch comes back again, measure the timing first, the same way.
+  - *Correction:* draft 22 first said the wallpaper *appears* 0.55–0.65 s
+    after being set, judging by when the menu bar restyled. But the menu
+    bar's background restyles when the cover is removed (next entry), so
+    that timing only showed the 0.5 s cover removal. The motion's timing
+    is measured; the cause of the motion is not.
+- **macOS: the menu bar's background restyles when the window under it
+  changes, not when the wallpaper changes (macOS 27.2).** *Verified*
+  2026-10-28 by the author with "Show menu bar background" on: the
+  background keeps its old color through the fade and after the wallpaper
+  is set, and changes when Phases removes its cover. This looks like a
+  sibling of the text-color delay in "Known issues" (FB25326597), where
+  the restyle followed app switching; that link is a guess. Explains the
+  cost noted under `[D-cover-settle]`.
 - **AppKit: `NSApplication.didChangeScreenParametersNotification` fires
   for more than display changes (macOS 27.2).** *Verified* 2026-10-28 by
   the author: hiding or showing the Dock, and toggling System Settings ›
   Menu Bar › "Show menu bar background", each started a Phases crossfade,
   which only that notification could trigger. The likely reason, that
   these change each screen's visible frame, is *recalled*, not checked.
-  Display UUIDs don't change. Shapes `[D-screen-change-no-reroll]` (§4).
+  Display UUIDs don't change. Shapes `[D-screen-change-no-reroll]`.
 - **SwiftUI: a window with no toolbar items gets no toolbar at all, so
   `.windowToolbarStyle(.unified)` has no effect and the title bar stays
   short (macOS 27).** *Verified* 2026-10-28: after removing the sidebar
@@ -735,7 +787,7 @@ they shaped.
     behaves on earlier macOS versions Phases supports (deployment target is
     macOS 26; only macOS 27 was tested).
 
-## 14. Testing
+## Testing
 
 Regressions found in testing (the − button doing nothing, the Name field
 taking focus, Tab skipping the grid) are why Phases has tests. They come in
@@ -759,6 +811,8 @@ two layers.
   - `ImageGridNavigation`: arrow-key movement `[D-grid-one-tab-stop]`
   - `PhaseListSelection`: which phase is selected after a delete
     `[D-delete-selects-next]`
+  - `AppVersion`: the spec draft constant matches SPEC.md's title
+    `[D-version-in-settings]`
 - `[D-tests-unhosted]` **The tests never launch Phases.** The test package
   compiles the files it tests directly instead of loading them into the
   running app.
@@ -810,5 +864,6 @@ were found in the commit history, not in this spec.
 | 2026-10-28 (draft 19) | Tab visited only the on-screen thumbnails, didn't scroll, then jumped back to the sidebar | Grid is one Tab stop with an arrow-key cursor `[D-grid-one-tab-stop]` | Unit test for arrow movement (Layer 1); **UI test:** Tab enters and leaves the grid in one stop, and arrowing down past the visible rows scrolls |
 | 2026-10-28 | Title bar became short and crowded after the sidebar toggle was removed; then the fix made it 66 pt tall | Hand-made empty unified toolbar, icon-only `[D-tall-toolbar]` | Nothing yet; a screenshot check (toolbar 52 pt). Cause of the 66 pt only theorized |
 | 2026-10-28 | Sidebar could be dragged far below 240 pt and far above 320 pt again, right after the toolbar helper was added | One helper, toolbar first, then sidebar limits `[D-window-helper-order]` | **UI test:** drag the divider both ways; width stays 240–320. Appears fixed; cause not proven, never caught in a log |
-| 2026-10-28 (draft 21, macOS 27.2) | The crossfade twitch returned: the cover was removed while macOS was still showing the new wallpaper | Settle delay raised from 0.5 s to 1.5 s `[D-cover-settle]`; see "The twitch returns" (§4a) | Not suited to XCUITest (frame timing); checked with frame-by-frame recordings |
+| 2026-10-28 (draft 21, macOS 27.2) | The crossfade twitch returned: the cover was removed while macOS was still showing the new wallpaper | Settle delay raised from 0.5 s to 1.5 s `[D-cover-settle]`; see "The twitch returns" (under "Transitions") | Not suited to XCUITest (frame timing); checked with frame-by-frame recordings |
 | 2026-10-28 (draft 21) | Hiding the Dock or toggling "Show menu bar background" crossfaded to a new image | Screen changes run the normal check instead of re-applying `[D-screen-change-no-reroll]` | Nothing yet; a unit test would need the scheduler's check pulled out of `WallpaperScheduler` |
+| 2026-10-28 (draft 22) | Sidebar width limits gone again: drags from very narrow to very wide | **Not fixed yet**; investigating, see `[D-window-helper-order]` | **UI test** (same as the earlier sidebar rows). Intermittent, so the test would need several launches |

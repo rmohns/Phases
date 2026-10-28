@@ -19,3 +19,9 @@
 - **Platform quirks:** framework/OS quirks live in SPEC.md under the "Platform quirks" heading, each marked
   verified (with date) or recalled. Check there before blaming or working
   around SwiftUI/AppKit behavior, and add new quirks there when found.
+- **No section numbers.** Refer to spec sections by `[D-…]` tag or by
+  quoted section title, in the spec and in code comments; never "§4" or
+  "section 4". Spec headings are unnumbered on purpose `[D-refs-by-id]`.
+- **Spec draft number:** when bumping the draft in SPEC.md's title, bump
+  `AppVersion.specDraft` too; a unit test enforces the match
+  `[D-version-in-settings]`.
