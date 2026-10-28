@@ -7,9 +7,10 @@ struct PhasesWindow: View {
 
   var scheduler: WallpaperScheduler
   @State private var selection: SidebarItem?
+  @State private var columnVisibility = NavigationSplitViewVisibility.all
 
   var body: some View {
-    NavigationSplitView {
+    NavigationSplitView(columnVisibility: $columnVisibility) {
       List(selection: $selection) {
         // [D-brand-scrolls] First list item, so it scrolls away with long
         // phase lists; never pinned.
@@ -51,6 +52,8 @@ struct PhasesWindow: View {
       }
       // [D-sidebar-width] Opens at the 240 pt minimum; widens to 320 pt.
       .navigationSplitViewColumnWidth(min: 240, ideal: 240, max: 320)
+      // [D-sidebar-always-visible] No toggle button; see onChange below.
+      .toolbar(removing: .sidebarToggle)
     } detail: {
       switch selection {
       case .settings:
@@ -74,6 +77,11 @@ struct PhasesWindow: View {
         .opacity(0)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+    // [D-sidebar-always-visible] Dragging the divider past the minimum width
+    // collapses the sidebar; reopen it.
+    .onChange(of: columnVisibility) {
+      if columnVisibility != .all { columnVisibility = .all }
     }
     .onAppear {
       scheduler.library.reload()
