@@ -8,87 +8,89 @@ struct PhaseEditor: View {
 
   var body: some View {
     let phase = phaseBinding
-    Form {
-      Section {
-        TextField("Name", text: phase.name)
-      }
+    ScrollViewReader { scrollProxy in
+      Form {
+        Section {
+          TextField("Name", text: phase.name)
+        }
 
-      Section("Starts") {
-        TriggerEditor(trigger: phase.trigger)
-        if phase.wrappedValue.trigger == .always && scheduler.phases.count > 1 {
-          Text("An “Always” phase is used only when no timed phase applies. Use “Only in” to switch between Always phases with Light and Dark Mode.")
-            .font(.caption)
-            .foregroundStyle(.secondary)
-        }
-        Picker("Only in", selection: phase.appearance) {
-          ForEach(AppearanceCondition.allCases) { condition in
-            Text(condition.title).tag(condition)
-          }
-        }
-        .pickerStyle(.segmented)
-        if phase.wrappedValue.trigger.usesLocation && scheduler.location.isDenied {
-          Label("Location access is off, so this phase is skipped.", systemImage: "exclamationmark.triangle")
-            .foregroundStyle(.orange)
-        }
-      }
-
-      Section("Wallpaper") {
-        Picker("Order", selection: phase.order) {
-          ForEach(ImageOrder.allCases) { order in
-            Text(order.title).tag(order)
-          }
-        }
-        .pickerStyle(.segmented)
-
-        Toggle("Rotate images during this phase", isOn: phase.isRotating)
-        if phase.wrappedValue.isRotating {
-          LabeledContent("Every") {
-            HStack {
-              TextField("Interval", value: phase.rotation.value, format: .number)
-                .labelsHidden()
-                .frame(width: 56)
-                .multilineTextAlignment(.trailing)
-              Stepper("Interval", value: phase.rotation.value, in: 1...999)
-                .labelsHidden()
-              Picker("Unit", selection: phase.rotation.unit) {
-                ForEach(TimeUnit.allCases) { unit in
-                  Text(unit.title).tag(unit)
-                }
-              }
-              .labelsHidden()
-              .fixedSize()
-            }
-          }
-        }
-      }
-
-      Section("Images") {
-        let displays = scheduler.displaysForPicker
-        if displays.count > 1 {
-          Picker("Display", selection: $display) {
-            Text("All Displays").tag(nil as String?)
-            ForEach(displays) { known in
-              Text(scheduler.isConnected(known) ? known.name : "\(known.name) (not connected)")
-                .tag(Optional(known.uuid))
-            }
-          }
-        }
-        if let display, displays.contains(where: { $0.uuid == display }) {
-          Toggle("Use different images on this display", isOn: usesOwnImages(display, in: phase))
-          if let own = ownImages(display, in: phase) {
-            ImageGrid(library: scheduler.library, selection: own)
-              .id(display)
-          } else {
-            Text("This display uses the All Displays images.")
+        Section("Starts") {
+          TriggerEditor(trigger: phase.trigger)
+          if phase.wrappedValue.trigger == .always && scheduler.phases.count > 1 {
+            Text("An “Always” phase is used only when no timed phase applies. Use “Only in” to switch between Always phases with Light and Dark Mode.")
+              .font(.caption)
               .foregroundStyle(.secondary)
           }
-        } else {
-          ImageGrid(library: scheduler.library, selection: phase.imageNames)
-            .id("all")
+          Picker("Only in", selection: phase.appearance) {
+            ForEach(AppearanceCondition.allCases) { condition in
+              Text(condition.title).tag(condition)
+            }
+          }
+          .pickerStyle(.segmented)
+          if phase.wrappedValue.trigger.usesLocation && scheduler.location.isDenied {
+            Label("Location access is off, so this phase is skipped.", systemImage: "exclamationmark.triangle")
+              .foregroundStyle(.orange)
+          }
+        }
+
+        Section("Wallpaper") {
+          Picker("Order", selection: phase.order) {
+            ForEach(ImageOrder.allCases) { order in
+              Text(order.title).tag(order)
+            }
+          }
+          .pickerStyle(.segmented)
+
+          Toggle("Rotate images during this phase", isOn: phase.isRotating)
+          if phase.wrappedValue.isRotating {
+            LabeledContent("Every") {
+              HStack {
+                TextField("Interval", value: phase.rotation.value, format: .number)
+                  .labelsHidden()
+                  .frame(width: 56)
+                  .multilineTextAlignment(.trailing)
+                Stepper("Interval", value: phase.rotation.value, in: 1...999)
+                  .labelsHidden()
+                Picker("Unit", selection: phase.rotation.unit) {
+                  ForEach(TimeUnit.allCases) { unit in
+                    Text(unit.title).tag(unit)
+                  }
+                }
+                .labelsHidden()
+                .fixedSize()
+              }
+            }
+          }
+        }
+
+        Section("Images") {
+          let displays = scheduler.displaysForPicker
+          if displays.count > 1 {
+            Picker("Display", selection: $display) {
+              Text("All Displays").tag(nil as String?)
+              ForEach(displays) { known in
+                Text(scheduler.isConnected(known) ? known.name : "\(known.name) (not connected)")
+                  .tag(Optional(known.uuid))
+              }
+            }
+          }
+          if let display, displays.contains(where: { $0.uuid == display }) {
+            Toggle("Use different images on this display", isOn: usesOwnImages(display, in: phase))
+            if let own = ownImages(display, in: phase) {
+              ImageGrid(library: scheduler.library, selection: own, scrollProxy: scrollProxy)
+                .id(display)
+            } else {
+              Text("This display uses the All Displays images.")
+                .foregroundStyle(.secondary)
+            }
+          } else {
+            ImageGrid(library: scheduler.library, selection: phase.imageNames, scrollProxy: scrollProxy)
+              .id("all")
+          }
         }
       }
+      .formStyle(.grouped)
     }
-    .formStyle(.grouped)
     .navigationTitle(phase.wrappedValue.name)
   }
 

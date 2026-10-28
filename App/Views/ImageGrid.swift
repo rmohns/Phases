@@ -1,13 +1,22 @@
 import SwiftUI
 
 /// Thumbnail grid of the library folder. Click toggles an image; Shift-click
-/// selects the range from the last clicked image.
+/// selects the range from the last clicked image. From the keyboard the grid
+/// is a single Tab stop with an arrow-key cursor `[D-grid-one-tab-stop]`.
 struct ImageGrid: View {
   var library: ImageLibrary
   @Binding var selection: [String]
+  /// The editor's scroll view, used to keep the keyboard cursor visible.
+  var scrollProxy: ScrollViewProxy?
   @State private var anchor: String?
+  /// The image the arrow keys move and Space toggles.
+  @State private var cursor: String?
+  @State private var columnCount = 1
+  @FocusState private var isFocused: Bool
 
-  private let columns = [GridItem(.adaptive(minimum: 112), spacing: 12)]
+  private static let minimumCellWidth: CGFloat = 112
+  private static let spacing: CGFloat = 12
+  private let columns = [GridItem(.adaptive(minimum: minimumCellWidth), spacing: spacing)]
 
   var body: some View {
     if library.folderURL == nil {
@@ -38,7 +47,7 @@ struct ImageGrid: View {
       }
 
       let groups = library.groups
-      LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+      LazyVGrid(columns: columns, alignment: .leading, spacing: Self.spacing) {
         ForEach(groups, id: \.folder) { group in
           Section {
             ForEach(group.names, id: \.self) { name in
@@ -54,20 +63,58 @@ struct ImageGrid: View {
           }
         }
       }
+      .onGeometryChange(for: Int.self) { proxy in
+        // Matches how `.adaptive` columns fit the width.
+        max(1, Int((proxy.size.width + Self.spacing) / (Self.minimumCellWidth + Self.spacing)))
+      } action: { columnCount = $0 }
       .padding(.vertical, 4)
+      // [D-grid-one-tab-stop] The grid, not each image, takes focus; the
+      // cursor ring below stands in for the focus ring.
+      .focusable()
+      .focused($isFocused)
+      .focusEffectDisabled()
+      .onChange(of: isFocused) {
+        if isFocused, cursor.map(library.contains) != true {
+          cursor = library.imageNames.first
+        }
+      }
+      .onMoveCommand { direction in
+        guard let cursor else { return }
+        let navigation = ImageGridNavigation(groups: groups, columns: columnCount)
+        self.cursor = navigation.destination(from: cursor, direction)
+      }
+      .onKeyPress(keys: [.space]) { press in
+        guard let cursor else { return .ignored }
+        toggle(cursor, extendingRange: press.modifiers.contains(.shift))
+        return .handled
+      }
+      .onChange(of: cursor) {
+        guard isFocused, let cursor else { return }
+        scrollProxy?.scrollTo(cursor)
+      }
+      .accessibilityElement(children: .contain)
+      .accessibilityLabel("Images")
     }
   }
 
   private func cell(for name: String) -> some View {
     let isSelected = selection.contains(name)
-    return Button {
+    return ThumbnailCell(
+      library: library,
+      name: name,
+      isSelected: isSelected,
+      showsCursor: isFocused && cursor == name
+    )
+    .id(name)
+    .onTapGesture {
+      cursor = name
+      isFocused = true
       toggle(name, extendingRange: NSEvent.modifierFlags.contains(.shift))
-    } label: {
-      ThumbnailCell(library: library, name: name, isSelected: isSelected)
     }
-    .buttonStyle(.plain)
+    .accessibilityElement(children: .ignore)
     .accessibilityLabel(name)
-    .accessibilityAddTraits(isSelected ? .isSelected : [])
+    .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    .accessibilityAction { toggle(name, extendingRange: false) }
   }
 
   private var selectedCount: Int {
@@ -103,6 +150,8 @@ private struct ThumbnailCell: View {
   var library: ImageLibrary
   var name: String
   var isSelected: Bool
+  /// Whether the grid's keyboard cursor is on this image.
+  var showsCursor: Bool
   @State private var image: NSImage?
   @Environment(\.displayScale) private var displayScale
 
@@ -124,6 +173,13 @@ private struct ThumbnailCell: View {
         .overlay {
           RoundedRectangle(cornerRadius: 6)
             .strokeBorder(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.separator), lineWidth: isSelected ? 3 : 1)
+        }
+        .overlay {
+          if showsCursor {
+            RoundedRectangle(cornerRadius: 9)
+              .strokeBorder(Color(nsColor: .keyboardFocusIndicatorColor), lineWidth: 3)
+              .padding(-4)
+          }
         }
         .overlay(alignment: .topTrailing) {
           if isSelected {
