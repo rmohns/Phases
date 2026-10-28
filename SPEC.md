@@ -282,6 +282,15 @@ extras don't show them. No global hotkey.
      active phase marked. Phase rows are two lines (name plus trigger), which
      also sets them apart from the one-line Settings row.
   - + / − buttons below the list add and remove phases.
+- **Sidebar width:** resizable from **220 pt** (minimum) to **320 pt**
+  (maximum), default 240 pt.
+  - *Why the minimum:* below about 220 pt, phase names and trigger times
+    truncate and the branding panel gets too small for its icon and text.
+  - *Why the maximum:* without one, the sidebar could be dragged across nearly
+    the whole window, squeezing the editor into an unusable column, and the
+    branding panel's fixed-size icon and text looked lost in a huge panel
+    (found in testing, 2026-10-27). 320 pt leaves room for long phase names
+    while keeping the editor the primary area.
 - **Phase selected:** editor with name, trigger, offset, appearance condition,
   order, rotation, and the Images section (Display picker and thumbnail grid).
 - **Settings selected:** image folder and Include subfolders; display sharing
