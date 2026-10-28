@@ -628,10 +628,28 @@ two layers.
 - XCUITest tests that drive the real Phases window (these need an Xcode
   test target, so first find a way to run one, given the `bitrig test`
   limit above), aimed at the focus and
-  wiring bugs Layer 1 can't see. Start with one test per past regression:
-  − deletes and selects the next phase, the sidebar (not the Name field)
-  has focus on open, and Tab enters and leaves the image grid in one stop.
+  wiring bugs Layer 1 can't see. Start with the UI tests marked in
+  "Regressions found so far" below.
 - Before building: decide how a UI test run avoids changing the real
   wallpaper (`[D-tests-unhosted]` doesn't apply, since UI tests must launch
   the app). Whether XCUITest drives a menu bar accessory app's window
   reliably is *recalled* as finicky, not tested.
+
+#### Regressions found so far
+
+Bugs found in testing and fixed, oldest first, with how a test could guard
+each one. Design changes made after review (menu bar icon legibility,
+sidebar width limits, branding panel dimming) aren't listed; neither is the
+unreproduced black desktop (see "Known issues"). Entries marked *git only*
+were found in the commit history, not in this spec.
+
+| Found | What broke | Fix | Guarded by |
+|---|---|---|---|
+| 2026-10-25 | Long image folder names in Settings were truncated badly (*git only*, commit 4e86957) | Middle truncation, full path in a tooltip | Nothing yet; visual only (AX reports the full name), so a screenshot check |
+| 2026-10-26 (draft 4) | Crossfade flashed the new image and twitched before fading; menu bar blinked to the new styling at the start | Fade the new image in and set the wallpaper at the end `[D-fade-in]` | Not suited to XCUITest (frame timing); checked with frame-by-frame recordings |
+| 2026-10-27 (draft 10) | Branding tagline cut off after its first line, because sidebar rows default to one line (*git only*, commit 58555d3) | Allow two lines on the tagline | Nothing yet; visual only (the panel's AX label is fixed text), so a screenshot check |
+| 2026-10-28 | Dragging the sidebar divider past its minimum collapsed the sidebar, with no way to reopen it; the first fix flickered and broke the 240 pt minimum | Non-collapsible split view item `[D-sidebar-always-visible]` | **UI test:** drag the divider far left; the sidebar stays at least 240 pt wide |
+| 2026-10-28 (draft 13) | − did nothing: it started disabled and never re-enabled when a phase was selected | +/− bar as its own view bound to the selection `[D-sidebar-footer-view]` | **UI test:** select a phase, click Delete Phase; the phase is gone |
+| 2026-10-28 (draft 15) | Deleting a phase always selected the first phase | Select the next phase down `[D-delete-selects-next]` | Unit test (Layer 1); **UI test:** delete a middle phase; the one below is selected |
+| 2026-10-28 (draft 17; draft 18's fix didn't work) | The Name field had focus with its text selected when the window opened, so any keypress renamed the phase | Move focus to the sidebar a run-loop pass after the window appears `[D-initial-focus-sidebar]` | **UI test:** open the window, type a letter; the phase name is unchanged |
+| 2026-10-28 (draft 19) | Tab visited only the on-screen thumbnails, didn't scroll, then jumped back to the sidebar | Grid is one Tab stop with an arrow-key cursor `[D-grid-one-tab-stop]` | Unit test for arrow movement (Layer 1); **UI test:** Tab enters and leaves the grid in one stop, and arrowing down past the visible rows scrolls |
