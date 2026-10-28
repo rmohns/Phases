@@ -580,6 +580,12 @@ they shaped.
   toggle and adding `.windowToolbarStyle(.unified)`, the title bar stayed
   short in a screenshot, and the AX API listed no toolbar on the window.
   Shapes `[D-tall-toolbar]`.
+- **AppKit: an empty unified `NSToolbar` makes the title area 66 pt tall
+  (macOS 27).** *Verified* 2026-10-28 from diagnostic logging: the window's
+  title area went from 32 pt (no toolbar) to 66 pt the moment an empty
+  `NSToolbar` with `.unified` style was attached, and stayed there. That's
+  taller than Notes' toolbar (about 50 pt in a screenshot). Why it's 66 is
+  unknown. Affects `[D-tall-toolbar]`.
 - **SwiftUI: content in a List's `.safeAreaInset` may not refresh when the
   parent view's state changes (macOS).** *Recalled*, not verified against
   Apple documentation or a bug report. Matches the draft 13 bug where −
