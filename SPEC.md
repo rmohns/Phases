@@ -583,12 +583,18 @@ they shaped.
 ## 14. Testing
 
 Regressions found in testing (the − button doing nothing, the Name field
-taking focus, Tab skipping the grid) are why Phases has tests. They run with
-`bitrig test` and come in two layers.
+taking focus, Tab skipping the grid) are why Phases has tests. They come in
+two layers.
 
 ### Layer 1: unit tests (in place, draft 21)
 
-- A `PhasesTests` target using Swift Testing, in `Tests/`.
+- A small Swift package in `UnitTests/`, using Swift Testing. Run it with
+  `swift test` from that folder (about 30 tests, well under a second once
+  built).
+  - *Why a package, not a test target in Project.json:* `bitrig test`
+    doesn't see test targets in Project.json projects ("has no test
+    targets", verified 2026-10-28), and there's no generated Xcode project
+    to hand to `xcodebuild`. `swift test` needs neither.
 - Covers the pure logic that decides what the app does:
   - `ScheduleEngine`: which phase is active (including overnight and
     Light/Dark conditions), the next phase start, and rotation slots, which
@@ -598,13 +604,17 @@ taking focus, Tab skipping the grid) are why Phases has tests. They run with
   - `ImageGridNavigation`: arrow-key movement `[D-grid-one-tab-stop]`
   - `PhaseListSelection`: which phase is selected after a delete
     `[D-delete-selects-next]`
-- `[D-tests-unhosted]` **The tests never launch Phases.** The test target
-  compiles the files it tests directly (listed in Project.json) instead of
-  loading them into the running app.
+- `[D-tests-unhosted]` **The tests never launch Phases.** The test package
+  compiles the files it tests directly instead of loading them into the
+  running app.
+  - *How:* `UnitTests/Sources/PhasesLogic` holds symlinks to the app's
+    own source files, so the tests always check the code the app ships.
   - *Why:* launching Phases records and changes the real wallpaper, so a
     test run would touch the desktop. Testing only pure files also keeps
     the tests fast and free of AppKit side effects. The cost: a newly
-    tested file has to be added to the test target's source list.
+    tested file needs a new symlink there.
+  - *Verified* 2026-10-28: all tests pass, and deliberately breaking
+    `PhaseListSelection` back to the draft 15 behavior made two tests fail.
 - `[D-tests-carry-tags]` **Tests for a tagged decision carry its tag** in
   the test's name or a comment, so searching for `[D-…]` finds the spec, the
   code, and the test together.
@@ -615,7 +625,9 @@ taking focus, Tab skipping the grid) are why Phases has tests. They run with
 
 ### Layer 2: UI tests (planned, not built)
 
-- XCUITest tests that drive the real Phases window, aimed at the focus and
+- XCUITest tests that drive the real Phases window (these need an Xcode
+  test target, so first find a way to run one, given the `bitrig test`
+  limit above), aimed at the focus and
   wiring bugs Layer 1 can't see. Start with one test per past regression:
   − deletes and selects the next phase, the sidebar (not the Name field)
   has focus on open, and Tab enters and leaves the image grid in one stop.
