@@ -1,4 +1,4 @@
-# Phases — Specification (draft 17)
+# Phases — Specification (draft 18)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -342,6 +342,13 @@ extras don't show them. No global hotkey.
       window opens with nothing selected, so − started disabled and stayed
       that way. A separate view with its own binding to the selection is
       refreshed whenever the selection changes, and reads it at click time.
+- `[D-initial-focus-sidebar]` **The sidebar list has keyboard focus when
+  the window opens.** No text is selected and typing doesn't edit anything,
+  the same as after clicking a phase in the sidebar.
+  - *Why:* in draft 17, macOS focused the first text field (the selected
+    phase's Name) on open and selected its text, so any keypress replaced
+    the phase's name (found in testing, 2026-10-28). Undo worked, but
+    renaming shouldn't be one stray key away.
 - `[D-sidebar-width]` **Sidebar width:** resizable from **240 pt** (minimum and default) to
   **320 pt** (maximum). The sidebar opens at its narrowest and can only be
   widened.
