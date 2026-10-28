@@ -305,6 +305,10 @@ extras don't show them. No global hotkey.
          adds about 14 pt of its own padding inside a row's insets. Negative
          insets are honored (verified, 2026-10-28). Recheck if a macOS
          update moves the selection pill.
+       - **Top edge:** the panel's top lines up with the top of the first
+         grouped row in the detail form (the Name row, or Settings' first
+         row), so the sidebar and detail start content on one line under
+         the toolbar `[D-tall-toolbar]`.
      - the app icon, about 52 pt
      - "Phases" in a semibold title font
      - the tagline in two balanced lines, 12 pt light, with a deliberate break:
@@ -407,6 +411,20 @@ extras don't show them. No global hotkey.
     branding panel's fixed-size icon and text looked lost in a huge panel
     (found in testing, 2026-10-27). 320 pt leaves room for long phase names
     while keeping the editor the primary area.
+- `[D-tall-toolbar]` **Full-height toolbar over the detail pane only.** The
+  window keeps macOS's tall unified toolbar, like System Settings and
+  Bitrig, even though it has no toolbar buttons. The sidebar stays full
+  height beside it. The toolbar title always names the sidebar selection:
+  the phase name, "Settings", or the window name "Phases" when nothing is
+  selected.
+  - *Why:* removing the sidebar toggle left the toolbar empty, and the
+    window fell back to a short title bar. The traffic lights moved up and
+    the form's top crowded into the title area (found in review,
+    2026-10-28). A Notes-style toolbar across the full width only works
+    there because Notes' folder sidebar can be hidden, which
+    `[D-sidebar-always-visible]` rules out. System Settings' hide-the-title-
+    until-you-scroll was rejected: it has no SwiftUI API that I know of
+    (recalled), and the Name field already shows the phase name.
 - `[D-sidebar-always-visible]` **The sidebar can't be hidden.** There is no
   sidebar toggle button, and dragging the divider past the minimum width
   doesn't collapse it.
