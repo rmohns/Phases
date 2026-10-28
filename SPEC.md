@@ -1,4 +1,4 @@
-# Phases — Specification (draft 19)
+# Phases — Specification (draft 20)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -92,6 +92,26 @@ image when there's more than one choice.
 - The Phases window shows the library as a **thumbnail grid**, grouped under a
   heading per subfolder when subfolders are on. Click toggles an image in or out
   of the selection, ⇧-click selects a range, plus Select All / Select None buttons.
+- `[D-grid-one-tab-stop]` **Keyboard: the thumbnail grid is one Tab stop.**
+  Tab moves into the grid and the next Tab moves past it, the way Finder's
+  icon view and Photos work. Inside the grid:
+  - **Arrow keys** move a highlighted image (the cursor). Left and right
+    step through images in order, wrapping across rows. Up and down move by
+    one row in the same column, crossing subfolder headings; on a shorter
+    row the cursor lands on its last image.
+  - **Space** toggles the highlighted image; **⇧-Space** selects a range
+    from the last toggled image, the same as ⇧-click.
+  - The window scrolls to keep the highlighted image visible.
+  - The highlight shows only while the grid has keyboard focus. Clicking an
+    image moves the highlight there and focuses the grid.
+  - Images are not individual Tab stops, and VoiceOver still sees each image
+    as a toggleable button with its file name.
+  - *Why:* in draft 19 each image was its own button. Tab stopped only at
+    images already on screen, then jumped back to the sidebar instead of
+    scrolling (found in testing, 2026-10-28; see "Platform quirks"). Making
+    every image a Tab stop would fix that but cost one keypress per image to
+    get past a large folder. One Tab stop with arrow keys matches macOS
+    collection views and adds arrow-key movement.
 - If a selected image is later deleted or renamed, it's skipped and the phase
   editor marks it as missing. A phase with no available images is skipped
   (the wallpaper stays as it is).
@@ -525,6 +545,13 @@ they shaped.
   2026-10-28). That fits a timing cause (the editor appears after SwiftUI
   applies default focus), but the cause itself is unproven. Shapes
   `[D-initial-focus-sidebar]`.
+- **SwiftUI: Tab can't reach buttons in a `LazyVGrid` that haven't been
+  created yet, and the Form doesn't scroll to follow Tab (macOS 27).**
+  *Partly verified* 2026-10-28 from a screen recording: Tab visited only the
+  on-screen thumbnails (including two half-visible ones, without scrolling),
+  then wrapped to the sidebar. The cause (lazy grids only create views near
+  the visible area, and only existing views are in the Tab order) is
+  *recalled*, not proven. Shaped `[D-grid-one-tab-stop]`.
 - **System Events (AppleScript) doesn't report SwiftUI button
   descriptions (macOS 27).** *Verified* 2026-10-28: for the + / − buttons,
   System Events' `description` returned only "button" and found no
