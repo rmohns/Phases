@@ -107,6 +107,15 @@ struct SettingsView: View {
           )
         }
       }
+
+      // [D-version-in-settings]
+      Section("About") {
+        LabeledContent("Version", value: AppVersion.versionAndBuild)
+        LabeledContent("Spec", value: "Draft \(AppVersion.specDraft)")
+        if let built = AppVersion.buildDate {
+          LabeledContent("Built", value: built.formatted(date: .abbreviated, time: .shortened))
+        }
+      }
     }
     .formStyle(.grouped)
     .navigationTitle("Settings")
