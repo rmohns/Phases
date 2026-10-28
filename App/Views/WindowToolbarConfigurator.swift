@@ -21,11 +21,18 @@ struct WindowToolbarConfigurator: NSViewRepresentable {
 
     func apply() {
       guard let window else { return }
+      // DIAGNOSTIC (temporary)
+      diagLog.log("toolbar apply BEFORE: toolbar=\(window.toolbar?.identifier ?? "nil", privacy: .public) items=\(window.toolbar?.items.count ?? -1, privacy: .public) style=\(window.toolbarStyle.rawValue, privacy: .public) titlebarHeight=\(window.frame.height - window.contentLayoutRect.height, privacy: .public)")
       // [D-tall-toolbar] An empty toolbar still gets the full unified height.
       if window.toolbar == nil {
         window.toolbar = NSToolbar(identifier: "PhasesWindowToolbar")
       }
       window.toolbarStyle = .unified
+      diagLog.log("toolbar apply AFTER: toolbar=\(window.toolbar?.identifier ?? "nil", privacy: .public) style=\(window.toolbarStyle.rawValue, privacy: .public) titlebarHeight=\(window.frame.height - window.contentLayoutRect.height, privacy: .public)")
+      DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak window] in
+        guard let window else { return }
+        diagLog.log("toolbar +1s: toolbar=\(window.toolbar?.identifier ?? "nil", privacy: .public) items=\(window.toolbar?.items.count ?? -1, privacy: .public) style=\(window.toolbarStyle.rawValue, privacy: .public) titlebarHeight=\(window.frame.height - window.contentLayoutRect.height, privacy: .public) accessories=\(window.titlebarAccessoryViewControllers.count, privacy: .public)")
+      }
     }
   }
 }
