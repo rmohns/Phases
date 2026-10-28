@@ -64,6 +64,10 @@ struct PhasesWindow: View {
       }
     }
     .background {
+      // [D-tall-toolbar] SwiftUI makes no toolbar when there are no items.
+      WindowToolbarConfigurator()
+    }
+    .background {
       // [D-quit-in-window] ⌘Q while this window is active. Phases has no app
       // menu, so nothing else provides it.
       Button("Quit Phases") { NSApp.terminate(nil) }
