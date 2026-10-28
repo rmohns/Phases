@@ -12,8 +12,9 @@ import ImageIO
 /// the menu bar switch before the screen does.
 @MainActor
 final class CrossfadeController {
-  /// Time for macOS to finish drawing the new wallpaper before the cover goes.
-  private static let settleDelay: Duration = .milliseconds(500)
+  /// [D-cover-settle] Time for macOS to finish drawing the new wallpaper,
+  /// including its own brief motion, before the cover goes.
+  private static let settleDelay: Duration = .milliseconds(1500)
 
   private var covers: [NSWindow] = []
   private var fadeTask: Task<Void, Never>?
