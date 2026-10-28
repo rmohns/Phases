@@ -425,6 +425,11 @@ extras don't show them. No global hotkey.
     `[D-sidebar-always-visible]` rules out. System Settings' hide-the-title-
     until-you-scroll was rejected: it has no SwiftUI API that I know of
     (recalled), and the Name field already shows the phase name.
+  - *How:* `.windowToolbarStyle(.unified)` alone did nothing, because
+    SwiftUI gives the window no toolbar at all when it has no items (see
+    "Platform quirks"). The window's AppKit `NSToolbar` is therefore
+    created by hand, empty, with the unified style, when SwiftUI hasn't
+    made one.
 - `[D-sidebar-always-visible]` **The sidebar can't be hidden.** There is no
   sidebar toggle button, and dragging the divider past the minimum width
   doesn't collapse it.
@@ -565,6 +570,12 @@ date) or is **recalled** (believed from past knowledge, not tested here).
 Add new quirks here when they're found; link them from the `[D-…]` decision
 they shaped.
 
+- **SwiftUI: a window with no toolbar items gets no toolbar at all, so
+  `.windowToolbarStyle(.unified)` has no effect and the title bar stays
+  short (macOS 27).** *Verified* 2026-10-28: after removing the sidebar
+  toggle and adding `.windowToolbarStyle(.unified)`, the title bar stayed
+  short in a screenshot, and the AX API listed no toolbar on the window.
+  Shapes `[D-tall-toolbar]`.
 - **SwiftUI: content in a List's `.safeAreaInset` may not refresh when the
   parent view's state changes (macOS).** *Recalled*, not verified against
   Apple documentation or a bug report. Matches the draft 13 bug where −
