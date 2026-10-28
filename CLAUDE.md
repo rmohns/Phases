@@ -1,5 +1,7 @@
 # Phases: project rules
 
+- **Start of every conversation:** read SPEC.md first. It is the source of
+  truth for what the app does and why (including design history).
 - **Spec first, always.** Update SPEC.md before changing the app, commit it, then
   build. The build must meet the spec, not the other way around. If the code
   needs to differ from the spec, change the spec first and say so.
