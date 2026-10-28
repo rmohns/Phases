@@ -289,26 +289,30 @@ extras don't show them. No global hotkey.
   them; draft 6 merged them back).
 - **Sidebar, top to bottom:**
   1. **Branding panel** (decorative): a rounded panel in a 16:10 aspect ratio,
-     like a laptop screen, spanning the sidebar's width (about 219 × 137 pt at
-     the default sidebar width, measured from the running app, 2026-10-28). Centered, top to bottom:
-     - `[D-brand-inset]` **Edges line up with the selection highlight.** The
-       panel's left and right edges match the system's blue selection pill
-       on the rows below it, about 10 pt from the window's left edge. This
-       also lines up with the left edge of the traffic-light buttons
-       (verified from screenshots, 2026-10-28).
-       - *Why:* the panel used an arbitrary 8 pt row inset that put it about
-         25 pt from the edge, matching nothing else in the sidebar (found in
-         review, 2026-10-28). The selection pill is the strongest vertical
-         line in the sidebar. The header and icon edges are system-drawn and
-         don't line up with each other anyway.
-       - *How:* the row inset is −6 pt on each side, because the system list
-         adds about 14 pt of its own padding inside a row's insets. Negative
-         insets are honored (verified, 2026-10-28). Recheck if a macOS
-         update moves the selection pill.
+     like a laptop screen, spanning the sidebar's width between the inset
+     edges below (expected about 201 × 126 pt at the default sidebar width).
+     Centered, top to bottom:
+     - `[D-brand-inset]` **Edges line up with the traffic lights and row
+       icons.** The panel's left edge matches the left edge of the red
+       traffic-light button and of the sidebar row icons, about 19–20 pt
+       from the window's left edge (measured from a 2× screenshot with the
+       tall toolbar, 2026-10-28). The right edge mirrors it.
+       - *Why:* the original 8 pt row inset matched nothing (about 25 pt from
+         the edge). Matching the selection highlight (about 10 pt) was tried
+         next and made the panel feel crowded against the sidebar edge
+         (found in review, 2026-10-28). Once `[D-tall-toolbar]` moved the
+         traffic lights right, their edge and the row icons' edge coincide,
+         so one line serves both.
+       - *How:* the row inset is +3 pt on each side; the system list adds
+         about 14–16 pt of its own padding inside a row's insets. Negative
+         insets are honored if ever needed (verified, 2026-10-28). Recheck
+         if a macOS update moves the traffic lights or row icons.
        - **Top edge:** the panel's top lines up with the top of the first
          grouped row in the detail form (the Name row, or Settings' first
          row), so the sidebar and detail start content on one line under
-         the toolbar `[D-tall-toolbar]`.
+         the toolbar `[D-tall-toolbar]`. The row's top inset is 20 pt
+         (measured: the form starts about 16 pt lower than the panel did
+         with a 4 pt inset).
      - the app icon, about 52 pt
      - "Phases" in a semibold title font
      - the tagline in two balanced lines, 12 pt light, with a deliberate break:
