@@ -1,4 +1,4 @@
-# Phases — Specification (draft 18)
+# Phases — Specification (draft 19)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -349,6 +349,10 @@ extras don't show them. No global hotkey.
     phase's Name) on open and selected its text, so any keypress replaced
     the phase's name (found in testing, 2026-10-28). Undo worked, but
     renaming shouldn't be one stray key away.
+  - *How:* the window moves focus to the sidebar list one run-loop pass
+    after it appears, once the phase editor is in place. Draft 18 used
+    SwiftUI's `.defaultFocus` on the list, which the Name field still beat
+    (see "Platform quirks").
 - `[D-sidebar-width]` **Sidebar width:** resizable from **240 pt** (minimum and default) to
   **320 pt** (maximum). The sidebar opens at its narrowest and can only be
   widened.
