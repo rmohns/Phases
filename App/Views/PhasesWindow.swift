@@ -84,22 +84,37 @@ private struct SidebarFooter: View {
   var body: some View {
     VStack(spacing: 0) {
       Divider()
+      // [D-sidebar-footer-style] System Settings' Login Items layout:
+      // 24 × 23 pt cells split by a 16 pt divider.
       HStack(spacing: 0) {
-        Button("Add Phase", systemImage: "plus") {
+        Button {
           selection = .phase(scheduler.addPhase().id)
+        } label: {
+          cell("Add Phase", systemImage: "plus")
         }
-        Button("Delete Phase", systemImage: "minus") {
+        Rectangle()
+          .fill(.separator)
+          .frame(width: 1, height: 16)
+        Button {
           guard let id = selectedPhaseID else { return }
           scheduler.deletePhase(id: id)
           selection = scheduler.phasesByTime.first.map { .phase($0.id) } ?? .settings
+        } label: {
+          cell("Delete Phase", systemImage: "minus")
         }
         .disabled(selectedPhaseID == nil)
         Spacer()
       }
-      .labelStyle(.iconOnly)
       .buttonStyle(.borderless)
-      .padding(6)
     }
+  }
+
+  /// An icon in a fully clickable 24 × 23 pt cell.
+  private func cell(_ title: LocalizedStringKey, systemImage: String) -> some View {
+    Label(title, systemImage: systemImage)
+      .labelStyle(.iconOnly)
+      .frame(width: 24, height: 23)
+      .contentShape(Rectangle())
   }
 
   private var selectedPhaseID: Phase.ID? {
