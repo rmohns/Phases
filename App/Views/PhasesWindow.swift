@@ -99,10 +99,17 @@ private struct SidebarBranding: View {
       .frame(maxWidth: .infinity)
       .background {
         if let wallpaper {
+          // No overall dimming; a gradient behind the text only (spec §7).
           Image(nsImage: wallpaper)
             .resizable()
             .scaledToFill()
-            .overlay(.black.opacity(0.35))
+            .overlay {
+              LinearGradient(
+                stops: [.init(color: .black.opacity(0.55), location: 0), .init(color: .clear, location: 0.55)],
+                startPoint: .bottom,
+                endPoint: .top
+              )
+            }
         } else {
           LinearGradient(
             colors: [Color(red: 0.19, green: 0.53, blue: 0.94), Color(red: 0.29, green: 0.25, blue: 0.88)],
@@ -113,16 +120,22 @@ private struct SidebarBranding: View {
         }
       }
       .overlay {
-        VStack(spacing: 6) {
+        VStack(spacing: 4) {
           Image(nsImage: NSApp.applicationIconImage)
             .resizable()
             .frame(width: 64, height: 64)
             .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
           Text("Phases")
             .font(.title3.weight(.semibold))
-            .foregroundStyle(.white)
-            .shadow(color: .black.opacity(0.5), radius: 3, y: 1)
+          Text("Wallpaper sets for every phase of your day")
+            .font(.caption)
+            .lineLimit(2)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
         }
+        .foregroundStyle(.white)
+        .shadow(color: .black.opacity(0.5), radius: 3, y: 1)
+        .padding(.horizontal, 10)
       }
       .clipShape(shape)
       .overlay(shape.strokeBorder(.separator))
@@ -137,7 +150,7 @@ private struct SidebarBranding: View {
         }
       }
       .accessibilityElement(children: .ignore)
-      .accessibilityLabel("Phases")
+      .accessibilityLabel("Phases. Wallpaper sets for every phase of your day")
   }
 }
 
