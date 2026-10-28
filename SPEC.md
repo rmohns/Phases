@@ -1,4 +1,4 @@
-# Phases — Specification (draft 20)
+# Phases — Specification (draft 21)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -339,6 +339,8 @@ extras don't show them. No global hotkey.
       Finder select the next item after a delete (recalled, not tested).
       The HIG has no explicit rule about this; matching those apps follows
       its general call for familiar, consistent behavior.
+    - The rule lives in a small model function (`PhaseListSelection`), not
+      in the view, so the unit tests can check it (see "Testing").
   - `[D-sidebar-footer-style]` **+ / − layout matches System Settings.**
     Reference: System Settings › General › Login Items & Extensions, the
     + / − under "Open at Login" (macOS 27). Measured from a screenshot
@@ -577,3 +579,47 @@ they shaped.
     highlights the whole 24 × 23 pt cell, and (b) how the system style
     behaves on earlier macOS versions Phases supports (deployment target is
     macOS 26; only macOS 27 was tested).
+
+## 14. Testing
+
+Regressions found in testing (the − button doing nothing, the Name field
+taking focus, Tab skipping the grid) are why Phases has tests. They run with
+`bitrig test` and come in two layers.
+
+### Layer 1: unit tests (in place, draft 21)
+
+- A `PhasesTests` target using Swift Testing, in `Tests/`.
+- Covers the pure logic that decides what the app does:
+  - `ScheduleEngine`: which phase is active (including overnight and
+    Light/Dark conditions), the next phase start, and rotation slots, which
+    are how `[D-missed-latest-only]` lands on the most recent missed rotation
+  - `SolarCalculator`: civil dawn and dusk at a known location, and days with
+    no civil dawn or dusk (far north)
+  - `ImageGridNavigation`: arrow-key movement `[D-grid-one-tab-stop]`
+  - `PhaseListSelection`: which phase is selected after a delete
+    `[D-delete-selects-next]`
+- `[D-tests-unhosted]` **The tests never launch Phases.** The test target
+  compiles the files it tests directly (listed in Project.json) instead of
+  loading them into the running app.
+  - *Why:* launching Phases records and changes the real wallpaper, so a
+    test run would touch the desktop. Testing only pure files also keeps
+    the tests fast and free of AppKit side effects. The cost: a newly
+    tested file has to be added to the test target's source list.
+- `[D-tests-carry-tags]` **Tests for a tagged decision carry its tag** in
+  the test's name or a comment, so searching for `[D-…]` finds the spec, the
+  code, and the test together.
+- Expected dawn and dusk times come from published almanac values
+  (*recalled*, not checked against a source). The tests allow ±10 minutes,
+  which catches real breakage (wrong day, wrong time zone, AM/PM swapped)
+  without depending on the almanac's exact rounding.
+
+### Layer 2: UI tests (planned, not built)
+
+- XCUITest tests that drive the real Phases window, aimed at the focus and
+  wiring bugs Layer 1 can't see. Start with one test per past regression:
+  − deletes and selects the next phase, the sidebar (not the Name field)
+  has focus on open, and Tab enters and leaves the image grid in one stop.
+- Before building: decide how a UI test run avoids changing the real
+  wallpaper (`[D-tests-unhosted]` doesn't apply, since UI tests must launch
+  the app). Whether XCUITest drives a menu bar accessory app's window
+  reliably is *recalled* as finicky, not tested.
