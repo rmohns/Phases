@@ -7,6 +7,7 @@ struct PhasesWindow: View {
 
   var scheduler: WallpaperScheduler
   @State private var selection: SidebarItem?
+  @FocusState private var sidebarFocused: Bool
 
   var body: some View {
     NavigationSplitView {
@@ -35,6 +36,10 @@ struct PhasesWindow: View {
         // refreshes when the selection changes.
         SidebarFooter(scheduler: scheduler, selection: $selection)
       }
+      // [D-initial-focus-sidebar] Otherwise macOS focuses the phase's Name
+      // field on open and selects its text.
+      .focused($sidebarFocused)
+      .defaultFocus($sidebarFocused, true)
       // [D-sidebar-width] Opens at the 240 pt minimum; widens to 320 pt.
       .navigationSplitViewColumnWidth(min: 240, ideal: 240, max: 320)
       .background {
