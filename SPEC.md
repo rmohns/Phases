@@ -574,6 +574,25 @@ extras don't show them. No global hotkey.
   - *How:* the sidebar's underlying AppKit split view item is marked as
     not collapsible, with its minimum and maximum thickness set from
     `[D-sidebar-width]`, so dragging stops at 240 pt.
+  - `[D-sidebar-limits-watch]` **The limits are watched and put back
+    whenever SwiftUI changes them.** SwiftUI rewrites the item's limits
+    seconds after the window opens (see "Platform quirks" and the
+    regression note under `[D-window-helper-order]`), so setting them
+    once isn't enough.
+    - *How:* event-driven only, no polling or timers. A key-value
+      observer on the split view item fires when anything sets its
+      minimum, maximum, or collapse settings; if a value differs from
+      Phases', it's set back (setting it again fires the observer once
+      more, finds it correct, and stops). As a backstop, the same check
+      runs on the sidebar's own split view resize notification, which
+      also re-attaches the observer if SwiftUI ever swaps in a new item.
+      Both go away when the window closes. Idle cost is zero.
+    - *Why not poll:* an idle menu bar app shouldn't use CPU (the
+      author's standing requirement; see also `[D-single-timer]`).
+    - Whether `NSSplitViewItem` sends key-value notifications for these
+      properties is *recalled*, not tested; the resize backstop covers
+      it if not. The diagnostic log records which path fixed each
+      rewrite.
   - **Works around SwiftUI on purpose.** SwiftUI has no way to stop a
     sidebar from collapsing, so Phases reaches past `NavigationSplitView` to
     the AppKit `NSSplitViewController` SwiftUI happens to use for it, and
@@ -894,4 +913,4 @@ were found in the commit history, not in this spec.
 | 2026-10-28 | Sidebar could be dragged far below 240 pt and far above 320 pt again, right after the toolbar helper was added | One helper, toolbar first, then sidebar limits `[D-window-helper-order]` | **UI test:** drag the divider both ways; width stays 240–320. Appears fixed; cause not proven, never caught in a log |
 | 2026-10-28 (draft 21, macOS 27.2) | The crossfade twitch returned: the cover was removed while macOS was still showing the new wallpaper | Settle delay raised from 0.5 s to 1.5 s `[D-cover-settle]`; see "The twitch returns" (under "Transitions") | Not suited to XCUITest (frame timing); checked with frame-by-frame recordings |
 | 2026-10-28 (draft 21) | Hiding the Dock or toggling "Show menu bar background" crossfaded to a new image | Screen changes run the normal check instead of re-applying `[D-screen-change-no-reroll]` | Nothing yet; a unit test would need the scheduler's check pulled out of `WallpaperScheduler` |
-| 2026-10-28 (draft 22) | Sidebar width limits gone again: drags from very narrow to very wide | **Not fixed yet.** Cause logged: SwiftUI rewrites the split view item's limits seconds after the window opens; see `[D-window-helper-order]` | **UI test** (same as the earlier sidebar rows). Intermittent, so the test would need several launches |
+| 2026-10-28 (draft 22) | Sidebar width limits gone again: drags from very narrow to very wide | Cause logged: SwiftUI rewrites the split view item's limits seconds after the window opens (see `[D-window-helper-order]`). Fix: watch the item and put the limits back `[D-sidebar-limits-watch]`; awaiting verification | **UI test** (same as the earlier sidebar rows). Intermittent, so the test would need several launches |
