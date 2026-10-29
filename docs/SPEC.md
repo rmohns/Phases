@@ -1,4 +1,4 @@
-# Phases — Specification (draft 26)
+# Phases — Specification (draft 27)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -544,10 +544,13 @@ extras don't show them. No global hotkey.
   - **Edit:** kept. Text fields (phase names) get Undo, Cut, Copy, Paste,
     and Select All from the Edit menu's shortcuts; removing it would break
     ⌘C and ⌘V in them (recalled AppKit behavior, to be checked in testing).
-  - **View:** removed. Its only items would be Show/Hide Sidebar, which
-    `[D-sidebar-always-visible]` rules out, and Enter Full Screen, which the
-    green window button and Window › Full Screen Tile still provide. macOS
-    fights this; see `[Q-view-menu-fullscreen]`.
+  - **View:** no Show/Hide Sidebar (ruled out by
+    `[D-sidebar-always-visible]`) and no toolbar items. What's left is a
+    View menu holding only a disabled Enter Full Screen, which macOS
+    insists on `[Q-view-menu-fullscreen]`. It stays: removing it with AppKit
+    made it show up when the menus opened and then vanish when they were
+    clicked, which is worse than an extra menu (author, 2026-10-29; tried in
+    draft 26).
   - **Window:** kept as macOS provides it (Minimize, Zoom, the window list,
     and so on). The app must behave like a well-mannered Mac app (author,
     2026-10-29).

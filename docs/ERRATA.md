@@ -182,8 +182,10 @@ would stop being true if a future macOS fixed the underlying behavior.
   groups replaced by nothing, the View menu held only a separator and a
   disabled Enter Full Screen (author's report, confirmed by reading the menu
   bar through System Events). SwiftUI has no API to remove a whole standard
-  menu (recalled). Shapes `[D-app-menu]`; workaround in "View menu
-  removal".
+  menu (recalled). Removing it from `NSApp.mainMenu` doesn't work cleanly
+  either: the menu still showed, then vanished once the menus were clicked
+  (*verified* 2026-10-29, author). Shapes `[D-app-menu]`, which keeps the
+  menu; see "View menu removal" under "Design history".
 
 ### Tools
 
@@ -219,22 +221,6 @@ How the tagged decisions route around the quirks above.
   0.5 s `[Q-menubar-bg-follows-window]`. The menu bar's text and icon color
   lag as before `[Q-menubar-restyle-on-app-switch]`.
 - Code: `CrossfadeController.settleDelay`.
-
-### View menu removal
-
-`[D-app-menu]` `[Q-view-menu-fullscreen]`
-
-- Phases removes the View menu from `NSApp.mainMenu` itself. It picks the
-  menu by contents, not by title, so it works in any language: a submenu
-  holding only separators and `toggleFullScreen:` items, which isn't the
-  Window or Help menu.
-- SwiftUI may rebuild the menu bar later, so the removal reruns whenever
-  an item is added to the main menu (`NSMenu.didAddItemNotification`) or
-  the main menu is replaced (key-value observing on `mainMenu`). It's
-  event-driven, with no polling, in keeping with `[D-sidebar-limits-watch]`.
-- If a macOS update breaks this, the one-item View menu comes back.
-  Nothing worse.
-- Code: `App/Model/MainMenuTrimmer.swift`.
 
 ### Tall toolbar
 
@@ -412,6 +398,22 @@ non-collapsible split view item (see "Sidebar limits").
     The 520-resize run that "confirmed" it probably ended before SwiftUI's
     rewrite.
   - Fixed by `[D-sidebar-limits-watch]` (see "Sidebar limits").
+
+### View menu removal
+
+`[D-app-menu]` `[Q-view-menu-fullscreen]`, draft 26 only.
+
+- Draft 26 removed the one-item View menu from `NSApp.mainMenu` itself,
+  picking it by contents (only separators and `toggleFullScreen:` items)
+  and redoing it whenever the menu bar changed (`NSMenu.didAddItemNotification`
+  and key-value observing on `mainMenu`).
+- In use, the View menu still appeared in the menu bar, then disappeared
+  the moment the author clicked into the menus (2026-10-29). Why it showed
+  at all is *unknown*; most likely SwiftUI or AppKit put it back and the
+  removal only ran once a menu event changed the menu again (a guess,
+  not tested).
+- Dropped in draft 27: a menu that vanishes under the pointer is worse than
+  a View menu with one disabled item.
 
 ## Diagnostic procedures
 
