@@ -10,6 +10,8 @@ between them at the right time, with a crossfade.
 It's a personal project, not on the App Store, and still in active
 development.
 
+![The Phases window, editing a Dusk phase that starts an hour before dusk and picks randomly from four selected images](docs/images/phases-window.png)
+
 ## Origin
 
 My friends share sky photos in a `cloud-game` channel on our Discord server. Some of them are pretty amazing. I wanted my Mac’s screens to feature them, but I also like different desktop pictures at different times of day, and I like variety.
