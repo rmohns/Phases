@@ -535,12 +535,23 @@ extras don't show them. No global hotkey.
       touched the crossfade and scheduler. So the bug is intermittent,
       and the ordering fix didn't remove it. The unit tests all pass but
       can't see this. Under investigation, following the plan above.
-      - A new suspect, from reading the code (not yet logged): if the
-        helper's delayed pass runs before its view is inside the split
-        view, or before the split view's delegate is the controller, it
-        returns without doing anything and never tries again. Nothing
-        reports that failure, so a launch can silently go without limits.
-        The diagnostic logging should record when this happens.
+      - A suspect from reading the code was a silent skip: the helper's
+        delayed pass running before the split view was ready. **Ruled out
+        by the log** (zero skips across three windows, 2026-10-28).
+      - **Cause found (logged 2026-10-28, three windows over two
+        launches):** the helper applies the limits every time, and they
+        take effect (min 240, max 320, not collapsible). Then, 1.5–28 s
+        later, SwiftUI writes its own defaults back onto the **same**
+        split view item: minimum 140 pt, no maximum, collapsible. The
+        split view, its controller, and the item never change. So the
+        limits hold for a few seconds after opening and then vanish,
+        which is why it looked intermittent. The author's recording shows
+        both results: the sidebar collapsing to nothing, and widening
+        until the form is pushed out of the window. What makes SwiftUI
+        rewrite them isn't known (see "Platform quirks").
+      - This also means the ordering theory above was wrong, or at most
+        incidental. The 520-resize run that "confirmed" it probably
+        ended before SwiftUI's rewrite.
       - **Temporary diagnostic logging is in the code** (marked
         `DIAGNOSTIC (temporary)` in `WindowLayoutConfigurator.swift`,
         subsystem `PhasesDiag`). It logs each limits pass (or a
@@ -733,6 +744,17 @@ they shaped.
   which only that notification could trigger. The likely reason, that
   these change each screen's visible frame, is *recalled*, not checked.
   Display UUIDs don't change. Shapes `[D-screen-change-no-reroll]`.
+- **SwiftUI: `NavigationSplitView` rewrites its sidebar's AppKit split
+  view item some time after the window opens, ignoring
+  `.navigationSplitViewColumnWidth` (macOS 27.2).** *Verified* 2026-10-28
+  from diagnostic logging: the item's minimum thickness went back to
+  140 pt, its maximum to unspecified, and `canCollapse` to true, 1.5–28 s
+  after Phases set them, on the same item object. The sidebar has
+  `.navigationSplitViewColumnWidth(min: 240, ideal: 240, max: 320)`, yet
+  the values SwiftUI wrote match none of it, so on macOS 27.2 that
+  modifier isn't reaching the item either. What triggers the rewrite is
+  *unknown*. Shapes `[D-window-helper-order]` and
+  `[D-sidebar-always-visible]`.
 - **SwiftUI: a window with no toolbar items gets no toolbar at all, so
   `.windowToolbarStyle(.unified)` has no effect and the title bar stays
   short (macOS 27).** *Verified* 2026-10-28: after removing the sidebar
@@ -872,4 +894,4 @@ were found in the commit history, not in this spec.
 | 2026-10-28 | Sidebar could be dragged far below 240 pt and far above 320 pt again, right after the toolbar helper was added | One helper, toolbar first, then sidebar limits `[D-window-helper-order]` | **UI test:** drag the divider both ways; width stays 240–320. Appears fixed; cause not proven, never caught in a log |
 | 2026-10-28 (draft 21, macOS 27.2) | The crossfade twitch returned: the cover was removed while macOS was still showing the new wallpaper | Settle delay raised from 0.5 s to 1.5 s `[D-cover-settle]`; see "The twitch returns" (under "Transitions") | Not suited to XCUITest (frame timing); checked with frame-by-frame recordings |
 | 2026-10-28 (draft 21) | Hiding the Dock or toggling "Show menu bar background" crossfaded to a new image | Screen changes run the normal check instead of re-applying `[D-screen-change-no-reroll]` | Nothing yet; a unit test would need the scheduler's check pulled out of `WallpaperScheduler` |
-| 2026-10-28 (draft 22) | Sidebar width limits gone again: drags from very narrow to very wide | **Not fixed yet**; investigating, see `[D-window-helper-order]` | **UI test** (same as the earlier sidebar rows). Intermittent, so the test would need several launches |
+| 2026-10-28 (draft 22) | Sidebar width limits gone again: drags from very narrow to very wide | **Not fixed yet.** Cause logged: SwiftUI rewrites the split view item's limits seconds after the window opens; see `[D-window-helper-order]` | **UI test** (same as the earlier sidebar rows). Intermittent, so the test would need several launches |
