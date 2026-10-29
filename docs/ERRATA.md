@@ -308,6 +308,17 @@ screen.
 
 Code: `App/Model/WindowSpaceMover.swift`.
 
+### Close stays here
+
+`[D-close-stays-here]`: on `willClose`, before dropping to accessory,
+Phases yields activation to the app chosen by `HandoffChoice` and
+activates it. *Verified* 2026-10-29 with real clicks: Phases window on
+Space A, Calculator on B as the most recent app, Dock click back to
+Phases, ⌘W → stayed on A, focus to the app with a window on A (Bitrig).
+Not yet tested: the Finder fallback when Finder has a window only on
+another Space (activating Finder might itself switch Spaces). Code:
+`App/Model/FocusHandoff.swift`, `App/Model/HandoffChoice.swift`.
+
 ### Branding panel insets
 
 `[D-brand-inset]` lines the panel up with the traffic lights and row icons.
