@@ -1,4 +1,4 @@
-# Phases — Specification (draft 29)
+# Phases — Specification (draft 30)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -531,7 +531,22 @@ extras don't show them. No global hotkey.
     happens before the window comes forward.
   - Replaces draft 24's "No Dock icon" rule.
   - macOS may fight this; see `[Q-regular-activation-menubar]` and
-    `[Q-accessory-focus-handoff]` (both recalled, not yet seen in Phases).
+    `[Q-accessory-focus-handoff]` (seen 2026-10-29; handled by
+    `[D-close-stays-here]`).
+- `[D-close-stays-here]` **Closing the window keeps you on the current
+  Space.** When the window closes, Phases hands focus to the frontmost
+  app with a window on the current Space, or to Finder if there is none,
+  before dropping its Dock icon `[D-dock-while-open]`. Only when Phases
+  is the active app; otherwise focus is already elsewhere.
+  - *Why:* without this, macOS activated the most recently used app,
+    wherever its window was, and switched Spaces to it. Contacts, which
+    quits when its window closes, hands off to the current Space or
+    Finder instead; Phases should feel the same (author, 2026-10-29).
+  - *How:* the choice of app is a pure function over the on-screen
+    window list (front to back): the first ordinary window (layer 0,
+    visible, at least 50 × 50 pt) not owned by Phases; else Finder.
+    Unit-tested.
+  - macOS fights this; see `[Q-accessory-focus-handoff]`.
 - `[D-open-here]` **"Open Phases…" brings the window to the Space you're
   on; the Dock and ⌘Tab take you to the window.** Choosing "Open Phases…"
   from the menu bar shows the window on the current Space, whether it's

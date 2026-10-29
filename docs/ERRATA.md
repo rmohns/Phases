@@ -171,11 +171,12 @@ would stop being true if a future macOS fixed the underlying behavior.
   policy first and activate on the next run-loop pass, or activate another
   app (e.g. the Dock) and then this one. Watch for it in testing
   `[D-dock-while-open]`.
-- `[Q-accessory-focus-handoff]` **Switching back to accessory may leave no
-  app active.** *Recalled*, not yet seen in Phases: when a frontmost regular
-  app becomes an accessory, macOS doesn't always activate the previous
-  app, so keystrokes go nowhere until you click something. Watch for it
-  when the window closes `[D-dock-while-open]`.
+- `[Q-accessory-focus-handoff]` **Switching back to accessory hands focus
+  to the most recently used app, even on another Space.** *Verified*
+  2026-10-29 (author's report): closing the Phases window activated the
+  next app in the recent-apps order and switched to that app's Space. A
+  quitting app gets a gentler handoff (an app on the current Space, else
+  Finder; recalled, matches Contacts). Shapes `[D-close-stays-here]`.
 - `[Q-activate-switches-space]` **Activating an app whose only window is
   on another Space switches to that Space, whatever triggered it.**
   *Verified* 2026-10-29 (author's report): with the Phases window on
