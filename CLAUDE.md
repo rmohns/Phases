@@ -43,6 +43,16 @@
 - **Spec draft number:** when bumping the draft in SPEC.md's title, bump
   `AppVersion.specDraft` too; a unit test enforces the match
   `[D-version-in-settings]`.
+- **Every regression gets a guard.** When a fix for a regression lands,
+  its branch also adds (a) a row to ERRATA.md "Regressions found so far"
+  and (b) a test that fails without the fix: a UI test, a unit test, or a
+  geometry or screenshot check, named in the row's "Guarded by" column.
+  Show the test failing against the broken code once (revert the fix
+  locally) before trusting it. If no test is practical, "Guarded by" says
+  why (for example, frame timing) and names the manual procedure; a bare
+  "Nothing yet" isn't allowed. A regression fix doesn't merge without one
+  or the other. UI test runs drive the mouse and keyboard, so ask before
+  each run (see SPEC.md "Layer 2: UI tests").
 - **Diagnostics:** logging is built in and off by default
   `[D-diagnostics-switch]` (SPEC.md "Diagnostics"). Add log lines with
   `Diagnostics.logger(…)`; never write new logging infrastructure.

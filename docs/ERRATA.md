@@ -523,6 +523,10 @@ dimming) aren't listed; neither is the unreproduced black desktop (see
 "Known issues" in SPEC.md). Entries marked *git only* were found in the
 commit history, not in the spec.
 
+Every new regression gets a row here and a guard: a test that fails without
+the fix, or, if none is practical, the reason and the manual procedure
+(standing rule in CLAUDE.md, 2026-10-29).
+
 | Found | What broke | Fix | Guarded by |
 |---|---|---|---|
 | 2026-10-25 | Long image folder names in Settings were truncated badly (*git only*, commit 4e86957) | Middle truncation, full path in a tooltip | Nothing yet; visual only (AX reports the full name), so a screenshot check |
