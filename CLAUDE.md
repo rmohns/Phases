@@ -8,9 +8,17 @@
   procedures, and the regressions list.
 - **Which file:** if a future macOS fixed the bug, would the line still be
   true? Yes → SPEC.md. No → ERRATA.md.
-- **Spec first, always.** Update SPEC.md before changing the app, commit it, then
-  build. The build must meet the spec, not the other way around. If the code
-  needs to differ from the spec, change the spec first and say so.
+- **Spec first, always.** SPEC.md changes are approved by the user before
+  any code is written, then land in the same commit as the code. The build
+  must meet the spec, not the other way around. If the code needs to differ
+  from the spec, change the spec first and say so.
+- **One branch per change, squash-merged.** Start each change on its own
+  branch: the spec edit goes first (open it in Marked for review), then
+  code and ERRATA notes follow on the same branch. Squash-merge into `main`
+  so each change lands as one commit with spec, code, and errata together.
+  Verification notes found after a merge ride along with the next change's
+  commit instead of getting their own. A squash merge counts as merging
+  into `main`: build right after it.
 - Never install launch agents, daemons, or helpers without asking the user first.
 - Launch at Login stays opt-in, with a confirmation before registering.
 - Open the specs for review with Marked: `/opt/homebrew/bin/mk docs/SPEC.md`
