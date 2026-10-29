@@ -1,4 +1,4 @@
-# Phases — Specification (draft 30)
+# Phases — Specification (draft 31)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -389,7 +389,7 @@ extras don't show them. No global hotkey.
       The HIG has no explicit rule about this; matching those apps follows
       its general call for familiar, consistent behavior.
     - The rule lives in a small model function (`PhaseListSelection`), not
-      in the view, so the unit tests can check it (see "Testing").
+      in the view, so the unit tests can check it (see TESTING.md).
   - `[D-sidebar-footer-style]` **+ / − layout matches System Settings.**
     Reference: System Settings › General › Login Items & Extensions, the
     + / − under "Open at Login" (macOS 27). Measured from a screenshot
@@ -701,99 +701,7 @@ data. Phases saved by earlier versions load unchanged (no per-display images).
 
 Moved to ERRATA.md, each with a `[Q-…]` ID.
 
-## Testing
+## Testing and diagnostics
 
-Regressions found in testing (the − button doing nothing, the Name field
-taking focus, Tab skipping the grid) are why Phases has tests. They come in
-two layers.
-
-### Layer 1: unit tests (in place, draft 21)
-
-- A small Swift package in `UnitTests/`, using Swift Testing. Run it with
-  `swift test` from that folder (about 30 tests, well under a second once
-  built).
-  - *Why a package, not a test target in Project.json:* `swift test` runs
-    without a test target or a generated Xcode project. The tooling fights
-    the test-target route; see `[Q-bitrig-test-targets]`.
-- Covers the pure logic that decides what the app does:
-  - `ScheduleEngine`: which phase is active (including overnight and
-    Light/Dark conditions), the next phase start, and rotation slots, which
-    are how `[D-missed-latest-only]` lands on the most recent missed rotation
-  - `SolarCalculator`: civil dawn and dusk at a known location, and days with
-    no civil dawn or dusk (far north)
-  - `ImageGridNavigation`: arrow-key movement `[D-grid-one-tab-stop]`
-  - `PhaseListSelection`: which phase is selected after a delete
-    `[D-delete-selects-next]`
-  - `AppVersion`: the spec draft constant matches SPEC.md's title
-    `[D-version-in-settings]`
-- `[D-tests-unhosted]` **The tests never launch Phases.** The test package
-  compiles the files it tests directly instead of loading them into the
-  running app.
-  - *How:* `UnitTests/Sources/PhasesLogic` holds symlinks to the app's
-    own source files, so the tests always check the code the app ships.
-  - *Why:* launching Phases records and changes the real wallpaper, so a
-    test run would touch the desktop. Testing only pure files also keeps
-    the tests fast and free of AppKit side effects. The cost: a newly
-    tested file needs a new symlink there.
-  - *Verified* 2026-10-28: all tests pass, and deliberately breaking
-    `PhaseListSelection` back to the draft 15 behavior made two tests fail.
-- `[D-tests-carry-tags]` **Tests for a tagged decision carry its tag** in
-  the test's name or a comment, so searching for `[D-…]` finds the spec, the
-  code, and the test together.
-- Expected dawn and dusk times come from published almanac values
-  (*recalled*, not checked against a source). The tests allow ±10 minutes,
-  which catches real breakage (wrong day, wrong time zone, AM/PM swapped)
-  without depending on the almanac's exact rounding.
-
-### Diagnostics
-
-- `[D-diagnostics-switch]` **Diagnostic logging is built in and off by
-  default.** Every build is the same; logging is switched on at launch,
-  not compiled in or out.
-  - Turn on (then quit and relaunch Phases):
-    `defaults write app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268 PhasesDiagnostics -bool true`
-  - Turn off: the same with `-bool false`, or `defaults delete … PhasesDiagnostics`.
-  - Read: `/usr/bin/log show --last 30m --style compact --predicate 'subsystem == "PhasesDiag"'`
-    (in zsh, plain `log` is a shell builtin; use the full path).
-  - Code: `App/Model/Diagnostics.swift`. Get a logger with
-    `Diagnostics.logger("category")`; guard any extra work done only to
-    build a log line with `Diagnostics.isEnabled`. Add new diagnostic
-    lines this way instead of writing new logging from scratch.
-  - *Why a launch switch, not a build flag:* switching needs a relaunch,
-    not a rebuild, and the logging code is compiled in every build, so
-    it can't silently stop compiling. When off, each call is a disabled
-    `os.Logger` call, which skips building its message (*recalled*,
-    standard `os.Logger` behavior). No extra observers or timers run for
-    logging alone.
-  - *Why:* the 2026-10-28 sidebar investigation needed logging twice,
-    and it was written from scratch both times (author's request).
-  - Currently instrumented: the sidebar limits (`[D-sidebar-limits-watch]`,
-    category `sidebar`). What to log when chasing a platform bug is in
-    ERRATA.md "Diagnostic procedures".
-  - *Verified* 2026-10-28: with the switch on, a relaunch logged the
-    sidebar's limit passes, restores, and resizes. The off state is
-    consistent but not proven: nothing was logged between that build's
-    launch and the switch going on, but the window may not have been
-    opened then.
-
-- `[D-test-no-location-prompt]` **Test launches can skip the location
-  prompt.** Launching with `--args -PhasesNoLocationPrompt YES` makes
-  Phases never ask for location; if permission was never decided, solar
-  phases fall back as they do when it's denied. It lasts one launch only
-  (a launch argument, not a saved setting), so it can't leak into normal
-  use.
-  - *Why:* each rebuild asks for location again, and the prompt sat over
-    the screen during UI test runs, where it could catch clicks (author,
-    2026-10-29).
-
-### Layer 2: UI tests (planned, not built)
-
-- XCUITest tests that drive the real Phases window (these need an Xcode
-  test target, so first find a way to run one; see
-  `[Q-bitrig-test-targets]`), aimed at the focus and wiring bugs Layer 1
-  can't see. Start with the UI tests marked in ERRATA.md "Regressions
-  found so far".
-- Before building: decide how a UI test run avoids changing the real
-  wallpaper (`[D-tests-unhosted]` doesn't apply, since UI tests must launch
-  the app). Whether XCUITest drives a menu bar accessory app's window
-  reliably is *recalled* as finicky, not tested.
+Moved to TESTING.md: the unit and UI test layers, test-only launch
+arguments, and diagnostic logging, with their `[D-…]` tags.

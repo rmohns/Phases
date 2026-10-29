@@ -94,6 +94,10 @@ would stop being true if a future macOS fixed the underlying behavior.
   isn't reaching the item either. What triggers the rewrite is *unknown*.
   Shapes `[D-window-helper-order]`, `[D-sidebar-always-visible]`, and
   `[D-sidebar-limits-watch]`; workaround in "Sidebar limits".
+  - *Trigger, partly found* 2026-10-29: in UI tests the rewrite didn't
+    happen with the window left alone for 30 s, but did once the detail
+    pane had switched between Settings and phases (limits gone, sidebar
+    collapsible). Which switch triggers it isn't isolated.
 - `[Q-sidebar-collapse]` **A sidebar's minimum width doesn't stop it
   collapsing, and SwiftUI can't make it non-collapsible.** macOS snaps a
   sidebar shut when its divider is dragged past the minimum; since Phases'
@@ -115,7 +119,8 @@ would stop being true if a future macOS fixed the underlying behavior.
   screenshot). Setting the toolbar's `displayMode` to `.iconOnly` brought
   it to 52 pt (verified 2026-10-28). The theory that the default display
   mode reserves a row for item labels is not confirmed in Apple
-  documentation. Affects `[D-tall-toolbar]`.
+  documentation. Affects `[D-tall-toolbar]`. *Confirmed* 2026-10-29 by
+  the UI tests: removing `.iconOnly` alone brings back exactly 66 pt.
 - `[Q-list-row-padding]` **The sidebar list adds about 14–16 pt of its own
   padding inside a row's insets (macOS 27).** *Measured* 2026-10-28 from a
   2× screenshot with the tall toolbar: the red traffic light and the row
@@ -218,8 +223,34 @@ would stop being true if a future macOS fixed the underlying behavior.
   Project.json projects** ("has no test targets", *verified* 2026-10-28),
   and there's no generated Xcode project to hand to `xcodebuild`. That's
   why the unit tests are a Swift package run with `swift test` (see
-  "Testing" in SPEC.md), and why Layer 2 UI tests first need a way to run
-  an Xcode test target.
+  TESTING.md). *Re-verified* 2026-10-29 with a
+  `bundle.ui-testing` target and a scheme naming it in `testTargets`: same
+  message. So Layer 2 drives the app through the AX API instead of
+  XCUITest `[D-ui-test-runner]`.
+
+- `[Q-launch-activate-refused]` **A menu bar app launched in the
+  background can't bring itself to the front with `NSApp.activate()`
+  (macOS 27.2).** *Verified* 2026-10-29: in test mode, Phases called it
+  when its window appeared, and the active app (Bitrig) stayed frontmost.
+  Cooperative activation (macOS 14 and later) only hands focus over when
+  the active app yields it (*recalled* explanation). Setting the app's AX
+  frontmost attribute from the UI tests worked on the first try in 9 of 9
+  launches the same day. Synthetic clicks don't count either: opening the
+  window by real clicks on the menu bar item and Open Phases… still left
+  Phases inactive when the window appeared (2026-10-29). So a UI test
+  can't reproduce a first open, and the first-open half of
+  `[D-initial-focus-sidebar]` stays a manual check. Shapes
+  `[D-ui-test-runner]`.
+- `[Q-closed-window-keeps-focus]` **Closing the Phases window only hides
+  it; on reopen it still has whatever had focus, with the text cursor and
+  selection where they were (macOS 27.2).** *Verified* 2026-10-29 by the
+  author's hand check on a build without `[D-initial-focus-sidebar]`:
+  leave the cursor in the Name field, close, reopen from the menu, and
+  the next keypress renames the phase. The focus log agreed (the field's
+  editor had focus 0.3 s after reopening). With the fix, focus goes back
+  to the sidebar on every open, reopens included (UI test, same day).
+  That a hidden window keeps its first responder is standard AppKit
+  behavior as recalled, not checked in documentation.
 
 ## Workarounds
 
@@ -493,7 +524,7 @@ non-collapsible split view item (see "Sidebar limits").
 
 ## Diagnostic procedures
 
-Logging is switched on and read as described under "Diagnostics" in SPEC.md
+Logging is switched on and read as described under "Diagnostics" in TESTING.md
 `[D-diagnostics-switch]`.
 
 - **Crossfade twitch returns:** measure before changing the delay. Record
@@ -517,7 +548,8 @@ Logging is switched on and read as described under "Diagnostics" in SPEC.md
 ## Regressions found so far
 
 Bugs found in testing and fixed, oldest first, with how a test could guard
-each one (see "Layer 2: UI tests" in SPEC.md). Design changes made after
+each one (see "Layer 2: UI tests" in TESTING.md). UI tests live in
+`UITests/Tests/PhasesUITests/`, unit tests in `UnitTests/Tests/`. Design changes made after
 review (menu bar icon legibility, sidebar width limits, branding panel
 dimming) aren't listed; neither is the unreproduced black desktop (see
 "Known issues" in SPEC.md). Entries marked *git only* were found in the
@@ -529,16 +561,17 @@ the fix, or, if none is practical, the reason and the manual procedure
 
 | Found | What broke | Fix | Guarded by |
 |---|---|---|---|
-| 2026-10-25 | Long image folder names in Settings were truncated badly (*git only*, commit 4e86957) | Middle truncation, full path in a tooltip | Nothing yet; visual only (AX reports the full name), so a screenshot check |
+| 2026-10-25 | Long image folder names in Settings were truncated badly (*git only*, commit 4e86957) | Middle truncation, full path in a tooltip | `AppearanceTests/imageFolderNameScreenshot` (AX full name, plus a screenshot for review) |
 | 2026-10-26 (draft 4) | Crossfade flashed the new image and twitched before fading; menu bar blinked to the new styling at the start | Fade the new image in and set the wallpaper at the end `[D-fade-in]` | Not suited to XCUITest (frame timing); checked with frame-by-frame recordings. Twitch returned on macOS 27.2 (see the draft 21 row below) |
-| 2026-10-27 (draft 10) | Branding tagline cut off after its first line, because sidebar rows default to one line (*git only*, commit 58555d3) | Allow two lines on the tagline | Nothing yet; visual only (the panel's AX label is fixed text), so a screenshot check |
-| 2026-10-28 | Dragging the sidebar divider past its minimum collapsed the sidebar, with no way to reopen it; the first fix flickered and broke the 240 pt minimum `[Q-sidebar-collapse]` | Non-collapsible split view item `[D-sidebar-always-visible]` | **UI test:** drag the divider far left; the sidebar stays at least 240 pt wide |
-| 2026-10-28 (draft 13) | − did nothing: it started disabled and never re-enabled when a phase was selected `[Q-safe-area-inset-refresh]` | +/− bar as its own view bound to the selection `[D-sidebar-footer-view]` | **UI test:** select a phase, click Delete Phase; the phase is gone |
-| 2026-10-28 (draft 15) | Deleting a phase always selected the first phase | Select the next phase down `[D-delete-selects-next]` | Unit test (Layer 1); **UI test:** delete a middle phase; the one below is selected |
-| 2026-10-28 (draft 17; draft 18's fix didn't work) | The Name field had focus with its text selected when the window opened, so any keypress renamed the phase `[Q-default-focus-loses]` | Move focus to the sidebar a run-loop pass after the window appears `[D-initial-focus-sidebar]` | **UI test:** open the window, type a letter; the phase name is unchanged |
-| 2026-10-28 (draft 19) | Tab visited only the on-screen thumbnails, didn't scroll, then jumped back to the sidebar `[Q-lazy-grid-tab]` | Grid is one Tab stop with an arrow-key cursor `[D-grid-one-tab-stop]` | Unit test for arrow movement (Layer 1); **UI test:** Tab enters and leaves the grid in one stop, and arrowing down past the visible rows scrolls |
-| 2026-10-28 | Title bar became short and crowded after the sidebar toggle was removed; then the fix made it 66 pt tall `[Q-no-items-no-toolbar]` `[Q-empty-toolbar-66pt]` | Hand-made empty unified toolbar, icon-only `[D-tall-toolbar]` | Nothing yet; a screenshot check (toolbar 52 pt). Cause of the 66 pt only theorized |
-| 2026-10-28 | Sidebar could be dragged far below 240 pt and far above 320 pt again, right after the toolbar helper was added | One helper, toolbar first, then sidebar limits `[D-window-helper-order]` | **UI test:** drag the divider both ways; width stays 240–320. Appeared fixed; the real cause was found later (draft 22 row) |
+| 2026-10-27 (draft 10) | Branding tagline cut off after its first line, because sidebar rows default to one line (*git only*, commit 58555d3) | Allow two lines on the tagline | `AppearanceTests/brandingPanelScreenshot` (screenshot for review; the panel's AX label is fixed text) |
+| 2026-10-28 | Dragging the sidebar divider past its minimum collapsed the sidebar, with no way to reopen it; the first fix flickered and broke the 240 pt minimum `[Q-sidebar-collapse]` | Non-collapsible split view item `[D-sidebar-always-visible]` | `SidebarTests/dividerDraggedFarLeftKeepsSidebarOpen` |
+| 2026-10-28 (draft 13) | − did nothing: it started disabled and never re-enabled when a phase was selected `[Q-safe-area-inset-refresh]` | +/− bar as its own view bound to the selection `[D-sidebar-footer-view]` | `PhaseListTests/deleteRemovesANewlyAddedPhase` (adds a phase, then deletes it) |
+| 2026-10-28 (draft 15) | Deleting a phase always selected the first phase | Select the next phase down `[D-delete-selects-next]` | `PhaseListSelectionTests` (Layer 1); `PhaseListTests/deletingAMiddlePhaseSelectsTheOneBelow` |
+| 2026-10-28 (draft 17; draft 18's fix didn't work) | The Name field had focus with its text selected when the window opened, so any keypress renamed the phase `[Q-default-focus-loses]` | Move focus to the sidebar a run-loop pass after the window appears `[D-initial-focus-sidebar]` | `FocusTests/typingAfterReopeningDoesNotRenameThePhase` (reopen path `[Q-closed-window-keeps-focus]`; failed without the fix, passed with it, 2026-10-29). First open: manual only `[Q-launch-activate-refused]`: open from the menu, type a letter |
+| 2026-10-28 (draft 19) | Tab visited only the on-screen thumbnails, didn't scroll, then jumped back to the sidebar `[Q-lazy-grid-tab]` | Grid is one Tab stop with an arrow-key cursor `[D-grid-one-tab-stop]` | `ImageGridNavigationTests` (Layer 1); `FocusTests/gridIsOneTabStopAndArrowsScroll` |
+| 2026-10-28 | Title bar became short and crowded after the sidebar toggle was removed; then the fix made it 66 pt tall `[Q-no-items-no-toolbar]` `[Q-empty-toolbar-66pt]` | Hand-made empty unified toolbar, icon-only `[D-tall-toolbar]` | `AppearanceTests/toolbarIs52PointsTall` (AX toolbar frame; matching AppKit's measure is unverified). Cause of the 66 pt only theorized |
+| 2026-10-28 | Sidebar could be dragged far below 240 pt and far above 320 pt again, right after the toolbar helper was added | One helper, toolbar first, then sidebar limits `[D-window-helper-order]` | `SidebarTests/dividerStaysWithin240To320`. Appeared fixed; the real cause was found later (draft 22 row) |
 | 2026-10-28 (draft 21, macOS 27.2) | The crossfade twitch returned: the cover was removed while macOS was still showing the new wallpaper `[Q-wallpaper-motion-delay]` | Settle delay raised from 0.5 s to 1.5 s `[D-cover-settle]`; see "The twitch returns" | Not suited to XCUITest (frame timing); checked with frame-by-frame recordings |
-| 2026-10-28 (draft 21) | Hiding the Dock or toggling "Show menu bar background" crossfaded to a new image `[Q-screen-params-notification]` | Screen changes run the normal check instead of re-applying `[D-screen-change-no-reroll]` | Nothing yet; a unit test would need the scheduler's check pulled out of `WallpaperScheduler` |
-| 2026-10-28 (draft 22) | Sidebar width limits gone again: drags from very narrow to very wide | Cause logged: SwiftUI rewrites the split view item's limits seconds after the window opens `[Q-split-item-rewrite]`. Fix: watch the item and put the limits back `[D-sidebar-limits-watch]`; verified 2026-10-28 | **UI test** (same as the earlier sidebar rows). Intermittent, so the test would need several launches |
+| 2026-10-28 (draft 21) | Hiding the Dock or toggling "Show menu bar background" crossfaded to a new image `[Q-screen-params-notification]` | Screen changes run the normal check instead of re-applying `[D-screen-change-no-reroll]` | `WallpaperCheckTests` (Layer 1; check pulled out into `WallpaperCheck`). The handler's wiring to that check isn't tested |
+| 2026-10-28 (draft 22) | Sidebar width limits gone again: drags from very narrow to very wide | Cause logged: SwiftUI rewrites the split view item's limits seconds after the window opens `[Q-split-item-rewrite]`. Fix: watch the item and put the limits back `[D-sidebar-limits-watch]`; verified 2026-10-28 | `SlowSidebarTests` (`PHASES_UI_SLOW=1`) and `SidebarTests/dividerStaysWithin240To320`, both switching the detail pane before dragging; failed without the watch (sidebar collapsed), passed with it, 2026-10-29 |
+| 2026-10-29 (found by the UI tests) | A long image folder name squeezed Settings' Choose… button to a 16 pt sliver: the name's `.layoutPriority(1)` takes its full width first | `.fixedSize()` on Choose… | `AppearanceTests/imageFolderNameScreenshot` (button at least 60 pt); failed on the old build at 16 pt, passed on the fix, 2026-10-29 |

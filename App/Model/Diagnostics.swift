@@ -2,7 +2,7 @@ import Foundation
 import os
 
 /// [D-diagnostics-switch] Built-in diagnostic logging, off by default and
-/// switched at launch (see SPEC.md "Diagnostics" for the commands).
+/// switched at launch (see TESTING.md "Diagnostics" for the commands).
 enum Diagnostics {
   /// Read once at launch; changing it takes a relaunch.
   static let isEnabled = UserDefaults.standard.bool(forKey: "PhasesDiagnostics")

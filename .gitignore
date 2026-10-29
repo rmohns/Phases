@@ -37,3 +37,6 @@ node_modules/
 # Build
 build/
 build-*/
+
+# UI test screenshots, for review only
+UITests/Screenshots/

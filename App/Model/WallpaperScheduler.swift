@@ -19,33 +19,33 @@ final class WallpaperScheduler {
 
   var displayMode: DisplayMode {
     didSet {
-      UserDefaults.standard.set(displayMode.rawValue, forKey: Keys.displayMode)
+      SettingsStore.defaults.set(displayMode.rawValue, forKey: Keys.displayMode)
       reapplyCurrentPhase()
     }
   }
 
   var transitionStyle: TransitionStyle {
-    didSet { UserDefaults.standard.set(transitionStyle.rawValue, forKey: Keys.transitionStyle) }
+    didSet { SettingsStore.defaults.set(transitionStyle.rawValue, forKey: Keys.transitionStyle) }
   }
 
   /// Crossfade length in seconds, within `TransitionStyle.durationRange`.
   var crossfadeDuration: Double {
-    didSet { UserDefaults.standard.set(crossfadeDuration, forKey: Keys.crossfadeDuration) }
+    didSet { SettingsStore.defaults.set(crossfadeDuration, forKey: Keys.crossfadeDuration) }
   }
 
   /// [D-restore-on-quit] Whether Quit puts back the pre-launch wallpaper.
   var restoresWallpaperOnQuit: Bool {
-    didSet { UserDefaults.standard.set(restoresWallpaperOnQuit, forKey: Keys.restoresWallpaperOnQuit) }
+    didSet { SettingsStore.defaults.set(restoresWallpaperOnQuit, forKey: Keys.restoresWallpaperOnQuit) }
   }
 
   /// [D-quit-confirm] Whether Quit Phases asks first.
   var asksBeforeQuitting: Bool {
-    didSet { UserDefaults.standard.set(asksBeforeQuitting, forKey: Keys.asksBeforeQuitting) }
+    didSet { SettingsStore.defaults.set(asksBeforeQuitting, forKey: Keys.asksBeforeQuitting) }
   }
 
   var isPaused: Bool {
     didSet {
-      UserDefaults.standard.set(isPaused, forKey: Keys.isPaused)
+      SettingsStore.defaults.set(isPaused, forKey: Keys.isPaused)
       evaluate()
     }
   }
@@ -98,9 +98,10 @@ final class WallpaperScheduler {
   }
 
   init() {
-    let defaults = UserDefaults.standard
+    let defaults = SettingsStore.defaults
+    // [D-ui-test-mode] Test mode's store starts empty, so it gets the fixtures.
     phases = Self.load([Phase].self, forKey: Keys.phases)
-      ?? [Phase(name: "All Day", trigger: .always)]
+      ?? (UITestMode.isOn ? UITestMode.fixturePhases : [Phase(name: "All Day", trigger: .always)])
     displayMode = defaults.string(forKey: Keys.displayMode).flatMap(DisplayMode.init) ?? .sameOnAll
     isPaused = defaults.bool(forKey: Keys.isPaused)
     restoresWallpaperOnQuit = defaults.object(forKey: Keys.restoresWallpaperOnQuit) as? Bool ?? true
@@ -112,7 +113,9 @@ final class WallpaperScheduler {
     knownDisplays = Self.load([KnownDisplay].self, forKey: Keys.knownDisplays) ?? []
     // Keep an existing restore point: one left over from a crash still holds
     // the true original, while capturing now would record Phases' own image.
-    restorePoint = Self.load(RestorePoint.self, forKey: Keys.restorePoint) ?? RestorePoint.capture()
+    // [D-ui-test-mode] Nothing to restore in test mode, which never changes
+    // the wallpaper.
+    restorePoint = UITestMode.isOn ? nil : Self.load(RestorePoint.self, forKey: Keys.restorePoint) ?? RestorePoint.capture()
 
     refreshDisplays()
     location.onChange = { [weak self] in self?.evaluate() }
@@ -230,16 +233,14 @@ final class WallpaperScheduler {
     let start = resolvedStart(for: active, now: now)
     let slot = slot(for: active.phase, start: start, now: now)
 
-    if let state = appliedState, isSameOccurrence(state, phase: active.phase, start: start) {
-      if state.rotationSlot != slot || !imagesMatchSelections(state, phase: active.phase) {
-        // [D-missed-latest-only] Jumps straight to the most recent missed
-        // rotation.
-        apply(active.phase, start: start, slot: slot, manualSteps: state.manualSteps)
-      } else if state.phaseStart != start {
-        appliedState?.phaseStart = start
-      }
-    } else {
-      apply(active.phase, start: start, slot: slot, manualSteps: 0)
+    let pools = Dictionary(uniqueKeysWithValues: connectedDisplayUUIDs.map { ($0, imagePool(for: $0, in: active.phase)) })
+    switch WallpaperCheck.action(applied: appliedState, phaseID: active.phase.id, start: start, slot: slot, pools: pools) {
+    case .apply(let manualSteps):
+      apply(active.phase, start: start, slot: slot, manualSteps: manualSteps)
+    case .updateStart:
+      appliedState?.phaseStart = start
+    case .nothing:
+      break
     }
     scheduleNextChange(from: now)
   }
@@ -268,31 +269,10 @@ final class WallpaperScheduler {
     phase.rotationSeconds.map { ScheduleEngine.rotationSlot(start: start, interval: $0, now: now) } ?? 0
   }
 
-  /// Whether every connected display shows an image from its current pool,
-  /// and displays with no image have nothing to show. Catches edited
-  /// selections, deleted files, and newly connected displays.
-  private func imagesMatchSelections(_ state: AppliedState, phase: Phase) -> Bool {
-    for uuid in connectedDisplayUUIDs {
-      let pool = imagePool(for: uuid, in: phase)
-      if let shown = state.imagesByDisplay[uuid] {
-        if !pool.contains(shown) { return false }
-      } else if !pool.isEmpty {
-        return false
-      }
-    }
-    return true
-  }
-
   /// The available images a display draws from: its own selection if it has
   /// one (even if empty), otherwise the All Displays selection.
   private func imagePool(for uuid: String, in phase: Phase) -> [String] {
     library.availableImages(phase.displayImageNames[uuid] ?? phase.imageNames)
-  }
-
-  /// A phase occurs at most once a day, so a small shift in its start time
-  /// (a location update nudging dusk) is still the same occurrence.
-  private func isSameOccurrence(_ state: AppliedState, phase: Phase, start: Date) -> Bool {
-    state.phaseID == phase.id && abs(state.phaseStart.timeIntervalSince(start)) < 6 * 3600
   }
 
   private func scheduleNextChange(from now: Date) {
@@ -336,7 +316,8 @@ final class WallpaperScheduler {
       guard let uuid = screen.displayUUID, let name = picks[uuid], let url = library.url(for: name) else { return nil }
       return WallpaperAssignment(screen: screen, url: url)
     }
-    if !assignments.isEmpty {
+    // [D-ui-test-mode] Test mode records what it would show but never shows it.
+    if !assignments.isEmpty, !UITestMode.isOn {
       crossfade.apply(assignments, duration: transitionStyle == .crossfade ? crossfadeDuration : nil)
     }
     appliedState = AppliedState(
@@ -475,13 +456,13 @@ final class WallpaperScheduler {
 
   private static func save<T: Encodable>(_ value: T?, forKey key: String) {
     if let value, let data = try? JSONEncoder().encode(value) {
-      UserDefaults.standard.set(data, forKey: key)
+      SettingsStore.defaults.set(data, forKey: key)
     } else {
-      UserDefaults.standard.removeObject(forKey: key)
+      SettingsStore.defaults.removeObject(forKey: key)
     }
   }
 
   private static func load<T: Decodable>(_ type: T.Type, forKey key: String) -> T? {
-    UserDefaults.standard.data(forKey: key).flatMap { try? JSONDecoder().decode(type, from: $0) }
+    SettingsStore.defaults.data(forKey: key).flatMap { try? JSONDecoder().decode(type, from: $0) }
   }
 }

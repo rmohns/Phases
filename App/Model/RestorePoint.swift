@@ -44,6 +44,8 @@ struct RestorePoint: Codable, Equatable {
 
   @MainActor
   func restore() {
+    // [D-ui-test-mode] Backstop: test mode never records a restore point.
+    guard !UITestMode.isOn else { return }
     for screen in NSScreen.screens {
       guard let displayID = screen.displayID,
         let original = displays.first(where: { $0.displayID == displayID }),

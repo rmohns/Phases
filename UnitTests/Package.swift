@@ -1,7 +1,7 @@
 // swift-tools-version: 6.0
 import PackageDescription
 
-// Unit tests for Phases' pure logic (SPEC.md "Testing"). Run with `swift test`
+// Unit tests for Phases' pure logic (TESTING.md "Layer 1: unit tests"). Run with `swift test`
 // from this folder. [D-tests-unhosted] Sources/PhasesLogic holds symlinks to
 // the app's own files, so the tests never launch Phases.
 let package = Package(

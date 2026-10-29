@@ -95,6 +95,8 @@ struct ImageGrid: View {
       }
       .accessibilityElement(children: .contain)
       .accessibilityLabel("Images")
+      // [D-ui-test-ids]
+      .accessibilityIdentifier("imageGrid")
     }
   }
 

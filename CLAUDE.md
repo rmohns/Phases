@@ -5,9 +5,12 @@
   SPEC.md is the source of truth for what the app does and why. ERRATA.md
   holds what macOS/SwiftUI/AppKit do to Phases and how it routes around
   them: platform quirks, workaround mechanics, design history, diagnostic
-  procedures, and the regressions list.
+  procedures, and the regressions list. Read `docs/TESTING.md` too when
+  the work touches tests, test-only launch arguments, or diagnostics.
 - **Which file:** if a future macOS fixed the bug, would the line still be
-  true? Yes → SPEC.md. No → ERRATA.md.
+  true? Yes → SPEC.md. No → ERRATA.md. Would someone using Phases ever see
+  or care about it? No → TESTING.md (tests, test-only switches,
+  diagnostics). TESTING.md decisions follow the same spec-first approval.
 - **Spec first, always.** SPEC.md changes are approved by the user before
   any code is written, then land in the same commit as the code. The build
   must meet the spec, not the other way around. If the code needs to differ
@@ -21,12 +24,12 @@
   into `main`: build right after it.
 - Never install launch agents, daemons, or helpers without asking the user first.
 - Launch at Login stays opt-in, with a confirmation before registering.
-- Open the specs for review with Marked: `/opt/homebrew/bin/mk docs/SPEC.md`
-  and `/opt/homebrew/bin/mk docs/ERRATA.md`.
+- Open the specs for review with Marked: `/opt/homebrew/bin/mk docs/SPEC.md`,
+  `/opt/homebrew/bin/mk docs/ERRATA.md`, and `/opt/homebrew/bin/mk docs/TESTING.md`.
 - **Design principle:** keep a clear separation between content and tools.
   Controls must never blend into the content behind them; don't follow
   Liquid Glass-style translucency where it costs legibility or findability.
-- **Tagged decisions:** deliberate choices carry a `[D-…]` tag in SPEC.md and
+- **Tagged decisions:** deliberate choices carry a `[D-…]` tag in SPEC.md (or TESTING.md) and
   in a comment on the code that enforces them (see SPEC.md "Design
   decisions"). Before changing tagged code, re-read the decision; if the
   change contradicts it, say so and update the spec first. Tag new deliberate
@@ -52,7 +55,7 @@
   why (for example, frame timing) and names the manual procedure; a bare
   "Nothing yet" isn't allowed. A regression fix doesn't merge without one
   or the other. UI test runs drive the mouse and keyboard, so ask before
-  each run (see SPEC.md "Layer 2: UI tests").
+  each run (see TESTING.md "Layer 2: UI tests").
 - **Diagnostics:** logging is built in and off by default
-  `[D-diagnostics-switch]` (SPEC.md "Diagnostics"). Add log lines with
+  `[D-diagnostics-switch]` (TESTING.md "Diagnostics"). Add log lines with
   `Diagnostics.logger(…)`; never write new logging infrastructure.

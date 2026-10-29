@@ -91,20 +91,22 @@ wallpaper.
 
 ## Project documentation
 
-Two documents carry the design:
+Three documents carry the design:
 
 - **[SPEC.md](docs/SPEC.md)** says what Phases does and why. Deliberate
   decisions carry a `[D-…]` tag, which also appears in the code that
   enforces them.
 - **[ERRATA.md](docs/ERRATA.md)** records what macOS, SwiftUI, and AppKit do to
   Phases and how it works around them. Each quirk has a `[Q-…]` tag.
+- **[TESTING.md](docs/TESTING.md)** covers the unit and UI tests, the
+  launch arguments that exist only for tests, and diagnostic logging.
 
 Search for a tag to find the spec, the workaround, the code, and its tests
 together. If you're changing behavior, read the decision first; the spec
 gets updated before the code does.
 
 Diagnostic logging is built in and off by default. See "Diagnostics" in
-docs/SPEC.md for how to turn it on.
+docs/TESTING.md for how to turn it on.
 
 ## Copyright
 

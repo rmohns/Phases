@@ -15,6 +15,8 @@ enum WallpaperSetter {
   /// that would steal focus from the user's app
   /// [Q-menubar-restyle-on-app-switch].
   static func apply(_ assignments: [WallpaperAssignment]) {
+    // [D-ui-test-mode] Backstop: the scheduler already skips this in test mode.
+    guard !UITestMode.isOn else { return }
     for assignment in assignments {
       let options = NSWorkspace.shared.desktopImageOptions(for: assignment.screen) ?? [:]
       do {

@@ -18,11 +18,16 @@ struct SettingsView: View {
                 .truncationMode(.middle)
                 .layoutPriority(1)
                 .help(url.path(percentEncoded: false))
+                // [D-ui-test-ids]
+                .accessibilityIdentifier("imageFolderName")
             } else {
               Text("None chosen")
                 .foregroundStyle(.secondary)
             }
             Button("Choose…") { isChoosingFolder = true }
+              // The name's layout priority would otherwise squeeze this to
+              // a sliver with a long folder name (found 2026-10-29).
+              .fixedSize()
           }
         }
         Toggle("Include subfolders", isOn: includesSubfoldersBinding)

@@ -19,10 +19,10 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
 
   override init() {
     authorizationStatus = manager.authorizationStatus
-    if let data = UserDefaults.standard.data(forKey: Self.coordinateKey) {
+    if let data = SettingsStore.defaults.data(forKey: Self.coordinateKey) {
       coordinate = try? JSONDecoder().decode(SolarCalculator.Coordinate.self, from: data)
     }
-    lastUpdated = UserDefaults.standard.object(forKey: Self.lastUpdatedKey) as? Date
+    lastUpdated = SettingsStore.defaults.object(forKey: Self.lastUpdatedKey) as? Date
     super.init()
     manager.delegate = self
     manager.desiredAccuracy = kCLLocationAccuracyKilometer
@@ -40,8 +40,8 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
   func refresh() {
     switch authorizationStatus {
     case .notDetermined:
-      // [D-test-no-location-prompt] A launch argument for UI test runs.
-      guard !UserDefaults.standard.bool(forKey: "PhasesNoLocationPrompt") else { return }
+      // [D-test-no-location-prompt] [D-ui-test-mode] Launch arguments for UI test runs.
+      guard !UserDefaults.standard.bool(forKey: "PhasesNoLocationPrompt"), !UITestMode.isOn else { return }
       manager.requestWhenInUseAuthorization()
     case .denied, .restricted:
       break
@@ -71,7 +71,7 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
     MainActor.assumeIsolated {
       isUpdating = false
       lastUpdated = Date()
-      UserDefaults.standard.set(lastUpdated, forKey: Self.lastUpdatedKey)
+      SettingsStore.defaults.set(lastUpdated, forKey: Self.lastUpdatedKey)
       // Ignore jitter under ~1 km; it moves dawn/dusk by seconds.
       if let coordinate,
         abs(coordinate.latitude - newCoordinate.latitude) < 0.01,
@@ -79,7 +79,7 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
       { return }
       coordinate = newCoordinate
       if let data = try? JSONEncoder().encode(newCoordinate) {
-        UserDefaults.standard.set(data, forKey: Self.coordinateKey)
+        SettingsStore.defaults.set(data, forKey: Self.coordinateKey)
       }
       onChange?()
     }

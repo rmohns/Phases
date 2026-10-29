@@ -12,6 +12,8 @@ struct PhaseEditor: View {
       Form {
         Section {
           TextField("Name", text: phase.name)
+            // [D-ui-test-ids]
+            .accessibilityIdentifier("phaseName")
         }
 
         Section("Starts") {

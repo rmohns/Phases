@@ -3,7 +3,7 @@ import Testing
 @testable import PhasesLogic
 
 /// Expected times are recalled almanac values for the Boston area; see
-/// SPEC.md "Testing" for why the tolerance is ±10 minutes.
+/// TESTING.md "Layer 1: unit tests" for why the tolerance is ±10 minutes.
 struct SolarCalculatorTests {
   private let haverhill = SolarCalculator.Coordinate(latitude: 42.776, longitude: -71.077)
   private let longyearbyen = SolarCalculator.Coordinate(latitude: 78.22, longitude: 15.65)

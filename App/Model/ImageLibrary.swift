@@ -19,7 +19,7 @@ final class ImageLibrary {
 
   var includesSubfolders: Bool {
     didSet {
-      UserDefaults.standard.set(includesSubfolders, forKey: Self.subfoldersKey)
+      SettingsStore.defaults.set(includesSubfolders, forKey: Self.subfoldersKey)
       reload()
     }
   }
@@ -29,14 +29,14 @@ final class ImageLibrary {
   private static let supportedTypes: [UTType] = [.jpeg, .png, .heic, .tiff]
 
   init() {
-    includesSubfolders = UserDefaults.standard.bool(forKey: Self.subfoldersKey)
+    includesSubfolders = SettingsStore.defaults.bool(forKey: Self.subfoldersKey)
     restoreBookmark()
     reload()
   }
 
   func setFolder(_ url: URL) {
     if let data = try? url.bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil) {
-      UserDefaults.standard.set(data, forKey: Self.bookmarkKey)
+      SettingsStore.defaults.set(data, forKey: Self.bookmarkKey)
     }
     folderURL = url
     reload()
@@ -129,7 +129,12 @@ final class ImageLibrary {
   }
 
   private func restoreBookmark() {
-    guard let data = UserDefaults.standard.data(forKey: Self.bookmarkKey) else { return }
+    // [D-ui-test-mode] The harness's folder, never the user's.
+    if UITestMode.isOn {
+      folderURL = UITestMode.imageFolder
+      return
+    }
+    guard let data = SettingsStore.defaults.data(forKey: Self.bookmarkKey) else { return }
     var isStale = false
     guard let url = try? URL(resolvingBookmarkData: data, options: [], bookmarkDataIsStale: &isStale) else { return }
     folderURL = url

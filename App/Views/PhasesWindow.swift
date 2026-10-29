@@ -33,6 +33,8 @@ struct PhasesWindow: View {
           }
         }
       }
+      // [D-ui-test-ids]
+      .accessibilityIdentifier("sidebar")
       .safeAreaInset(edge: .bottom, spacing: 0) {
         // [D-sidebar-footer-view] [Q-safe-area-inset-refresh] Its own view with
         // a binding, so it refreshes when the selection changes.
@@ -100,6 +102,7 @@ private struct SidebarFooter: View {
         // [D-footer-ax-labels] [Q-system-events-ax] The wrapped icon-only Label doesn't pass its
         // title through, so name the button explicitly.
         .accessibilityLabel("Add Phase")
+        .accessibilityIdentifier("addPhase")
         Rectangle()
           .fill(.separator)
           .frame(width: 1, height: 16)
@@ -114,6 +117,7 @@ private struct SidebarFooter: View {
           cell("Delete Phase", systemImage: "minus")
         }
         .accessibilityLabel("Delete Phase")
+        .accessibilityIdentifier("deletePhase")
         .disabled(selectedPhaseID == nil)
         Spacer()
       }
