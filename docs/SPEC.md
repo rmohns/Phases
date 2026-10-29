@@ -1,4 +1,4 @@
-# Phases — Specification (draft 28)
+# Phases — Specification (draft 29)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -757,6 +757,16 @@ two layers.
     consistent but not proven: nothing was logged between that build's
     launch and the switch going on, but the window may not have been
     opened then.
+
+- `[D-test-no-location-prompt]` **Test launches can skip the location
+  prompt.** Launching with `--args -PhasesNoLocationPrompt YES` makes
+  Phases never ask for location; if permission was never decided, solar
+  phases fall back as they do when it's denied. It lasts one launch only
+  (a launch argument, not a saved setting), so it can't leak into normal
+  use.
+  - *Why:* each rebuild asks for location again, and the prompt sat over
+    the screen during UI test runs, where it could catch clicks (author,
+    2026-10-29).
 
 ### Layer 2: UI tests (planned, not built)
 
