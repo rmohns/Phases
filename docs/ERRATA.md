@@ -268,12 +268,16 @@ screen.
   failed.** *Verified* 2026-10-29 with real clicks: "Open Phases…" on
   another Space switched to the window's Space, same as before the fix;
   `isOnActiveSpace` stayed false right after `orderFront`.
-- **Order out, activate, `makeKeyAndOrderFront`: unknown.** Its only run
-  used System Events clicks, so it's invalid; the real-click retest broke
-  on a launch race (two Phases launches at once, LaunchServices error
-  -600). This is what the build currently does.
-- **Next to try:** keep `.moveToActiveSpace` on until the app finishes
-  activating (`didBecomeActiveNotification`), then turn it off.
+- **Order out, activate, `makeKeyAndOrderFront`: failed.** *Verified*
+  2026-10-29 with real clicks: switched to the window's Space;
+  `isOnActiveSpace` false after re-showing. macOS keeps a hidden window's
+  Space.
+- **`.moveToActiveSpace` on until `didBecomeActiveNotification`, then
+  off:** what the build does now; *not yet tested*. If Phases is already
+  active when "Open Phases…" is chosen, the notification doesn't come and
+  the flag stays on until the next activation (to check).
+- **Dock click:** went to the window's Space in every real-click run, as
+  intended.
 
 Code: `App/Model/WindowSpaceMover.swift`.
 
