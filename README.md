@@ -10,6 +10,14 @@ between them at the right time, with a crossfade.
 It's a personal project, not on the App Store, and still in active
 development.
 
+## Origin
+
+My friends share sky photos in a `cloud-game` channel on our Discord server. Some of them are pretty amazing. I wanted my Mac’s screens to feature them, but I also like different desktop pictures at different times of day, and I like variety.
+
+That inspired this little Mac utility. It scratches an itch. It supports sets of wallpapers that activate at arbitrary times of day, including dawn & dusk with optional offsets, and sets can apply to macOS’s Light or Dark appearance (or neither). It can shuffle, or not. It can have different sets for each screen, or not. It can crossfade, or not.
+
+It isn’t the best app ever, but it’s mine, so I like it. Maybe you’ll find it useful too. Enjoy.
+
 ## What it does
 
 1. **Phases with start times.** A phase can start at a clock time, at civil
@@ -94,3 +102,7 @@ gets updated before the code does.
 
 Diagnostic logging is built in and off by default. See "Diagnostics" in
 SPEC.md for how to turn it on.
+
+## Copyright
+
+Copyright © 2026 Robert Mohns.
