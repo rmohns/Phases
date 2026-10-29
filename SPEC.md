@@ -552,12 +552,11 @@ extras don't show them. No global hotkey.
       - This also means the ordering theory above was wrong, or at most
         incidental. The 520-resize run that "confirmed" it probably
         ended before SwiftUI's rewrite.
-      - **Temporary diagnostic logging is in the code** (marked
-        `DIAGNOSTIC (temporary)` in `WindowLayoutConfigurator.swift`,
-        subsystem `PhasesDiag`). It logs each limits pass (or a
-        "SKIPPED limits" error), and each change in the split view's
-        identity or limits, or an out-of-range width. Remove it once the
-        cause is found.
+      - **Sidebar diagnostic logging stays in the code,** off by default
+        `[D-diagnostics-switch]` (category `sidebar`). It logs each
+        limits pass (or a "SKIPPED limits" error), each restore and
+        which hook caught it, a swapped-in item, and each change in the
+        split view's limits or an out-of-range width.
 - `[D-sidebar-always-visible]` **The sidebar can't be hidden.** There is no
   sidebar toggle button, and dragging the divider past the minimum width
   doesn't collapse it.
@@ -890,6 +889,30 @@ two layers.
   (*recalled*, not checked against a source). The tests allow ±10 minutes,
   which catches real breakage (wrong day, wrong time zone, AM/PM swapped)
   without depending on the almanac's exact rounding.
+
+### Diagnostics
+
+- `[D-diagnostics-switch]` **Diagnostic logging is built in and off by
+  default.** Every build is the same; logging is switched on at launch,
+  not compiled in or out.
+  - Turn on (then quit and relaunch Phases):
+    `defaults write app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268 PhasesDiagnostics -bool true`
+  - Turn off: the same with `-bool false`, or `defaults delete … PhasesDiagnostics`.
+  - Read: `/usr/bin/log show --last 30m --style compact --predicate 'subsystem == "PhasesDiag"'`
+    (in zsh, plain `log` is a shell builtin; use the full path).
+  - Code: `App/Model/Diagnostics.swift`. Get a logger with
+    `Diagnostics.logger("category")`; guard any extra work done only to
+    build a log line with `Diagnostics.isEnabled`. Add new diagnostic
+    lines this way instead of writing new logging from scratch.
+  - *Why a launch switch, not a build flag:* switching needs a relaunch,
+    not a rebuild, and the logging code is compiled in every build, so
+    it can't silently stop compiling. When off, each call is a disabled
+    `os.Logger` call, which skips building its message (*recalled*,
+    standard `os.Logger` behavior). No extra observers or timers run for
+    logging alone.
+  - *Why:* the 2026-10-28 sidebar investigation needed logging twice,
+    and it was written from scratch both times (author's request).
+  - Currently instrumented: the sidebar limits (`[D-sidebar-limits-watch]`).
 
 ### Layer 2: UI tests (planned, not built)
 

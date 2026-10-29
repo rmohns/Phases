@@ -25,3 +25,6 @@
 - **Spec draft number:** when bumping the draft in SPEC.md's title, bump
   `AppVersion.specDraft` too; a unit test enforces the match
   `[D-version-in-settings]`.
+- **Diagnostics:** logging is built in and off by default
+  `[D-diagnostics-switch]` (SPEC.md "Diagnostics"). Add log lines with
+  `Diagnostics.logger(…)`; never write new logging infrastructure.
