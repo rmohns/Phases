@@ -10,7 +10,7 @@ struct AppVersionTests {
       .deletingLastPathComponent()  // Tests
       .deletingLastPathComponent()  // UnitTests
       .deletingLastPathComponent()  // project root
-      .appending(path: "SPEC.md")
+      .appending(path: "docs/SPEC.md")
     let title = try #require(try String(contentsOf: spec, encoding: .utf8).split(separator: "\n").first)
     // Title ends "(draft 24)".
     let draft = try #require(title.components(separatedBy: "(draft ").last?.prefix { $0.isNumber })

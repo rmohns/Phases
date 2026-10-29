@@ -1,6 +1,7 @@
 # Phases: project rules
 
-- **Start of every conversation:** read SPEC.md and ERRATA.md first.
+- **Start of every conversation:** read `docs/SPEC.md` and `docs/ERRATA.md`
+  first. Both live in `docs/`, along with README images (`docs/images/`).
   SPEC.md is the source of truth for what the app does and why. ERRATA.md
   holds what macOS/SwiftUI/AppKit do to Phases and how it routes around
   them: platform quirks, workaround mechanics, design history, diagnostic
@@ -12,8 +13,8 @@
   needs to differ from the spec, change the spec first and say so.
 - Never install launch agents, daemons, or helpers without asking the user first.
 - Launch at Login stays opt-in, with a confirmation before registering.
-- Open the specs for review with Marked: `/opt/homebrew/bin/mk SPEC.md`
-  and `/opt/homebrew/bin/mk ERRATA.md`.
+- Open the specs for review with Marked: `/opt/homebrew/bin/mk docs/SPEC.md`
+  and `/opt/homebrew/bin/mk docs/ERRATA.md`.
 - **Design principle:** keep a clear separation between content and tools.
   Controls must never blend into the content behind them; don't follow
   Liquid Glass-style translucency where it costs legibility or findability.
