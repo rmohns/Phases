@@ -22,6 +22,10 @@
   Verification notes found after a merge ride along with the next change's
   commit instead of getting their own. A squash merge counts as merging
   into `main`: build right after it.
+- **Two remotes; name the one you push to.** `github` is the author's
+  GitHub repo (github.com/rmohns/Phases); `origin` is Bitrig's hosted repo.
+  "Push to GitHub" means `git push github …`. Say which remote, by name and
+  URL, every time.
 - Never install launch agents, daemons, or helpers without asking the user first.
 - Launch at Login stays opt-in, with a confirmation before registering.
 - Open the specs for review with Marked: `/opt/homebrew/bin/mk docs/SPEC.md`,
