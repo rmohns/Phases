@@ -256,7 +256,7 @@ run-loop pass after it appears, once the phase editor is in place, because
 
 ### Open here
 
-`[D-open-here]`: **not settled.** Tests run 2026-10-29 with diagnostics
+`[D-open-here]`: settled 2026-10-29 (last item below). Tests run 2026-10-29 with diagnostics
 and a probe that reads the active Space ID and whether the window is on
 screen.
 
@@ -285,9 +285,13 @@ screen.
   survived to activation, so SwiftUI doesn't reset it. But the window
   was still off the active Space at `didBecomeActive`: the move happens
   *after* activation, which is why turning the flag off there failed.
-- **Next to try:** keep the flag on until the window is actually on the
-  active Space (watch `NSWindow.didChangeOcclusionStateNotification`),
-  then turn it off; also turn it off if Phases resigns active first.
+- **Flag on until the window arrives (occlusion turns visible on the
+  active Space), or until Phases resigns active: works; this is the
+  fix.** *Verified* 2026-10-29 with real clicks: "Open Phases…" on Space
+  B stayed on B and the window came; the log showed "flag off (arrived)";
+  a Dock click from a third Space then switched to the window's Space as
+  usual. ⌘Tab not driven in the test (it goes through the same
+  activation path as the Dock, recalled).
 - **Dock click:** went to the window's Space in every real-click run, as
   intended.
 

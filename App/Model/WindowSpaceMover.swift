@@ -10,7 +10,7 @@ private let diagLog = Diagnostics.logger("spaces")
 @MainActor
 enum WindowSpaceMover {
   /// If the window is open on another Space, lets the coming activation
-  /// bring it here. Call just before activating.
+  /// bring it here instead of switching Spaces. Call just before activating.
   static func moveOnNextActivation(windowID: String) {
     guard let window = NSApp.windows.first(where: {
       $0.identifier?.rawValue.hasPrefix(windowID) == true
@@ -21,17 +21,28 @@ enum WindowSpaceMover {
     diagLog.log("window \(window.identifier?.rawValue ?? "", privacy: .public) visible=\(window.isVisible) onActiveSpace=\(window.isOnActiveSpace) minimized=\(window.isMiniaturized)")
     guard window.isVisible, !window.isOnActiveSpace, !window.isMiniaturized else { return }
     window.collectionBehavior.insert(.moveToActiveSpace)
-    // Off again once activation is done, so the Dock and ⌘Tab still follow
-    // the user's Mission Control setting.
-    var observer: NSObjectProtocol?
-    observer = NotificationCenter.default.addObserver(
-      forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
+    // macOS moves the window after activation finishes, so the flag stays on
+    // until the window shows up here. Off again then (or if Phases loses
+    // focus first), so the Dock and ⌘Tab still follow the user's Mission
+    // Control setting.
+    var observers: [NSObjectProtocol] = []
+    func finish(_ reason: String) {
+      window.collectionBehavior.remove(.moveToActiveSpace)
+      observers.forEach(NotificationCenter.default.removeObserver)
+      observers = []
+      diagLog.log("flag off (\(reason, privacy: .public)); onActiveSpace=\(window.isOnActiveSpace)")
+    }
+    observers.append(NotificationCenter.default.addObserver(
+      forName: NSWindow.didChangeOcclusionStateNotification, object: window, queue: .main
     ) { _ in
       MainActor.assumeIsolated {
-        window.collectionBehavior.remove(.moveToActiveSpace)
-        diagLog.log("activated; onActiveSpace=\(window.isOnActiveSpace)")
-        if let observer { NotificationCenter.default.removeObserver(observer) }
+        if window.isOnActiveSpace && window.occlusionState.contains(.visible) { finish("arrived") }
       }
-    }
+    })
+    observers.append(NotificationCenter.default.addObserver(
+      forName: NSApplication.didResignActiveNotification, object: nil, queue: .main
+    ) { _ in
+      MainActor.assumeIsolated { finish("resigned active") }
+    })
   }
 }
