@@ -21,6 +21,7 @@ struct AppDefinition: App {
     // no toolbar buttons. Not enough on its own [Q-no-items-no-toolbar].
     .windowToolbarStyle(.unified)
     .defaultLaunchBehavior(.suppressed)
+    .commands { PhasesCommands(scheduler: scheduler) }
   }
 
   /// [D-menubar-icon] Solid shapes, drawn at 20 pt as a template so macOS

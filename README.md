@@ -41,8 +41,9 @@ It isn’t the best app ever, but it’s mine, so I like it. Maybe you’ll find
 7. **Puts your wallpaper back.** By default, quitting restores the
    wallpaper you had before Phases started.
 
-Phases lives in the menu bar (no Dock icon). Everything else, including
-Settings and Quit, is in one window, opened from the menu.
+Phases lives in the menu bar. Everything else, Settings included, is in
+one window, opened from the menu. While that window is open, Phases shows
+a Dock icon, appears in ⌘Tab, and has a normal menu bar with Quit.
 
 ## Privacy and permissions
 

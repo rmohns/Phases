@@ -38,6 +38,11 @@ final class WallpaperScheduler {
     didSet { UserDefaults.standard.set(restoresWallpaperOnQuit, forKey: Keys.restoresWallpaperOnQuit) }
   }
 
+  /// [D-quit-confirm] Whether Quit Phases asks first.
+  var asksBeforeQuitting: Bool {
+    didSet { UserDefaults.standard.set(asksBeforeQuitting, forKey: Keys.asksBeforeQuitting) }
+  }
+
   var isPaused: Bool {
     didSet {
       UserDefaults.standard.set(isPaused, forKey: Keys.isPaused)
@@ -89,6 +94,7 @@ final class WallpaperScheduler {
     static let transitionStyle = "transitionStyle"
     static let crossfadeDuration = "crossfadeDuration"
     static let restoresWallpaperOnQuit = "restoresWallpaperOnQuit"
+    static let asksBeforeQuitting = "asksBeforeQuitting"
   }
 
   init() {
@@ -98,6 +104,7 @@ final class WallpaperScheduler {
     displayMode = defaults.string(forKey: Keys.displayMode).flatMap(DisplayMode.init) ?? .sameOnAll
     isPaused = defaults.bool(forKey: Keys.isPaused)
     restoresWallpaperOnQuit = defaults.object(forKey: Keys.restoresWallpaperOnQuit) as? Bool ?? true
+    asksBeforeQuitting = defaults.object(forKey: Keys.asksBeforeQuitting) as? Bool ?? true
     transitionStyle = defaults.string(forKey: Keys.transitionStyle).flatMap(TransitionStyle.init) ?? .crossfade
     let duration = defaults.object(forKey: Keys.crossfadeDuration) as? Double ?? TransitionStyle.defaultDuration
     crossfadeDuration = min(max(duration, TransitionStyle.durationRange.lowerBound), TransitionStyle.durationRange.upperBound)

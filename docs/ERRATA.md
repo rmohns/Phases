@@ -162,6 +162,30 @@ would stop being true if a future macOS fixed the underlying behavior.
     highlights the whole 24 × 23 pt cell, and (b) how the system style
     behaves on earlier macOS versions Phases supports (deployment target is
     macOS 26; only macOS 27 was tested).
+- `[Q-regular-activation-menubar]` **Switching from accessory to regular
+  and activating in the same pass can leave the app frontmost without its
+  menu bar.** *Recalled*, not yet seen in Phases: a long-standing AppKit
+  report that after `setActivationPolicy(.regular)` plus `activate()`, the
+  window comes forward but the menu bar still shows the previous app's
+  menus until you switch away and back. Commonly cited fixes: set the
+  policy first and activate on the next run-loop pass, or activate another
+  app (e.g. the Dock) and then this one. Watch for it in testing
+  `[D-dock-while-open]`.
+- `[Q-accessory-focus-handoff]` **Switching back to accessory may leave no
+  app active.** *Recalled*, not yet seen in Phases: when a frontmost regular
+  app becomes an accessory, macOS doesn't always activate the previous
+  app, so keystrokes go nowhere until you click something. Watch for it
+  when the window closes `[D-dock-while-open]`.
+- `[Q-view-menu-fullscreen]` **Emptying SwiftUI's View menu doesn't remove
+  it: macOS adds Enter Full Screen, so a one-item View menu remains (macOS
+  27.2).** *Verified* 2026-10-29: with the `.sidebar` and `.toolbar` command
+  groups replaced by nothing, the View menu held only a separator and a
+  disabled Enter Full Screen (author's report, confirmed by reading the menu
+  bar through System Events). SwiftUI has no API to remove a whole standard
+  menu (recalled). Removing it from `NSApp.mainMenu` doesn't work cleanly
+  either: the menu still showed, then vanished once the menus were clicked
+  (*verified* 2026-10-29, author). Shapes `[D-app-menu]`, which keeps the
+  menu; see "View menu removal" under "Design history".
 
 ### Tools
 
@@ -374,6 +398,22 @@ non-collapsible split view item (see "Sidebar limits").
     The 520-resize run that "confirmed" it probably ended before SwiftUI's
     rewrite.
   - Fixed by `[D-sidebar-limits-watch]` (see "Sidebar limits").
+
+### View menu removal
+
+`[D-app-menu]` `[Q-view-menu-fullscreen]`, draft 26 only.
+
+- Draft 26 removed the one-item View menu from `NSApp.mainMenu` itself,
+  picking it by contents (only separators and `toggleFullScreen:` items)
+  and redoing it whenever the menu bar changed (`NSMenu.didAddItemNotification`
+  and key-value observing on `mainMenu`).
+- In use, the View menu still appeared in the menu bar, then disappeared
+  the moment the author clicked into the menus (2026-10-29). Why it showed
+  at all is *unknown*; most likely SwiftUI or AppKit put it back and the
+  removal only ran once a menu event changed the menu again (a guess,
+  not tested).
+- Dropped in draft 27: a menu that vanishes under the pointer is worse than
+  a View menu with one disabled item.
 
 ## Diagnostic procedures
 

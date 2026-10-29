@@ -65,15 +65,8 @@ struct PhasesWindow: View {
         )
       }
     }
-    .background {
-      // [D-quit-in-window] ⌘Q while this window is active. Phases has no app
-      // menu, so nothing else provides it.
-      Button("Quit Phases") { NSApp.terminate(nil) }
-        .keyboardShortcut("q")
-        .opacity(0)
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
-    }
+    // [D-app-menu] For Settings… in the app menu.
+    .focusedSceneValue(\.sidebarSelection, $selection)
     .onAppear {
       scheduler.library.reload()
       if selection == nil {
@@ -215,7 +208,7 @@ private struct SidebarBranding: View {
   }
 }
 
-private enum SidebarItem: Hashable {
+enum SidebarItem: Hashable {
   case phase(Phase.ID)
   case settings
 }

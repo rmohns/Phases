@@ -24,8 +24,11 @@ struct MenuContent: View {
     Divider()
 
     Button("Open Phases…") {
-      NSApp.activate()
+      // [D-dock-while-open] [Q-regular-activation-menubar] Regular before
+      // activating, so the menu bar comes with the window.
+      DockPresence.show()
       openWindow(id: PhasesWindow.windowID)
+      NSApp.activate()
     }
   }
 
