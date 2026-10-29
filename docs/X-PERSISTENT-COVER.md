@@ -59,6 +59,12 @@ launch of the branch build behaves like `main`:
   was a sync), and each cover created or removed. Turn on with
   `[D-diagnostics-switch]`.
 
+Code: `App/Model/PersistentCover.swift`, plus a two-line hand-off in
+`CrossfadeController`. At launch the cover goes up over whatever
+wallpaper is showing, so it's in place before the first change. Launch
+with `open <Phases.app> --args -PhasesPersistentCover A
+-PhasesWallpaperTiming mid` (quit any running Phases first).
+
 Known gaps, on purpose: no handling of display connect/disconnect or
 resolution changes (a mismatched cover is expected there), and no Settings
 UI.
@@ -94,6 +100,23 @@ Setup: two or three Spaces on the main display, a phase with a mix of
 light and dark images, Crossfade at 1 s, diagnostics on. Where it matters,
 test both A and B.
 
+### Display configurations
+
+Agreed with the author 2026-10-29:
+
+- **One display: the full run, E1–E12.** The baseline.
+- **Three displays: the tests that depend on display count,** E1, E3,
+  E4, E5, E8, and E12. Each display has its own Spaces, lock screen
+  image, and cover, so these can differ.
+- **Two displays: skipped,** unless the three-display run shows something
+  odd. Three exercises everything two would, and one and three are enough
+  to work out memory per display.
+- E6, E7, E9, E10, and E11 are believed (not tested) not to depend on
+  display count.
+- The test build doesn't handle displays changing (see "Changes on the
+  branch"). Between configurations: quit Phases, change the displays,
+  relaunch.
+
 | # | Test | Steps | Looking for |
 |---|---|---|---|
 | E1 | Twitch | Change Now ×5 | No twitch at any point. |
@@ -107,7 +130,7 @@ test both A and B.
 | E9 | Full screen and Stage Manager | Full-screen an app; turn Stage Manager on | Nothing odd shows through or around. |
 | E10 | Quit and crash | Quit; relaunch; Force Quit | What's on screen the moment the cover goes; restore-on-quit still behaves. |
 | E11 | System Settings | Change wallpaper there while Phases runs | Expected: hidden by the cover. Confirm, and note how confusing it is. |
-| E12 | Memory | `footprint` on Phases: on `main` at idle, then the branch with the cover up, A and B, one display and two | The real cost per display, against today's idle baseline. |
+| E12 | Memory | `footprint` on Phases: on `main` at idle, then the branch with the cover up, A and B, one display and three | The real cost per display, against today's idle baseline. |
 
 ## Results
 

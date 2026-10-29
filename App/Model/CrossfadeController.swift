@@ -21,9 +21,16 @@ final class CrossfadeController {
   private var fadeTask: Task<Void, Never>?
   /// Wallpaper to set when the running fade completes or is interrupted.
   private var pendingAssignments: [WallpaperAssignment]?
+  /// EXPERIMENT (docs/X-PERSISTENT-COVER.md): takes over when launched with
+  /// `-PhasesPersistentCover`.
+  private let persistent = PersistentCover.variant.map(PersistentCover.init)
 
   /// Applies the assignments. Pass a nil duration for an instant switch.
   func apply(_ assignments: [WallpaperAssignment], duration: TimeInterval?) {
+    if let persistent {
+      persistent.apply(assignments, duration: duration)
+      return
+    }
     finishRunningFade()
 
     // [D-no-fade-cases] None, Reduce Motion, unreadable file, unchanged screen.
@@ -67,6 +74,7 @@ final class CrossfadeController {
 
   /// Ends any fade in progress immediately: sets its wallpaper, removes covers.
   func finishRunningFade() {
+    persistent?.finishRunningFade()
     fadeTask?.cancel()
     fadeTask = nil
     setPendingWallpaper()
@@ -123,7 +131,7 @@ final class CrossfadeController {
   }
 
   /// Matches macOS's wallpaper modes: Fill Screen, Fit to Screen, Stretch, Center.
-  private static func gravity(for scaling: NSImageScaling, allowsClipping: Bool) -> CALayerContentsGravity {
+  static func gravity(for scaling: NSImageScaling, allowsClipping: Bool) -> CALayerContentsGravity {
     switch scaling {
     case .scaleAxesIndependently: .resize
     case .scaleNone: .center
@@ -131,7 +139,7 @@ final class CrossfadeController {
     }
   }
 
-  private static func loadImage(_ url: URL, maxPixelSize: CGFloat?) -> CGImage? {
+  static func loadImage(_ url: URL, maxPixelSize: CGFloat?) -> CGImage? {
     guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
     guard let maxPixelSize else { return CGImageSourceCreateImageAtIndex(source, 0, nil) }
     let options: [CFString: Any] = [
