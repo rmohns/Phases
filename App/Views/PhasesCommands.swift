@@ -29,9 +29,9 @@ struct PhasesCommands: Commands {
       }
       .keyboardShortcut(",")
     }
-    // [D-sidebar-always-visible] No Show/Hide Sidebar; with the toolbar
-    // items gone too, nothing is left for the View menu, but macOS keeps it
-    // for Enter Full Screen [Q-view-menu-fullscreen]; MainMenuTrimmer removes it.
+    // [D-sidebar-always-visible] No Show/Hide Sidebar, and no toolbar items.
+    // macOS keeps the View menu for Enter Full Screen anyway, and it stays
+    // [Q-view-menu-fullscreen].
     CommandGroup(replacing: .sidebar) {}
     CommandGroup(replacing: .toolbar) {}
     // No help book, so no "Phases Help".
