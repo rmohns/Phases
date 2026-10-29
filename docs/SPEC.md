@@ -1,4 +1,4 @@
-# Phases — Specification (draft 24)
+# Phases — Specification (draft 25)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -308,7 +308,8 @@ following the pattern of Apple's own menu bar extras (e.g. Time Machine's
 
 `[D-menu-no-shortcuts]` The current image's filename is not shown in the
 menu. There is no Quit item
-in the menu; Quit lives in the Phases window (below).
+in the menu; Quit lives in the app menu, which shows while the Phases
+window is open `[D-app-menu]`.
 
 No keyboard shortcuts in the menu. Shortcuts in a menu bar extra's menu work
 only while that menu is open, so they'd be decoration; Apple's own menu bar
@@ -470,8 +471,8 @@ extras don't show them. No global hotkey.
   doesn't collapse it.
   - *Why:* the sidebar is the window's only navigation (Settings and every
     phase), so hiding it leaves an editor with no visible way to anything
-    else. As a menu bar accessory, Phases has no View › Show Sidebar menu item
-    to recover with. The editor is a form, so hiding a ≤ 320 pt sidebar gains
+    else. Phases has no View › Show Sidebar menu item to recover with
+    (the app menu leaves out View, `[D-app-menu]`). The editor is a form, so hiding a ≤ 320 pt sidebar gains
     nothing. Removing the toggle alone isn't enough: a drag past the
     minimum would close it with no way back except dragging the window's
     edge.
@@ -491,10 +492,12 @@ extras don't show them. No global hotkey.
 - **Settings selected:** image folder and Include subfolders; display sharing
   preference (see "Displays sharing the All Displays images"); transition and duration; Launch at Login; location status
   with today's civil dawn and dusk and Update Now; and, at the bottom, a
-  **Quit** section with the **Restore original wallpaper when quitting** toggle
-  and a **Quit Phases** button whose note says what quitting will do `[D-restore-on-quit]`.
+  **Quitting** section with the **Restore original wallpaper when quitting**
+  toggle and a note that says what quitting will do `[D-restore-on-quit]`.
+  No Quit button: Quit lives in the app menu `[D-app-menu]` (draft 24 and
+  earlier had a Quit Phases button here).
 - `[D-version-in-settings]` **About section,** last in Settings, below
-  Quit, one line each:
+  Quitting, one line each:
   - **Version:** the app's version and build number, e.g. "1.0 (1)".
   - **Spec:** the SPEC.md draft the build was made against, e.g. "Draft 23".
   - **Built:** the date and time this copy of the app was built (taken
@@ -507,11 +510,45 @@ extras don't show them. No global hotkey.
     (`App/Model/AppVersion.swift`). A unit test reads SPEC.md's title and
     fails if the constant doesn't match it, so the number can't drift
     from the spec `[D-tests-carry-tags]`. Bump it with each new draft.
-- `[D-quit-in-window]` **⌘Q** quits Phases whenever the Phases window is
-  active, and Settings has the Quit Phases button (above).
 
-No Dock icon. The app runs as a menu bar accessory, so it has no app menu;
-that's why Quit needs a home in the window.
+### Dock icon and app menu
+
+- `[D-dock-while-open]` **Phases shows a Dock icon, and appears in the ⌘Tab
+  switcher, only while its window is open.** It launches as a menu bar
+  accessory with no Dock icon. Opening the window makes it a regular app;
+  closing the window makes it an accessory again, and the Dock icon goes
+  away. Minimizing the window does not count as closing: the icon stays, so
+  the minimized window can be found.
+  - *Why:* a window on screen that ⌘Tab can't reach is un-Mac-like
+    (author, 2026-10-29). Removing the icon when the window closes follows
+    single-window apps such as Contacts, Calculator, and System Settings,
+    which quit (and leave the Dock) when their window closes. Phases keeps
+    running in the menu bar instead, but the Dock looks the same.
+  - Replaces draft 24's "No Dock icon" rule.
+  - macOS may fight this; see `[Q-regular-activation-menubar]` and
+    `[Q-accessory-focus-handoff]` (both recalled, not yet seen in Phases).
+- `[D-app-menu]` **While the window is open, Phases has a standard menu
+  bar,** trimmed to what applies:
+  - **Phases** (app menu): About Phases, **Settings… ⌘,** (opens the window
+    with Settings selected in the sidebar `[D-one-window]`), Hide, Hide
+    Others, Show All, **Quit Phases ⌘Q**.
+  - **File:** Close ⌘W.
+  - **Edit:** kept. Text fields (phase names) get Undo, Cut, Copy, Paste,
+    and Select All from the Edit menu's shortcuts; removing it would break
+    ⌘C and ⌘V in them (recalled AppKit behavior, to be checked in testing).
+  - **View:** removed. Its only items would be Show/Hide Sidebar, which
+    `[D-sidebar-always-visible]` rules out, and Enter Full Screen, which the
+    green window button still provides.
+  - **Window:** kept as macOS provides it (Minimize, Zoom, the window list,
+    and so on). The app must behave like a well-mannered Mac app (author,
+    2026-10-29).
+  - **Help:** no "Phases Help" item; there's no help book.
+  - *Why:* Quit belongs in the app menu, like every Mac app (author,
+    2026-10-29). Replaces `[D-quit-in-window]` (draft 24 and earlier: a
+    hidden ⌘Q button in the window plus a Quit Phases button in Settings,
+    because an accessory app has no app menu).
+  - With the window closed there's no menu bar of Phases' own, so quitting
+    means opening the window first, as before.
 
 ## Launch at login: explicit consent only
 

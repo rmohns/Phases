@@ -162,6 +162,20 @@ would stop being true if a future macOS fixed the underlying behavior.
     highlights the whole 24 × 23 pt cell, and (b) how the system style
     behaves on earlier macOS versions Phases supports (deployment target is
     macOS 26; only macOS 27 was tested).
+- `[Q-regular-activation-menubar]` **Switching from accessory to regular
+  and activating in the same pass can leave the app frontmost without its
+  menu bar.** *Recalled*, not yet seen in Phases: a long-standing AppKit
+  report that after `setActivationPolicy(.regular)` plus `activate()`, the
+  window comes forward but the menu bar still shows the previous app's
+  menus until you switch away and back. Commonly cited fixes: set the
+  policy first and activate on the next run-loop pass, or activate another
+  app (e.g. the Dock) and then this one. Watch for it in testing
+  `[D-dock-while-open]`.
+- `[Q-accessory-focus-handoff]` **Switching back to accessory may leave no
+  app active.** *Recalled*, not yet seen in Phases: when a frontmost regular
+  app becomes an accessory, macOS doesn't always activate the previous
+  app, so keystrokes go nowhere until you click something. Watch for it
+  when the window closes `[D-dock-while-open]`.
 
 ### Tools
 
