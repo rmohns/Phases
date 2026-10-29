@@ -28,10 +28,11 @@ struct MenuContent: View {
       // activating, so the menu bar comes with the window.
       // [D-open-here] [Q-activate-switches-space] Come to this Space rather
       // than switching to the window's.
-      WindowSpaceMover.moveToActiveSpace(windowID: PhasesWindow.windowID)
+      let moved = WindowSpaceMover.prepare(windowID: PhasesWindow.windowID)
       DockPresence.show()
       openWindow(id: PhasesWindow.windowID)
       NSApp.activate()
+      WindowSpaceMover.finish(moved)
     }
   }
 

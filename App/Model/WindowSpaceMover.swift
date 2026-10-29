@@ -9,22 +9,26 @@ private let diagLog = Diagnostics.logger("spaces")
 /// [Q-activate-switches-space]. Workaround: ERRATA.md "Open here".
 @MainActor
 enum WindowSpaceMover {
-  /// If the window is open on another Space, moves it to the current one.
-  /// Call before activating, so activation has no other Space to go to.
-  static func moveToActiveSpace(windowID: String) {
+  /// Takes the window off screen if it's open on another Space. Returns the
+  /// window to show again after activating, or nil if there's nothing to do.
+  static func prepare(windowID: String) -> NSWindow? {
     guard let window = NSApp.windows.first(where: {
       $0.identifier?.rawValue.hasPrefix(windowID) == true
     }) else {
       diagLog.log("no window yet")
-      return
+      return nil
     }
     diagLog.log("window \(window.identifier?.rawValue ?? "", privacy: .public) visible=\(window.isVisible) onActiveSpace=\(window.isOnActiveSpace) minimized=\(window.isMiniaturized)")
-    guard window.isVisible, !window.isOnActiveSpace, !window.isMiniaturized else { return }
-    // On only while the window is ordered front, so the Dock and ⌘Tab still
-    // follow the user's Mission Control setting.
-    window.collectionBehavior.insert(.moveToActiveSpace)
-    window.orderFront(nil)
-    window.collectionBehavior.remove(.moveToActiveSpace)
+    guard window.isVisible, !window.isOnActiveSpace, !window.isMiniaturized else { return nil }
+    // Ordering out doesn't post willClose, so the Dock icon stays [D-dock-while-open].
+    window.orderOut(nil)
+    return window
+  }
+
+  /// Shows the window again, on the current Space. Call after activating.
+  static func finish(_ window: NSWindow?) {
+    guard let window else { return }
+    window.makeKeyAndOrderFront(nil)
     diagLog.log("moved; onActiveSpace=\(window.isOnActiveSpace)")
   }
 }

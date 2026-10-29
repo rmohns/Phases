@@ -256,16 +256,26 @@ run-loop pass after it appears, once the phase editor is in place, because
 
 ### Open here
 
-`[D-open-here]`: if the window is on another Space (and isn't minimized),
-"Open Phases…" turns on `.moveToActiveSpace`, orders the window front, and
-turns the flag off again, all before activating. Activation then has no
-other-Space window to switch to `[Q-activate-switches-space]`, and the Dock
-and ⌘Tab keep following the Mission Control setting. *Built, not yet
-tested* (2026-10-29). Code: `App/Model/WindowSpaceMover.swift`.
-- Tried first and failed: ordering the window out and back in. *Verified*
-  2026-10-29 with diagnostics: the window came back on its old Space
-  (`onActiveSpace=false` after `makeKeyAndOrderFront`). macOS remembers a
-  hidden window's Space.
+`[D-open-here]`: **not settled.** Tests run 2026-10-29 with diagnostics
+and a probe that reads the active Space ID and whether the window is on
+screen.
+
+- **Test method matters.** Clicking the menu through System Events
+  accessibility actions doesn't let Phases activate at all (Finder stayed
+  frontmost, no Space switch), so those runs prove nothing. Real mouse
+  events (CGEvent) at the menu item's position do. *Verified* 2026-10-29.
+- **Temporary `.moveToActiveSpace` (on, `orderFront`, off, then activate):
+  failed.** *Verified* 2026-10-29 with real clicks: "Open Phases…" on
+  another Space switched to the window's Space, same as before the fix;
+  `isOnActiveSpace` stayed false right after `orderFront`.
+- **Order out, activate, `makeKeyAndOrderFront`: unknown.** Its only run
+  used System Events clicks, so it's invalid; the real-click retest broke
+  on a launch race (two Phases launches at once, LaunchServices error
+  -600). This is what the build currently does.
+- **Next to try:** keep `.moveToActiveSpace` on until the app finishes
+  activating (`didBecomeActiveNotification`), then turn it off.
+
+Code: `App/Model/WindowSpaceMover.swift`.
 
 ### Branding panel insets
 
