@@ -9,6 +9,8 @@ enum DockPresence {
   static func show() {
     guard NSApp.activationPolicy() != .regular else { return }
     NSApp.setActivationPolicy(.regular)
+    // [D-app-menu] [Q-view-menu-fullscreen]
+    MainMenuTrimmer.shared.start()
   }
 
   /// Back to a menu bar accessory. Only when the window closes, never on

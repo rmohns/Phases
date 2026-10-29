@@ -102,6 +102,11 @@ struct SettingsView: View {
               : "Quitting Phases keeps the current wallpaper."
           )
         }
+        // [D-quit-confirm] Turns the question back on after "Don't ask again".
+        Toggle(isOn: $scheduler.asksBeforeQuitting) {
+          Text("Ask before quitting")
+          Text("Quit Phases (⌘Q) checks first, and offers to keep Phases running in the menu bar.")
+        }
       }
 
       // [D-version-in-settings]
