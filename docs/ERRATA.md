@@ -315,8 +315,10 @@ Phases yields activation to the app chosen by `HandoffChoice` and
 activates it. *Verified* 2026-10-29 with real clicks: Phases window on
 Space A, Calculator on B as the most recent app, Dock click back to
 Phases, ⌘W → stayed on A, focus to the app with a window on A (Bitrig).
-Not yet tested: the Finder fallback when Finder has a window only on
-another Space (activating Finder might itself switch Spaces). Code:
+Finder fallback with Finder's only window on another Space: no Space
+switch. *Verified* 2026-10-29 (author, by hand); Finder seems to be
+treated specially because it owns the desktop on every Space (recalled
+explanation). UI test rerun the same day: same pass. Code:
 `App/Model/FocusHandoff.swift`, `App/Model/HandoffChoice.swift`.
 
 ### Branding panel insets
