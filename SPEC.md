@@ -541,6 +541,12 @@ extras don't show them. No global hotkey.
         returns without doing anything and never tries again. Nothing
         reports that failure, so a launch can silently go without limits.
         The diagnostic logging should record when this happens.
+      - **Temporary diagnostic logging is in the code** (marked
+        `DIAGNOSTIC (temporary)` in `WindowLayoutConfigurator.swift`,
+        subsystem `PhasesDiag`). It logs each limits pass (or a
+        "SKIPPED limits" error), and each change in the split view's
+        identity or limits, or an out-of-range width. Remove it once the
+        cause is found.
 - `[D-sidebar-always-visible]` **The sidebar can't be hidden.** There is no
   sidebar toggle button, and dragging the divider past the minimum width
   doesn't collapse it.
