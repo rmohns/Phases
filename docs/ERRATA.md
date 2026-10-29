@@ -279,10 +279,15 @@ screen.
 - **Not SwiftUI's `openWindow`.** *Verified* 2026-10-29: bringing the
   existing window forward with `makeKeyAndOrderFront` instead (flag on
   until active) still switched Spaces.
-- **Still to check:** whether `.moveToActiveSpace` works in Phases at all
-  (left on permanently), and whether SwiftUI resets `collectionBehavior`.
-  At `didBecomeActive` the window was still off the active Space, so the
-  switch comes after activation.
+- **`.moveToActiveSpace` left on: works.** *Verified* 2026-10-29: "Open
+  Phases…" on another Space kept the user there and brought the window;
+  a Dock click did the same (expected with the flag left on). The flag
+  survived to activation, so SwiftUI doesn't reset it. But the window
+  was still off the active Space at `didBecomeActive`: the move happens
+  *after* activation, which is why turning the flag off there failed.
+- **Next to try:** keep the flag on until the window is actually on the
+  active Space (watch `NSWindow.didChangeOcclusionStateNotification`),
+  then turn it off; also turn it off if Phases resigns active first.
 - **Dock click:** went to the window's Space in every real-click run, as
   intended.
 
