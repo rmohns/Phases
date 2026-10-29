@@ -524,6 +524,10 @@ extras don't show them. No global hotkey.
     single-window apps such as Contacts, Calculator, and System Settings,
     which quit (and leave the Dock) when their window closes. Phases keeps
     running in the menu bar instead, but the Dock looks the same.
+  - *How:* the window helper `[D-window-helper-order]` makes Phases a
+    regular app when it attaches to the window and watches for the window
+    closing. "Open Phases…" also switches before activating, so the switch
+    happens before the window comes forward.
   - Replaces draft 24's "No Dock icon" rule.
   - macOS may fight this; see `[Q-regular-activation-menubar]` and
     `[Q-accessory-focus-handoff]` (both recalled, not yet seen in Phases).
