@@ -533,9 +533,9 @@ extras don't show them. No global hotkey.
   - macOS may fight this; see `[Q-regular-activation-menubar]` and
     `[Q-accessory-focus-handoff]` (both recalled, not yet seen in Phases).
 - `[D-open-here]` **"Open Phases…" brings the window to the Space you're
-  on; the Dock and ⌘Tab take you to the window.** If the window is already
-  open on another Space, choosing "Open Phases…" from the menu bar moves it
-  to the current Space instead of switching Spaces. Clicking the Dock icon
+  on; the Dock and ⌘Tab take you to the window.** Choosing "Open Phases…"
+  from the menu bar shows the window on the current Space, whether it's
+  open on another Space or was closed there, instead of switching Spaces. Clicking the Dock icon
   or picking Phases in ⌘Tab behaves like any other app: macOS follows the
   user's Mission Control setting ("When switching to an application,
   switch to a Space with open windows for the application"). Phases never
@@ -547,7 +547,8 @@ extras don't show them. No global hotkey.
     current Space. The Dock and ⌘Tab are about the app, and on the Mac
     switching to an app goes to its windows; keeping that respects the
     user's own setting (author, 2026-10-29).
-  - *How:* if the window is on another Space, "Open Phases…" turns on
+  - *How:* if the window (open or closed) belongs to another Space, "Open
+    Phases…" turns on
     `.moveToActiveSpace` before activating and turns it off once the
     window has arrived on the current Space (or if Phases loses focus
     first). Nothing persistent changes on the window. Details and the

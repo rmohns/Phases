@@ -185,6 +185,12 @@ would stop being true if a future macOS fixed the underlying behavior.
   (on by default, recalled). A window can opt out with
   `NSWindow.CollectionBehavior.moveToActiveSpace`, but that applies to
   every activation, Dock and ⌘Tab included. Shapes `[D-open-here]`.
+- `[Q-closed-window-keeps-space]` **A closed SwiftUI `Window` comes back
+  on the Space it was closed on.** *Verified* 2026-10-29 (author's report,
+  confirmed in the diagnostics log: `visible=false onActiveSpace=false`
+  on reopening). SwiftUI keeps the closed window and re-shows it, and a
+  hidden window keeps its Space, so reopening switches to that Space.
+  Shapes `[D-open-here]`.
 - `[Q-view-menu-fullscreen]` **Emptying SwiftUI's View menu doesn't remove
   it: macOS adds Enter Full Screen, so a one-item View menu remains (macOS
   27.2).** *Verified* 2026-10-29: with the `.sidebar` and `.toolbar` command
