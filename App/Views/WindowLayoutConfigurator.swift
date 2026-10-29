@@ -12,7 +12,8 @@ private func diagID(_ object: AnyObject?) -> String { Diagnostics.id(object) }
 /// unified toolbar if SwiftUI made none, then makes the sidebar's split view
 /// item non-collapsible within a fixed width range. SwiftUI has no API for
 /// either [Q-no-items-no-toolbar] [Q-sidebar-collapse]. Workarounds:
-/// ERRATA.md "Tall toolbar" and "Sidebar limits".
+/// ERRATA.md "Tall toolbar" and "Sidebar limits". Also keeps Phases in the
+/// Dock until the window closes [D-dock-while-open].
 struct WindowLayoutConfigurator: NSViewRepresentable {
   var sidebarMinWidth: CGFloat
   var sidebarMaxWidth: CGFloat
@@ -37,14 +38,38 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
     private var itemObservations: [NSKeyValueObservation] = []
     private var resizeObserver: NSObjectProtocol?
 
+    /// [D-dock-while-open] The window whose closing drops the Dock icon.
+    /// Kept when this view leaves the window, so a close still counts.
+    private weak var closeWatchedWindow: NSWindow?
+    private var closeObserver: NSObjectProtocol?
+
     /// Diagnostics: last logged split state, to log only changes.
     private var diagLastState = ""
+
+    deinit {
+      if let closeObserver { NotificationCenter.default.removeObserver(closeObserver) }
+    }
 
     override func viewDidMoveToWindow() {
       super.viewDidMoveToWindow()
       diagLog.log("probe \(diagID(self), privacy: .public) moved to window \(diagID(self.window), privacy: .public)")
       if window == nil { stopWatching() }
+      if let window { showInDock(while: window) }
       apply()
+    }
+
+    /// [D-dock-while-open] Regular app while the window is open; accessory
+    /// again when it closes. Minimizing doesn't post willClose.
+    private func showInDock(while window: NSWindow) {
+      DockPresence.show()
+      guard window !== closeWatchedWindow else { return }
+      if let closeObserver { NotificationCenter.default.removeObserver(closeObserver) }
+      closeWatchedWindow = window
+      closeObserver = NotificationCenter.default.addObserver(
+        forName: NSWindow.willCloseNotification, object: window, queue: .main
+      ) { _ in
+        MainActor.assumeIsolated { DockPresence.hide() }
+      }
     }
 
     /// [D-window-helper-order] Toolbar first; sidebar limits one run-loop
