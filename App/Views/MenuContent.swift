@@ -26,9 +26,13 @@ struct MenuContent: View {
     Button("Open Phases…") {
       // [D-dock-while-open] [Q-regular-activation-menubar] Regular before
       // activating, so the menu bar comes with the window.
+      // [D-open-here] [Q-activate-switches-space] Come to this Space rather
+      // than switching to the window's.
+      let moved = WindowSpaceMover.prepare(windowID: PhasesWindow.windowID)
       DockPresence.show()
       openWindow(id: PhasesWindow.windowID)
       NSApp.activate()
+      WindowSpaceMover.finish(moved)
     }
   }
 
