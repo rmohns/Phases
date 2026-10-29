@@ -17,7 +17,7 @@ struct PhasesWindow: View {
         SidebarBranding(scheduler: scheduler)
           .selectionDisabled()
           .listRowSeparator(.hidden)
-          // [D-brand-inset] Sides line up with the traffic lights and row
+          // [D-brand-inset] [Q-list-row-padding] Sides line up with the traffic lights and row
           // icons; top lines up with the detail form's first row.
           .listRowInsets(EdgeInsets(top: 20, leading: 3, bottom: 8, trailing: 3))
 
@@ -34,8 +34,8 @@ struct PhasesWindow: View {
         }
       }
       .safeAreaInset(edge: .bottom, spacing: 0) {
-        // [D-sidebar-footer-view] Its own view with a binding, so it
-        // refreshes when the selection changes.
+        // [D-sidebar-footer-view] [Q-safe-area-inset-refresh] Its own view with
+        // a binding, so it refreshes when the selection changes.
         SidebarFooter(scheduler: scheduler, selection: $selection)
       }
       // [D-initial-focus-sidebar] Set in onAppear below.
@@ -43,10 +43,11 @@ struct PhasesWindow: View {
       // [D-sidebar-width] Opens at the 240 pt minimum; widens to 320 pt.
       .navigationSplitViewColumnWidth(min: 240, ideal: 240, max: 320)
       .background {
-        // [D-window-helper-order] Toolbar, then sidebar limits, in one helper.
+        // [D-window-helper-order] Toolbar, then sidebar limits, in one helper
+        // [Q-split-item-rewrite].
         WindowLayoutConfigurator(sidebarMinWidth: 240, sidebarMaxWidth: 320)
       }
-      // [D-sidebar-always-visible] No toggle button; the configurator above
+      // [D-sidebar-always-visible] [Q-sidebar-collapse] No toggle button; the configurator above
       // stops drags from collapsing it.
       .toolbar(removing: .sidebarToggle)
     } detail: {
@@ -78,7 +79,7 @@ struct PhasesWindow: View {
       if selection == nil {
         selection = (scheduler.activePhase ?? scheduler.phasesByTime.first).map { .phase($0.id) } ?? .settings
       }
-      // [D-initial-focus-sidebar] Otherwise macOS focuses the phase's Name
+      // [D-initial-focus-sidebar] [Q-default-focus-loses] Otherwise macOS focuses the phase's Name
       // field on open and selects its text. Deferred a pass so the editor
       // exists first; `.defaultFocus` alone lost to the field.
       DispatchQueue.main.async { sidebarFocused = true }
@@ -94,7 +95,8 @@ private struct SidebarFooter: View {
   var body: some View {
     VStack(spacing: 0) {
       Divider()
-      // [D-sidebar-footer-style] System Settings' Login Items layout:
+      // [D-sidebar-footer-style] [Q-borderless-pressed-state] System Settings'
+      // Login Items layout:
       // 24 × 23 pt cells split by a 16 pt divider.
       HStack(spacing: 0) {
         Button {
@@ -102,7 +104,7 @@ private struct SidebarFooter: View {
         } label: {
           cell("Add Phase", systemImage: "plus")
         }
-        // [D-footer-ax-labels] The wrapped icon-only Label doesn't pass its
+        // [D-footer-ax-labels] [Q-system-events-ax] The wrapped icon-only Label doesn't pass its
         // title through, so name the button explicitly.
         .accessibilityLabel("Add Phase")
         Rectangle()

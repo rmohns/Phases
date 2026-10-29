@@ -12,7 +12,8 @@ enum WallpaperSetter {
   /// Keeps each screen's existing fill/scaling options.
   ///
   /// [D-no-focus-steal] Never activates Phases to force a menu bar restyle;
-  /// that would steal focus from the user's app.
+  /// that would steal focus from the user's app
+  /// [Q-menubar-restyle-on-app-switch].
   static func apply(_ assignments: [WallpaperAssignment]) {
     for assignment in assignments {
       let options = NSWorkspace.shared.desktopImageOptions(for: assignment.screen) ?? [:]

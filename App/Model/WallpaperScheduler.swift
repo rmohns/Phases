@@ -422,8 +422,8 @@ final class WallpaperScheduler {
     let now: @Sendable (Notification) -> Void = { [weak self] _ in
       Task { @MainActor in self?.evaluate() }
     }
-    // [D-screen-change-no-reroll] This also fires for Dock and menu bar
-    // changes, so only fix displays whose image no longer fits.
+    // [D-screen-change-no-reroll] [Q-screen-params-notification] This also
+    // fires for Dock and menu bar changes, so only fix displays whose image no longer fits.
     let screens: @Sendable (Notification) -> Void = { [weak self] _ in
       Task { @MainActor in
         self?.refreshDisplays()

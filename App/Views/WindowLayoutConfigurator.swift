@@ -11,7 +11,8 @@ private func diagID(_ object: AnyObject?) -> String { Diagnostics.id(object) }
 /// window around it in a fixed order: first gives the window an empty
 /// unified toolbar if SwiftUI made none, then makes the sidebar's split view
 /// item non-collapsible within a fixed width range. SwiftUI has no API for
-/// either.
+/// either [Q-no-items-no-toolbar] [Q-sidebar-collapse]. Workarounds:
+/// ERRATA.md "Tall toolbar" and "Sidebar limits".
 struct WindowLayoutConfigurator: NSViewRepresentable {
   var sidebarMinWidth: CGFloat
   var sidebarMaxWidth: CGFloat
@@ -30,7 +31,7 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
     var sidebarMinWidth: CGFloat = 0
     var sidebarMaxWidth: CGFloat = .greatestFiniteMagnitude
 
-    /// [D-sidebar-limits-watch] The item being held to the limits, and the
+    /// [D-sidebar-limits-watch] [Q-split-item-rewrite] The item being held to the limits, and the
     /// event hooks that put them back. No polling.
     private weak var watchedItem: NSSplitViewItem?
     private var itemObservations: [NSKeyValueObservation] = []
@@ -60,12 +61,13 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
     }
 
     private func installToolbar(in window: NSWindow) {
-      // [D-tall-toolbar] An empty toolbar still gets the full unified height.
+      // [D-tall-toolbar] [Q-no-items-no-toolbar] An empty toolbar still gets
+      // the full unified height.
       if window.toolbar == nil {
         window.toolbar = NSToolbar(identifier: "PhasesWindowToolbar")
       }
-      // Icon-only: the default display mode made the bar 66 pt, not 52
-      // (fix verified, cause unproven; see SPEC.md).
+      // [Q-empty-toolbar-66pt] Icon-only: the default display mode made the
+      // bar 66 pt, not 52 (fix verified, cause unproven).
       window.toolbar?.displayMode = .iconOnly
       window.toolbarStyle = .unified
     }

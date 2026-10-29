@@ -18,7 +18,7 @@ struct AppDefinition: App {
     }
     .defaultSize(width: 960, height: 680)
     // [D-tall-toolbar] Tall unified toolbar over the detail pane, even with
-    // no toolbar buttons.
+    // no toolbar buttons. Not enough on its own [Q-no-items-no-toolbar].
     .windowToolbarStyle(.unified)
     .defaultLaunchBehavior(.suppressed)
   }

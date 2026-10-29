@@ -9,11 +9,12 @@ import ImageIO
 ///
 /// The wallpaper is set at the end, not the start, because macOS picks the
 /// menu bar's appearance from the actual wallpaper; setting it early makes
-/// the menu bar switch before the screen does.
+/// the menu bar switch before the screen does [Q-menubar-reads-wallpaper].
 @MainActor
 final class CrossfadeController {
   /// [D-cover-settle] Time for macOS to finish drawing the new wallpaper,
-  /// including its own brief motion, before the cover goes.
+  /// including its own brief motion, before the cover goes
+  /// [Q-wallpaper-motion-delay].
   private static let settleDelay: Duration = .milliseconds(1500)
 
   private var covers: [NSWindow] = []

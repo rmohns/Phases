@@ -12,7 +12,7 @@ struct AppVersionTests {
       .deletingLastPathComponent()  // project root
       .appending(path: "SPEC.md")
     let title = try #require(try String(contentsOf: spec, encoding: .utf8).split(separator: "\n").first)
-    // Title ends "(draft 23)".
+    // Title ends "(draft 24)".
     let draft = try #require(title.components(separatedBy: "(draft ").last?.prefix { $0.isNumber })
     #expect(Int(draft) == AppVersion.specDraft)
   }

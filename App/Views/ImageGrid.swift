@@ -68,7 +68,8 @@ struct ImageGrid: View {
         max(1, Int((proxy.size.width + Self.spacing) / (Self.minimumCellWidth + Self.spacing)))
       } action: { columnCount = $0 }
       .padding(.vertical, 4)
-      // [D-grid-one-tab-stop] The grid, not each image, takes focus; the
+      // [D-grid-one-tab-stop] [Q-lazy-grid-tab] The grid, not each image,
+      // takes focus; the
       // cursor ring below stands in for the focus ring.
       .focusable()
       .focused($isFocused)
