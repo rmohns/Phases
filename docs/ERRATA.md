@@ -273,9 +273,14 @@ screen.
   `isOnActiveSpace` false after re-showing. macOS keeps a hidden window's
   Space.
 - **`.moveToActiveSpace` on until `didBecomeActiveNotification`, then
-  off:** what the build does now; *not yet tested*. If Phases is already
-  active when "Open Phases…" is chosen, the notification doesn't come and
-  the flag stays on until the next activation (to check).
+  off: failed.** *Verified* 2026-10-29 with real clicks and the location
+  prompt off `[D-test-no-location-prompt]`: switched to the window's
+  Space; `isOnActiveSpace` false once active.
+- **Untested suspects:** SwiftUI's `openWindow(id:)` on an already-open
+  window may itself switch to the window's Space, before any of the above
+  matters; or SwiftUI may reset `collectionBehavior`. Not yet checked
+  whether `.moveToActiveSpace` works in Phases at all (left on
+  permanently).
 - **Dock click:** went to the window's Space in every real-click run, as
   intended.
 
