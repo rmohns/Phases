@@ -547,9 +547,11 @@ extras don't show them. No global hotkey.
     current Space. The Dock and ⌘Tab are about the app, and on the Mac
     switching to an app goes to its windows; keeping that respects the
     user's own setting (author, 2026-10-29).
-  - *How:* not settled; see ERRATA.md "Open here". The build currently
-    turns on `.moveToActiveSpace` until activation finishes, then turns it
-    off (not yet tested). Nothing persistent changes on the window.
+  - *How:* if the window is on another Space, "Open Phases…" turns on
+    `.moveToActiveSpace` before activating and turns it off once the
+    window has arrived on the current Space (or if Phases loses focus
+    first). Nothing persistent changes on the window. Details and the
+    approaches that failed: ERRATA.md "Open here".
   - macOS fights this; see `[Q-activate-switches-space]`.
 - `[D-app-menu]` **While the window is open, Phases has a standard menu
   bar,** trimmed to what applies:
