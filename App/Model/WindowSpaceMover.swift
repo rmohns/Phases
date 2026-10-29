@@ -9,7 +9,7 @@ private let diagLog = Diagnostics.logger("spaces")
 /// [Q-activate-switches-space]. Workaround: ERRATA.md "Open here".
 @MainActor
 enum WindowSpaceMover {
-  /// If the window is open on another Space, lets the coming activation
+  /// If the window, open or closed, belongs to another Space, lets the coming activation
   /// bring it here instead of switching Spaces. Call just before activating.
   static func moveOnNextActivation(windowID: String) {
     guard let window = NSApp.windows.first(where: {
@@ -19,7 +19,9 @@ enum WindowSpaceMover {
       return
     }
     diagLog.log("window \(window.identifier?.rawValue ?? "", privacy: .public) visible=\(window.isVisible) onActiveSpace=\(window.isOnActiveSpace) minimized=\(window.isMiniaturized)")
-    guard window.isVisible, !window.isOnActiveSpace, !window.isMiniaturized else { return }
+    // Closed windows count too: SwiftUI keeps them, and they come back on
+    // their old Space [Q-closed-window-keeps-space].
+    guard !window.isOnActiveSpace, !window.isMiniaturized else { return }
     window.collectionBehavior.insert(.moveToActiveSpace)
     // macOS moves the window after activation finishes, so the flag stays on
     // until the window shows up here. Off again then (or if Phases loses

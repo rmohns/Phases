@@ -298,6 +298,10 @@ screen.
   a Dock click from a third Space then switched to the window's Space as
   usual. ⌘Tab not driven in the test (it goes through the same
   activation path as the Dock, recalled).
+- **Closed window:** the flag now applies to a closed window too
+  `[Q-closed-window-keeps-space]`. *Verified* 2026-10-29 with real
+  clicks: open on A, ⌘W, switch to B, "Open Phases…" → window on B, no
+  switch; the open-window run passed again in the same session.
 - **Dock click:** went to the window's Space in every real-click run, as
   intended.
 
