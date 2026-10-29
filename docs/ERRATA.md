@@ -276,11 +276,13 @@ screen.
   off: failed.** *Verified* 2026-10-29 with real clicks and the location
   prompt off `[D-test-no-location-prompt]`: switched to the window's
   Space; `isOnActiveSpace` false once active.
-- **Untested suspects:** SwiftUI's `openWindow(id:)` on an already-open
-  window may itself switch to the window's Space, before any of the above
-  matters; or SwiftUI may reset `collectionBehavior`. Not yet checked
-  whether `.moveToActiveSpace` works in Phases at all (left on
-  permanently).
+- **Not SwiftUI's `openWindow`.** *Verified* 2026-10-29: bringing the
+  existing window forward with `makeKeyAndOrderFront` instead (flag on
+  until active) still switched Spaces.
+- **Still to check:** whether `.moveToActiveSpace` works in Phases at all
+  (left on permanently), and whether SwiftUI resets `collectionBehavior`.
+  At `didBecomeActive` the window was still off the active Space, so the
+  switch comes after activation.
 - **Dock click:** went to the window's Space in every real-click run, as
   intended.
 
