@@ -913,6 +913,11 @@ two layers.
   - *Why:* the 2026-10-28 sidebar investigation needed logging twice,
     and it was written from scratch both times (author's request).
   - Currently instrumented: the sidebar limits (`[D-sidebar-limits-watch]`).
+  - *Verified* 2026-10-28: with the switch on, a relaunch logged the
+    sidebar's limit passes, restores, and resizes. The off state is
+    consistent but not proven: nothing was logged between that build's
+    launch and the switch going on, but the window may not have been
+    opened then.
 
 ### Layer 2: UI tests (planned, not built)
 
