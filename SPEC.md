@@ -1,7 +1,13 @@
-# Phases — Specification (draft 23)
+# Phases — Specification (draft 24)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
+
+This file says what Phases does and why. What macOS, SwiftUI, and AppKit do
+to Phases, and how Phases routes around it, lives in **ERRATA.md**: platform
+quirks, workaround mechanics, the design history behind them, diagnostic
+procedures, and the regressions list. Sorting test: if a future macOS fixed
+the bug, would the line still be true? Yes → here. No → ERRATA.md.
 
 ## Design decisions
 
@@ -17,11 +23,16 @@ in the code.
 - When a decision is replaced, keep a short note of what it replaced and
   why, as the existing *Why* and design-history notes do.
 - New deliberate choices get a tag when they're added to the spec.
-- `[D-refs-by-id]` **Cross-references use a `[D-…]` tag or a section
-  title, never a section number,** in this spec and in code comments.
-  Sections aren't numbered, so adding one never breaks a reference.
-  Prefer the tag when a decision covers the point; otherwise quote the
-  section title, e.g. see "Platform quirks".
+- **Platform quirks** carry a `[Q-…]` tag in ERRATA.md. A decision whose
+  implementation fights the platform says so in one line ("macOS fights
+  this; see `[Q-…]`"), and its *How* lives in ERRATA.md. Code comments
+  carry both tags where relevant, so one search finds spec, errata, and
+  code.
+- `[D-refs-by-id]` **Cross-references use a `[D-…]` or `[Q-…]` tag or a
+  section title, never a section number,** in this spec, ERRATA.md, and
+  code comments. Sections aren't numbered, so adding one never breaks a
+  reference. Prefer the tag when one covers the point; otherwise quote the
+  section title, e.g. see "Persistence".
   - *Why:* drafts up to 22 numbered sections (§4a and so on) and cited
     them by number, which breaks whenever a section is added or moved
     (author's rule, 2026-10-28).
@@ -114,16 +125,15 @@ image when there's more than one choice.
     image moves the highlight there and focuses the grid.
   - Images are not individual Tab stops, and VoiceOver still sees each image
     as a toggleable button with its file name.
-  - *Why:* in draft 19 each image was its own button. Tab stopped only at
-    images already on screen, then jumped back to the sidebar instead of
-    scrolling (found in testing, 2026-10-28; see "Platform quirks"). Making
-    every image a Tab stop would fix that but cost one keypress per image to
-    get past a large folder. One Tab stop with arrow keys matches macOS
-    collection views and adds arrow-key movement.
+  - *Why:* in draft 19 each image was its own button, and Tab couldn't get
+    through a grid larger than the window (found in testing, 2026-10-28).
+    Making every image a reachable Tab stop would cost one keypress per
+    image to get past a large folder. One Tab stop with arrow keys matches
+    macOS collection views and adds arrow-key movement. macOS fights the
+    per-image approach; see `[Q-lazy-grid-tab]`.
   - *Verified* 2026-10-28 by the author: Tab enters and leaves the grid in
     one stop, arrows (including up/down column math) and ⇧-Space work, and
-    the window scrolls to follow the cursor (`ScrollViewReader` around the
-    grouped Form).
+    the window scrolls to follow the cursor.
 - If a selected image is later deleted or renamed, it's skipped and the phase
   editor marks it as missing. A phase with no available images is skipped
   (the wallpaper stays as it is).
@@ -174,12 +184,11 @@ image when there's more than one choice.
   changes only if something no longer fits: a newly connected display has
   no image yet, or a display's image isn't in its selection. Otherwise
   nothing changes. A screen change never by itself picks new images.
-  - *Why:* draft 21 re-applied the active phase on every display change.
-    With Random order, that picked a new image each time. macOS sends the
-    same notification when the Dock is hidden or shown and when "Show menu
-    bar background" is toggled, so those started a crossfade to a new
-    image (found in testing, 2026-10-28, on macOS 27.2; see "Platform
-    quirks").
+  - *Why:* a change that leaves every display's image fitting shouldn't
+    change the wallpaper. Draft 21 re-applied the active phase on every
+    display change, so with Random order unrelated system changes such as
+    hiding the Dock crossfaded to a new image (found in testing,
+    2026-10-28). macOS fights this; see `[Q-screen-params-notification]`.
   - When a change is needed, the whole phase is re-applied, so with Random
     a newly connected display can also give the other displays new picks.
     Unchanged from earlier drafts.
@@ -191,7 +200,7 @@ image when there's more than one choice.
   only when Crossfade is selected.
 - macOS has no transition for wallpapers set by apps, so Phases does it itself
   by **fading the new image in over the old wallpaper** `[D-fade-in]`
-  (see design history below):
+  (see *Why fade in* below):
   1. **Cover:** on each screen whose image is changing, a borderless,
      click-through window shows the *incoming* image, fully transparent.
      `[D-cover-level]` It sits just above the desktop picture and below the
@@ -206,18 +215,15 @@ image when there's more than one choice.
      macOS finish drawing the new wallpaper (including its own brief
      change motion), the cover is removed. This is invisible, since the
      cover and the wallpaper match.
-     - *Why 1.5 s:* macOS shows an app-set wallpaper about 0.55–0.65 s
-       after Phases sets it, then plays about 0.13 s of its own motion
-       (see "Platform quirks"). Draft 5's 0.5 s delay removed the cover
-       right as that motion played, bringing the twitch back (see "The
-       twitch returns" below). 1.5 s leaves about 0.7 s of margin. A
-       longer-lived cover can't be seen, because it shows the same image
-       as the wallpaper behind it.
-     - *Cost:* the menu bar's background restyles when the cover is
-       removed, not when the wallpaper is set (verified by the author
-       with draft 22, 2026-10-28). So it now lags the fade by about
-       1.5 s instead of 0.5 s. The menu bar's text and icon color lag as
-       before (see "Known issues").
+     - *Why:* removing the cover before macOS has finished drawing lets
+       its motion show through as a twitch. A longer-lived cover can't be
+       seen, because it shows the same image as the wallpaper behind it,
+       so the delay errs long. macOS fights this; see
+       `[Q-wallpaper-motion-delay]` (timing and margin in ERRATA.md
+       "Crossfade settle timing").
+     - *Cost:* the menu bar's background restyles only when the cover
+       comes off, so it lags the fade by about 1.5 s; see
+       `[Q-menubar-bg-follows-window]`.
 - The cover draws the incoming image the way macOS will, using that screen's
   scaling (fill, fit, stretch, or center) and fill color.
 - `[D-no-screenshots]` The cover is drawn from the image file. No screenshots and no Screen
@@ -232,54 +238,16 @@ image when there's more than one choice.
 - If another change starts while a fade is running, the running fade finishes
   instantly (its wallpaper is set and its cover removed) and the new change
   starts its own fade.
-
-### Why fade in, not fade out (design history)
-
-Draft 4 did the reverse: it covered the screen with the *outgoing* image, set the
-new wallpaper immediately, and faded the cover out. Testing found two problems:
-
-1. **Flash and twitch.** The new wallpaper could reach the screen before the
-   cover did, briefly showing the new image (and macOS's own wallpaper-change
-   motion) before the fade. Draft 4.1 worked around this by waiting for the
-   cover to be on screen and suppressing window resize/appear animations.
-2. **Menu bar blink.** macOS picks the menu bar's text color and shadow from
-   the *actual* wallpaper, ignoring windows above it. Setting the wallpaper at
-   the start of the fade switched the menu bar immediately, while the screen
-   still showed the old image (most visible going from light to dark).
-
-Fading the new image in and setting the wallpaper at the end fixes both: the
-wallpaper changes behind an identical image, and the menu bar switches once, at
-the end, just as it does when changing wallpaper in System Settings. The menu
-bar's own switch is still instant; macOS doesn't animate it. The draft 4.1
-workarounds were removed as no longer needed.
-
-A side benefit: the old wallpaper is never redrawn, so crossfades now work when
-the outgoing wallpaper is an Aerial.
-
-### The twitch returns (2026-10-28, draft 22)
-
-The twitch came back on macOS 27.2, on one display or two. A frame-by-frame
-analysis of a screen recording (seven changes) showed:
-
-- The fade itself is smooth, and the cover matches the final wallpaper
-  exactly (before and after differ only at noise level). So the cover's
-  image and geometry aren't the cause.
-- The twitch is about 0.13 s of the image shifting and settling back. It
-  starts 0.55–0.65 s after the fade ends, in the same frames as the menu
-  bar restyle: that's when macOS actually shows the new wallpaper.
-- The cover was removed 0.5 s after the fade ended `[D-cover-settle]`, just
-  before macOS's own motion, so the motion showed through.
-
-The crossfade code's timing hadn't changed since draft 5. The author
-believes (not certain) the original fix was tested on macOS 27.1, so
-macOS 27.2 may have made wallpaper changes slower. That's unconfirmed; the
-draft 5 timing may also have been marginal from the start. The fix is a
-longer settle delay (1.5 s), not a new mechanism. See "Platform quirks" for
-the measured macOS behavior.
-
-The same recording showed a second, separate problem: turning System
-Settings' "Show menu bar background" on or off started a crossfade to a new
-image. See `[D-screen-change-no-reroll]`.
+- *Why fade in `[D-fade-in]`:* the real wallpaper changes only at the end,
+  behind an identical image, so nothing flashes and the menu bar switches
+  once, at the end, just as it does when changing wallpaper in System
+  Settings. The old wallpaper is never redrawn, so crossfades also work
+  when the outgoing wallpaper is an Aerial. Draft 4 faded the old image
+  out instead; macOS fought that; see `[Q-menubar-reads-wallpaper]` and
+  ERRATA.md "Why fade in, not fade out".
+- `[D-no-focus-steal]` **Phases never activates itself to force a menu bar
+  restyle.** That would steal focus from the user's app. macOS sometimes
+  delays the restyle; see `[Q-menubar-restyle-on-app-switch]`.
 
 ## Missed changes: sleep, wake, unlock
 
@@ -358,25 +326,20 @@ extras don't show them. No global hotkey.
      Centered, top to bottom:
      - `[D-brand-inset]` **Edges line up with the traffic lights and row
        icons.** The panel's left edge matches the left edge of the red
-       traffic-light button and of the sidebar row icons, about 19–20 pt
-       from the window's left edge (measured from a 2× screenshot with the
-       tall toolbar, 2026-10-28). The right edge mirrors it.
+       traffic-light button and of the sidebar row icons. The right edge
+       mirrors it.
        - *Why:* the original 8 pt row inset matched nothing (about 25 pt from
          the edge). Matching the selection highlight (about 10 pt) was tried
          next and made the panel feel crowded against the sidebar edge
          (found in review, 2026-10-28). Once `[D-tall-toolbar]` moved the
          traffic lights right, their edge and the row icons' edge coincide,
          so one line serves both.
-       - *How:* the row inset is +3 pt on each side; the system list adds
-         about 14–16 pt of its own padding inside a row's insets. Negative
-         insets are honored if ever needed (verified, 2026-10-28). Recheck
-         if a macOS update moves the traffic lights or row icons.
        - **Top edge:** the panel's top lines up with the top of the first
          grouped row in the detail form (the Name row, or Settings' first
          row), so the sidebar and detail start content on one line under
-         the toolbar `[D-tall-toolbar]`. The row's top inset is 20 pt
-         (measured: the form starts about 16 pt lower than the panel did
-         with a 4 pt inset).
+         the toolbar `[D-tall-toolbar]`.
+       - The insets that achieve this depend on macOS's own list padding;
+         see `[Q-list-row-padding]` and ERRATA.md "Branding panel insets".
      - the app icon, about 52 pt
      - "Phases" in a semibold title font
      - the tagline in two balanced lines, 12 pt light, with a deliberate break:
@@ -435,24 +398,22 @@ extras don't show them. No global hotkey.
     default size (about 9 pt wide, matching the reference).
     - *Why:* draft 14 placed the two icons side by side with no gap ("+−"),
       making them small, crowded targets. The pressed state is left as the
-      system draws it; see "Platform quirks".
+      system draws it; see `[Q-borderless-pressed-state]`.
   - `[D-footer-ax-labels]` **+ and − carry explicit accessibility labels**
     ("Add Phase", "Delete Phase"), set on the buttons themselves, so
     VoiceOver and other assistive tools can name them.
-    - *Why:* a 2026-10-28 test suggested the draft 16 buttons had no
-      accessibility name, but that reading came from System Events, which
-      turned out not to see these descriptions at all (see "Platform
-      quirks"). So the original gap is unconfirmed. The explicit labels stay
-      as cheap insurance; with them, the AX API reports "Add Phase" and
-      "Delete Phase" (verified 2026-10-28).
+    - *Why:* cheap insurance. A 2026-10-28 test that suggested the draft 16
+      buttons had no accessibility name used a tool that can't see them
+      (`[Q-system-events-ax]`), so the original gap is unconfirmed. With the
+      labels, the AX API reports "Add Phase" and "Delete Phase" (verified
+      2026-10-28).
   - `[D-sidebar-footer-view]` The + / − buttons are their own view, bound
     to the sidebar selection, not inline in the window's body.
-    - *Why:* in draft 13, − did nothing (found in testing, 2026-10-28). The
-      buttons sit in a bar pinned below the sidebar list, and macOS SwiftUI
-      doesn't reliably refresh that bar when the selection changes. The
-      window opens with nothing selected, so − started disabled and stayed
-      that way. A separate view with its own binding to the selection is
-      refreshed whenever the selection changes, and reads it at click time.
+    - *Why:* in draft 13, − did nothing: it started disabled and stayed
+      that way when a phase was selected (found in testing, 2026-10-28). A
+      separate view with its own binding to the selection is refreshed
+      whenever the selection changes, and reads it at click time. macOS
+      fights the inline version; see `[Q-safe-area-inset-refresh]`.
 - `[D-initial-focus-sidebar]` **The sidebar list has keyboard focus when
   the window opens.** No text is selected and typing doesn't edit anything,
   the same as after clicking a phase in the sidebar.
@@ -460,10 +421,8 @@ extras don't show them. No global hotkey.
     phase's Name) on open and selected its text, so any keypress replaced
     the phase's name (found in testing, 2026-10-28). Undo worked, but
     renaming shouldn't be one stray key away.
-  - *How:* the window moves focus to the sidebar list one run-loop pass
-    after it appears, once the phase editor is in place. Draft 18 used
-    SwiftUI's `.defaultFocus` on the list, which the Name field still beat
-    (see "Platform quirks").
+  - macOS fights this; see `[Q-default-focus-loses]` (*How* in ERRATA.md
+    "Initial focus").
 - `[D-sidebar-width]` **Sidebar width:** resizable from **240 pt** (minimum and default) to
   **320 pt** (maximum). The sidebar opens at its narrowest and can only be
   widened.
@@ -493,70 +452,19 @@ extras don't show them. No global hotkey.
     `[D-sidebar-always-visible]` rules out. System Settings' hide-the-title-
     until-you-scroll was rejected: it has no SwiftUI API that I know of
     (recalled), and the Name field already shows the phase name.
-  - *How:* `.windowToolbarStyle(.unified)` alone did nothing, because
-    SwiftUI gives the window no toolbar at all when it has no items (see
-    "Platform quirks"). The window's AppKit `NSToolbar` is therefore
-    created by hand, empty, with the unified style, when SwiftUI hasn't
-    made one. It's set to icon-only display, which brought the title area
-    from 66 pt down to the standard 52 pt (verified from diagnostic
-    logging and a screenshot, 2026-10-28).
-  - **Status: appears fixed, cause not proven.** Icon-only fixed the
-    height, which fits the theory that the default display mode reserves
-    a row for item labels. Nobody confirmed that theory in Apple
-    documentation. If the toolbar grows tall again, first check (by
-    logging `frame.height − contentLayoutRect.height`) whether the toolbar
-    is still icon-only and whether SwiftUI has replaced it with its own.
-  - `[D-window-helper-order]` **One helper, in a fixed order.** A single
-    AppKit helper (`App/Views/WindowLayoutConfigurator.swift`) attaches the
-    toolbar first, then, one run-loop pass later, sets the sidebar's split
-    view limits (`[D-sidebar-width]`, `[D-sidebar-always-visible]`).
-    - *Why:* with two separate helpers, the order they ran in varied by
-      launch. Suspected (not proven): when the sidebar limits went on
-      first, attaching the toolbar rebuilt the split view and wiped them,
-      so the sidebar could be dragged to any width (regression found in
-      review, 2026-10-28; didn't reproduce in a logged run where the
-      toolbar went first). The run-loop pass covers the rebuild happening
-      after the toolbar is attached.
-    - **Status: appears fixed, cause not proven.** With the merged helper,
-      one logged launch kept the limits on a single split view through
-      520 resizes, with drags stopping at exactly 240 and 320 pt
-      (2026-10-28). The original failure was never caught in a log, so
-      the ordering theory is unconfirmed: the fix may have worked for a
-      different reason, or the bug may be intermittent and just didn't
-      happen. **If the sidebar width limits vanish again,** don't retry
-      the ordering fix. Instead, log the split view controller's identity
-      at launch and on each resize, to see whether SwiftUI swaps in a new
-      one later, and log the item's `minimumThickness`/`maximumThickness`
-      to see what resets them. The untried fallback is re-applying the
-      limits whenever the split view resizes.
-    - **Regressed 2026-10-28 (draft 22 build).** The sidebar again drags
-      from very narrow to very wide (found by the author). No window or
-      sidebar code changed since the merged helper; that build only
-      touched the crossfade and scheduler. So the bug is intermittent,
-      and the ordering fix didn't remove it. The unit tests all pass but
-      can't see this. Under investigation, following the plan above.
-      - A suspect from reading the code was a silent skip: the helper's
-        delayed pass running before the split view was ready. **Ruled out
-        by the log** (zero skips across three windows, 2026-10-28).
-      - **Cause found (logged 2026-10-28, three windows over two
-        launches):** the helper applies the limits every time, and they
-        take effect (min 240, max 320, not collapsible). Then, 1.5–28 s
-        later, SwiftUI writes its own defaults back onto the **same**
-        split view item: minimum 140 pt, no maximum, collapsible. The
-        split view, its controller, and the item never change. So the
-        limits hold for a few seconds after opening and then vanish,
-        which is why it looked intermittent. The author's recording shows
-        both results: the sidebar collapsing to nothing, and widening
-        until the form is pushed out of the window. What makes SwiftUI
-        rewrite them isn't known (see "Platform quirks").
-      - This also means the ordering theory above was wrong, or at most
-        incidental. The 520-resize run that "confirmed" it probably
-        ended before SwiftUI's rewrite.
-      - **Sidebar diagnostic logging stays in the code,** off by default
-        `[D-diagnostics-switch]` (category `sidebar`). It logs each
-        limits pass (or a "SKIPPED limits" error), each restore and
-        which hook caught it, a swapped-in item, and each change in the
-        split view's limits or an out-of-range width.
+  - macOS fights this; see `[Q-no-items-no-toolbar]` and
+    `[Q-empty-toolbar-66pt]` (*How* in ERRATA.md "Tall toolbar").
+  - `[D-window-helper-order]` **One AppKit helper, in a fixed order.** All
+    of the window's AppKit adjustments live in one helper
+    (`App/Views/WindowLayoutConfigurator.swift`): it attaches the toolbar
+    first, then, one run-loop pass later, sets the sidebar's limits
+    (`[D-sidebar-width]`, `[D-sidebar-always-visible]`).
+    - *Why:* every reach past SwiftUI is in one file, the first place to
+      check after an OS update. Two separate helpers ran in a varying
+      order. The ordering was meant to stop the toolbar wiping the sidebar
+      limits; that theory turned out wrong, but the order is harmless and
+      kept. See `[Q-split-item-rewrite]` and ERRATA.md "Sidebar limits:
+      history".
 - `[D-sidebar-always-visible]` **The sidebar can't be hidden.** There is no
   sidebar toggle button, and dragging the divider past the minimum width
   doesn't collapse it.
@@ -564,60 +472,20 @@ extras don't show them. No global hotkey.
     phase), so hiding it leaves an editor with no visible way to anything
     else. As a menu bar accessory, Phases has no View › Show Sidebar menu item
     to recover with. The editor is a form, so hiding a ≤ 320 pt sidebar gains
-    nothing.
-  - The `[D-sidebar-width]` minimum does **not** prevent collapsing: macOS
-    snaps a sidebar shut when its divider is dragged past the minimum, and
-    since the sidebar opens at its minimum, a short leftward drag closed it
-    (reproduced 2026-10-28). Removing the toggle alone would have made that
-    unrecoverable except by dragging the window's edge.
-  - *How:* the sidebar's underlying AppKit split view item is marked as
-    not collapsible, with its minimum and maximum thickness set from
-    `[D-sidebar-width]`, so dragging stops at 240 pt.
+    nothing. Removing the toggle alone isn't enough: a drag past the
+    minimum would close it with no way back except dragging the window's
+    edge.
+  - macOS fights this; see `[Q-sidebar-collapse]`. The workaround relies on
+    undocumented AppKit internals; if a macOS update breaks it, the sidebar
+    simply becomes collapsible again (nothing worse). *How* in ERRATA.md
+    "Sidebar limits".
   - `[D-sidebar-limits-watch]` **The limits are watched and put back
-    whenever SwiftUI changes them.** SwiftUI rewrites the item's limits
-    seconds after the window opens (see "Platform quirks" and the
-    regression note under `[D-window-helper-order]`), so setting them
-    once isn't enough.
-    - *How:* event-driven only, no polling or timers. A key-value
-      observer on the split view item fires when anything sets its
-      minimum, maximum, or collapse settings; if a value differs from
-      Phases', it's set back (setting it again fires the observer once
-      more, finds it correct, and stops). As a backstop, the same check
-      runs on the sidebar's own split view resize notification, which
-      also re-attaches the observer if SwiftUI ever swaps in a new item.
-      Both go away when the window closes. Idle cost is zero.
-    - *Why not poll:* an idle menu bar app shouldn't use CPU (the
-      author's standing requirement; see also `[D-single-timer]`).
-    - *Verified* 2026-10-28 by the author (drags across two launches)
-      and the diagnostic log: `NSSplitViewItem` does send key-value
-      notifications for all four properties, and the observer caught
-      every rewrite. In one window SwiftUI rewrote the limits in two
-      bursts about 15 s after opening; each property was put back once,
-      with no loop (10 restores in total). The resize backstop never had
-      to act, and the item was never swapped. It stays in as cheap
-      insurance.
-    - Seen once, not fixed: one resize reported the sidebar at 230.5 pt,
-      just under the minimum, 54 ms *after* the limits were set and about
-      120 ms after the helper joined the window (possibly before the
-      window was on screen). The split view hadn't yet applied its new
-      minimum. How long it lasted is unknown, because the diagnostic log
-      only records changes. It was back in range by the author's first
-      drag, since no later resize was out of range. No one noticed it on
-      screen.
-  - **Works around SwiftUI on purpose.** SwiftUI has no way to stop a
-    sidebar from collapsing, so Phases reaches past `NavigationSplitView` to
-    the AppKit `NSSplitViewController` SwiftUI happens to use for it, and
-    changes that controller's sidebar item. This relies on undocumented
-    internals and **may break in a future macOS update**. If it does, the
-    sidebar simply becomes collapsible again (nothing worse). All of it is in
-    `App/Views/WindowLayoutConfigurator.swift` (`[D-window-helper-order]`);
-    check there first if the
-    sidebar starts collapsing after an OS update.
-  - *Design history:* the first version (2026-10-28) let the sidebar
-    collapse and reopened it right away. In testing, the sidebar flickered
-    closed and open on every mouse move during the drag, and the 240 pt
-    minimum stopped working (it shrank to about 90 pt). Replaced with the
-    non-collapsible split view item.
+    whenever SwiftUI changes them,** event-driven, with no polling or
+    timers. Idle cost is zero.
+    - *Why:* SwiftUI resets them seconds after the window opens, so setting
+      them once isn't enough; see `[Q-split-item-rewrite]`. No polling,
+      because an idle menu bar app shouldn't use CPU (the author's standing
+      requirement; see also `[D-single-timer]`).
 - **Phase selected:** editor with name, trigger, offset, appearance condition,
   order, rotation, and the Images section (Display picker and thumbnail grid).
 - **Settings selected:** image folder and Include subfolders; display sharing
@@ -718,132 +586,14 @@ data. Phases saved by earlier versions load unchanged (no per-display images).
 - Restoring an Aerial isn't supported yet (see `[D-aerials-untouched]`). Possible approach: back up
   and restore macOS's wallpaper store file and restart the wallpaper process.
   Undocumented, so it needs explicit approval before building.
-- **Menu bar blanks for about 0.1 s when the wallpaper changes (macOS behavior,
-  confirmed 2026-10-26).** Frame-by-frame recordings of a change made in System
-  Settings show the same thing: the menu bar keeps its old styling for a couple
-  of frames, disappears for 2–3 frames, then returns restyled. Phases' fade-in
-  design keeps the menu bar steady during the fade and limits this to the one
-  blink at the end. Not fixable by Phases.
-- **macOS sometimes doesn't restyle the menu bar after a wallpaper change until
-  the frontmost app changes** (macOS 27.0.1). In a recording of System
-  Settings' own 5-second shuffle, the menu bar's styling changed when apps
-  were switched, not when the wallpaper changed. Bug or design decision is
-  unknown. Phases could force a restyle by briefly activating itself, but that
-  would steal focus from the user's app, so it deliberately doesn't
-  `[D-no-focus-steal]`.
-  Reported to Apple: **FB25326597** (2026-10-27).
-- Bartender (menu bar manager) caused additional odd menu bar behavior during
-  testing. Not a Phases issue.
+- The menu bar blinks once at the end of each change, and sometimes doesn't
+  restyle until the frontmost app changes. Both are macOS behavior that
+  Phases can't fix; see `[Q-menubar-blank]` and
+  `[Q-menubar-restyle-on-app-switch]` (FB25326597).
 
 ## Platform quirks
 
-Framework and OS behavior that affects Phases' code and is easy to trip
-over. Each entry says whether it was **verified** (tested or measured, with
-date) or is **recalled** (believed from past knowledge, not tested here).
-Add new quirks here when they're found; link them from the `[D-…]` decision
-they shaped.
-
-- **macOS: after an app sets the wallpaper, macOS plays about 0.13 s of
-  its own motion (a shift that settles back) somewhere within the next
-  1.5 s (macOS 27.2).** *Measured* 2026-10-28 from a 30 fps screen
-  recording of seven Phases changes on one display: the motion landed
-  0.55–0.65 s after the wallpaper was set, just as draft 21's cover came
-  off. With the cover held 1.5 s, the twitch is gone (verified by the
-  author, 2026-10-28), so the motion finishes within that time. Whether
-  macOS 27.1 was faster is *unknown*: the draft 5 fix worked then with a
-  0.5 s delay, and the author believes (not certain) that was on 27.1.
-  Shapes `[D-cover-settle]`; history in "The twitch returns" (under "Transitions"). If
-  the twitch comes back again, measure the timing first, the same way.
-  - *Correction:* draft 22 first said the wallpaper *appears* 0.55–0.65 s
-    after being set, judging by when the menu bar restyled. But the menu
-    bar's background restyles when the cover is removed (next entry), so
-    that timing only showed the 0.5 s cover removal. The motion's timing
-    is measured; the cause of the motion is not.
-- **macOS: the menu bar's background restyles when the window under it
-  changes, not when the wallpaper changes (macOS 27.2).** *Verified*
-  2026-10-28 by the author with "Show menu bar background" on: the
-  background keeps its old color through the fade and after the wallpaper
-  is set, and changes when Phases removes its cover. This looks like a
-  sibling of the text-color delay in "Known issues" (FB25326597), where
-  the restyle followed app switching; that link is a guess. Explains the
-  cost noted under `[D-cover-settle]`.
-- **AppKit: `NSApplication.didChangeScreenParametersNotification` fires
-  for more than display changes (macOS 27.2).** *Verified* 2026-10-28 by
-  the author: hiding or showing the Dock, and toggling System Settings ›
-  Menu Bar › "Show menu bar background", each started a Phases crossfade,
-  which only that notification could trigger. The likely reason, that
-  these change each screen's visible frame, is *recalled*, not checked.
-  Display UUIDs don't change. Shapes `[D-screen-change-no-reroll]`.
-- **SwiftUI: `NavigationSplitView` rewrites its sidebar's AppKit split
-  view item some time after the window opens, ignoring
-  `.navigationSplitViewColumnWidth` (macOS 27.2).** *Verified* 2026-10-28
-  from diagnostic logging: the item's minimum thickness went back to
-  140 pt, its maximum to unspecified, and `canCollapse` to true, 1.5–28 s
-  after Phases set them, on the same item object. The sidebar has
-  `.navigationSplitViewColumnWidth(min: 240, ideal: 240, max: 320)`, yet
-  the values SwiftUI wrote match none of it, so on macOS 27.2 that
-  modifier isn't reaching the item either. What triggers the rewrite is
-  *unknown*. Shapes `[D-window-helper-order]` and
-  `[D-sidebar-always-visible]`.
-- **SwiftUI: a window with no toolbar items gets no toolbar at all, so
-  `.windowToolbarStyle(.unified)` has no effect and the title bar stays
-  short (macOS 27).** *Verified* 2026-10-28: after removing the sidebar
-  toggle and adding `.windowToolbarStyle(.unified)`, the title bar stayed
-  short in a screenshot, and the AX API listed no toolbar on the window.
-  Shapes `[D-tall-toolbar]`.
-- **AppKit: an empty unified `NSToolbar` makes the title area 66 pt tall
-  (macOS 27).** *Verified* 2026-10-28 from diagnostic logging: the window's
-  title area went from 32 pt (no toolbar) to 66 pt the moment an empty
-  `NSToolbar` with `.unified` style was attached, and stayed there. That's
-  taller than Notes' toolbar (about 50 pt in a screenshot). Setting the
-  toolbar's `displayMode` to `.iconOnly` brought it to 52 pt (verified
-  2026-10-28). The label-row explanation is a theory, not confirmed.
-  Affects `[D-tall-toolbar]`.
-- **SwiftUI: content in a List's `.safeAreaInset` may not refresh when the
-  parent view's state changes (macOS).** *Recalled*, not verified against
-  Apple documentation or a bug report. Matches the draft 13 bug where −
-  stayed disabled; moving the bar into its own view with a binding fixed it
-  (fix verified by the author, 2026-10-28). Shaped
-  `[D-sidebar-footer-view]`.
-- **SwiftUI: `.defaultFocus` on the sidebar List doesn't stop macOS from
-  focusing the first text field when the window opens (macOS 27).**
-  *Verified* 2026-10-28 by the author, across several relaunches: with
-  `.focused` + `.defaultFocus` on the List, the phase's Name field still
-  opened focused with its text selected. The AX API confirmed it: the
-  focused element is the Name text field, with all of its text selected
-  (2026-10-28). Moving focus one run-loop pass after `onAppear` works:
-  the AX API then reports the sidebar outline as focused (verified
-  2026-10-28). That fits a timing cause (the editor appears after SwiftUI
-  applies default focus), but the cause itself is unproven. Shapes
-  `[D-initial-focus-sidebar]`.
-- **SwiftUI: Tab can't reach buttons in a `LazyVGrid` that haven't been
-  created yet, and the Form doesn't scroll to follow Tab (macOS 27).**
-  *Partly verified* 2026-10-28 from a screen recording: Tab visited only the
-  on-screen thumbnails (including two half-visible ones, without scrolling),
-  then wrapped to the sidebar. The cause (lazy grids only create views near
-  the visible area, and only existing views are in the Tab order) is
-  *recalled*, not proven. Shaped `[D-grid-one-tab-stop]`.
-- **System Events (AppleScript) doesn't report SwiftUI button
-  descriptions (macOS 27).** *Verified* 2026-10-28: for the + / − buttons,
-  System Events' `description` returned only "button" and found no
-  AXDescription, while the AX API (`AXUIElementCopyAttributeValue`) read
-  "Add Phase" / "Delete Phase" from the same buttons. Check accessibility
-  labels with the AX API or Accessibility Inspector, not System Events.
-  Whether an icon-only `Label` wrapped in `.frame`/`.contentShape` loses its
-  title on its own is *unverified*; `[D-footer-ax-labels]` sets the label
-  explicitly either way.
-- **SwiftUI: borderless buttons show their pressed state only by darkening
-  the icon (macOS 27).** *Verified* 2026-10-28 by holding the mouse down
-  and measuring screenshots: Phases' + went from 0.53 to 0.18 gray; System
-  Settings' Login Items + went from 0.52 to 0.35. There's no background or
-  whole-area highlight, and the change sits under the mouse pointer, so
-  it's easy to miss. Earlier macOS versions highlighted the whole button
-  more clearly (author's recollection). Same as Apple's own +/− bars, so
-  Phases matches it for now `[D-sidebar-footer-style]`.
-  - **Possible future TODO:** revisit (a) a custom pressed state that
-    highlights the whole 24 × 23 pt cell, and (b) how the system style
-    behaves on earlier macOS versions Phases supports (deployment target is
-    macOS 26; only macOS 27 was tested).
+Moved to ERRATA.md, each with a `[Q-…]` ID.
 
 ## Testing
 
@@ -856,10 +606,9 @@ two layers.
 - A small Swift package in `UnitTests/`, using Swift Testing. Run it with
   `swift test` from that folder (about 30 tests, well under a second once
   built).
-  - *Why a package, not a test target in Project.json:* `bitrig test`
-    doesn't see test targets in Project.json projects ("has no test
-    targets", verified 2026-10-28), and there's no generated Xcode project
-    to hand to `xcodebuild`. `swift test` needs neither.
+  - *Why a package, not a test target in Project.json:* `swift test` runs
+    without a test target or a generated Xcode project. The tooling fights
+    the test-target route; see `[Q-bitrig-test-targets]`.
 - Covers the pure logic that decides what the app does:
   - `ScheduleEngine`: which phase is active (including overnight and
     Light/Dark conditions), the next phase start, and rotation slots, which
@@ -912,7 +661,9 @@ two layers.
     logging alone.
   - *Why:* the 2026-10-28 sidebar investigation needed logging twice,
     and it was written from scratch both times (author's request).
-  - Currently instrumented: the sidebar limits (`[D-sidebar-limits-watch]`).
+  - Currently instrumented: the sidebar limits (`[D-sidebar-limits-watch]`,
+    category `sidebar`). What to log when chasing a platform bug is in
+    ERRATA.md "Diagnostic procedures".
   - *Verified* 2026-10-28: with the switch on, a relaunch logged the
     sidebar's limit passes, restores, and resizes. The off state is
     consistent but not proven: nothing was logged between that build's
@@ -922,35 +673,11 @@ two layers.
 ### Layer 2: UI tests (planned, not built)
 
 - XCUITest tests that drive the real Phases window (these need an Xcode
-  test target, so first find a way to run one, given the `bitrig test`
-  limit above), aimed at the focus and
-  wiring bugs Layer 1 can't see. Start with the UI tests marked in
-  "Regressions found so far" below.
+  test target, so first find a way to run one; see
+  `[Q-bitrig-test-targets]`), aimed at the focus and wiring bugs Layer 1
+  can't see. Start with the UI tests marked in ERRATA.md "Regressions
+  found so far".
 - Before building: decide how a UI test run avoids changing the real
   wallpaper (`[D-tests-unhosted]` doesn't apply, since UI tests must launch
   the app). Whether XCUITest drives a menu bar accessory app's window
   reliably is *recalled* as finicky, not tested.
-
-#### Regressions found so far
-
-Bugs found in testing and fixed, oldest first, with how a test could guard
-each one. Design changes made after review (menu bar icon legibility,
-sidebar width limits, branding panel dimming) aren't listed; neither is the
-unreproduced black desktop (see "Known issues"). Entries marked *git only*
-were found in the commit history, not in this spec.
-
-| Found | What broke | Fix | Guarded by |
-|---|---|---|---|
-| 2026-10-25 | Long image folder names in Settings were truncated badly (*git only*, commit 4e86957) | Middle truncation, full path in a tooltip | Nothing yet; visual only (AX reports the full name), so a screenshot check |
-| 2026-10-26 (draft 4) | Crossfade flashed the new image and twitched before fading; menu bar blinked to the new styling at the start | Fade the new image in and set the wallpaper at the end `[D-fade-in]` | Not suited to XCUITest (frame timing); checked with frame-by-frame recordings. Twitch returned on macOS 27.2 (see the draft 21 row below) |
-| 2026-10-27 (draft 10) | Branding tagline cut off after its first line, because sidebar rows default to one line (*git only*, commit 58555d3) | Allow two lines on the tagline | Nothing yet; visual only (the panel's AX label is fixed text), so a screenshot check |
-| 2026-10-28 | Dragging the sidebar divider past its minimum collapsed the sidebar, with no way to reopen it; the first fix flickered and broke the 240 pt minimum | Non-collapsible split view item `[D-sidebar-always-visible]` | **UI test:** drag the divider far left; the sidebar stays at least 240 pt wide |
-| 2026-10-28 (draft 13) | − did nothing: it started disabled and never re-enabled when a phase was selected | +/− bar as its own view bound to the selection `[D-sidebar-footer-view]` | **UI test:** select a phase, click Delete Phase; the phase is gone |
-| 2026-10-28 (draft 15) | Deleting a phase always selected the first phase | Select the next phase down `[D-delete-selects-next]` | Unit test (Layer 1); **UI test:** delete a middle phase; the one below is selected |
-| 2026-10-28 (draft 17; draft 18's fix didn't work) | The Name field had focus with its text selected when the window opened, so any keypress renamed the phase | Move focus to the sidebar a run-loop pass after the window appears `[D-initial-focus-sidebar]` | **UI test:** open the window, type a letter; the phase name is unchanged |
-| 2026-10-28 (draft 19) | Tab visited only the on-screen thumbnails, didn't scroll, then jumped back to the sidebar | Grid is one Tab stop with an arrow-key cursor `[D-grid-one-tab-stop]` | Unit test for arrow movement (Layer 1); **UI test:** Tab enters and leaves the grid in one stop, and arrowing down past the visible rows scrolls |
-| 2026-10-28 | Title bar became short and crowded after the sidebar toggle was removed; then the fix made it 66 pt tall | Hand-made empty unified toolbar, icon-only `[D-tall-toolbar]` | Nothing yet; a screenshot check (toolbar 52 pt). Cause of the 66 pt only theorized |
-| 2026-10-28 | Sidebar could be dragged far below 240 pt and far above 320 pt again, right after the toolbar helper was added | One helper, toolbar first, then sidebar limits `[D-window-helper-order]` | **UI test:** drag the divider both ways; width stays 240–320. Appears fixed; cause not proven, never caught in a log |
-| 2026-10-28 (draft 21, macOS 27.2) | The crossfade twitch returned: the cover was removed while macOS was still showing the new wallpaper | Settle delay raised from 0.5 s to 1.5 s `[D-cover-settle]`; see "The twitch returns" (under "Transitions") | Not suited to XCUITest (frame timing); checked with frame-by-frame recordings |
-| 2026-10-28 (draft 21) | Hiding the Dock or toggling "Show menu bar background" crossfaded to a new image | Screen changes run the normal check instead of re-applying `[D-screen-change-no-reroll]` | Nothing yet; a unit test would need the scheduler's check pulled out of `WallpaperScheduler` |
-| 2026-10-28 (draft 22) | Sidebar width limits gone again: drags from very narrow to very wide | Cause logged: SwiftUI rewrites the split view item's limits seconds after the window opens (see `[D-window-helper-order]`). Fix: watch the item and put the limits back `[D-sidebar-limits-watch]`; verified 2026-10-28 | **UI test** (same as the earlier sidebar rows). Intermittent, so the test would need several launches |
