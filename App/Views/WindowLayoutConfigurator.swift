@@ -2,14 +2,10 @@ import AppKit
 import SwiftUI
 import os
 
-// DIAGNOSTIC (temporary): remove once the sidebar-width regression is
-// understood (SPEC.md [D-window-helper-order], "Regressed 2026-10-28").
-// Read with: log show --last 30m --predicate 'subsystem == "PhasesDiag"'
-let diagLog = Logger(subsystem: "PhasesDiag", category: "sidebar")
+// [D-diagnostics-switch] Off unless diagnostics are switched on at launch.
+private let diagLog = Diagnostics.logger("sidebar")
 
-private func diagID(_ object: AnyObject?) -> String {
-  object.map { String(UInt(bitPattern: ObjectIdentifier($0).hashValue) % 100_000) } ?? "nil"
-}
+private func diagID(_ object: AnyObject?) -> String { Diagnostics.id(object) }
 
 /// Placed inside the sidebar of a NavigationSplitView, adjusts the AppKit
 /// window around it in a fixed order: first gives the window an empty
@@ -40,7 +36,7 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
     private var itemObservations: [NSKeyValueObservation] = []
     private var resizeObserver: NSObjectProtocol?
 
-    /// DIAGNOSTIC (temporary): last logged split state, to log only changes.
+    /// Diagnostics: last logged split state, to log only changes.
     private var diagLastState = ""
 
     override func viewDidMoveToWindow() {
@@ -83,7 +79,6 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
             let controller = splitView.delegate as? NSSplitViewController,
             let item = controller.splitViewItems.first
       else {
-        // DIAGNOSTIC (temporary)
         diagLog.error("SKIPPED limits: probe \(diagID(self), privacy: .public) superview=\(self.superview != nil, privacy: .public)")
         return
       }
@@ -102,7 +97,7 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
       // [D-sidebar-width]
       let wrongWidths = item.minimumThickness != sidebarMinWidth || item.maximumThickness != sidebarMaxWidth
       guard collapses || wrongWidths else { return }
-      // DIAGNOSTIC (temporary): shows which hook caught each SwiftUI rewrite.
+      // Diagnostics: shows which hook caught each SwiftUI rewrite.
       diagLog.log("RESTORING limits (\(reason, privacy: .public)): item=\(diagID(item), privacy: .public) found min=\(item.minimumThickness, privacy: .public) max=\(item.maximumThickness, privacy: .public) canCollapse=\(item.canCollapse, privacy: .public)")
       if item.canCollapse { item.canCollapse = false }
       if item.canCollapseFromWindowResize { item.canCollapseFromWindowResize = false }
@@ -155,9 +150,10 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
       resizeObserver = nil
     }
 
-    /// DIAGNOSTIC (temporary): logs when the split view's identity or
-    /// limits change, or the sidebar's width leaves the allowed range.
+    /// Diagnostics: logs when the split view's identity or limits change,
+    /// or the sidebar's width leaves the allowed range.
     private func diagLogState(splitView: NSSplitView, item: NSSplitViewItem) {
+      guard Diagnostics.isEnabled else { return }
       let width = item.viewController.view.frame.width
       let state = "split=\(diagID(splitView)) item=\(diagID(item)) min=\(item.minimumThickness) max=\(item.maximumThickness) canCollapse=\(item.canCollapse)"
       let outOfRange = width < sidebarMinWidth - 0.5 || width > sidebarMaxWidth + 0.5
