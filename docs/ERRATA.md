@@ -256,15 +256,16 @@ run-loop pass after it appears, once the phase editor is in place, because
 
 ### Open here
 
-`[D-open-here]`: "Open Phases…" checks whether the window is on the active
-Space. If not (and it isn't minimized), it orders the window out, then
-activates and orders it back in, so it reappears on the current Space and
-activation has no other-Space window to switch to
-`[Q-activate-switches-space]`. Ordering out doesn't post `willClose`, so
-the Dock icon stays `[D-dock-while-open]`. Not used: turning on
-`.moveToActiveSpace` for just this activation, because activation finishes
-asynchronously and there's no clean moment to turn it off again (recalled,
-not tried). Code: `App/Model/WindowSpaceMover.swift`.
+`[D-open-here]`: if the window is on another Space (and isn't minimized),
+"Open Phases…" turns on `.moveToActiveSpace`, orders the window front, and
+turns the flag off again, all before activating. Activation then has no
+other-Space window to switch to `[Q-activate-switches-space]`, and the Dock
+and ⌘Tab keep following the Mission Control setting. *Built, not yet
+tested* (2026-10-29). Code: `App/Model/WindowSpaceMover.swift`.
+- Tried first and failed: ordering the window out and back in. *Verified*
+  2026-10-29 with diagnostics: the window came back on its old Space
+  (`onActiveSpace=false` after `makeKeyAndOrderFront`). macOS remembers a
+  hidden window's Space.
 
 ### Branding panel insets
 
