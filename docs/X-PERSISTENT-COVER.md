@@ -65,9 +65,30 @@ UI.
 
 ## Test plan
 
-Run by hand by the author. Before each run I say what I'll change and
-wait for a yes; I don't drive the mouse or keyboard. Rule out Bartender
-first if the menu bar acts oddly `[Q-bartender-menubar]`.
+**Who runs what.** I drive E1–E7 and E9–E12, with the author's go-ahead
+(2026-10-29). The author checks E8, the lock screen and login window,
+since I can't see or use the Mac while it's locked.
+
+- Before each run I say what I'll do and roughly when, then wait for an
+  explicit yes. When it's done I announce it out loud.
+- My tools: keystrokes and menu clicks (Space switching with ⌃←/⌃→,
+  Mission Control, Change Now), screenshots, and screen recordings read
+  frame by frame for anything timing-related (the twitch, the menu bar
+  flip), the same method as "The twitch returns" in ERRATA.md. Plus the
+  diagnostic log and `footprint` for memory.
+- Screenshots and recordings need Screen Recording permission for the
+  process I run commands from. That's not checked yet; if it's missing,
+  macOS will ask, and that's the author's call.
+- Menu clicks have to be real mouse events, not System Events
+  accessibility actions (see "Open here" in ERRATA.md).
+
+**Not in this test:**
+
+- Bartender: the author has stopped using it (2026-10-29), so
+  `[Q-bartender-menubar]` doesn't apply.
+- Light and Dark Mode: believed (not tested) to no longer affect the menu
+  bar's styling on macOS 26 and 27, and the cover doesn't change how
+  Phases picks phases.
 
 Setup: two or three Spaces on the main display, a phase with a mix of
 light and dark images, Crossfade at 1 s, diagnostics on. Where it matters,
@@ -78,15 +99,15 @@ test both A and B.
 | E1 | Twitch | Change Now ×5 | No twitch at any point. |
 | E2 | Menu bar text | Change Now between a light image and a dark one, `end` then `mid` | When the text color flips relative to the fade; whether `mid` looks better. Note any late restyle `[Q-menubar-restyle-on-app-switch]`. |
 | E3 | Menu bar background | "Show menu bar background" on; Change Now, A then B | Whether the background follows the new image, and when. |
-| E4 | Spaces | Change on Space 1; swipe to 2 and 3 | New image shown on every Space; how the swipe looks with a cover that stays put; whether menu bar text restyles (or blinks) on arriving at a Space whose real wallpaper was out of date. |
+| E4 | Spaces | Change on Space 1; swipe to 2 and 3 | New image shown on every Space; how the swipe looks with a cover that stays put; whether menu bar text restyles (or blinks) on arriving at a Space whose real wallpaper was out of date. A blink there is acceptable (author, 2026-10-29); this records it, not fails on it. |
 | E5 | Mission Control | Open it on each Space | What the main view and the Spaces strip thumbnails show: cover or real wallpaper. |
 | E6 | Desktop | Icons, right-click on the desktop, drag a file to the desktop, "Click wallpaper to reveal desktop" | Icons above the cover; clicks reach the desktop as before. |
 | E7 | Desktop widgets | Add a widget, widget style Automatic | Whether its tint matches the cover or the real wallpaper. |
-| E8 | Lock screen | Lock (⌃⌘Q): on Space 1 right after a change; on Space 2 after arriving; on Space 2 after a change made on Space 1, before arriving | Which image the lock screen shows in each case. |
+| E8 | Lock screen and login window (author) | Lock (⌃⌘Q): on Space 1 right after a change; on Space 2 after arriving; on Space 2 after a change made on Space 1, before arriving. Then log out once | Which image the lock screen and the login window show in each case. |
 | E9 | Full screen and Stage Manager | Full-screen an app; turn Stage Manager on | Nothing odd shows through or around. |
 | E10 | Quit and crash | Quit; relaunch; Force Quit | What's on screen the moment the cover goes; restore-on-quit still behaves. |
 | E11 | System Settings | Change wallpaper there while Phases runs | Expected: hidden by the cover. Confirm, and note how confusing it is. |
-| E12 | Memory | Activity Monitor, Phases' memory, before and after the cover is up | The real cost per display. |
+| E12 | Memory | `footprint` on Phases: on `main` at idle, then the branch with the cover up, A and B, one display and two | The real cost per display, against today's idle baseline. |
 
 ## Results
 
@@ -116,4 +137,6 @@ observed, and anything surprising.
   `[D-fade-in]` and `[D-cover-settle]` rewritten, "Different wallpaper per
   Space" in "Out of scope" replaced by "the same wallpaper on every Space",
   and what Pause and Quit do with the cover.
-- The branch is deleted once its findings are recorded.
+- **The branch stays until we both agree the findings are well understood
+  by both of us.** I ask the author before deleting it, and don't delete
+  it without a yes (author, 2026-10-29).
