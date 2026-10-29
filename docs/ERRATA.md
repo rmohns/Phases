@@ -176,6 +176,15 @@ would stop being true if a future macOS fixed the underlying behavior.
   app becomes an accessory, macOS doesn't always activate the previous
   app, so keystrokes go nowhere until you click something. Watch for it
   when the window closes `[D-dock-while-open]`.
+- `[Q-activate-switches-space]` **Activating an app whose only window is
+  on another Space switches to that Space, whatever triggered it.**
+  *Verified* 2026-10-29 (author's report): with the Phases window on
+  another Space, "Open Phases…", the Dock icon, and ⌘Tab all switched
+  Spaces. That's the Mission Control setting "When switching to an
+  application, switch to a Space with open windows for the application"
+  (on by default, recalled). A window can opt out with
+  `NSWindow.CollectionBehavior.moveToActiveSpace`, but that applies to
+  every activation, Dock and ⌘Tab included. Shapes `[D-open-here]`.
 - `[Q-view-menu-fullscreen]` **Emptying SwiftUI's View menu doesn't remove
   it: macOS adds Enter Full Screen, so a one-item View menu remains (macOS
   27.2).** *Verified* 2026-10-29: with the `.sidebar` and `.toolbar` command
@@ -244,6 +253,18 @@ How the tagged decisions route around the quirks above.
 run-loop pass after it appears, once the phase editor is in place, because
 `.defaultFocus` loses to the Name field `[Q-default-focus-loses]`. Code:
 `PhasesWindow.onAppear`.
+
+### Open here
+
+`[D-open-here]`: "Open Phases…" checks whether the window is on the active
+Space. If not (and it isn't minimized), it orders the window out, then
+activates and orders it back in, so it reappears on the current Space and
+activation has no other-Space window to switch to
+`[Q-activate-switches-space]`. Ordering out doesn't post `willClose`, so
+the Dock icon stays `[D-dock-while-open]`. Not used: turning on
+`.moveToActiveSpace` for just this activation, because activation finishes
+asynchronously and there's no clean moment to turn it off again (recalled,
+not tried). Code: `App/Model/WindowSpaceMover.swift`.
 
 ### Branding panel insets
 

@@ -1,4 +1,4 @@
-# Phases — Specification (draft 27)
+# Phases — Specification (draft 28)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -532,6 +532,25 @@ extras don't show them. No global hotkey.
   - Replaces draft 24's "No Dock icon" rule.
   - macOS may fight this; see `[Q-regular-activation-menubar]` and
     `[Q-accessory-focus-handoff]` (both recalled, not yet seen in Phases).
+- `[D-open-here]` **"Open Phases…" brings the window to the Space you're
+  on; the Dock and ⌘Tab take you to the window.** If the window is already
+  open on another Space, choosing "Open Phases…" from the menu bar moves it
+  to the current Space instead of switching Spaces. Clicking the Dock icon
+  or picking Phases in ⌘Tab behaves like any other app: macOS follows the
+  user's Mission Control setting ("When switching to an application,
+  switch to a Space with open windows for the application"). Phases never
+  changes that setting. A minimized window is left to macOS: "Open
+  Phases…" restores it as usual.
+  - *Why:* the menu bar is on every Space, so choosing from it means "show
+    it here"; being pulled to another Space is disorienting. It matters
+    more in Phases than most apps, because wallpaper changes apply to the
+    current Space. The Dock and ⌘Tab are about the app, and on the Mac
+    switching to an app goes to its windows; keeping that respects the
+    user's own setting (author, 2026-10-29).
+  - *How:* before activating, "Open Phases…" takes the window off screen if
+    it's on another Space, then shows it again, so it reappears on the
+    current Space. Nothing persistent changes on the window.
+  - macOS fights this; see `[Q-activate-switches-space]`.
 - `[D-app-menu]` **While the window is open, Phases has a standard menu
   bar,** trimmed to what applies:
   - **Phases** (app menu): About Phases, **Settings… ⌘,** (opens the window
