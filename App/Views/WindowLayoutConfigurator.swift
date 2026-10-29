@@ -68,7 +68,12 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
       closeObserver = NotificationCenter.default.addObserver(
         forName: NSWindow.willCloseNotification, object: window, queue: .main
       ) { _ in
-        MainActor.assumeIsolated { DockPresence.hide() }
+        MainActor.assumeIsolated {
+          // [D-close-stays-here] Hand off first, so macOS doesn't pick an
+          // app on another Space [Q-accessory-focus-handoff].
+          FocusHandoff.toCurrentSpace()
+          DockPresence.hide()
+        }
       }
     }
 
