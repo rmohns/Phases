@@ -597,9 +597,14 @@ extras don't show them. No global hotkey.
       with no loop (10 restores in total). The resize backstop never had
       to act, and the item was never swapped. It stays in as cheap
       insurance.
-    - Seen once, not fixed: the sidebar opened at 230.5 pt, just under
-      the minimum, for a moment before the limits applied. No one
-      noticed it on screen.
+    - Seen once, not fixed: one resize reported the sidebar at 230.5 pt,
+      just under the minimum, 54 ms *after* the limits were set and about
+      120 ms after the helper joined the window (possibly before the
+      window was on screen). The split view hadn't yet applied its new
+      minimum. How long it lasted is unknown, because the diagnostic log
+      only records changes. It was back in range by the author's first
+      drag, since no later resize was out of range. No one noticed it on
+      screen.
   - **Works around SwiftUI on purpose.** SwiftUI has no way to stop a
     sidebar from collapsing, so Phases reaches past `NavigationSplitView` to
     the AppKit `NSSplitViewController` SwiftUI happens to use for it, and
