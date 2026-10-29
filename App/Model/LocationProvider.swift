@@ -40,6 +40,8 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
   func refresh() {
     switch authorizationStatus {
     case .notDetermined:
+      // [D-test-no-location-prompt] A launch argument for UI test runs.
+      guard !UserDefaults.standard.bool(forKey: "PhasesNoLocationPrompt") else { return }
       manager.requestWhenInUseAuthorization()
     case .denied, .restricted:
       break
