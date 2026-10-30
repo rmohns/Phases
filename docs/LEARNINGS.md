@@ -178,6 +178,41 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   image and what CA wants (*guess*, not checked). Who keeps the copy
   alive after the window is freed: not found (*guess*: a CA or CG image
   cache keyed by the image).
+  **Update, same day: the format guess was wrong; see
+  `[L-mem-ca-copy-test]`.**
+- `[L-mem-ca-copy-test]` **Core Animation copied every CGImage we gave
+  it, whatever its format; an IOSurface it used as is.** Throwaway
+  harness (not Phases): an offscreen borderless window, no Dock icon, one
+  layer whose `contents` is a 2880 × 2160 Display P3 wallpaper decoded
+  exactly as `CrossfadeController.loadImage` does, on the built-in
+  display ("Color LCD"); `malloc_history` checked for
+  `create_image_by_rendering`. *Measured* 2026-10-30, macOS 27.2:
+
+  | Contents | CA copy (24.9 MB) | Footprint |
+  |---|---|---|
+  | `loadImage` result as is (XRGB, big-endian, Display P3) | yes | 91 MB |
+  | redrawn as BGRA little-endian, same color space | yes | 114 MB |
+  | redrawn as XRGB in the screen's color space | yes | 115 MB |
+  | redrawn as BGRA in the screen's color space | yes | 115 MB |
+  | IOSurface (BGRA), image drawn into it | **no** | 67 MB |
+
+  (The redrawn rows also hold the harness's redraw buffer, hence the
+  higher totals.) So neither byte order nor color space avoids the copy,
+  and our rows were already 64-byte aligned, which rules out the
+  alignment cause reported elsewhere (SDWebImage PR #3559, *not Apple*).
+  Apple's `CALayer.contents` page names only CGImage and NSImage and
+  says nothing about copies; `contentsFormat` is only "a hint" (read
+  2026-10-30). Why CA copies a CGImage: on macOS another process
+  (WindowServer) composites the screen, and an image in ordinary app
+  memory has to be moved into memory it can share (*guess*; fits the
+  IOSurface result, not confirmed by Apple). Not tested: whether colors
+  stay right without tagging the IOSurface's color space, and whether
+  the copy also happens for images smaller than the screen.
+- `[L-mem-no-upscale]` **`loadImage` never scales an image up.** The
+  max-pixel option only caps size, so a 2880 × 2160 file stays 2880 ×
+  2160 (24.9 MB) on a larger screen; CA scales it when compositing.
+  *Measured* (decoded sizes of the author's files, 2026-10-30). That
+  explains block sizes that don't match any display.
 - `[L-mem-freed-held]` **Freed full-screen buffers stay in the process
   for minutes.** `vmmap` shows "Malloc Large (empty)": blocks already
   freed but still resident and dirty, which `footprint` counts in full.
@@ -212,7 +247,9 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
 - `[L-mem-fix-ideas]` **Directions for the fix, all untested.** Decode
   straight into a buffer CA can use without copying (matching the
   screen's color space and pixel format), so there's one copy per
-  display, not two or three. Avoid the full-size decode (ImageIO
+  display, not two or three. *Update:* a matching CGImage still gets
+  copied; an IOSurface doesn't (`[L-mem-ca-copy-test]`), so the buffer
+  would be an IOSurface, with our decoded image dropped once it's drawn. Avoid the full-size decode (ImageIO
   subsampling). After a fade, clear `layer.contents` and drop the image.
   Ask the allocator to hand freed pages back after a fade
   (`malloc_zone_pressure_relief`, *recalled*). Release the grid's
