@@ -28,9 +28,13 @@ final class PersistentCover {
     let ms = UserDefaults.standard.integer(forKey: "PhasesUncover")
     return ms > 0 ? ms : nil
   }()
-  /// [D-cover-settle] Same settle time as the crossfade, so macOS's motion
-  /// has finished before the cover comes off [Q-wallpaper-motion-delay].
-  private static let settleDelay: Duration = .milliseconds(1500)
+  /// [D-cover-settle] Settle time before the uncover, so macOS's motion has
+  /// finished [Q-wallpaper-motion-delay]. 1.5 s like the crossfade unless
+  /// `-PhasesUncoverDelay <ms>` is given.
+  private static let settleDelay: Duration = .milliseconds({
+    let ms = UserDefaults.standard.integer(forKey: "PhasesUncoverDelay")
+    return ms > 0 ? ms : 1500
+  }())
 
   private struct Cover {
     var window: NSWindow
