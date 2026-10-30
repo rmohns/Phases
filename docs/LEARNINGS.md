@@ -141,6 +141,23 @@ borderless, click-through window just above the desktop picture
   opened the window. *Measured* 2026-10-30 with `footprint`. Possibly the
   thumbnail grid isn't released when the window closes (*hypothesis*).
   To investigate on its own branch (author, 2026-10-30).
+- `[L-cover-alpha-later]` **Could the 99% cover go to 100% once the menu
+  bar has restyled, and does it matter?** Untested. Risks, from
+  `[L-opaque-cover-freezes-menubar]`: an opaque cover might stop the menu
+  bar restyling on Space arrival and on macOS's own late restyles
+  `[L-menubar-lazy-restyle]`, and every change would have to drop back to
+  99% first. Memory: opacity shouldn't change it; the window's backing
+  store is the same size either way, and the experiment's covers were
+  already marked non-opaque (`isOpaque = false`) at both settings
+  (*recalled* AppKit behavior, not measured). The cost of blending is GPU
+  compositing work, which is near zero while the desktop is still
+  (*believed*). Measure before acting on either (author and Mike,
+  2026-10-30).
+- Design questions raised by the experiment (what System Settings
+  changes do under the cover, display changes, a switch to turn the cover
+  off, same-on-every-Space versus per Space, and how Pause, Quit, and
+  Transition: None treat the cover) are tracked as GitHub issues labeled
+  "planning" (author, 2026-10-30), not here.
 
 ## Driving and measuring the Mac in tests
 
@@ -155,6 +172,23 @@ techniques belong in TESTING.md; these are the ad hoc ones.
   windows find motion; `psnr` between two frames tells a real shift
   (about 26 dB) from noise (about 43 dB). Tiling menu bar crops at 4
   frames per second shows restyle timing. *Verified* 2026-10-30.
+  The recording only adds frames when the screen changes (a few per
+  second while still, up to 60 during motion), so a twitch can't fall
+  between frames, but frame counts aren't a time base: use the frame
+  timestamps. Recording several displays at once starves the encoder;
+  record one at a time (`-D<n>`, where 1 is the main display, which isn't
+  the same numbering as `NSScreenNumber`).
+- `[L-settings-panes]` **Opening System Settings panes directly:**
+  `open "x-apple.systempreferences:com.apple.ControlCenter-Settings.extension"`
+  (Menu Bar, including "Show menu bar background") and
+  `…com.apple.Desktop-Settings.extension` (Desktop & Dock, including Stage
+  Manager). Toggle positions depend on where the window lands, so read
+  its position with System Events and check a screenshot before
+  clicking. Turning Stage Manager on the first time shows an intro sheet
+  with its own Turn On button. Verify the result
+  (`defaults read com.apple.WindowManager GloballyEnabled` for Stage
+  Manager, or a screenshot) and put every setting back after the test.
+  *Verified* 2026-10-30.
 - `[L-synthetic-clicks]` **Synthetic input that works:** CGEvent clicks
   on a menu bar extra need about 60 ms between mouse down and up, or the
   menu opens but the item doesn't fire. ⌃← and ⌃→ to switch Spaces need
