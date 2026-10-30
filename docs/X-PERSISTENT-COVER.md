@@ -193,6 +193,24 @@ by per-frame differences over the desktop area.
   second, blinked, then restyled correctly. The author had accepted a
   blink here (E4). *Observed* once.
 
+### Three displays
+
+2026-10-30, macOS 27.2, 99% cover B (`-PhasesCoverAlpha 0.99`), Debug
+build. Displays: LG Ultrawide (main, 2580 × 1080 pt, three Spaces, Dock
+at the bottom), built-in (1512 × 982 pt, one Space), Cinema HD portrait
+(1100 × 1760 pt, one Space). "Different picks per display", so each
+display changed to its own image every time.
+
+| # | Result |
+|---|---|
+| E1 | **No twitch on any display.** *Measured:* frames before and after each fade's end matched at noise level, 44–50 dB, on all three. Recording all three at once starves the encoder (the built-in and portrait recordings dropped to a few frames per second), so the built-in and portrait displays were re-recorded one at a time. |
+| E2 | Menu bar text followed each display's image on all three (*observed* from per-second menu bar crops). The two inactive menu bars show dimmed text, as macOS always does. |
+| E3 | **With "Show menu bar background" on, all three backgrounds tracked their images** (olive over trees, purple over the neon planet, blue over sky), three changes, *observed*. On the ultrawide over the very white Ergo Proxy image, macOS drew white text on a light grey bar; a control with no cover (wallpaper set directly) did the same, so that's macOS's own choice. Background turned back off afterward (verified in Settings). |
+| E4 | Every Space on the ultrawide showed the current image, synced on arrival (*verified* in the log); the other two displays were unaffected. |
+| E5 | Mission Control showed the cover images on all three displays. |
+| E8 | *Author to check.* |
+| E12 | **Grows with every change: a leak in the experiment.** No cover: 77 MB right after launch. Cover at launch: 140–187 MB (two launches). After about nine changes: 344, then 373 MB; a fresh launch plus four changes: 336 MB. About 25–30 MB per change across three displays, so old cover windows or their images aren't being released. Must be fixed before any of this ships. The 77 MB no-cover figure, against 23 MB on one display, isn't explained either. |
+
 ## Afterward
 
 - Each finding about macOS behavior becomes a `[Q-…]` entry in ERRATA.md,
