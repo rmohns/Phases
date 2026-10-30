@@ -199,3 +199,32 @@ two layers.
 - **Not covered by UI tests:** crossfade timing (the twitch) is checked
   with frame-by-frame recordings ("Diagnostic procedures" in ERRATA.md);
   the screen-change rule `[D-screen-change-no-reroll]` is a Layer 1 test.
+
+## Memory checks (draft 32)
+
+- `[D-memory-protocol]` **Memory is checked by hand, ten changes per run,
+  at least two runs before a change and two after.** This is how
+  `[D-memory-flat]` passes or fails. Runs vary widely (297 MB after three
+  changes in one, 144 MB in another), so one run proves nothing.
+  - **Build:** the installed Release build, measured with `footprint -p
+    <pid>`, which matches what Activity Monitor shows. No
+    `MallocStackLogging` on pass/fail runs: it adds 16–64 MB of its own.
+  - **Setup:** a fresh launch, the window closed, Transition set to
+    Crossfade, and every display connected. Note the display setup with
+    the results, since each change costs one cover per changing display.
+  - **Run:** read the footprint at idle, then make ten changes with
+    Change Now from the menu bar menu, about 6 s apart, reading the
+    footprint after each. Read it once more after 30 s idle.
+  - **Pass:** after the tenth change, footprint is within 30 MB of what it
+    was after the first (`[D-memory-flat]`).
+  - **Window:** for `[D-grid-release-on-close]`, open the window, wait
+    for the thumbnails, close it, and compare with the reading before
+    opening; the grid's roughly 25 MB should come back.
+  - **Clicks are real mouse events,** so ask the author before each run,
+    the same as UI tests (`[D-ui-test-runner]`). The techniques are in
+    LEARNINGS.md `[L-synthetic-clicks]` and `[L-memory-tools]`.
+  - **Record** each run's figures in LEARNINGS.md "Memory", with the date,
+    macOS version, build, and displays.
+  - *Why by hand:* footprint swings with when macOS chooses to purge, so
+    a pass mark needs several runs and judgment. An automated test would
+    be flaky or too loose to catch anything.
