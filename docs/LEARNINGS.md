@@ -362,38 +362,49 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   **Update 2026-10-30: investigated; see "Memory".** Mostly crossfade
   images, not the grid; the grid is about 25 MB of it.
 - `[L-hdr-wallpaper]` **How does macOS draw an HDR photo (an iPhone
-  HEIC with a gain map) as wallpaper: SDR, or with HDR headroom?** Apple's
-  documentation doesn't say. Read 2026-10-30, macOS 27.0 SDK: the
-  `NSWorkspace` desktop-image pages and `DesktopImageOptionKey` (only
-  scaling, clipping, fill color), and the "Enhancing high dynamic range
-  image rendering" article (how an app shows HDR, not the wallpaper).
-  What the SDK does give a cover, if it needs to match HDR:
-  `kCGImageSourceDecodeRequest` = `kCGImageSourceDecodeToHDR` to decode
-  with the gain map applied, `kIOSurfaceContentHeadroom` to tag a surface,
-  and `CALayer.preferredDynamicRange` (default `.standard`, macOS 26+;
-  per the header, `contents` with headroom above 1.0 are tone-mapped to
-  SDR unless it's set otherwise). The headers don't state ImageIO's
-  default decode for gain-map images; SDR is *recalled*, not tested. Bears
-  on `[D-cover-iosurface]`: an 8-bit SDR surface is right only if macOS
-  shows the wallpaper as SDR. To test: set an iPhone HDR photo as
-  wallpaper on an HDR-capable display (the built-in one) and compare its
-  brightness with an SDR copy of the same photo.
-  **First look, same day: it appears SDR.** An iPhone HEIC (4032 × 3024,
-  Display P3, 8-bit base, ISO gain map, headroom 4.1 when decoded with
-  `kCGImageSourceDecodeToHDR`; ImageIO's default decode came back 8-bit
-  with headroom 1.0, so default is SDR, *measured*) set as wallpaper on
-  the built-in display "looks pretty SDR" (*observed* by the author).
-  Set with Finder's Services › Set Desktop Picture, not by Phases, so
-  this is macOS's own rendering, which is what a cover has to match.
-  That Phases' `setDesktopImageURL` gets the same rendering is
-  *inference* (the wallpaper is drawn by macOS either way), not tested.
-  A screen capture matched the default SDR decode by eye (*observed*,
-  weak: `screencapture` output is SDR, so it can't show HDR either way,
-  *recalled*). While it showed, the built-in display's
-  `maximumExtendedDynamicRangeColorComponentValue` read 1.2 (potential
-  16). A wallpaper using the photo's 4.1 headroom would likely push that
-  higher (*recalled*, not calibrated). To settle it: read the same value
-  with an HDR photo open full screen in Preview, as a known-HDR control.
+  HEIC with a gain map) as wallpaper: SDR, or with HDR headroom?**
+  - **Answer so far: SDR** (first look, 2026-10-30; one control still
+    to run, below).
+  - **Why it matters:** bears on `[D-cover-iosurface]`. An 8-bit SDR
+    cover surface is right only if macOS shows the wallpaper as SDR.
+  - **Apple's documentation doesn't say.** Read 2026-10-30, macOS 27.0
+    SDK:
+    - `NSWorkspace` desktop-image pages and `DesktopImageOptionKey`: only
+      scaling, clipping, and fill color.
+    - "Enhancing high dynamic range image rendering": how an app shows
+      HDR, not the wallpaper.
+  - **What the SDK offers a cover, if it ever needs to match HDR:**
+    - `kCGImageSourceDecodeRequest` = `kCGImageSourceDecodeToHDR`:
+      decodes with the gain map applied.
+    - `kIOSurfaceContentHeadroom`: tags a surface's headroom.
+    - `CALayer.preferredDynamicRange` (macOS 26+): defaults to
+      `.standard`, which per the header tone-maps `contents` with
+      headroom above 1.0 down to SDR.
+  - **The test photo** (author's iPhone HEIC): 4032 × 3024, Display P3,
+    8-bit base, ISO gain map. *Measured:*
+    - HDR decode: headroom 4.1.
+    - ImageIO's default decode: 8-bit, headroom 1.0, so the default is
+      SDR. (The headers don't say; first noted as *recalled*, now
+      measured.)
+  - **What we saw** with it as wallpaper on the built-in display:
+    - It "looks pretty SDR" (*observed* by the author).
+    - It was set with Finder's Services › Set Desktop Background, not
+      by Phases, so this is macOS's own rendering: what a cover has to
+      match.
+    - A screen capture matched the default SDR decode by eye
+      (*observed*). Weak evidence: `screencapture` output is SDR, so it
+      can't show HDR either way (*recalled*).
+    - The built-in display's
+      `maximumExtendedDynamicRangeColorComponentValue` read 1.2
+      (potential 16). A wallpaper using the photo's 4.1 headroom would
+      likely push that higher (*recalled*, not calibrated).
+  - **Still open:**
+    - Calibrate that reading: open an HDR photo full screen in Preview
+      as a known-HDR control and read the same value.
+    - Whether Phases' `setDesktopImageURL` gets the same rendering as
+      Finder: *inference* that it does (macOS draws the wallpaper either
+      way), not tested. The new cover will show it: an HDR photo should
+      look the same before and after the cover comes off.
 - `[L-cover-alpha-later]` **Could the 99% cover go to 100% once the menu
   bar has restyled, and does it matter?** Untested. Risks, from
   `[L-opaque-cover-freezes-menubar]`: an opaque cover might stop the menu
