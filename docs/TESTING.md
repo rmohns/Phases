@@ -219,11 +219,19 @@ two layers.
     was after the first (`[D-memory-flat]`).
   - **Window:** for `[D-grid-release-on-close]`, read the footprint, open
     the window, scroll through the whole grid so every thumbnail loads,
-    read it again, close the window, and wait 30 s. **Pass:** footprint
-    is back within 30 MB of the reading before opening, however much it
-    rose while the window was open. The rise depends on folder size (25 MB
-    for 22 images in one test), so it isn't a target; note it and the
-    image count with the results.
+    read it again, close the window, and wait 30 s. Then do it a second
+    time. **Pass:** both of these.
+    - After each close, `heap <pid>` finds no `ThumbnailCell` views: the
+      grid really was released.
+    - The second close's reading is within 5 MB of the first close's: the
+      window's cost doesn't grow with each open.
+
+    The footprint after closing isn't a target. Note it with the image
+    count. It stays well above the pre-open figure even when the grid is
+    released (about 40 MB at 22 images): freed memory the allocator keeps
+    resident, and objects SwiftUI and AppKit hold on to, neither of which
+    Phases can give back (LEARNINGS.md `[L-mem-fix-runs]`). Not worth
+    chasing (author, 2026-10-30).
   - **Flag anything over 500 MB.** If any reading in a run, window open
     or closed, goes above 500 MB, tell the author. It doesn't fail the
     run; it's a signal to look at refactoring, decided when it happens,
