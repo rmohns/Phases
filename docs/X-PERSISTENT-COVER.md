@@ -121,7 +121,7 @@ Agreed with the author 2026-10-29:
 |---|---|---|---|
 | E1 | Twitch | Change Now ×5 | No twitch at any point. |
 | E2 | Menu bar text | Change Now between a light image and a dark one, `end` then `mid` | When the text color flips relative to the fade; whether `mid` looks better. Note any late restyle `[Q-menubar-restyle-on-app-switch]`. |
-| E3 | Menu bar background | "Show menu bar background" on; Change Now, A then B | Whether the background follows the new image, and when. |
+| E3 | "Show menu bar background" is **off** on the author's Mac (author, 2026-10-30). With it off, the menu bar area showed the cover fading live, with no lag, in A and B. Not run with it on. |
 | E4 | Spaces | Change on Space 1; swipe to 2 and 3 | New image shown on every Space; how the swipe looks with a cover that stays put; whether menu bar text restyles (or blinks) on arriving at a Space whose real wallpaper was out of date. A blink there is acceptable (author, 2026-10-29); this records it, not fails on it. |
 | E5 | Mission Control | Open it on each Space | What the main view and the Spaces strip thumbnails show: cover or real wallpaper. |
 | E6 | Desktop | Icons, right-click on the desktop, drag a file to the desktop, "Click wallpaper to reveal desktop" | Icons above the cover; clicks reach the desktop as before. |
@@ -149,7 +149,7 @@ by per-frame differences over the desktop area.
 | E5 | Mission Control shows the cover as the background. The Spaces strip showed names only, no thumbnails. |
 | E6 | **Desktop works through the cover.** Icons and widgets draw above it; right-click on the desktop opens Finder's desktop menu (Change Wallpaper…, Edit Widgets…). *Observed.* |
 | E7 | Widgets draw above the cover in full color. Tint behavior with an app in front not checked. |
-| E8 | *Author to check.* |
+| E8 | **Lock screen correct from both Spaces tested; login window correct** (logged out from one Space). *Verified* by the author, 2026-10-30, cover B, `mid`. **New, observed by the author:** a twitch during logout, appearing to start after logout finished, just as the login window appeared. Not investigated yet. |
 | E9 | Not run: no full-screen app at run time; Stage Manager not toggled. |
 | E10 | **Quit: hard cut** from the cover to the restored wallpaper, no fade. **Force Quit: nothing visible**, because the real wallpaper underneath matched the cover on that Space. |
 | E11 | A wallpaper set from outside Phases (System Events) is **hidden by the cover**, as expected. Confusing for a user changing wallpaper in System Settings. |
