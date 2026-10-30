@@ -217,9 +217,13 @@ two layers.
     footprint after each. Read it once more after 30 s idle.
   - **Pass:** after the tenth change, footprint is within 30 MB of what it
     was after the first (`[D-memory-flat]`).
-  - **Window:** for `[D-grid-release-on-close]`, open the window, wait
-    for the thumbnails, close it, and compare with the reading before
-    opening; the grid's roughly 25 MB should come back.
+  - **Window:** for `[D-grid-release-on-close]`, read the footprint, open
+    the window, scroll through the whole grid so every thumbnail loads,
+    read it again, close the window, and wait 30 s. **Pass:** footprint
+    is back within 30 MB of the reading before opening, however much it
+    rose while the window was open. The rise depends on folder size (25 MB
+    for 22 images in one test), so it isn't a target; note it and the
+    image count with the results.
   - **Clicks are real mouse events,** so ask the author before each run,
     the same as UI tests (`[D-ui-test-runner]`). The techniques are in
     LEARNINGS.md `[L-synthetic-clicks]` and `[L-memory-tools]`.

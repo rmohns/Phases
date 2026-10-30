@@ -136,10 +136,10 @@ image when there's more than one choice.
     the window scrolls to follow the cursor.
 - `[D-grid-release-on-close]` **Closing the Phases window releases the
   grid's thumbnails.** Reopening it loads them again.
-  - *Why:* the closed window kept every thumbnail and its view, about
-    25 MB, for as long as Phases ran (measured 2026-10-30, LEARNINGS.md
-    `[L-mem-window]`). Phases spends most of its life with the window
-    closed.
+  - *Why:* the closed window kept every thumbnail and its view for as
+    long as Phases ran: about 25 MB for a 22-image folder (measured
+    2026-10-30, LEARNINGS.md `[L-mem-window]`), and more for bigger
+    folders. Phases spends most of its life with the window closed.
   - *Cost:* thumbnails reload when the window reopens. Expected to be
     quick, since QuickLook keeps its own thumbnail cache (*recalled*, not
     measured).
