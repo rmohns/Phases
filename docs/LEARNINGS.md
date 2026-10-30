@@ -259,6 +259,15 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   or a profile change (Night Shift isn't one, *recalled*), would need a
   redraw (*inference*). A first Cinema HD run was invalid (the window
   was wider than the display, so panes didn't line up) and was redone.
+- `[L-mem-pressure-relief]` **`malloc_zone_pressure_relief` didn't
+  release the freed-but-held blocks.** Installed `main`, three changes
+  (23 → 297, 229, 240 MB), then the call made inside the running app from
+  `lldb`: it returned 0 bytes released, and "Malloc Large (empty)" stayed
+  at 32.6 MB. *Measured* 2026-10-30. Yet footprint fell from 239 to
+  110 MB within the same few seconds. Cause unknown: the timing points
+  to Core Animation's purgeable copies `[L-mem-ca-copy]` going, perhaps
+  set off by the debugger pausing the app (*guess*), not to the call.
+  One run only; repeat without `lldb` before relying on it.
 - `[L-mem-no-upscale]` **`loadImage` never scales an image up.** The
   max-pixel option only caps size, so a 2880 × 2160 file stays 2880 ×
   2160 (24.9 MB) on a larger screen; CA scales it when compositing.
