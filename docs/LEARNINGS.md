@@ -277,6 +277,22 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   memory it doesn't count in its return value (*guesses*). Also
   unexplained: the same three changes cost 297 MB in one run and 144 MB
   in the other.
+  **Ten changes per run, same day** (fresh launch each, 6 s apart):
+  - Watch run: 23 → 83, 134, 141, 179, 184, 193, 216, 224, 257, 296 MB;
+    flat at 295 MB for 30 s after. Freed blocks 71 MB.
+  - Relief run: 23 → 84, 94, 166, 190, 222, 261, 259, **157**, 177,
+    190 MB; the relief call returned 0, and footprint stayed at 192 MB.
+    Freed blocks 32.6 MB before and after.
+
+  *Measured.* So memory stacks up with each change, by roughly 20–40 MB
+  per change across three displays, and only sometimes falls back on
+  its own: the relief run dropped 102 MB between changes 7 and 8 with
+  no help. That fits macOS purging CA's purgeable copies
+  `[L-mem-ca-copy]` when it chooses (*guess*), and makes the first
+  run's drop look like the same thing happening by chance, not the
+  relief call (*inference*). `malloc_zone_pressure_relief` returned 0
+  both times: it doesn't help. Whether the climb has a ceiling is not
+  known; 296 MB was the highest seen in ten changes.
 - `[L-mem-no-upscale]` **`loadImage` never scales an image up.** The
   max-pixel option only caps size, so a 2880 × 2160 file stays 2880 ×
   2160 (24.9 MB) on a larger screen; CA scales it when compositing.
