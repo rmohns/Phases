@@ -21,6 +21,12 @@ final class PersistentCover {
     .flatMap { Variant(rawValue: $0.uppercased()) }
   static let timing = UserDefaults.standard.string(forKey: "PhasesWallpaperTiming")
     .flatMap { Timing(rawValue: $0.lowercased()) } ?? .end
+  /// Cover opacity when fully faded in. Below 1, macOS may treat the
+  /// wallpaper as visible rather than covered. `-PhasesCoverAlpha <0–1>`.
+  static let coverAlpha: CGFloat = {
+    let value = UserDefaults.standard.double(forKey: "PhasesCoverAlpha")
+    return value > 0 && value <= 1 ? value : 1
+  }()
   /// Brief uncover: after the real wallpaper settles, take the cover off for
   /// this many milliseconds, so the menu bar background restyles
   /// [Q-menubar-bg-follows-window]. Off unless `-PhasesUncover <ms>` is given.
@@ -60,7 +66,7 @@ final class PersistentCover {
 
   init(variant: Variant) {
     self.variant = variant
-    log.info("persistent cover on, variant \(variant.rawValue, privacy: .public), timing \(Self.timing.rawValue, privacy: .public), uncover \(Self.uncoverGap ?? 0) ms")
+    log.info("persistent cover on, variant \(variant.rawValue, privacy: .public), timing \(Self.timing.rawValue, privacy: .public), uncover \(Self.uncoverGap ?? 0) ms, alpha \(Double(Self.coverAlpha))")
     spaceObserver = NSWorkspace.shared.notificationCenter.addObserver(
       forName: NSWorkspace.activeSpaceDidChangeNotification, object: nil, queue: .main
     ) { [weak self] _ in
@@ -112,7 +118,7 @@ final class PersistentCover {
     NSAnimationContext.runAnimationGroup { context in
       context.duration = duration
       context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-      for window in windows { window.animator().alphaValue = 1 }
+      for window in windows { window.animator().alphaValue = Self.coverAlpha }
     }
     for layer in layers {
       let animation = CABasicAnimation(keyPath: "opacity")
@@ -147,7 +153,7 @@ final class PersistentCover {
 
   private func completeFade() {
     guard let fade = running else { return }
-    for window in fade.fadingWindows { window.alphaValue = 1 }
+    for window in fade.fadingWindows { window.alphaValue = Self.coverAlpha }
     for layer in fade.fadingLayers { layer.removeAnimation(forKey: "fade") }
     setPendingWallpaper(reason: "end of fade")
     for layer in fade.retiringLayers { layer.removeFromSuperlayer() }
@@ -273,6 +279,7 @@ final class PersistentCover {
     window.isOpaque = false
     window.backgroundColor = .clear
     window.isReleasedWhenClosed = false
+    window.alphaValue = coverAlpha
     let view = NSView(frame: NSRect(origin: .zero, size: screen.frame.size))
     view.wantsLayer = true
     if let root = view.layer {
