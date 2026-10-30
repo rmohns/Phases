@@ -274,6 +274,39 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   (*inference* from the decoded sizes). A SPEC.md decision (proposed
   name `[D-cover-iosurface]`) comes first, for approval.
 
+- `[L-mem-fix-runs]` **`[D-memory-protocol]` runs of the fix, 2026-10-30.**
+  macOS 27.2; two displays (LG Ultrawide, Cinema HD rotated; no built-in),
+  Different per Display, Crossfade 1 s, diagnostics switched on (author's
+  setting). Before = installed Release of `main` (built 2026-10-29); after
+  = Release of `fix/cover-memory` (code as of `18130ee`), run from its
+  build folder, not installed. Ten Change Now clicks 6 s apart, then 30 s
+  idle, then the window check. *Measured:*
+
+  | Run | Idle | After changes 1–10 (MB) | 30 s idle | Window: before, open, closed 30 s |
+  |---|---|---|---|---|
+  | before 1 | 66 | 96 109 141 144 161 260 230 257 280 291 | 291 | 291, 236, 236 |
+  | before 2 | 21 | 59 66 137 169 137 170 189 221 230 272 | 272 | 272, 314, 291 |
+  | after 1 | 22 | 28 30 30 30 31 31 31 31 31 31 | 31 | 31, 81, 71 |
+  | after 2 | 21 | 28 29 30 30 30 30 30 30 30 30 | 30 | 30, 81, 71 |
+
+  - **Covers pass `[D-memory-flat]`:** 3 MB and 2 MB from change 1 to 10,
+    against a 30 MB allowance; `main` rose 195 and 213 MB.
+  - **Window fails** the `[D-memory-protocol]` window check: 40 MB above
+    the pre-open reading after closing, against 30. (Before-run window
+    figures are swamped by cover purges and say nothing.)
+  - **The grid is released.** Diagnostic run (after build, no changes):
+    open 81, closed 71 MB. `heap` shows 22 `ThumbnailCell` view lists
+    while open and none 30 s after closing. *Measured.*
+  - **What stays:** Malloc Small 13 → 45 MB, unchanged by the close; live
+    heap 7.8 → 27.7 MB (56k → 173k allocations). So about 20 MB is still
+    live (the window's other SwiftUI and AppKit objects: sidebar, toolbar,
+    hosting views, 104 CGImages, 48 NSImages) and about 17 MB is freed but
+    held `[L-mem-freed-held]`. CoreAnimation 11 → 6.6 MB and QuickLook
+    9.3 → 5.2 MB on close. *Measured*; the split into live and held is
+    *inference* from `heap` against `footprint`.
+  - The 30 MB window bar assumed the grid was most of the window's cost
+    (`[L-mem-window]`); at 22 images it isn't.
+
 ## Open questions
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
