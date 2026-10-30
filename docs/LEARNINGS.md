@@ -414,7 +414,23 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
       (*guess*: Preview's HDR content isn't in the window's captured
       surface, or per-window capture tone-maps). A whole-display capture
       wasn't tried.
+    - A ⌘⇧3 screenshot with Preview showing HDR also came out SDR
+      (*observed* by the author).
     - No tool here measures HDR on screen yet; only the eye does.
+  - **How macOS does HDR, as far as we know:**
+    - SDR is the baseline. Pixel value 1.0 is SDR white, shown below the
+      panel's peak; values above 1.0 use the leftover headroom
+      (extended dynamic range, EDR). *Recalled.*
+    - Content gets the headroom only if it carries values above 1.0
+      *and* its layer opts in. `CALayer.preferredDynamicRange` defaults
+      to `.standard`, which tone-maps it down to SDR. *Read* in the SDK
+      header, 2026-10-30.
+    - Screenshots and our captures clip at SDR white, so they can't
+      show the difference (*observed*; the clipping explanation is
+      *recalled*).
+    - So the wallpaper showing SDR fits either of two causes: macOS
+      decodes it without the gain map, or its layer doesn't opt in.
+      Which one doesn't matter to Phases (*inference*).
   - **Still open:**
     - Whether Phases' `setDesktopImageURL` gets the same rendering as
       Finder: *inference* that it does (macOS draws the wallpaper either
