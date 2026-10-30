@@ -329,17 +329,27 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   fits the same mechanisms, plus the images the persistent cover holds
   on purpose. *Inference* from the numbers above, not measured on the
   spike branch.
-- `[L-mem-fix-ideas]` **Directions for the fix, all untested.** Decode
-  straight into a buffer CA can use without copying (matching the
-  screen's color space and pixel format), so there's one copy per
-  display, not two or three. *Update:* a matching CGImage still gets
-  copied; an IOSurface doesn't (`[L-mem-ca-copy-test]`), so the buffer
-  would be an IOSurface, with our decoded image dropped once it's drawn. Avoid the full-size decode (ImageIO
-  subsampling). After a fade, clear `layer.contents` and drop the image.
-  Ask the allocator to hand freed pages back after a fade
-  (`malloc_zone_pressure_relief`, *recalled*). Release the grid's
-  thumbnails when the window closes. Measure each against
-  `[L-mem-timeline]`.
+- `[L-mem-fix-ideas]` **Recommended fix, in order (agreed with the
+  author 2026-10-30; untested in Phases).** Earlier versions of this
+  entry suggested a matching CGImage and an allocator call; both are
+  ruled out (`[L-mem-ca-copy-test]`, `[L-mem-pressure-relief]`).
+  1. Covers draw into an IOSurface tagged with the image's color space
+     (`[L-mem-iosurface-color]`); drop our decoded image once drawn;
+     release the surface when the cover goes. Removes CA's copy, most
+     of the per-change pile-up.
+  2. Decode once, straight into that surface, without ImageIO's
+     full-size intermediate (`kCGImageSourceShouldCache` off). Should
+     also shrink the freed-but-held blocks, which mostly come from
+     those buffers (*inference*).
+  3. Release the grid's thumbnails when the window closes (about
+     25 MB, `[L-mem-window]`).
+  4. Measure with ten changes per run, at least two runs before and
+     two after: runs vary widely (`[L-mem-pressure-relief]`).
+
+  For the persistent cover, one tagged surface per display is the floor
+  it can't avoid: about 25–63 MB per display at the author's sizes
+  (*inference* from the decoded sizes). A SPEC.md decision (proposed
+  name `[D-cover-iosurface]`) comes first, for approval.
 
 ## Open questions
 
@@ -373,6 +383,25 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
 
 How the experiment's UI runs were done, for next time. Test-suite
 techniques belong in TESTING.md; these are the ad hoc ones.
+
+- `[L-nswindow-screen-rect]` **`NSWindow(contentRect:…, screen:)` reads
+  the rect relative to that screen, not in global coordinates.** A
+  harness window meant for the built-in display (global x −1396) landed
+  at −2908, off the display, shifted by the screen's own −1512 origin.
+  *Measured* 2026-10-30. Pass global coordinates without `screen:`.
+- `[L-test-window-height]` **A borderless 240 pt harness window came out
+  241 pt tall on two displays** (240 on the third), leaving a 1 pt strip
+  of window background: the white line seen across the color-test panes.
+  *Measured* 2026-10-30; why macOS added the point is unknown. Fill the
+  whole content view, or skip edge rows when comparing pixels.
+- `[L-memory-tools]` **Measuring memory:** `footprint -p <pid>` (what
+  Activity Monitor shows), `vmmap --summary` (look for "Malloc Large
+  (empty)"), `heap` (live objects by class), `malloc_history <pid>
+  <address>` and `-allBySize` (who allocated it; needs the app launched
+  with `MallocStackLogging=1`, which adds 16–64 MB of its own), `leaks`.
+  All work on the installed build because it carries `get-task-allow`.
+  Changes were made by clicking the menu bar item's Change Now with real
+  mouse events, positions read through System Events.
 
 - `[L-twitch-measurement]` **Measuring a twitch:** record with
   `screencapture -v -V <seconds> -x out.mov` (60 fps, variable frame rate;
