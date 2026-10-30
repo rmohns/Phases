@@ -21,6 +21,16 @@ final class PersistentCover {
     .flatMap { Variant(rawValue: $0.uppercased()) }
   static let timing = UserDefaults.standard.string(forKey: "PhasesWallpaperTiming")
     .flatMap { Timing(rawValue: $0.lowercased()) } ?? .end
+  /// Brief uncover: after the real wallpaper settles, take the cover off for
+  /// this many milliseconds, so the menu bar background restyles
+  /// [Q-menubar-bg-follows-window]. Off unless `-PhasesUncover <ms>` is given.
+  static let uncoverGap: Int? = {
+    let ms = UserDefaults.standard.integer(forKey: "PhasesUncover")
+    return ms > 0 ? ms : nil
+  }()
+  /// [D-cover-settle] Same settle time as the crossfade, so macOS's motion
+  /// has finished before the cover comes off [Q-wallpaper-motion-delay].
+  private static let settleDelay: Duration = .milliseconds(1500)
 
   private struct Cover {
     var window: NSWindow
@@ -41,11 +51,12 @@ final class PersistentCover {
   private var running: RunningFade?
   private var fadeTask: Task<Void, Never>?
   private var spaceObserver: NSObjectProtocol?
+  private var uncoverTask: Task<Void, Never>?
   private let log = Diagnostics.logger("spike")
 
   init(variant: Variant) {
     self.variant = variant
-    log.info("persistent cover on, variant \(variant.rawValue, privacy: .public), timing \(Self.timing.rawValue, privacy: .public)")
+    log.info("persistent cover on, variant \(variant.rawValue, privacy: .public), timing \(Self.timing.rawValue, privacy: .public), uncover \(Self.uncoverGap ?? 0) ms")
     spaceObserver = NSWorkspace.shared.notificationCenter.addObserver(
       forName: NSWorkspace.activeSpaceDidChangeNotification, object: nil, queue: .main
     ) { [weak self] _ in
@@ -154,6 +165,28 @@ final class PersistentCover {
     WallpaperSetter.apply(assignments)
     for assignment in assignments {
       log.info("wallpaper set (\(reason, privacy: .public)) on \(assignment.screen.displayID ?? 0): \(assignment.url.lastPathComponent, privacy: .public)")
+    }
+    scheduleUncover()
+  }
+
+  /// Takes every cover off for `uncoverGap` once the wallpaper has settled,
+  /// then puts it back. Invisible when the real wallpaper matches the cover.
+  private func scheduleUncover() {
+    guard let gap = Self.uncoverGap else { return }
+    uncoverTask?.cancel()
+    uncoverTask = Task { [weak self] in
+      try? await Task.sleep(for: Self.settleDelay)
+      guard !Task.isCancelled, let self else { return }
+      // A fade that started meanwhile will schedule its own.
+      guard self.running == nil else { return }
+      let windows = self.covers.values.map(\.window)
+      for window in windows { window.orderOut(nil) }
+      self.log.info("uncovered for \(gap) ms")
+      try? await Task.sleep(for: .milliseconds(gap))
+      for window in windows where self.covers.values.contains(where: { $0.window === window }) {
+        window.orderFrontRegardless()
+      }
+      self.log.info("recovered")
     }
   }
 
