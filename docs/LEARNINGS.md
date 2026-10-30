@@ -268,6 +268,15 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   to Core Animation's purgeable copies `[L-mem-ca-copy]` going, perhaps
   set off by the debugger pausing the app (*guess*), not to the call.
   One run only; repeat without `lldb` before relying on it.
+  **Repeat without `lldb`, same day:** 23 → 83, 116, 144 MB over three
+  changes; then flat at 143 MB for 30 s; then a 2 s pause and resume
+  (`kill -STOP`/`-CONT`) changed nothing (143 MB for 10 s more); freed
+  blocks 58.7 MB. *Measured.* So the earlier drop wasn't a timer within
+  30 s and wasn't the pause itself. Still unexplained: something `lldb`
+  does when it runs an expression, or the relief call freeing purgeable
+  memory it doesn't count in its return value (*guesses*). Also
+  unexplained: the same three changes cost 297 MB in one run and 144 MB
+  in the other.
 - `[L-mem-no-upscale]` **`loadImage` never scales an image up.** The
   max-pixel option only caps size, so a 2880 × 2160 file stays 2880 ×
   2160 (24.9 MB) on a larger screen; CA scales it when compositing.
