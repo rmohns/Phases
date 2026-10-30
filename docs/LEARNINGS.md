@@ -317,6 +317,14 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
     allocator memory `[L-mem-freed-held]` (about 25 MB, *inference*) plus
     about 15 MB of live objects Phases no longer references (*inference*:
     SwiftUI and AppKit caches).
+    Kept as a measurement only: the code went back to releasing the pane
+    (author, 2026-10-30), since 11 MB isn't worth rebuilding the sidebar
+    and its fragile helpers on every reopen.
+  - **Pane-only confirmation, same day,** under the new window check
+    (Release, window only, two rounds): idle 24; open 80 (31
+    `ThumbnailCell` view lists in `heap`), closed 30 s 70 (none); open 83
+    (31), closed 30 s 73 (none). *Measured.* Passes: the grid is released
+    each time, and the second close is 3 MB above the first (limit 5).
 
 ## Open questions
 
@@ -345,6 +353,12 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   To investigate on its own branch (author, 2026-10-30).
   **Update 2026-10-30: investigated; see "Memory".** Mostly crossfade
   images, not the grid; the grid is about 25 MB of it.
+  **Correction, same day (`[L-mem-fix-runs]`):** "mostly crossfade
+  images" holds: with covers fixed, ten changes cost 2–3 MB instead of
+  about 200. "The grid is about 25 MB" doesn't: the 25 MB was the whole
+  window's lasting cost, not the grid's. Releasing the grid gives back
+  about 10 MB of a 40–50 MB lasting cost; the rest is the window itself
+  and allocator-held memory. *Measured.*
 - `[L-hdr-wallpaper]` **How does macOS draw an HDR photo (an iPhone
   HEIC with a gain map) as wallpaper: SDR, or with HDR headroom?**
   - **Answer: SDR,** by the author's eye against a known-HDR control

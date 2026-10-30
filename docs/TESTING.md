@@ -228,10 +228,10 @@ two layers.
 
     The footprint after closing isn't a target. Note it with the image
     count. It stays well above the pre-open figure even when the grid is
-    released (about 40 MB at 22 images): freed memory the allocator keeps
+    released (40–50 MB at 22 images): freed memory the allocator keeps
     resident, and objects SwiftUI and AppKit hold on to, neither of which
     Phases can give back (LEARNINGS.md `[L-mem-fix-runs]`). Not worth
-    chasing (author, 2026-10-30).
+    chasing (author, 2026-10-30; this check approved the same day).
   - **Flag anything over 500 MB.** If any reading in a run, window open
     or closed, goes above 500 MB, tell the author. It doesn't fail the
     run; it's a signal to look at refactoring, decided when it happens,
