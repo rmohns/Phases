@@ -139,18 +139,18 @@ observed, and anything surprising.
 
 | # | Result |
 |---|---|
-| E1 | |
-| E2 | |
+| E1 | 2026-10-30, macOS 27.2, one display, A, `end`: **no twitch** after any of three fades. *Verified* from per-frame differences of a 60 fps recording: nothing above noise after each fade ends. |
+| E2 | 2026-10-30, A, `end`: menu bar text stayed white for all four images, including a mostly white one; no flip to dark seen. The menu bar area showed the cover fading live, with no lag. *Observed* at 4 samples per second, so a 0.1 s blink could be missed. `mid` not run yet. |
 | E3 | |
-| E4 | |
-| E5 | |
-| E6 | |
+| E4 | 2026-10-30, A: Space-arrival sync works (*verified* in the log: each arrival found an out-of-date Space and set it). Swipes look native: the cover slides with each Space, with the usual black gap. Arrival blink not checked. |
+| E5 | 2026-10-30, A: Mission Control shows the cover image as its background. The Spaces strip was collapsed to names, so thumbnails weren't seen. |
+| E6 | 2026-10-30, A: desktop icons and widgets draw above the cover (*observed*). Right-click not checked: it landed on Bitrig, not the desktop. |
 | E7 | |
 | E8 | |
 | E9 | |
 | E10 | |
-| E11 | |
-| E12 | |
+| E11 | 2026-10-30, A: wallpaper set from outside Phases (System Events, solid black) at the end of the run; result not checked. The real wallpaper on that Space was left black behind the cover. |
+| E12 | 2026-10-30, one display (3024 × 1964), Debug build: 23 MB without the cover, **93 MB with it** (+70 MB). The image is held three times, about 23 MB each: CoreAnimation, Malloc Large, and CG Raster Data. Likely reducible. (The installed Release Phases, running since before the test with its window opened earlier, measured 179 MB; worth a look of its own.) |
 
 ## Afterward
 
