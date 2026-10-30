@@ -160,6 +160,14 @@ observed, and anything surprising.
   `[D-fade-in]` and `[D-cover-settle]` rewritten, "Different wallpaper per
   Space" in "Out of scope" replaced by "the same wallpaper on every Space",
   and what Pause and Quit do with the cover.
+- **Follow-up, not part of this experiment: memory on `main`.** The
+  installed Release build measured 179 MB on 2026-10-30, with its window
+  closed (82 MB Malloc Large, 54 MB Malloc Small, 9 MB QuickLook
+  Thumbnails), against 23 MB for a fresh Debug launch with no window
+  opened. Something may not be released after the window closes, such as
+  the thumbnail grid. Investigate on its own branch (author, 2026-10-30).
+  This note must reach `main` with the findings, so it isn't lost when the
+  branch goes.
 - **The branch stays until we both agree the findings are well understood
   by both of us.** I ask the author before deleting it, and don't delete
   it without a yes (author, 2026-10-29).
