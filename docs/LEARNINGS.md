@@ -276,6 +276,18 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
 
 ## Open questions
 
+- `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
+  bar runs out of room?** UI test run on `fix/cover-memory`, 2026-10-30,
+  two external displays (no built-in), Bartender not running: the driver
+  found Phases' menu bar item at x = 2630 but refused to click it ("isn't
+  this test instance's"), failing `deleteRemovesANewlyAddedPhase` and,
+  most likely, one `FocusTests` test whose message wasn't kept. *Measured*
+  (the refusal); the cause is a *guess*: the author runs the Cinema HD at
+  1000 × 1600, narrow enough that macOS may push status items off the
+  menu bar. A rerun of `FocusTests` alone passed all three. Matters beyond
+  tests: on that display a person might not reach Phases' menu at all.
+  To investigate on its own branch.
+
 - `[L-main-memory]` **The installed Release build of `main` measured
   179 MB with its window closed** (82 MB large mallocs, 54 MB small, 9 MB
   QuickLook thumbnails), against 23 MB for a fresh Debug launch that never
