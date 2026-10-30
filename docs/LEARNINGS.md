@@ -214,7 +214,31 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   lists which contents CA can use without copying. `kIOSurfaceColorSpace`
   exists, but its page has no description. Not tested: whether colors
   stay right without tagging the IOSurface's color space, and whether
-  the copy also happens for images smaller than the screen.
+  the copy also happens for images smaller than the screen (since
+  answered: see `[L-mem-iosurface-color]`).
+- `[L-mem-iosurface-color]` **An IOSurface needs its color space
+  attached, or colors come out wrong; attached, it matches the CGImage
+  and still isn't copied.** Visible harness window on the built-in
+  display (Color LCD), four panes showing the same wallpaper, captured
+  with `screencapture -R` and compared pixel by pixel against the
+  CGImage pane. *Measured* 2026-10-30, macOS 27.2:
+
+  | Pane (sRGB image, 2560 × 1440) | vs CGImage: mean, max difference (of 255) |
+  |---|---|
+  | IOSurface, image's pixels, no color space attached | 1.08, **56** |
+  | IOSurface, image's pixels, `kIOSurfaceColorSpace` = image's ICC data | 0.06, 1 |
+  | IOSurface, drawn in the screen's color space, nothing attached | 0, 0 |
+
+  So CA treats an untagged surface as already in the display's space.
+  Converting to the screen's space happens to work, but only for that
+  display's current profile; tagging is the general answer. With a
+  Display P3 image all three matched exactly, because Color LCD is
+  practically Display P3, so P3 images can't show the difference on
+  this display. *Measured.* `malloc_history` on the offscreen harness:
+  the tagged surface still has no `create_image_by_rendering` copy
+  (footprint 48 MB against 62 MB for the CGImage). *Measured.* The same
+  run shows CA copies images smaller than the screen too: 2560 × 1440
+  on a 3024 × 1964 display. *Measured.*
 - `[L-mem-no-upscale]` **`loadImage` never scales an image up.** The
   max-pixel option only caps size, so a 2880 × 2160 file stays 2880 ×
   2160 (24.9 MB) on a larger screen; CA scales it when compositing.
