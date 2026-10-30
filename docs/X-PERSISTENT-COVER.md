@@ -127,7 +127,7 @@ Agreed with the author 2026-10-29:
 | E6 | Desktop | Icons, right-click on the desktop, drag a file to the desktop, "Click wallpaper to reveal desktop" | Icons above the cover; clicks reach the desktop as before. |
 | E7 | Widgets draw above the cover. With an app in front, they turn translucent and show the cover through them, so they match it. *Observed* 2026-10-30. |
 | E8 | Lock screen and login window (author) | Lock (⌃⌘Q): on Space 1 right after a change; on Space 2 after arriving; on Space 2 after a change made on Space 1, before arriving. Then log out once | Which image the lock screen and the login window show in each case. |
-| E9 | Not run. A full-screen attempt didn't take (the ⌃⌘F keystroke didn't reach Activity Monitor); Stage Manager not toggled. |
+| E9 | 2026-10-30, 99% cover B: Calendar into and out of full screen looked normal; the cover showed around the windows during the exit animation, nothing odd. *Observed.* (Activity Monitor can't go full screen; it only zooms.) Stage Manager not toggled. |
 | E10 | Quit and crash | Quit; relaunch; Force Quit | What's on screen the moment the cover goes; restore-on-quit still behaves. |
 | E11 | System Settings | Change wallpaper there while Phases runs | Expected: hidden by the cover. Confirm, and note how confusing it is. |
 | E12 | Memory | `footprint` on Phases: on `main` at idle, then the branch with the cover up, A and B, one display and three | The real cost per display, against today's idle baseline. |
@@ -183,6 +183,15 @@ by per-frame differences over the desktop area.
   Safari window opened by something else appeared as I clicked the
   toggle, so the click probably missed. The bars in the recording show
   the background still on. I stopped driving there.
+- **99% with the background off** (the author's usual setting, turned
+  off by the author). **Menu bar text now follows the image**: white on
+  the autumn trees, sky, and neon planet, black on the pale Misty Rocks.
+  This fixes E2, where an opaque cover left the text stuck. No twitch
+  after the fades. *Observed* from a recording, three changes.
+- **99% on Space arrival:** arriving at a Space just synced to a new
+  image, the menu bar kept the old image's style for about half a
+  second, blinked, then restyled correctly. The author had accepted a
+  blink here (E4). *Observed* once.
 
 ## Afterward
 
