@@ -16,6 +16,8 @@
   Learned something that doesn't shape code on `main`? → LEARNINGS.md,
   with an `[L-…]` tag (experiments, rejected approaches, measurements,
   open questions). Record findings there as they happen, not at the end.
+  Entries move between the two as code starts or stops depending on them
+  (LEARNINGS.md "Promotion" and "Demotion").
 - **Spec first, always.** SPEC.md changes are approved by the user before
   any code is written, then land in the same commit as the code. The build
   must meet the spec, not the other way around. If the code needs to differ

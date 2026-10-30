@@ -17,6 +17,11 @@ another way.
 - **Promotion:** when a learning starts shaping code, it moves to ERRATA.md
   as a `[Q-…]` entry (or to SPEC.md as a decision) in the same change, and
   leaves a one-line pointer here: "Promoted to `[Q-…]` (date)."
+- **Demotion:** when the code a `[Q-…]` entry shapes is removed from
+  `main`, the entry moves here in the same change, keeping its `[Q-…]` tag
+  alongside a new `[L-…]` tag so old comments and commits still find it,
+  and leaves a one-line pointer in ERRATA.md: "Demoted to `[L-…]` (date)."
+  ERRATA.md holds only quirks the current code depends on.
 - Keep corrections and history; don't silently rewrite an entry.
 - Cross-references use a tag or a quoted section title, never a section
   number `[D-refs-by-id]`.

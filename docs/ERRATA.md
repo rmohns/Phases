@@ -16,6 +16,10 @@ would stop being true if a future macOS fixed the underlying behavior.
 - Cross-references use a tag or a quoted section title, never a section
   number `[D-refs-by-id]`.
 - New quirks go here, with a new `[Q-…]` ID, when they're found.
+- Only quirks the code on `main` depends on live here. Findings that don't
+  shape code go in LEARNINGS.md; they're promoted here when code starts
+  depending on them, and demoted back (leaving a one-line pointer) when the
+  code that depended on them is removed. See LEARNINGS.md for the rules.
 
 ## Quirks
 
