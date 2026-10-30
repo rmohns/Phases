@@ -262,8 +262,7 @@ image when there's more than one choice.
     to about 300 MB after ten changes. Most of that was a copy the system
     made of every image handed to a cover; a shared buffer is shown as is,
     with no copy. macOS fights this; see `[Q-cover-image-copied]` and
-    `[Q-iosurface-color-tag]` (to be added to ERRATA.md with the code,
-    promoted from LEARNINGS.md "Memory").
+    `[Q-iosurface-color-tag]`.
   - *Cost:* the cover's pixels are drawn by Phases rather than by the
     system's image pipeline, so color matching depends on the tag. Measured
     within 1–5 of 255 of the system's own drawing on all three of the
