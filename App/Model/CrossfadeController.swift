@@ -1,5 +1,6 @@
 import AppKit
-import ImageIO
+
+private let diagLog = Diagnostics.logger("cover")
 
 /// [D-fade-in] Crossfades wallpaper changes (spec "Transitions"). macOS has no transition for
 /// app-set wallpapers, so this fades the incoming image in over the old
@@ -80,7 +81,12 @@ final class CrossfadeController {
   }
 
   private func removeCovers() {
-    for cover in covers { cover.orderOut(nil) }
+    for cover in covers {
+      cover.orderOut(nil)
+      // [D-cover-iosurface] The buffer goes with the cover, even if AppKit
+      // holds on to the window a while longer.
+      cover.contentView?.layer?.contents = nil
+    }
     covers.removeAll()
   }
 
@@ -97,7 +103,11 @@ final class CrossfadeController {
     // enough pixels to fill the screen.
     let maxPixels = gravity == .center ? nil : max(screen.frame.width, screen.frame.height) * screen.backingScaleFactor
     // [D-no-screenshots] Drawn from the file; no Screen Recording permission.
-    guard let image = Self.loadImage(url, maxPixelSize: maxPixels) else { return nil }
+    // [D-cover-iosurface] One tagged surface, shown without a copy.
+    guard let surface = CoverSurface.make(from: url, maxPixelSize: maxPixels) else {
+      diagLog.log("cover: no surface for \(url.lastPathComponent, privacy: .public)")
+      return nil
+    }
 
     let window = NSWindow(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
     // [D-cover-level] Above the desktop picture, below the desktop icons.
@@ -112,7 +122,7 @@ final class CrossfadeController {
     let view = NSView(frame: NSRect(origin: .zero, size: screen.frame.size))
     view.wantsLayer = true
     if let layer = view.layer {
-      layer.contents = image
+      layer.contents = surface
       layer.contentsGravity = gravity
       layer.contentsScale = screen.backingScaleFactor
       layer.masksToBounds = true
@@ -129,16 +139,5 @@ final class CrossfadeController {
     case .scaleNone: .center
     default: allowsClipping ? .resizeAspectFill : .resizeAspect
     }
-  }
-
-  private static func loadImage(_ url: URL, maxPixelSize: CGFloat?) -> CGImage? {
-    guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
-    guard let maxPixelSize else { return CGImageSourceCreateImageAtIndex(source, 0, nil) }
-    let options: [CFString: Any] = [
-      kCGImageSourceCreateThumbnailFromImageAlways: true,
-      kCGImageSourceCreateThumbnailWithTransform: true,
-      kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
-    ]
-    return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
   }
 }
