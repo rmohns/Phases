@@ -383,6 +383,10 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   `kCGImageSourceDecodeToHDR`; ImageIO's default decode came back 8-bit
   with headroom 1.0, so default is SDR, *measured*) set as wallpaper on
   the built-in display "looks pretty SDR" (*observed* by the author).
+  Set with Finder's Services › Set Desktop Picture, not by Phases, so
+  this is macOS's own rendering, which is what a cover has to match.
+  That Phases' `setDesktopImageURL` gets the same rendering is
+  *inference* (the wallpaper is drawn by macOS either way), not tested.
   A screen capture matched the default SDR decode by eye (*observed*,
   weak: `screencapture` output is SDR, so it can't show HDR either way,
   *recalled*). While it showed, the built-in display's
