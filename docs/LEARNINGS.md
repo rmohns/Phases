@@ -205,7 +205,14 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   2026-10-30). Why CA copies a CGImage: on macOS another process
   (WindowServer) composites the screen, and an image in ordinary app
   memory has to be moved into memory it can share (*guess*; fits the
-  IOSurface result, not confirmed by Apple). Not tested: whether colors
+  IOSurface result, not confirmed by Apple). Apple's local docs (read
+  2026-10-30) support the premise without stating the copy: NSView
+  `layerUsesCoreImageFilters` says "In macOS 10.9 and later, AppKit
+  prefers to render layer trees out-of-process", and the IOSurface
+  framework is "a framebuffer object suitable for sharing across process
+  boundaries". No Apple page found says CGImage contents are copied, or
+  lists which contents CA can use without copying. `kIOSurfaceColorSpace`
+  exists, but its page has no description. Not tested: whether colors
   stay right without tagging the IOSurface's color space, and whether
   the copy also happens for images smaller than the screen.
 - `[L-mem-no-upscale]` **`loadImage` never scales an image up.** The
