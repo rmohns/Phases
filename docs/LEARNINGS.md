@@ -361,6 +361,23 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   To investigate on its own branch (author, 2026-10-30).
   **Update 2026-10-30: investigated; see "Memory".** Mostly crossfade
   images, not the grid; the grid is about 25 MB of it.
+- `[L-hdr-wallpaper]` **How does macOS draw an HDR photo (an iPhone
+  HEIC with a gain map) as wallpaper: SDR, or with HDR headroom?** Apple's
+  documentation doesn't say. Read 2026-10-30, macOS 27.0 SDK: the
+  `NSWorkspace` desktop-image pages and `DesktopImageOptionKey` (only
+  scaling, clipping, fill color), and the "Enhancing high dynamic range
+  image rendering" article (how an app shows HDR, not the wallpaper).
+  What the SDK does give a cover, if it needs to match HDR:
+  `kCGImageSourceDecodeRequest` = `kCGImageSourceDecodeToHDR` to decode
+  with the gain map applied, `kIOSurfaceContentHeadroom` to tag a surface,
+  and `CALayer.preferredDynamicRange` (default `.standard`, macOS 26+;
+  per the header, `contents` with headroom above 1.0 are tone-mapped to
+  SDR unless it's set otherwise). The headers don't state ImageIO's
+  default decode for gain-map images; SDR is *recalled*, not tested. Bears
+  on `[D-cover-iosurface]`: an 8-bit SDR surface is right only if macOS
+  shows the wallpaper as SDR. To test: set an iPhone HDR photo as
+  wallpaper on an HDR-capable display (the built-in one) and compare its
+  brightness with an SDR copy of the same photo.
 - `[L-cover-alpha-later]` **Could the 99% cover go to 100% once the menu
   bar has restyled, and does it matter?** Untested. Risks, from
   `[L-opaque-cover-freezes-menubar]`: an opaque cover might stop the menu
