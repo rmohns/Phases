@@ -16,6 +16,16 @@ would stop being true if a future macOS fixed the underlying behavior.
 - Cross-references use a tag or a quoted section title, never a section
   number `[D-refs-by-id]`.
 - New quirks go here, with a new `[Q-…]` ID, when they're found.
+- Only quirks the code on `main` depends on live here. Findings that don't
+  shape code go in LEARNINGS.md; they're promoted here when code starts
+  depending on them (see LEARNINGS.md "Promotion").
+- **Demotion:** when the code a `[Q-…]` entry shapes is removed from
+  `main`, the entry moves to LEARNINGS.md in the same change, keeping its
+  `[Q-…]` tag alongside a new `[L-…]` tag so old comments and commits still
+  find it, and leaves a one-line pointer here: "Demoted to `[L-…]` (date)."
+  This duplicates LEARNINGS.md "Demotion" on purpose: this file is read
+  every session and LEARNINGS.md isn't, so the rule has to be here when the
+  code is being removed. Keep the two copies in sync.
 
 ## Quirks
 

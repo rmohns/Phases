@@ -7,10 +7,17 @@
   them: platform quirks, workaround mechanics, design history, diagnostic
   procedures, and the regressions list. Read `docs/TESTING.md` too when
   the work touches tests, test-only launch arguments, or diagnostics.
+  Read `docs/LEARNINGS.md` before experimenting, or before blaming or
+  working around platform behavior: it may already hold the answer.
 - **Which file:** if a future macOS fixed the bug, would the line still be
   true? Yes → SPEC.md. No → ERRATA.md. Would someone using Phases ever see
   or care about it? No → TESTING.md (tests, test-only switches,
   diagnostics). TESTING.md decisions follow the same spec-first approval.
+  Learned something that doesn't shape code on `main`? → LEARNINGS.md,
+  with an `[L-…]` tag (experiments, rejected approaches, measurements,
+  open questions). Record findings there as they happen, not at the end.
+  Entries move between the two as code starts or stops depending on them
+  (LEARNINGS.md "Promotion" and "Demotion").
 - **Spec first, always.** SPEC.md changes are approved by the user before
   any code is written, then land in the same commit as the code. The build
   must meet the spec, not the other way around. If the code needs to differ
@@ -29,7 +36,8 @@
 - Never install launch agents, daemons, or helpers without asking the user first.
 - Launch at Login stays opt-in, with a confirmation before registering.
 - Open the specs for review with Marked: `/opt/homebrew/bin/mk docs/SPEC.md`,
-  `/opt/homebrew/bin/mk docs/ERRATA.md`, and `/opt/homebrew/bin/mk docs/TESTING.md`.
+  `/opt/homebrew/bin/mk docs/ERRATA.md`, `/opt/homebrew/bin/mk docs/TESTING.md`,
+  and `/opt/homebrew/bin/mk docs/LEARNINGS.md`.
 - **Design principle:** keep a clear separation between content and tools.
   Controls must never blend into the content behind them; don't follow
   Liquid Glass-style translucency where it costs legibility or findability.
