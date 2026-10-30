@@ -139,6 +139,174 @@ borderless, click-through window just above the desktop picture
   2026-10-29; not inspected. **Rejected for Phases** (author, 2026-10-29):
   no private macOS operations, consistent with `[D-aerials-untouched]`.
 
+## Memory
+
+Source for this section: branch `investigate/memory`, 2026-10-30,
+macOS 27.2, three displays (built-in, LG Ultrawide, Cinema HD). Measured
+on the installed Release build of `main` (built 2026-10-29; no `App/`
+changes on `main` since), the window closed unless noted. Two runs: one
+with `MallocStackLogging=1` so `malloc_history` could name allocators (it
+adds 16–64 MB of "Performance Tool Data", subtracted below), and a
+control run without it. Tools: `footprint`, `vmmap`, `heap`,
+`malloc_history`, `leaks`. Changes made with Change Now from the menu.
+
+- `[L-mem-timeline]` **Footprint rises and falls with crossfades; it
+  isn't a steady leak on `main`.** Control run: 23 MB idle; after
+  successive changes 23 (nothing changed), 94, 148, 200, 207, 303 MB;
+  window open 208, closed 168; three idle minutes later 134 MB.
+  Logging run (tool data subtracted): 55 at idle after a launch-time
+  fade, then 89, 145, 218, 175 MB over four changes, flat at 174 after
+  two idle minutes. `leaks`: 0 leaks. *Measured.*
+- `[L-mem-cover-windows-freed]` **`main`'s cover windows are freed after
+  each fade.** `heap` finds no cover `NSWindow`, `CALayer`, or view after
+  fades. So the guess that ordered-out, never-closed windows stay alive
+  is wrong for `main`. *Measured.* Not checked on the spike's persistent
+  covers, which are meant to stay.
+- `[L-mem-ca-copy]` **Core Animation keeps its own full-screen copy of
+  each cover image, and it outlives the window.** `malloc_history` puts
+  the largest live blocks (9, 24, 29–43, and 63 MB, one per display and
+  image) in `CA::Render::copy_image` → `create_image_by_rendering`,
+  during the commit that first draws the cover's layer. CA redraws the
+  `CGImage` from `loadImage` into a new buffer instead of using it as is.
+  Copies from the last one or two changes were still resident after the
+  fade, 175 MB of them after six changes. *Measured.* They sit in
+  CoreGraphics' purgeable zone, and `footprint` counts most of them as
+  "Reclaimable" (86–114 MB): macOS may drop them under memory pressure,
+  but Activity Monitor still shows them. *Measured* (the column);
+  *recalled* (what macOS does under pressure, not tested here). Why CA
+  copies: a pixel-format or color-space mismatch between the decoded
+  image and what CA wants (*guess*, not checked). Who keeps the copy
+  alive after the window is freed: not found (*guess*: a CA or CG image
+  cache keyed by the image).
+  **Update, same day: the format guess was wrong; see
+  `[L-mem-ca-copy-test]`.**
+- `[L-mem-ca-copy-test]` **Core Animation copied every CGImage we gave
+  it, whatever its format; an IOSurface it used as is.** Throwaway
+  harness (not Phases): an offscreen borderless window, no Dock icon, one
+  layer whose `contents` is a 2880 × 2160 Display P3 wallpaper decoded
+  exactly as `CrossfadeController.loadImage` does, on the built-in
+  display ("Color LCD"); `malloc_history` checked for
+  `create_image_by_rendering`. *Measured* 2026-10-30, macOS 27.2:
+
+  | Contents | CA copy (24.9 MB) | Footprint |
+  |---|---|---|
+  | `loadImage` result as is (XRGB, big-endian, Display P3) | yes | 91 MB |
+  | redrawn as BGRA little-endian, same color space | yes | 114 MB |
+  | redrawn as XRGB in the screen's color space | yes | 115 MB |
+  | redrawn as BGRA in the screen's color space | yes | 115 MB |
+  | IOSurface (BGRA), image drawn into it | **no** | 67 MB |
+
+  (The redrawn rows also hold the harness's redraw buffer, hence the
+  higher totals.) So neither byte order nor color space avoids the copy,
+  and our rows were already 64-byte aligned, which rules out the
+  alignment cause reported elsewhere (SDWebImage PR #3559, *not Apple*).
+  Apple's `CALayer.contents` page names only CGImage and NSImage and
+  says nothing about copies; `contentsFormat` is only "a hint" (read
+  2026-10-30). Why CA copies a CGImage: on macOS another process
+  (WindowServer) composites the screen, and an image in ordinary app
+  memory has to be moved into memory it can share (*guess*; fits the
+  IOSurface result, not confirmed by Apple). Apple's local docs (read
+  2026-10-30) support the premise without stating the copy: NSView
+  `layerUsesCoreImageFilters` says "In macOS 10.9 and later, AppKit
+  prefers to render layer trees out-of-process", and the IOSurface
+  framework is "a framebuffer object suitable for sharing across process
+  boundaries". No Apple page found says CGImage contents are copied, or
+  lists which contents CA can use without copying. `kIOSurfaceColorSpace`
+  exists, but its page has no description. Not tested: whether colors
+  stay right without tagging the IOSurface's color space, and whether
+  the copy also happens for images smaller than the screen (since
+  answered: see `[L-mem-iosurface-color]`).
+- `[L-mem-iosurface-color]` **An IOSurface needs its color space
+  attached, or colors come out wrong; attached, it matches the CGImage
+  and still isn't copied.** Visible harness window on the built-in
+  display (Color LCD), four panes showing the same wallpaper, captured
+  with `screencapture -R` and compared pixel by pixel against the
+  CGImage pane. *Measured* 2026-10-30, macOS 27.2:
+
+  | Pane (sRGB image, 2560 × 1440) | vs CGImage: mean, max difference (of 255) |
+  |---|---|
+  | IOSurface, image's pixels, no color space attached | 1.08, **56** |
+  | IOSurface, image's pixels, `kIOSurfaceColorSpace` = image's ICC data | 0.06, 1 |
+  | IOSurface, drawn in the screen's color space, nothing attached | 0, 0 |
+
+  So CA treats an untagged surface as already in the display's space.
+  Converting to the screen's space happens to work, but only for that
+  display's current profile; tagging is the general answer. With a
+  Display P3 image all three matched exactly, because Color LCD is
+  practically Display P3, so P3 images can't show the difference on
+  this display. *Measured.* `malloc_history` on the offscreen harness:
+  the tagged surface still has no `create_image_by_rendering` copy
+  (footprint 48 MB against 62 MB for the CGImage). *Measured.* The same
+  run shows CA copies images smaller than the screen too: 2560 × 1440
+  on a 3024 × 1964 display. *Measured.*
+  **Same test on the other two displays** (the author's displays have
+  different color spaces, so nothing may assume P3). Captures there come
+  back sRGB. Max difference against the CGImage pane, of 255:
+
+  | Display | Image | Untagged | Tagged | Screen-space, untagged |
+  |---|---|---|---|---|
+  | Built-in (Color LCD) | sRGB | 56 | 1 | 0 |
+  | Built-in (Color LCD) | Display P3 | 0 | 0 | 0 |
+  | LG Ultrawide | Display P3 | 38 | 5 | 0 |
+  | LG Ultrawide | sRGB | 0 | 0 | 0 |
+  | Cinema HD | Display P3 | 45 | 2 | 0 |
+  | Cinema HD | sRGB | 0 | 0 | 0 |
+
+  Untagged is wrong whenever the image's space differs from the
+  display's; tagged is within rounding on every display. *Measured*
+  2026-10-30. Screen-space drawing is exact, but it's tied to one
+  display's profile at drawing time: a cover moved to another display,
+  or a profile change (Night Shift isn't one, *recalled*), would need a
+  redraw (*inference*). A first Cinema HD run was invalid (the window
+  was wider than the display, so panes didn't line up) and was redone.
+- `[L-mem-no-upscale]` **`loadImage` never scales an image up.** The
+  max-pixel option only caps size, so a 2880 × 2160 file stays 2880 ×
+  2160 (24.9 MB) on a larger screen; CA scales it when compositing.
+  *Measured* (decoded sizes of the author's files, 2026-10-30). That
+  explains block sizes that don't match any display.
+- `[L-mem-freed-held]` **Freed full-screen buffers stay in the process
+  for minutes.** `vmmap` shows "Malloc Large (empty)": blocks already
+  freed but still resident and dirty, which `footprint` counts in full.
+  24 MB at idle after one launch fade; 40–95 MB after changes; 62 MB
+  still there after three idle minutes. *Measured.* That's the system
+  allocator keeping freed large blocks for reuse rather than handing the
+  pages back (*recalled* allocator behavior; when and whether it returns
+  them is not tested).
+- `[L-mem-decode]` **Each cover also decodes the file at full size
+  first.** `CGImageSourceCreateThumbnailAtIndex` draws the full-size
+  source image, leaving a decoded copy in CoreGraphics' purgeable zone
+  (24 and 22 MB after the launch fade). They were already purged
+  (resident 0) 40 s later, so they cost a peak, not a steady state.
+  *Measured.* `footprint` reported a 161 MB peak at launch from one fade.
+- `[L-mem-window]` **Opening the window adds about 25 MB that stays after
+  it closes.** Small allocations went from 28 to 55 MB (logging run) and
+  21 to 45 MB (control); closing gave none of it back. `heap` still finds
+  the grid's 17 `ThumbnailCell` views and their images after the close,
+  so SwiftUI keeps the closed `Window`'s view tree. *Measured.* A second
+  open and close added only about 2 MB of small allocations, plus 4 MB
+  each of CoreAnimation and QuickLook thumbnails, so it's one-time, not
+  per open. *Measured.* Whether SwiftUI ever releases it: unknown.
+- `[L-mem-thumbnails]` **Thumbnails are small:** the folder has 22
+  images; QuickLook Thumbnails measured 4–9 MB. *Measured.*
+- `[L-mem-reconcile]` **This accounts for the earlier figures.** The
+  179 MB in `[L-main-memory]` (82 MB large, 54 MB small, 9 MB thumbnails)
+  fits: CA copies plus freed-but-held blocks for "large", the window's
+  retained tree for "small". The spike's growth in `[L-cover-memory]`
+  fits the same mechanisms, plus the images the persistent cover holds
+  on purpose. *Inference* from the numbers above, not measured on the
+  spike branch.
+- `[L-mem-fix-ideas]` **Directions for the fix, all untested.** Decode
+  straight into a buffer CA can use without copying (matching the
+  screen's color space and pixel format), so there's one copy per
+  display, not two or three. *Update:* a matching CGImage still gets
+  copied; an IOSurface doesn't (`[L-mem-ca-copy-test]`), so the buffer
+  would be an IOSurface, with our decoded image dropped once it's drawn. Avoid the full-size decode (ImageIO
+  subsampling). After a fade, clear `layer.contents` and drop the image.
+  Ask the allocator to hand freed pages back after a fade
+  (`malloc_zone_pressure_relief`, *recalled*). Release the grid's
+  thumbnails when the window closes. Measure each against
+  `[L-mem-timeline]`.
+
 ## Open questions
 
 - `[L-main-memory]` **The installed Release build of `main` measured
@@ -147,6 +315,8 @@ borderless, click-through window just above the desktop picture
   opened the window. *Measured* 2026-10-30 with `footprint`. Possibly the
   thumbnail grid isn't released when the window closes (*hypothesis*).
   To investigate on its own branch (author, 2026-10-30).
+  **Update 2026-10-30: investigated; see "Memory".** Mostly crossfade
+  images, not the grid; the grid is about 25 MB of it.
 - `[L-cover-alpha-later]` **Could the 99% cover go to 100% once the menu
   bar has restyled, and does it matter?** Untested. Risks, from
   `[L-opaque-cover-freezes-menubar]`: an opaque cover might stop the menu
