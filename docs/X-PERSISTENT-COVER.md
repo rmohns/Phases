@@ -134,23 +134,26 @@ Agreed with the author 2026-10-29:
 
 ## Results
 
-Filled in as runs happen: date, macOS version, variant, verified or
-observed, and anything surprising.
+Run 2, 2026-10-30, macOS 27.2, one display (built-in, 3024 × 1964), Debug
+build, driven by me with the author's go-ahead. Run 1 earlier the same
+morning was restarted from scratch at the author's request; where it
+agreed, it's noted. Recordings are 60 fps, variable frame rate, analyzed
+by per-frame differences over the desktop area.
 
 | # | Result |
 |---|---|
-| E1 | 2026-10-30, macOS 27.2, one display, A, `end`: **no twitch** after any of three fades. *Verified* from per-frame differences of a 60 fps recording: nothing above noise after each fade ends. |
-| E2 | 2026-10-30, A, `end`: menu bar text stayed white for all four images, including a mostly white one; no flip to dark seen. The menu bar area showed the cover fading live, with no lag. *Observed* at 4 samples per second, so a 0.1 s blink could be missed. `mid` not run yet. |
-| E3 | |
-| E4 | 2026-10-30, A: Space-arrival sync works (*verified* in the log: each arrival found an out-of-date Space and set it). Swipes look native: the cover slides with each Space, with the usual black gap. Arrival blink not checked. |
-| E5 | 2026-10-30, A: Mission Control shows the cover image as its background. The Spaces strip was collapsed to names, so thumbnails weren't seen. |
-| E6 | 2026-10-30, A: desktop icons and widgets draw above the cover (*observed*). Right-click not checked: it landed on Bitrig, not the desktop. |
-| E7 | |
-| E8 | |
-| E9 | |
-| E10 | |
-| E11 | 2026-10-30, A: wallpaper set from outside Phases (System Events, solid black) at the end of the run; result not checked. The real wallpaper on that Space was left black behind the cover. |
-| E12 | 2026-10-30, one display (3024 × 1964), Debug build: 23 MB without the cover, **93 MB with it** (+70 MB). The image is held three times, about 23 MB each: CoreAnimation, Malloc Large, and CG Raster Data. Likely reducible. (The installed Release Phases, running since before the test with its window opened earlier, measured 179 MB; worth a look of its own.) |
+| E1 | **No twitch**, A and B. *Verified*: three fades each (A `end`, B `mid`), nothing above noise after any fade ends. Run 1 (A) agreed. |
+| E2 | **Menu bar text never changed color during a run.** Black for every image in run 2 (A and B), white for every image in run 1, including a mostly white image and a solid black real wallpaper. `mid` made no visible difference. *Observed* at 4 samples per second. The text seems to restyle only on other events (launch, Space arrival), which fits `[Q-menubar-restyle-on-app-switch]`; not proven. |
+| E3 | The menu bar area showed the cover fading live, with no lag, in A and B. Not yet checked with "Show menu bar background" known to be on. |
+| E4 | **Space-arrival sync works** (*verified* in the log every time). Swipes look native: the cover slides with each Space (run 1 frames). On arriving at a Space just synced to the same image, the menu bar had a different style (grey bar, white text) than that image had on the other Space (black text). *Observed* once. |
+| E5 | Mission Control shows the cover as the background. The Spaces strip showed names only, no thumbnails. |
+| E6 | **Desktop works through the cover.** Icons and widgets draw above it; right-click on the desktop opens Finder's desktop menu (Change Wallpaper…, Edit Widgets…). *Observed.* |
+| E7 | Widgets draw above the cover in full color. Tint behavior with an app in front not checked. |
+| E8 | *Author to check.* |
+| E9 | Not run: no full-screen app at run time; Stage Manager not toggled. |
+| E10 | **Quit: hard cut** from the cover to the restored wallpaper, no fade. **Force Quit: nothing visible**, because the real wallpaper underneath matched the cover on that Space. |
+| E11 | A wallpaper set from outside Phases (System Events) is **hidden by the cover**, as expected. Confusing for a user changing wallpaper in System Settings. |
+| E12 | 23 MB without the cover. With it: **A 93 MB** at launch; **B 86 MB** at launch, **102 MB after three changes**. The image is held about three times (CoreAnimation, Malloc Large, CG Raster Data, about 23 MB each), so likely reducible. Growth after changes not explained yet. |
 
 ## Afterward
 
