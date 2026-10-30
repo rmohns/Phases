@@ -363,8 +363,8 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   images, not the grid; the grid is about 25 MB of it.
 - `[L-hdr-wallpaper]` **How does macOS draw an HDR photo (an iPhone
   HEIC with a gain map) as wallpaper: SDR, or with HDR headroom?**
-  - **Answer so far: SDR** (first look, 2026-10-30; one control still
-    to run, below).
+  - **Answer: SDR,** by the author's eye against a known-HDR control
+    (2026-10-30, below). No tool here could measure it.
   - **Why it matters:** bears on `[D-cover-iosurface]`. An 8-bit SDR
     cover surface is right only if macOS shows the wallpaper as SDR.
   - **Apple's documentation doesn't say.** Read 2026-10-30, macOS 27.0
@@ -398,9 +398,24 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
       `maximumExtendedDynamicRangeColorComponentValue` read 1.2
       (potential 16). A wallpaper using the photo's 4.1 headroom would
       likely push that higher (*recalled*, not calibrated).
+  - **Known-HDR control, same day:** the same photo open full screen in
+    Preview on the built-in display, its bright areas visibly brighter
+    than SDR white (*observed* by the author). So the display does show
+    this photo as HDR, and the wallpaper doesn't: the author's
+    side-by-side is the evidence for "SDR".
+    - The EDR reading stayed at 1.2 with Preview showing HDR. It reports
+      headroom available, not headroom in use, so it can't tell the two
+      apart. *Measured.*
+    - ScreenCaptureKit per-window capture with `.hdrLocalDisplay` (16-bit
+      half float, extended linear Display P3) also topped out at SDR
+      white for Preview's window (max 1.09, under 0.01% of pixels above
+      1.05), the same as the wallpaper window. So it didn't see Preview's
+      HDR either and can't settle this. *Measured.* Why not: unknown
+      (*guess*: Preview's HDR content isn't in the window's captured
+      surface, or per-window capture tone-maps). A whole-display capture
+      wasn't tried.
+    - No tool here measures HDR on screen yet; only the eye does.
   - **Still open:**
-    - Calibrate that reading: open an HDR photo full screen in Preview
-      as a known-HDR control and read the same value.
     - Whether Phases' `setDesktopImageURL` gets the same rendering as
       Finder: *inference* that it does (macOS draws the wallpaper either
       way), not tested. The new cover will show it: an HDR photo should
