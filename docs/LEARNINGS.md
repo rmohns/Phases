@@ -91,6 +91,32 @@ borderless, click-through window just above the desktop picture
   launch; 102 MB after three changes (window-per-change version), growth
   unexplained. *Measured.* Releasing Phases' own copies once the layer
   has the image might bring it to about one copy (*hypothesis*).
+  **Update, three displays (2026-10-30, 99% cover B): it's a leak.**
+  77 MB with no cover; 140–187 MB with the cover at launch; then about
+  25–30 MB more with every change, reaching 373 MB after about nine
+  changes. Old cover windows or their images aren't released. *Measured.*
+  Must be fixed before any persistent cover ships (author, 2026-10-30).
+  The 77 MB no-cover figure, against 23 MB on one display, isn't
+  explained.
+- `[L-menubar-lazy-on-light]` **macOS sometimes leaves menu bar text
+  white over a very light wallpaper, with no cover involved.** On the
+  ultrawide, the white Ergo Proxy image got white text on a light grey
+  bar, with or without the cover; in the control, the wallpaper was set
+  directly with nothing from Phases running, and the text was still white
+  8 s later. *Observed* 2026-10-30, three displays. Fits the lazy restyle
+  in `[Q-menubar-restyle-on-app-switch]` (FB25326597): macOS doesn't
+  always restyle until something else happens, such as an app switch.
+  Rule this out before blaming Phases for wrong menu bar text.
+- `[L-cover-three-displays]` **The 99% cover held up on three displays**
+  (ultrawide main with three Spaces, built-in, portrait Cinema HD; each
+  with its own image): no twitch on any display (44–50 dB before and
+  after each fade), menu bar text and background tracked each display's
+  image, every ultrawide Space synced on arrival without touching the
+  other displays, and Mission Control showed the covers on all three.
+  *Measured/observed* 2026-10-30. Not tested: more than one Space on the
+  built-in or portrait display. Recording all three displays at once
+  starves `screencapture` (two dropped to a few frames per second);
+  record one display at a time for twitch checks.
 - `[L-backdrop-private-store]` **Backdrop (Cindori) puts video on the
   lock screen by registering entries in macOS's private wallpaper store,**
   `~/Library/Application Support/com.apple.wallpaper/Store/aerials/manifest/entries.json`,
