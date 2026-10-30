@@ -224,6 +224,10 @@ two layers.
     rose while the window was open. The rise depends on folder size (25 MB
     for 22 images in one test), so it isn't a target; note it and the
     image count with the results.
+  - **Flag anything over 500 MB.** If any reading in a run, window open
+    or closed, goes above 500 MB, tell the author. It doesn't fail the
+    run; it's a signal to look at refactoring, decided when it happens,
+    not built ahead of time (author, 2026-10-30).
   - **Clicks are real mouse events,** so ask the author before each run,
     the same as UI tests (`[D-ui-test-runner]`). The techniques are in
     LEARNINGS.md `[L-synthetic-clicks]` and `[L-memory-tools]`.
