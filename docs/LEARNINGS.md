@@ -180,85 +180,8 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   cache keyed by the image).
   **Update, same day: the format guess was wrong; see
   `[L-mem-ca-copy-test]`.**
-- `[L-mem-ca-copy-test]` **Core Animation copied every CGImage we gave
-  it, whatever its format; an IOSurface it used as is.** Throwaway
-  harness (not Phases): an offscreen borderless window, no Dock icon, one
-  layer whose `contents` is a 2880 × 2160 Display P3 wallpaper decoded
-  exactly as `CrossfadeController.loadImage` does, on the built-in
-  display ("Color LCD"); `malloc_history` checked for
-  `create_image_by_rendering`. *Measured* 2026-10-30, macOS 27.2:
-
-  | Contents | CA copy (24.9 MB) | Footprint |
-  |---|---|---|
-  | `loadImage` result as is (XRGB, big-endian, Display P3) | yes | 91 MB |
-  | redrawn as BGRA little-endian, same color space | yes | 114 MB |
-  | redrawn as XRGB in the screen's color space | yes | 115 MB |
-  | redrawn as BGRA in the screen's color space | yes | 115 MB |
-  | IOSurface (BGRA), image drawn into it | **no** | 67 MB |
-
-  (The redrawn rows also hold the harness's redraw buffer, hence the
-  higher totals.) So neither byte order nor color space avoids the copy,
-  and our rows were already 64-byte aligned, which rules out the
-  alignment cause reported elsewhere (SDWebImage PR #3559, *not Apple*).
-  Apple's `CALayer.contents` page names only CGImage and NSImage and
-  says nothing about copies; `contentsFormat` is only "a hint" (read
-  2026-10-30). Why CA copies a CGImage: on macOS another process
-  (WindowServer) composites the screen, and an image in ordinary app
-  memory has to be moved into memory it can share (*guess*; fits the
-  IOSurface result, not confirmed by Apple). Apple's local docs (read
-  2026-10-30) support the premise without stating the copy: NSView
-  `layerUsesCoreImageFilters` says "In macOS 10.9 and later, AppKit
-  prefers to render layer trees out-of-process", and the IOSurface
-  framework is "a framebuffer object suitable for sharing across process
-  boundaries". No Apple page found says CGImage contents are copied, or
-  lists which contents CA can use without copying. `kIOSurfaceColorSpace`
-  exists, but its page has no description. Not tested: whether colors
-  stay right without tagging the IOSurface's color space, and whether
-  the copy also happens for images smaller than the screen (since
-  answered: see `[L-mem-iosurface-color]`).
-- `[L-mem-iosurface-color]` **An IOSurface needs its color space
-  attached, or colors come out wrong; attached, it matches the CGImage
-  and still isn't copied.** Visible harness window on the built-in
-  display (Color LCD), four panes showing the same wallpaper, captured
-  with `screencapture -R` and compared pixel by pixel against the
-  CGImage pane. *Measured* 2026-10-30, macOS 27.2:
-
-  | Pane (sRGB image, 2560 × 1440) | vs CGImage: mean, max difference (of 255) |
-  |---|---|
-  | IOSurface, image's pixels, no color space attached | 1.08, **56** |
-  | IOSurface, image's pixels, `kIOSurfaceColorSpace` = image's ICC data | 0.06, 1 |
-  | IOSurface, drawn in the screen's color space, nothing attached | 0, 0 |
-
-  So CA treats an untagged surface as already in the display's space.
-  Converting to the screen's space happens to work, but only for that
-  display's current profile; tagging is the general answer. With a
-  Display P3 image all three matched exactly, because Color LCD is
-  practically Display P3, so P3 images can't show the difference on
-  this display. *Measured.* `malloc_history` on the offscreen harness:
-  the tagged surface still has no `create_image_by_rendering` copy
-  (footprint 48 MB against 62 MB for the CGImage). *Measured.* The same
-  run shows CA copies images smaller than the screen too: 2560 × 1440
-  on a 3024 × 1964 display. *Measured.*
-  **Same test on the other two displays** (the author's displays have
-  different color spaces, so nothing may assume P3). Captures there come
-  back sRGB. Max difference against the CGImage pane, of 255:
-
-  | Display | Image | Untagged | Tagged | Screen-space, untagged |
-  |---|---|---|---|---|
-  | Built-in (Color LCD) | sRGB | 56 | 1 | 0 |
-  | Built-in (Color LCD) | Display P3 | 0 | 0 | 0 |
-  | LG Ultrawide | Display P3 | 38 | 5 | 0 |
-  | LG Ultrawide | sRGB | 0 | 0 | 0 |
-  | Cinema HD | Display P3 | 45 | 2 | 0 |
-  | Cinema HD | sRGB | 0 | 0 | 0 |
-
-  Untagged is wrong whenever the image's space differs from the
-  display's; tagged is within rounding on every display. *Measured*
-  2026-10-30. Screen-space drawing is exact, but it's tied to one
-  display's profile at drawing time: a cover moved to another display,
-  or a profile change (Night Shift isn't one, *recalled*), would need a
-  redraw (*inference*). A first Cinema HD run was invalid (the window
-  was wider than the display, so panes didn't line up) and was redone.
+- `[L-mem-ca-copy-test]` Promoted to `[Q-cover-image-copied]` (2026-10-30).
+- `[L-mem-iosurface-color]` Promoted to `[Q-iosurface-color-tag]` (2026-10-30).
 - `[L-mem-pressure-relief]` **`malloc_zone_pressure_relief` didn't
   release the freed-but-held blocks.** Installed `main`, three changes
   (23 → 297, 229, 240 MB), then the call made inside the running app from
@@ -351,7 +274,76 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   (*inference* from the decoded sizes). A SPEC.md decision (proposed
   name `[D-cover-iosurface]`) comes first, for approval.
 
+- `[L-mem-fix-runs]` **`[D-memory-protocol]` runs of the fix, 2026-10-30.**
+  macOS 27.2; two displays (LG Ultrawide, Cinema HD rotated; no built-in),
+  Different per Display, Crossfade 1 s, diagnostics switched on (author's
+  setting). Before = installed Release of `main` (built 2026-10-29); after
+  = Release of `fix/cover-memory` (code as of `18130ee`), run from its
+  build folder, not installed. Ten Change Now clicks 6 s apart, then 30 s
+  idle, then the window check. *Measured:*
+
+  | Run | Idle | After changes 1–10 (MB) | 30 s idle | Window: before, open, closed 30 s |
+  |---|---|---|---|---|
+  | before 1 | 66 | 96 109 141 144 161 260 230 257 280 291 | 291 | 291, 236, 236 |
+  | before 2 | 21 | 59 66 137 169 137 170 189 221 230 272 | 272 | 272, 314, 291 |
+  | after 1 | 22 | 28 30 30 30 31 31 31 31 31 31 | 31 | 31, 81, 71 |
+  | after 2 | 21 | 28 29 30 30 30 30 30 30 30 30 | 30 | 30, 81, 71 |
+
+  - **Covers pass `[D-memory-flat]`:** 3 MB and 2 MB from change 1 to 10,
+    against a 30 MB allowance; `main` rose 195 and 213 MB.
+  - **Window fails** the `[D-memory-protocol]` window check: 40 MB above
+    the pre-open reading after closing, against 30. (Before-run window
+    figures are swamped by cover purges and say nothing.)
+  - **The grid is released.** Diagnostic run (after build, no changes):
+    open 81, closed 71 MB. `heap` shows 22 `ThumbnailCell` view lists
+    while open and none 30 s after closing. *Measured.*
+  - **What stays:** Malloc Small 13 → 45 MB, unchanged by the close; live
+    heap 7.8 → 27.7 MB (56k → 173k allocations). So about 20 MB is still
+    live (the window's other SwiftUI and AppKit objects: sidebar, toolbar,
+    hosting views, 104 CGImages, 48 NSImages) and about 17 MB is freed but
+    held `[L-mem-freed-held]`. CoreAnimation 11 → 6.6 MB and QuickLook
+    9.3 → 5.2 MB on close. *Measured*; the split into live and held is
+    *inference* from `heap` against `footprint`.
+  - The 30 MB window bar assumed the grid was most of the window's cost
+    (`[L-mem-window]`); at 22 images it isn't.
+  - **Whole-window release, same day** (experiment: the window's entire
+    content dropped 1 s after closing, not just the detail pane; Release
+    build, window only, no changes): idle 22; open 81, closed 30 s 60;
+    open again 84, closed 30 s 62 MB. *Measured.* 11 MB better than
+    dropping the pane alone, still 38–40 MB over idle, so it also fails
+    the 30 MB bar. A second open and close added 2 MB. Live heap after
+    the second close 23.2 MB (idle 7.8), Malloc Small 48 MB dirty,
+    CoreAnimation 1.1 MB. So most of what stays is freed-but-held
+    allocator memory `[L-mem-freed-held]` (about 25 MB, *inference*) plus
+    about 15 MB of live objects Phases no longer references (*inference*:
+    SwiftUI and AppKit caches).
+    Kept as a measurement only: the code went back to releasing the pane
+    (author, 2026-10-30), since 11 MB isn't worth rebuilding the sidebar
+    and its fragile helpers on every reopen.
+  - **Pane-only confirmation, same day,** under the new window check
+    (Release, window only, two rounds): idle 24; open 80 (31
+    `ThumbnailCell` view lists in `heap`), closed 30 s 70 (none); open 83
+    (31), closed 30 s 73 (none). *Measured.* Passes: the grid is released
+    each time, and the second close is 3 MB above the first (limit 5).
+
 ## Open questions
+
+- `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
+  bar runs out of room?** UI test run on `fix/cover-memory`, 2026-10-30,
+  two external displays (no built-in), Bartender not running: the driver
+  found Phases' menu bar item at x = 2630 but refused to click it ("isn't
+  this test instance's"), failing `deleteRemovesANewlyAddedPhase` and,
+  most likely, one `FocusTests` test whose message wasn't kept. *Measured*
+  (the refusal); the cause is a *guess*: the author runs the Cinema HD at
+  1000 × 1600, narrow enough that macOS may push status items off the
+  menu bar. A rerun of `FocusTests` alone passed all three. Matters beyond
+  tests: on that display a person might not reach Phases' menu at all.
+  To investigate on its own branch.
+  **Update, same day:** the author checked the narrow display: it had
+  run out of room, and macOS showed a chevron that expands the hidden
+  icons when clicked, so Phases stays reachable on macOS 27.2 (*observed*
+  by the author). Still open: whether macOS 26 does the same. Tracked as
+  GitHub issue #11; no action for now.
 
 - `[L-main-memory]` **The installed Release build of `main` measured
   179 MB with its window closed** (82 MB large mallocs, 54 MB small, 9 MB
@@ -361,6 +353,87 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   To investigate on its own branch (author, 2026-10-30).
   **Update 2026-10-30: investigated; see "Memory".** Mostly crossfade
   images, not the grid; the grid is about 25 MB of it.
+  **Correction, same day (`[L-mem-fix-runs]`):** "mostly crossfade
+  images" holds: with covers fixed, ten changes cost 2–3 MB instead of
+  about 200. "The grid is about 25 MB" doesn't: the 25 MB was the whole
+  window's lasting cost, not the grid's. Releasing the grid gives back
+  about 10 MB of a 40–50 MB lasting cost; the rest is the window itself
+  and allocator-held memory. *Measured.*
+- `[L-hdr-wallpaper]` **How does macOS draw an HDR photo (an iPhone
+  HEIC with a gain map) as wallpaper: SDR, or with HDR headroom?**
+  - **Answer: SDR,** by the author's eye against a known-HDR control
+    (2026-10-30, below). No tool here could measure it.
+  - **Why it matters:** bears on `[D-cover-iosurface]`. An 8-bit SDR
+    cover surface is right only if macOS shows the wallpaper as SDR.
+  - **Apple's documentation doesn't say.** Read 2026-10-30, macOS 27.0
+    SDK:
+    - `NSWorkspace` desktop-image pages and `DesktopImageOptionKey`: only
+      scaling, clipping, and fill color.
+    - "Enhancing high dynamic range image rendering": how an app shows
+      HDR, not the wallpaper.
+  - **What the SDK offers a cover, if it ever needs to match HDR:**
+    - `kCGImageSourceDecodeRequest` = `kCGImageSourceDecodeToHDR`:
+      decodes with the gain map applied.
+    - `kIOSurfaceContentHeadroom`: tags a surface's headroom.
+    - `CALayer.preferredDynamicRange` (macOS 26+): defaults to
+      `.standard`, which per the header tone-maps `contents` with
+      headroom above 1.0 down to SDR.
+  - **The test photo** (author's iPhone HEIC): 4032 × 3024, Display P3,
+    8-bit base, ISO gain map. *Measured:*
+    - HDR decode: headroom 4.1.
+    - ImageIO's default decode: 8-bit, headroom 1.0, so the default is
+      SDR. (The headers don't say; first noted as *recalled*, now
+      measured.)
+  - **What we saw** with it as wallpaper on the built-in display:
+    - It "looks pretty SDR" (*observed* by the author).
+    - It was set with Finder's Services › Set Desktop Background, not
+      by Phases, so this is macOS's own rendering: what a cover has to
+      match.
+    - A screen capture matched the default SDR decode by eye
+      (*observed*). Weak evidence: `screencapture` output is SDR, so it
+      can't show HDR either way (*recalled*).
+    - The built-in display's
+      `maximumExtendedDynamicRangeColorComponentValue` read 1.2
+      (potential 16). A wallpaper using the photo's 4.1 headroom would
+      likely push that higher (*recalled*, not calibrated).
+  - **Known-HDR control, same day:** the same photo open full screen in
+    Preview on the built-in display, its bright areas visibly brighter
+    than SDR white (*observed* by the author). So the display does show
+    this photo as HDR, and the wallpaper doesn't: the author's
+    side-by-side is the evidence for "SDR".
+    - The EDR reading stayed at 1.2 with Preview showing HDR. It reports
+      headroom available, not headroom in use, so it can't tell the two
+      apart. *Measured.*
+    - ScreenCaptureKit per-window capture with `.hdrLocalDisplay` (16-bit
+      half float, extended linear Display P3) also topped out at SDR
+      white for Preview's window (max 1.09, under 0.01% of pixels above
+      1.05), the same as the wallpaper window. So it didn't see Preview's
+      HDR either and can't settle this. *Measured.* Why not: unknown
+      (*guess*: Preview's HDR content isn't in the window's captured
+      surface, or per-window capture tone-maps). A whole-display capture
+      wasn't tried.
+    - A ⌘⇧3 screenshot with Preview showing HDR also came out SDR
+      (*observed* by the author).
+    - No tool here measures HDR on screen yet; only the eye does.
+  - **How macOS does HDR, as far as we know:**
+    - SDR is the baseline. Pixel value 1.0 is SDR white, shown below the
+      panel's peak; values above 1.0 use the leftover headroom
+      (extended dynamic range, EDR). *Recalled.*
+    - Content gets the headroom only if it carries values above 1.0
+      *and* its layer opts in. `CALayer.preferredDynamicRange` defaults
+      to `.standard`, which tone-maps it down to SDR. *Read* in the SDK
+      header, 2026-10-30.
+    - Screenshots and our captures clip at SDR white, so they can't
+      show the difference (*observed*; the clipping explanation is
+      *recalled*).
+    - So the wallpaper showing SDR fits either of two causes: macOS
+      decodes it without the gain map, or its layer doesn't opt in.
+      Which one doesn't matter to Phases (*inference*).
+  - **Still open:**
+    - Whether Phases' `setDesktopImageURL` gets the same rendering as
+      Finder: *inference* that it does (macOS draws the wallpaper either
+      way), not tested. The new cover will show it: an HDR photo should
+      look the same before and after the cover comes off.
 - `[L-cover-alpha-later]` **Could the 99% cover go to 100% once the menu
   bar has restyled, and does it matter?** Untested. Risks, from
   `[L-opaque-cover-freezes-menubar]`: an opaque cover might stop the menu

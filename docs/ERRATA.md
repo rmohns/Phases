@@ -90,6 +90,101 @@ would stop being true if a future macOS fixed the underlying behavior.
   that notification could trigger. The likely reason, that these change
   each screen's visible frame, is *recalled*, not checked. Display UUIDs
   don't change. Shapes `[D-screen-change-no-reroll]`.
+- `[Q-cover-image-copied]` **Core Animation copies every CGImage set as a
+  layer's `contents`, a full-screen copy per cover, and the copy outlives
+  the window; an IOSurface it shows as is (macOS 27.2).** *Measured*
+  2026-10-30 in a throwaway harness and in Phases' own memory runs. No byte
+  order, color space, or alignment avoided the copy. Why CA copies is a
+  *guess* (WindowServer composites out of process, so ordinary app memory
+  has to be moved somewhere it can share). Shapes `[D-cover-iosurface]`
+  and `[D-memory-flat]`. Promoted from LEARNINGS.md (2026-10-30); the
+  original entry, unchanged:
+  - `[L-mem-ca-copy-test]` **Core Animation copied every CGImage we gave
+    it, whatever its format; an IOSurface it used as is.** Throwaway
+    harness (not Phases): an offscreen borderless window, no Dock icon, one
+    layer whose `contents` is a 2880 × 2160 Display P3 wallpaper decoded
+    exactly as `CrossfadeController.loadImage` does, on the built-in
+    display ("Color LCD"); `malloc_history` checked for
+    `create_image_by_rendering`. *Measured* 2026-10-30, macOS 27.2:
+
+    | Contents | CA copy (24.9 MB) | Footprint |
+    |---|---|---|
+    | `loadImage` result as is (XRGB, big-endian, Display P3) | yes | 91 MB |
+    | redrawn as BGRA little-endian, same color space | yes | 114 MB |
+    | redrawn as XRGB in the screen's color space | yes | 115 MB |
+    | redrawn as BGRA in the screen's color space | yes | 115 MB |
+    | IOSurface (BGRA), image drawn into it | **no** | 67 MB |
+
+    (The redrawn rows also hold the harness's redraw buffer, hence the
+    higher totals.) So neither byte order nor color space avoids the copy,
+    and our rows were already 64-byte aligned, which rules out the
+    alignment cause reported elsewhere (SDWebImage PR #3559, *not Apple*).
+    Apple's `CALayer.contents` page names only CGImage and NSImage and
+    says nothing about copies; `contentsFormat` is only "a hint" (read
+    2026-10-30). Why CA copies a CGImage: on macOS another process
+    (WindowServer) composites the screen, and an image in ordinary app
+    memory has to be moved into memory it can share (*guess*; fits the
+    IOSurface result, not confirmed by Apple). Apple's local docs (read
+    2026-10-30) support the premise without stating the copy: NSView
+    `layerUsesCoreImageFilters` says "In macOS 10.9 and later, AppKit
+    prefers to render layer trees out-of-process", and the IOSurface
+    framework is "a framebuffer object suitable for sharing across process
+    boundaries". No Apple page found says CGImage contents are copied, or
+    lists which contents CA can use without copying. `kIOSurfaceColorSpace`
+    exists, but its page has no description. Not tested: whether colors
+    stay right without tagging the IOSurface's color space, and whether
+    the copy also happens for images smaller than the screen (since
+    answered: see `[L-mem-iosurface-color]`).
+- `[Q-iosurface-color-tag]` **Core Animation treats an IOSurface with no
+  color space attached as already in the display's color space (macOS
+  27.2).** Untagged, colors were off by up to 56 of 255 whenever the
+  image's space differed from the display's; with `kIOSurfaceColorSpace`
+  set to the image's ICC data, within 5 of 255 on all three of the
+  author's displays. *Measured* 2026-10-30. Shapes `[D-cover-iosurface]`.
+  Promoted from LEARNINGS.md (2026-10-30); the original entry, unchanged:
+  - `[L-mem-iosurface-color]` **An IOSurface needs its color space
+    attached, or colors come out wrong; attached, it matches the CGImage
+    and still isn't copied.** Visible harness window on the built-in
+    display (Color LCD), four panes showing the same wallpaper, captured
+    with `screencapture -R` and compared pixel by pixel against the
+    CGImage pane. *Measured* 2026-10-30, macOS 27.2:
+
+    | Pane (sRGB image, 2560 × 1440) | vs CGImage: mean, max difference (of 255) |
+    |---|---|
+    | IOSurface, image's pixels, no color space attached | 1.08, **56** |
+    | IOSurface, image's pixels, `kIOSurfaceColorSpace` = image's ICC data | 0.06, 1 |
+    | IOSurface, drawn in the screen's color space, nothing attached | 0, 0 |
+
+    So CA treats an untagged surface as already in the display's space.
+    Converting to the screen's space happens to work, but only for that
+    display's current profile; tagging is the general answer. With a
+    Display P3 image all three matched exactly, because Color LCD is
+    practically Display P3, so P3 images can't show the difference on
+    this display. *Measured.* `malloc_history` on the offscreen harness:
+    the tagged surface still has no `create_image_by_rendering` copy
+    (footprint 48 MB against 62 MB for the CGImage). *Measured.* The same
+    run shows CA copies images smaller than the screen too: 2560 × 1440
+    on a 3024 × 1964 display. *Measured.*
+    **Same test on the other two displays** (the author's displays have
+    different color spaces, so nothing may assume P3). Captures there come
+    back sRGB. Max difference against the CGImage pane, of 255:
+
+    | Display | Image | Untagged | Tagged | Screen-space, untagged |
+    |---|---|---|---|---|
+    | Built-in (Color LCD) | sRGB | 56 | 1 | 0 |
+    | Built-in (Color LCD) | Display P3 | 0 | 0 | 0 |
+    | LG Ultrawide | Display P3 | 38 | 5 | 0 |
+    | LG Ultrawide | sRGB | 0 | 0 | 0 |
+    | Cinema HD | Display P3 | 45 | 2 | 0 |
+    | Cinema HD | sRGB | 0 | 0 | 0 |
+
+    Untagged is wrong whenever the image's space differs from the
+    display's; tagged is within rounding on every display. *Measured*
+    2026-10-30. Screen-space drawing is exact, but it's tied to one
+    display's profile at drawing time: a cover moved to another display,
+    or a profile change (Night Shift isn't one, *recalled*), would need a
+    redraw (*inference*). A first Cinema HD run was invalid (the window
+    was wider than the display, so panes didn't line up) and was redone.
 
 ### Window, sidebar, and toolbar (SwiftUI and AppKit)
 

@@ -4,7 +4,7 @@ import Foundation
 enum AppVersion {
   /// The SPEC.md draft this build was made against. Bump with the spec's
   /// title; a unit test checks they match.
-  static let specDraft = 31
+  static let specDraft = 32
 
   /// "1.0 (1)": the app's version and build number.
   static var versionAndBuild: String {

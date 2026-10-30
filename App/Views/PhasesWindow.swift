@@ -7,6 +7,10 @@ struct PhasesWindow: View {
 
   var scheduler: WallpaperScheduler
   @State private var selection: SidebarItem?
+  /// [D-grid-release-on-close] False once the window has been closed for a
+  /// moment, so SwiftUI drops the detail pane and the grid's thumbnails.
+  @State private var holdsDetail = true
+  @State private var isOpen = true
   @FocusState private var sidebarFocused: Bool
 
   var body: some View {
@@ -47,29 +51,23 @@ struct PhasesWindow: View {
       .background {
         // [D-window-helper-order] Toolbar, then sidebar limits, in one helper
         // [Q-split-item-rewrite].
-        WindowLayoutConfigurator(sidebarMinWidth: 240, sidebarMaxWidth: 320)
+        WindowLayoutConfigurator(
+          sidebarMinWidth: 240, sidebarMaxWidth: 320,
+          onOpen: windowOpened, onClose: windowClosed
+        )
       }
       // [D-sidebar-always-visible] [Q-sidebar-collapse] No toggle button; the configurator above
       // stops drags from collapsing it.
       .toolbar(removing: .sidebarToggle)
     } detail: {
-      switch selection {
-      case .settings:
-        SettingsView(scheduler: scheduler)
-      case .phase(let id) where scheduler.phases.contains(where: { $0.id == id }):
-        PhaseEditor(scheduler: scheduler, phaseID: id)
-          .id(id)
-      default:
-        ContentUnavailableView(
-          "No Phase Selected",
-          systemImage: "sun.horizon",
-          description: Text("Select a phase, or add one with the + button.")
-        )
+      if holdsDetail {
+        detail
       }
     }
     // [D-app-menu] For Settings… in the app menu.
     .focusedSceneValue(\.sidebarSelection, $selection)
     .onAppear {
+      windowOpened()
       scheduler.library.reload()
       if selection == nil {
         selection = (scheduler.activePhase ?? scheduler.phasesByTime.first).map { .phase($0.id) } ?? .settings
@@ -78,6 +76,36 @@ struct PhasesWindow: View {
       // field on open and selects its text. Deferred a pass so the editor
       // exists first; `.defaultFocus` alone lost to the field.
       DispatchQueue.main.async { sidebarFocused = true }
+    }
+  }
+
+  @ViewBuilder private var detail: some View {
+    switch selection {
+    case .settings:
+      SettingsView(scheduler: scheduler)
+    case .phase(let id) where scheduler.phases.contains(where: { $0.id == id }):
+      PhaseEditor(scheduler: scheduler, phaseID: id)
+        .id(id)
+    default:
+      ContentUnavailableView(
+        "No Phase Selected",
+        systemImage: "sun.horizon",
+        description: Text("Select a phase, or add one with the + button.")
+      )
+    }
+  }
+
+  private func windowOpened() {
+    isOpen = true
+    holdsDetail = true
+  }
+
+  /// [D-grid-release-on-close] Waits out the close before emptying the pane,
+  /// so nothing visibly blanks; a reopen in the meantime keeps it.
+  private func windowClosed() {
+    isOpen = false
+    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+      if !isOpen { holdsDetail = false }
     }
   }
 }

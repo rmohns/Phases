@@ -13,10 +13,15 @@ private func diagID(_ object: AnyObject?) -> String { Diagnostics.id(object) }
 /// item non-collapsible within a fixed width range. SwiftUI has no API for
 /// either [Q-no-items-no-toolbar] [Q-sidebar-collapse]. Workarounds:
 /// ERRATA.md "Tall toolbar" and "Sidebar limits". Also keeps Phases in the
-/// Dock until the window closes [D-dock-while-open].
+/// Dock until the window closes [D-dock-while-open], and reports the window
+/// opening and closing [D-grid-release-on-close].
 struct WindowLayoutConfigurator: NSViewRepresentable {
   var sidebarMinWidth: CGFloat
   var sidebarMaxWidth: CGFloat
+  /// Called when the window becomes key, which opening it always does.
+  var onOpen: () -> Void = {}
+  /// Called when the window is about to close.
+  var onClose: () -> Void = {}
 
   func makeNSView(context: Context) -> ProbeView {
     ProbeView()
@@ -25,12 +30,16 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
   func updateNSView(_ view: ProbeView, context: Context) {
     view.sidebarMinWidth = sidebarMinWidth
     view.sidebarMaxWidth = sidebarMaxWidth
+    view.onOpen = onOpen
+    view.onClose = onClose
     view.apply()
   }
 
   final class ProbeView: NSView {
     var sidebarMinWidth: CGFloat = 0
     var sidebarMaxWidth: CGFloat = .greatestFiniteMagnitude
+    var onOpen: () -> Void = {}
+    var onClose: () -> Void = {}
 
     /// [D-sidebar-limits-watch] [Q-split-item-rewrite] The item being held to the limits, and the
     /// event hooks that put them back. No polling.
@@ -42,12 +51,14 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
     /// Kept when this view leaves the window, so a close still counts.
     private weak var closeWatchedWindow: NSWindow?
     private var closeObserver: NSObjectProtocol?
+    private var keyObserver: NSObjectProtocol?
 
     /// Diagnostics: last logged split state, to log only changes.
     private var diagLastState = ""
 
     deinit {
       if let closeObserver { NotificationCenter.default.removeObserver(closeObserver) }
+      if let keyObserver { NotificationCenter.default.removeObserver(keyObserver) }
     }
 
     override func viewDidMoveToWindow() {
@@ -64,16 +75,23 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
       DockPresence.show()
       guard window !== closeWatchedWindow else { return }
       if let closeObserver { NotificationCenter.default.removeObserver(closeObserver) }
+      if let keyObserver { NotificationCenter.default.removeObserver(keyObserver) }
       closeWatchedWindow = window
       closeObserver = NotificationCenter.default.addObserver(
         forName: NSWindow.willCloseNotification, object: window, queue: .main
-      ) { _ in
+      ) { [weak self] _ in
         MainActor.assumeIsolated {
           // [D-close-stays-here] Hand off first, so macOS doesn't pick an
           // app on another Space [Q-accessory-focus-handoff].
           FocusHandoff.toCurrentSpace()
           DockPresence.hide()
+          self?.onClose()
         }
+      }
+      keyObserver = NotificationCenter.default.addObserver(
+        forName: NSWindow.didBecomeKeyNotification, object: window, queue: .main
+      ) { [weak self] _ in
+        MainActor.assumeIsolated { self?.onOpen() }
       }
     }
 

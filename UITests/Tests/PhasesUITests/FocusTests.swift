@@ -45,6 +45,28 @@ extension PhasesUITests {
       }
     }
 
+    /// [D-grid-release-on-close] [D-initial-focus-sidebar] Closed for 2 s,
+    /// the window drops its editor pane, so reopening builds a new one; a
+    /// new editor must not take focus either [Q-default-focus-loses]. The
+    /// test above reopens at once, before the pane is dropped.
+    @Test func typingAfterReopeningPastTheReleaseDoesNotRenameThePhase() async throws {
+      try await withPhases { app in
+        try await app.click(app.element("phaseName"))
+        try await waitUntil("the Name field to have focus") {
+          (try? app.focusedElement()?.isInside(app.element("phaseName"))) == true
+        }
+        try await app.closeWindow()
+        try await Task.sleep(for: .seconds(2))
+        try await app.reopenWindow()
+        let name = try app.element("phaseName")
+        let before = try #require(name.value)
+        print("Focused on reopen after 2 s: \(app.focusedElement()?.summary ?? "nothing")")
+        try await app.press(.x)
+        try await Task.sleep(for: .milliseconds(500))
+        #expect(try app.element("phaseName").value == before, "Typing after reopening renamed \(before)")
+      }
+    }
+
     /// [D-grid-one-tab-stop] [Q-lazy-grid-tab] Tab used to visit only the
     /// on-screen thumbnails, then jump away, and never scrolled.
     @Test func gridIsOneTabStopAndArrowsScroll() async throws {

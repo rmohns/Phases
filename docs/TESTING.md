@@ -116,6 +116,16 @@ two layers.
   - *Safety:* before any click or keystroke, the harness checks that the
     test instance of Phases is frontmost; if not, the test fails without
     sending input, so a stray keystroke can't land in another app.
+  - `[D-ui-menubar-wide]` **Phases' menu bar item is only clicked on a
+    display at least 1200 points wide.** If the item is on a narrower
+    display, the harness moves the pointer to a wide one and looks again;
+    if it's still narrow, the test fails with that reason. If no display
+    that wide is connected, the test fails and the harness says so aloud.
+    - *Why:* a narrow menu bar runs out of room and hides status items
+      (made more likely by iPhone Live Activities in the menu bar on
+      macOS 27). That's the setup, not a Phases failure: a display under
+      1200 points is only possible on Apple Silicon by changing display
+      settings (author, 2026-10-30; LEARNINGS.md `[L-menubar-overflow]`).
   - *Why:* `bitrig test` can't run test targets in a Project.json project
     `[Q-bitrig-test-targets]`, and the AX API reads these controls
     reliably where System Events doesn't `[Q-system-events-ax]`.
@@ -199,3 +209,48 @@ two layers.
 - **Not covered by UI tests:** crossfade timing (the twitch) is checked
   with frame-by-frame recordings ("Diagnostic procedures" in ERRATA.md);
   the screen-change rule `[D-screen-change-no-reroll]` is a Layer 1 test.
+
+## Memory checks (draft 32)
+
+- `[D-memory-protocol]` **Memory is checked by hand, ten changes per run,
+  at least two runs before a change and two after.** This is how
+  `[D-memory-flat]` passes or fails. Runs vary widely (297 MB after three
+  changes in one, 144 MB in another), so one run proves nothing.
+  - **Build:** the installed Release build, measured with `footprint -p
+    <pid>`, which matches what Activity Monitor shows. No
+    `MallocStackLogging` on pass/fail runs: it adds 16–64 MB of its own.
+  - **Setup:** a fresh launch, the window closed, Transition set to
+    Crossfade, and every display connected. Note the display setup with
+    the results, since each change costs one cover per changing display.
+  - **Run:** read the footprint at idle, then make ten changes with
+    Change Now from the menu bar menu, about 6 s apart, reading the
+    footprint after each. Read it once more after 30 s idle.
+  - **Pass:** after the tenth change, footprint is within 30 MB of what it
+    was after the first (`[D-memory-flat]`).
+  - **Window:** for `[D-grid-release-on-close]`, read the footprint, open
+    the window, scroll through the whole grid so every thumbnail loads,
+    read it again, close the window, and wait 30 s. Then do it a second
+    time. **Pass:** both of these.
+    - After each close, `heap <pid>` finds no `ThumbnailCell` views: the
+      grid really was released.
+    - The second close's reading is within 5 MB of the first close's: the
+      window's cost doesn't grow with each open.
+
+    The footprint after closing isn't a target. Note it with the image
+    count. It stays well above the pre-open figure even when the grid is
+    released (40–50 MB at 22 images): freed memory the allocator keeps
+    resident, and objects SwiftUI and AppKit hold on to, neither of which
+    Phases can give back (LEARNINGS.md `[L-mem-fix-runs]`). Not worth
+    chasing (author, 2026-10-30; this check approved the same day).
+  - **Flag anything over 500 MB.** If any reading in a run, window open
+    or closed, goes above 500 MB, tell the author. It doesn't fail the
+    run; it's a signal to look at refactoring, decided when it happens,
+    not built ahead of time (author, 2026-10-30).
+  - **Clicks are real mouse events,** so ask the author before each run,
+    the same as UI tests (`[D-ui-test-runner]`). The techniques are in
+    LEARNINGS.md `[L-synthetic-clicks]` and `[L-memory-tools]`.
+  - **Record** each run's figures in LEARNINGS.md "Memory", with the date,
+    macOS version, build, and displays.
+  - *Why by hand:* footprint swings with when macOS chooses to purge, so
+    a pass mark needs several runs and judgment. An automated test would
+    be flaky or too loose to catch anything.

@@ -1,4 +1,4 @@
-# Phases — Specification (draft 31)
+# Phases — Specification (draft 32)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -134,6 +134,15 @@ image when there's more than one choice.
   - *Verified* 2026-10-28 by the author: Tab enters and leaves the grid in
     one stop, arrows (including up/down column math) and ⇧-Space work, and
     the window scrolls to follow the cursor.
+- `[D-grid-release-on-close]` **Closing the Phases window releases the
+  grid's thumbnails.** Reopening it loads them again.
+  - *Why:* the closed window kept every thumbnail and its view for as
+    long as Phases ran: about 25 MB for a 22-image folder (measured
+    2026-10-30, LEARNINGS.md `[L-mem-window]`), and more for bigger
+    folders. Phases spends most of its life with the window closed.
+  - *Cost:* thumbnails reload when the window reopens. Expected to be
+    quick, since QuickLook keeps its own thumbnail cache (*recalled*, not
+    measured).
 - If a selected image is later deleted or renamed, it's skipped and the phase
   editor marks it as missing. A phase with no available images is skipped
   (the wallpaper stays as it is).
@@ -228,11 +237,44 @@ image when there's more than one choice.
   scaling (fill, fit, stretch, or center) and fill color.
 - `[D-no-screenshots]` The cover is drawn from the image file. No screenshots and no Screen
   Recording permission.
+- `[D-cover-iosurface]` **Each cover holds one copy of its image, and only
+  while it's up.**
+  - The file is decoded once, at no more than the size the screen needs,
+    then drawn into a shared graphics buffer (an IOSurface) that the cover
+    shows. The decoded image is dropped as soon as it's drawn: two copies
+    for a moment, then only the buffer.
+    - ImageIO is told not to cache a full-size decode
+      (`kCGImageSourceShouldCache` off). Whether it still makes one
+      internally for some formats is measured, not assumed.
+    - Not decoded straight into the buffer: macOS has no public way to
+      decode a file into memory the caller supplies (*recalled*, not
+      verified).
+  - 8 bits per channel: macOS shows the wallpaper as SDR, even for an
+    HDR photo (LEARNINGS.md `[L-hdr-wallpaper]`).
+  - The buffer is tagged with the image's own color space, so colors match
+    what macOS draws for the same file on every display, whatever that
+    display's color space. An image with no color space, or one that
+    isn't RGB (grayscale, CMYK), is drawn in sRGB and tagged sRGB.
+  - When the cover is removed, its buffer is released with it.
+  - *Why:* up to draft 31, each change left full-screen copies behind (one
+    per changing display, about 25–63 MB each at the author's sizes), and
+    memory climbed by roughly 20–40 MB per change across three displays,
+    to about 300 MB after ten changes. Most of that was a copy the system
+    made of every image handed to a cover; a shared buffer is shown as is,
+    with no copy. macOS fights this; see `[Q-cover-image-copied]` and
+    `[Q-iosurface-color-tag]`.
+  - *Cost:* the cover's pixels are drawn by Phases rather than by the
+    system's image pipeline, so color matching depends on the tag. Measured
+    within 1–5 of 255 of the system's own drawing on all three of the
+    author's displays (2026-10-30, test harness, not yet in Phases).
+  - *Also:* this sets the floor for any longer-lived cover: one buffer per
+    display, for as long as it's up.
 - `[D-no-fade-cases]` **No fade (instant switch) when:**
   - Transition is set to None
   - Reduce Motion is on (System Settings › Accessibility › Display)
-  - The incoming image file can't be read (that screen only: it switches
-    without a fade, at the same moment as the other screens finish fading)
+  - The incoming image file can't be read, or its cover buffer can't be
+    made `[D-cover-iosurface]` (that screen only: it switches without a
+    fade, at the same moment as the other screens finish fading)
   - A screen's image isn't actually changing (that screen only)
   - Restoring the original wallpaper on quit `[D-restore-on-quit]`
 - If another change starts while a fade is running, the running fade finishes
@@ -677,6 +719,22 @@ All settings (folder bookmark, phases including per-display selections,
 preferences, in-order positions, last applied phase and image per display, known
 displays and their names, last location) are stored in UserDefaults as Codable
 data. Phases saved by earlier versions load unchanged (no per-display images).
+
+## Memory
+
+- `[D-memory-flat]` **Memory doesn't build up with wallpaper changes.**
+  Between changes, with the window closed, Phases should sit near its idle
+  launch figure, not climb change after change. During a fade it holds one
+  cover buffer per changing display `[D-cover-iosurface]`, and gives it
+  back when the cover goes.
+  - **Target:** after ten changes, footprint is within 30 MB of what it
+    was after the first change (approved by the author, 2026-10-30).
+  - Checked by hand, with at least two runs before a change and two after,
+    because runs vary widely (one run measured 297 MB after three changes,
+    another 144 MB). Procedure: TESTING.md `[D-memory-protocol]`.
+  - *Why:* Phases runs all day in the background. Draft 31 reached about
+    300 MB after ten changes on three displays (measured 2026-10-30,
+    LEARNINGS.md "Memory").
 
 ## Out of scope (v1)
 
