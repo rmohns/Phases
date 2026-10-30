@@ -240,12 +240,21 @@ image when there's more than one choice.
 - `[D-cover-iosurface]` **Each cover holds one copy of its image, and only
   while it's up.**
   - The file is decoded once, at no more than the size the screen needs,
-    straight into a shared graphics buffer (an IOSurface) that the cover
-    shows. No full-size intermediate decode, and Phases keeps no other
-    decoded copy once the buffer is drawn.
+    then drawn into a shared graphics buffer (an IOSurface) that the cover
+    shows. The decoded image is dropped as soon as it's drawn: two copies
+    for a moment, then only the buffer.
+    - ImageIO is told not to cache a full-size decode
+      (`kCGImageSourceShouldCache` off). Whether it still makes one
+      internally for some formats is measured, not assumed.
+    - Not decoded straight into the buffer: macOS has no public way to
+      decode a file into memory the caller supplies (*recalled*, not
+      verified).
+  - 8 bits per channel: macOS shows the wallpaper as SDR, even for an
+    HDR photo (LEARNINGS.md `[L-hdr-wallpaper]`).
   - The buffer is tagged with the image's own color space, so colors match
     what macOS draws for the same file on every display, whatever that
-    display's color space.
+    display's color space. An image with no color space, or one that
+    isn't RGB (grayscale, CMYK), is drawn in sRGB and tagged sRGB.
   - When the cover is removed, its buffer is released with it.
   - *Why:* up to draft 31, each change left full-screen copies behind (one
     per changing display, about 25–63 MB each at the author's sizes), and
