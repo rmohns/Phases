@@ -97,15 +97,23 @@ borderless, click-through window just above the desktop picture
   changes. Old cover windows or their images aren't released. *Measured.*
   Must be fixed before any persistent cover ships (author, 2026-10-30).
   The 77 MB no-cover figure, against 23 MB on one display, isn't
-  explained.
-- `[L-menubar-lazy-on-light]` **macOS sometimes leaves menu bar text
-  white over a very light wallpaper, with no cover involved.** On the
-  ultrawide, the white Ergo Proxy image got white text on a light grey
+  explained. Later in the same run, Activity Monitor showed 242 MB with no
+  further changes (*observed* by the author), so memory may be released
+  slowly rather than leaked, or Activity Monitor and `footprint` measure
+  differently. To pin down when fixing it.
+- `[L-menubar-lazy-restyle]` **macOS sometimes leaves menu bar text
+  the wrong color for the wallpaper, with no cover involved, in either
+  direction.** The author has also seen dark text on a very dark
+  wallpaper, and the text corrects itself the moment any part of the menu
+  bar is clicked (*observed* by the author, several times before
+  2026-10-30). That's why we read it as macOS updating lazily.
+  Example: on the ultrawide, the white Ergo Proxy image got white text on a light grey
   bar, with or without the cover; in the control, the wallpaper was set
   directly with nothing from Phases running, and the text was still white
   8 s later. *Observed* 2026-10-30, three displays. Fits the lazy restyle
   in `[Q-menubar-restyle-on-app-switch]` (FB25326597): macOS doesn't
-  always restyle until something else happens, such as an app switch.
+  always restyle until something else happens, such as an app switch or
+  a click in the menu bar.
   Rule this out before blaming Phases for wrong menu bar text.
 - `[L-cover-three-displays]` **The 99% cover held up on three displays**
   (ultrawide main with three Spaces, built-in, portrait Cinema HD; each
