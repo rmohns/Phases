@@ -21,7 +21,8 @@ another way.
   `main`, the entry moves here in the same change, keeping its `[Q-…]` tag
   alongside a new `[L-…]` tag so old comments and commits still find it,
   and leaves a one-line pointer in ERRATA.md: "Demoted to `[L-…]` (date)."
-  ERRATA.md holds only quirks the current code depends on.
+  ERRATA.md holds only quirks the current code depends on. ERRATA.md
+  carries a deliberate copy of this rule; keep the two in sync.
 - Keep corrections and history; don't silently rewrite an entry.
 - Cross-references use a tag or a quoted section title, never a section
   number `[D-refs-by-id]`.
