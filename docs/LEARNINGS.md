@@ -239,6 +239,26 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   (footprint 48 MB against 62 MB for the CGImage). *Measured.* The same
   run shows CA copies images smaller than the screen too: 2560 × 1440
   on a 3024 × 1964 display. *Measured.*
+  **Same test on the other two displays** (the author's displays have
+  different color spaces, so nothing may assume P3). Captures there come
+  back sRGB. Max difference against the CGImage pane, of 255:
+
+  | Display | Image | Untagged | Tagged | Screen-space, untagged |
+  |---|---|---|---|---|
+  | Built-in (Color LCD) | sRGB | 56 | 1 | 0 |
+  | Built-in (Color LCD) | Display P3 | 0 | 0 | 0 |
+  | LG Ultrawide | Display P3 | 38 | 5 | 0 |
+  | LG Ultrawide | sRGB | 0 | 0 | 0 |
+  | Cinema HD | Display P3 | 45 | 2 | 0 |
+  | Cinema HD | sRGB | 0 | 0 | 0 |
+
+  Untagged is wrong whenever the image's space differs from the
+  display's; tagged is within rounding on every display. *Measured*
+  2026-10-30. Screen-space drawing is exact, but it's tied to one
+  display's profile at drawing time: a cover moved to another display,
+  or a profile change (Night Shift isn't one, *recalled*), would need a
+  redraw (*inference*). A first Cinema HD run was invalid (the window
+  was wider than the display, so panes didn't line up) and was redone.
 - `[L-mem-no-upscale]` **`loadImage` never scales an image up.** The
   max-pixel option only caps size, so a 2880 × 2160 file stays 2880 ×
   2160 (24.9 MB) on a larger screen; CA scales it when compositing.
