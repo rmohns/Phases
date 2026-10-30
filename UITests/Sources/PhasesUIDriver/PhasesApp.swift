@@ -100,11 +100,44 @@ public final class PhasesApp {
     // picks a window's first focus when it first becomes key
     // [D-initial-focus-sidebar]. Best effort; the click may do it anyway.
     try? await bringToFront()
+    try await requireWideMenuBar(item)
     try await clickOwnElement(item, what: "the menu bar item")
     let open = try await waitFor("Open Phases… in the menu", timeout: .seconds(5)) {
       item.first { $0.role == kAXMenuItemRole && $0.title == "Open Phases…" }
     }
     try await clickOwnElement(open, what: "Open Phases…")
+  }
+
+  /// [D-ui-menubar-wide] Narrow displays can run out of menu bar room and
+  /// hide Phases' item, so its menu is only used on a display at least
+  /// 1200 pt wide. If the item is on a narrower one, moves the pointer to a
+  /// wide display (the active menu bar can follow it) and looks again. No
+  /// wide display at all means the setup is wrong: fail and say so aloud.
+  private func requireWideMenuBar(_ item: AXNode) async throws {
+    let minimumWidth: CGFloat = 1200
+    var count: UInt32 = 0
+    var ids = [CGDirectDisplayID](repeating: 0, count: 16)
+    CGGetActiveDisplayList(16, &ids, &count)
+    let displays = ids.prefix(Int(count)).map(CGDisplayBounds)
+    guard let wide = displays.first(where: { $0.width >= minimumWidth }) else {
+      let message = "No display is at least \(Int(minimumWidth)) points wide; Phases' menu bar item can't be relied on"
+      let say = Process()
+      say.executableURL = URL(filePath: "/usr/bin/say")
+      say.arguments = ["Robert, the UI tests need a display at least 1200 points wide, and none is connected."]
+      try? say.run()
+      throw UITestFailure(message)
+    }
+    func itemDisplay() -> CGRect? {
+      guard let frame = item.frame else { return nil }
+      return displays.first { $0.contains(CGPoint(x: frame.midX, y: frame.midY)) }
+    }
+    if let display = itemDisplay(), display.width >= minimumWidth { return }
+    try await SyntheticInput.move(to: CGPoint(x: wide.midX, y: wide.midY))
+    guard let display = itemDisplay(), display.width >= minimumWidth else {
+      throw UITestFailure(
+        "Phases' menu bar item is on a display narrower than \(Int(minimumWidth)) points (\(itemDisplay().map { "\($0)" } ?? "none")), and moving the pointer to \(wide) didn't move it; make a wide display's menu bar active"
+      )
+    }
   }
 
   /// [D-ui-test-runner] For clicks outside the window (menu bar, menu):

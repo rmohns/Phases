@@ -19,6 +19,11 @@ public enum SyntheticInput {
     try await pause(0.2)
   }
 
+  static func move(to point: CGPoint) async throws {
+    post(.mouseMoved, at: point)
+    try await pause(0.5)
+  }
+
   /// Presses at `start`, moves to `end` in steps, and releases there.
   static func drag(from start: CGPoint, to end: CGPoint, steps: Int = 30) async throws {
     post(.mouseMoved, at: start)

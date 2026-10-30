@@ -116,6 +116,16 @@ two layers.
   - *Safety:* before any click or keystroke, the harness checks that the
     test instance of Phases is frontmost; if not, the test fails without
     sending input, so a stray keystroke can't land in another app.
+  - `[D-ui-menubar-wide]` **Phases' menu bar item is only clicked on a
+    display at least 1200 points wide.** If the item is on a narrower
+    display, the harness moves the pointer to a wide one and looks again;
+    if it's still narrow, the test fails with that reason. If no display
+    that wide is connected, the test fails and the harness says so aloud.
+    - *Why:* a narrow menu bar runs out of room and hides status items
+      (made more likely by iPhone Live Activities in the menu bar on
+      macOS 27). That's the setup, not a Phases failure: a display under
+      1200 points is only possible on Apple Silicon by changing display
+      settings (author, 2026-10-30; LEARNINGS.md `[L-menubar-overflow]`).
   - *Why:* `bitrig test` can't run test targets in a Project.json project
     `[Q-bitrig-test-targets]`, and the AX API reads these controls
     reliably where System Events doesn't `[Q-system-events-ax]`.
