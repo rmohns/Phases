@@ -8,12 +8,25 @@ struct PhasesWindow: View {
   var scheduler: WallpaperScheduler
   @State private var selection: SidebarItem?
   /// [D-grid-release-on-close] False once the window has been closed for a
-  /// moment, so SwiftUI drops the detail pane and the grid's thumbnails.
-  @State private var holdsDetail = true
+  /// moment, so SwiftUI drops the window's content and the grid's thumbnails.
+  @State private var holdsContent = true
   @State private var isOpen = true
   @FocusState private var sidebarFocused: Bool
 
   var body: some View {
+    Group {
+      if holdsContent {
+        splitView
+      }
+    }
+    // [D-grid-release-on-close] Outside the content, so it still hears the
+    // window open again after the content is gone.
+    .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { note in
+      if (note.object as? NSWindow)?.styleMask.contains(.titled) == true { windowOpened() }
+    }
+  }
+
+  private var splitView: some View {
     NavigationSplitView {
       List(selection: $selection) {
         // [D-brand-scrolls] First list item, so it scrolls away with long
@@ -53,16 +66,14 @@ struct PhasesWindow: View {
         // [Q-split-item-rewrite].
         WindowLayoutConfigurator(
           sidebarMinWidth: 240, sidebarMaxWidth: 320,
-          onOpen: windowOpened, onClose: windowClosed
+          onClose: windowClosed
         )
       }
       // [D-sidebar-always-visible] [Q-sidebar-collapse] No toggle button; the configurator above
       // stops drags from collapsing it.
       .toolbar(removing: .sidebarToggle)
     } detail: {
-      if holdsDetail {
-        detail
-      }
+      detail
     }
     // [D-app-menu] For Settings… in the app menu.
     .focusedSceneValue(\.sidebarSelection, $selection)
@@ -97,15 +108,15 @@ struct PhasesWindow: View {
 
   private func windowOpened() {
     isOpen = true
-    holdsDetail = true
+    holdsContent = true
   }
 
-  /// [D-grid-release-on-close] Waits out the close before emptying the pane,
+  /// [D-grid-release-on-close] Waits out the close before emptying the window,
   /// so nothing visibly blanks; a reopen in the meantime keeps it.
   private func windowClosed() {
     isOpen = false
     DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-      if !isOpen { holdsDetail = false }
+      if !isOpen { holdsContent = false }
     }
   }
 }

@@ -306,6 +306,17 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
     *inference* from `heap` against `footprint`.
   - The 30 MB window bar assumed the grid was most of the window's cost
     (`[L-mem-window]`); at 22 images it isn't.
+  - **Whole-window release, same day** (experiment: the window's entire
+    content dropped 1 s after closing, not just the detail pane; Release
+    build, window only, no changes): idle 22; open 81, closed 30 s 60;
+    open again 84, closed 30 s 62 MB. *Measured.* 11 MB better than
+    dropping the pane alone, still 38–40 MB over idle, so it also fails
+    the 30 MB bar. A second open and close added 2 MB. Live heap after
+    the second close 23.2 MB (idle 7.8), Malloc Small 48 MB dirty,
+    CoreAnimation 1.1 MB. So most of what stays is freed-but-held
+    allocator memory `[L-mem-freed-held]` (about 25 MB, *inference*) plus
+    about 15 MB of live objects Phases no longer references (*inference*:
+    SwiftUI and AppKit caches).
 
 ## Open questions
 
@@ -320,6 +331,11 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   menu bar. A rerun of `FocusTests` alone passed all three. Matters beyond
   tests: on that display a person might not reach Phases' menu at all.
   To investigate on its own branch.
+  **Update, same day:** the author checked the narrow display: it had
+  run out of room, and macOS showed a chevron that expands the hidden
+  icons when clicked, so Phases stays reachable on macOS 27.2 (*observed*
+  by the author). Still open: whether macOS 26 does the same. Tracked as
+  GitHub issue #11; no action for now.
 
 - `[L-main-memory]` **The installed Release build of `main` measured
   179 MB with its window closed** (82 MB large mallocs, 54 MB small, 9 MB
