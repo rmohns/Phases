@@ -155,6 +155,35 @@ by per-frame differences over the desktop area.
 | E11 | A wallpaper set from outside Phases (System Events) is **hidden by the cover**, as expected. Confusing for a user changing wallpaper in System Settings. |
 | E12 | 23 MB without the cover. With it: **A 93 MB** at launch; **B 86 MB** at launch, **102 MB after three changes**. The image is held about three times (CoreAnimation, Malloc Large, CG Raster Data, about 23 MB each), so likely reducible. Growth after changes not explained yet. |
 
+### Fixes for the menu bar background (E3)
+
+2026-10-30, one display, cover B, "Show menu bar background" on.
+
+- **Brief uncover** (`-PhasesUncover 100`: take the cover off for 100 ms
+  once the wallpaper has settled). The background restyled at the
+  uncover, but **the twitch came back at that moment**: macOS's shift
+  played when the wallpaper was revealed (crane and building visibly
+  offset in the frame, 26 dB against the frame before). Same with a 4 s
+  settle (`-PhasesUncoverDelay 4000`). *Measured.* So the motion isn't
+  on a timer: macOS seems to hold it until the new wallpaper is first
+  seen. Hypothesis, not proven: macOS treats a fully opaque full-screen
+  cover as hiding the desktop and defers presenting the wallpaper
+  (motion and menu bar restyle) until it's revealed. That would also
+  explain the logout twitch (E8). Rejected.
+- **99% cover** (`-PhasesCoverAlpha 0.99`). **The background and text
+  restyled promptly for every change**, matching each image (olive, light
+  grey with black text, dark purple and blue with white text), across two
+  recordings of three changes each. **No twitch:** the frame after each
+  fade matched the frame before at noise level (43 dB). The 1% of real
+  wallpaper showing through is the same image once set, so it can't be
+  seen. *Measured.* The candidate fix. Untested: whether 99% also fixes
+  the menu bar text with the background off (E2), Space arrival, and
+  three displays.
+- The second 99% recording was meant to have the background off, but a
+  Safari window opened by something else appeared as I clicked the
+  toggle, so the click probably missed. The bars in the recording show
+  the background still on. I stopped driving there.
+
 ## Afterward
 
 - Each finding about macOS behavior becomes a `[Q-…]` entry in ERRATA.md,
