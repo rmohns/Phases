@@ -121,13 +121,13 @@ Agreed with the author 2026-10-29:
 |---|---|---|---|
 | E1 | Twitch | Change Now ×5 | No twitch at any point. |
 | E2 | Menu bar text | Change Now between a light image and a dark one, `end` then `mid` | When the text color flips relative to the fade; whether `mid` looks better. Note any late restyle `[Q-menubar-restyle-on-app-switch]`. |
-| E3 | "Show menu bar background" is **off** on the author's Mac (author, 2026-10-30). With it off, the menu bar area showed the cover fading live, with no lag, in A and B. Not run with it on. |
+| E3 | **Fails with "Show menu bar background" on, in both A and B.** 2026-10-30, background turned on for the test and back off after. Across three changes per variant, the background kept the color of an earlier image (dark purple, then olive) while the cover showed others, and stayed wrong after two app switches and 15 s. Control, same session, no persistent cover: one change and the background restyled to match. *Observed* from recordings and screenshots. So the menu bar background follows the real wallpaper only when no window covers it, or after some event the persistent cover never produces; cause unknown. Untested idea: drop the cover briefly once the real wallpaper has settled, then put it back (invisible, since the images match). With the background off (the author's usual setting) the menu bar shows the cover live, with no lag. |
 | E4 | Spaces | Change on Space 1; swipe to 2 and 3 | New image shown on every Space; how the swipe looks with a cover that stays put; whether menu bar text restyles (or blinks) on arriving at a Space whose real wallpaper was out of date. A blink there is acceptable (author, 2026-10-29); this records it, not fails on it. |
 | E5 | Mission Control | Open it on each Space | What the main view and the Spaces strip thumbnails show: cover or real wallpaper. |
 | E6 | Desktop | Icons, right-click on the desktop, drag a file to the desktop, "Click wallpaper to reveal desktop" | Icons above the cover; clicks reach the desktop as before. |
-| E7 | Desktop widgets | Add a widget, widget style Automatic | Whether its tint matches the cover or the real wallpaper. |
+| E7 | Widgets draw above the cover. With an app in front, they turn translucent and show the cover through them, so they match it. *Observed* 2026-10-30. |
 | E8 | Lock screen and login window (author) | Lock (⌃⌘Q): on Space 1 right after a change; on Space 2 after arriving; on Space 2 after a change made on Space 1, before arriving. Then log out once | Which image the lock screen and the login window show in each case. |
-| E9 | Full screen and Stage Manager | Full-screen an app; turn Stage Manager on | Nothing odd shows through or around. |
+| E9 | Not run. A full-screen attempt didn't take (the ⌃⌘F keystroke didn't reach Activity Monitor); Stage Manager not toggled. |
 | E10 | Quit and crash | Quit; relaunch; Force Quit | What's on screen the moment the cover goes; restore-on-quit still behaves. |
 | E11 | System Settings | Change wallpaper there while Phases runs | Expected: hidden by the cover. Confirm, and note how confusing it is. |
 | E12 | Memory | `footprint` on Phases: on `main` at idle, then the branch with the cover up, A and B, one display and three | The real cost per display, against today's idle baseline. |
@@ -149,7 +149,7 @@ by per-frame differences over the desktop area.
 | E5 | Mission Control shows the cover as the background. The Spaces strip showed names only, no thumbnails. |
 | E6 | **Desktop works through the cover.** Icons and widgets draw above it; right-click on the desktop opens Finder's desktop menu (Change Wallpaper…, Edit Widgets…). *Observed.* |
 | E7 | Widgets draw above the cover in full color. Tint behavior with an app in front not checked. |
-| E8 | **Lock screen correct from both Spaces tested; login window correct** (logged out from one Space). *Verified* by the author, 2026-10-30, cover B, `mid`. **New, observed by the author:** a twitch during logout, appearing to start after logout finished, just as the login window appeared. Not investigated yet. |
+| E8 | **Lock screen correct from both Spaces tested; login window correct** (logged out from one Space). *Verified* by the author, 2026-10-30, cover B, `mid`. **New, observed by the author:** a twitch during logout, appearing to start after logout finished, just as the login window appeared. Not investigated yet. The author sees the login window darken the wallpaper slightly, which fits macOS redrawing its own wallpaper for the login window (recalled, not tested). Check whether `main` does the same. |
 | E9 | Not run: no full-screen app at run time; Stage Manager not toggled. |
 | E10 | **Quit: hard cut** from the cover to the restored wallpaper, no fade. **Force Quit: nothing visible**, because the real wallpaper underneath matched the cover on that Space. |
 | E11 | A wallpaper set from outside Phases (System Events) is **hidden by the cover**, as expected. Confusing for a user changing wallpaper in System Settings. |
