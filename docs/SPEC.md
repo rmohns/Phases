@@ -720,10 +720,10 @@ data. Phases saved by earlier versions load unchanged (no per-display images).
   cover buffer per changing display `[D-cover-iosurface]`, and gives it
   back when the cover goes.
   - **Target:** after ten changes, footprint is within 30 MB of what it
-    was after the first change (*proposed figure*; the author's call).
+    was after the first change (approved by the author, 2026-10-30).
   - Checked by hand, with at least two runs before a change and two after,
     because runs vary widely (one run measured 297 MB after three changes,
-    another 144 MB). The procedure belongs in TESTING.md.
+    another 144 MB). Procedure: TESTING.md `[D-memory-protocol]`.
   - *Why:* Phases runs all day in the background. Draft 31 reached about
     300 MB after ten changes on three displays (measured 2026-10-30,
     LEARNINGS.md "Memory").
