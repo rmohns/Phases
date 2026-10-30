@@ -101,6 +101,13 @@ Three documents carry the design:
 - **[TESTING.md](docs/TESTING.md)** covers the unit and UI tests, the
   launch arguments that exist only for tests, and diagnostic logging.
 
+One more isn't a design document:
+
+- **[LEARNINGS.md](docs/LEARNINGS.md)** records what we've run into that
+  isn't documented elsewhere: experiment results, approaches tried and
+  rejected, measurements, and open questions. Each finding has an `[L-…]`
+  tag. When one starts shaping the code, it moves to ERRATA.md.
+
 Search for a tag to find the spec, the workaround, the code, and its tests
 together. If you're changing behavior, read the decision first; the spec
 gets updated before the code does.
