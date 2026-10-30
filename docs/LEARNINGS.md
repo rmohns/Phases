@@ -378,6 +378,18 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
   shows the wallpaper as SDR. To test: set an iPhone HDR photo as
   wallpaper on an HDR-capable display (the built-in one) and compare its
   brightness with an SDR copy of the same photo.
+  **First look, same day: it appears SDR.** An iPhone HEIC (4032 × 3024,
+  Display P3, 8-bit base, ISO gain map, headroom 4.1 when decoded with
+  `kCGImageSourceDecodeToHDR`; ImageIO's default decode came back 8-bit
+  with headroom 1.0, so default is SDR, *measured*) set as wallpaper on
+  the built-in display "looks pretty SDR" (*observed* by the author).
+  A screen capture matched the default SDR decode by eye (*observed*,
+  weak: `screencapture` output is SDR, so it can't show HDR either way,
+  *recalled*). While it showed, the built-in display's
+  `maximumExtendedDynamicRangeColorComponentValue` read 1.2 (potential
+  16). A wallpaper using the photo's 4.1 headroom would likely push that
+  higher (*recalled*, not calibrated). To settle it: read the same value
+  with an HDR photo open full screen in Preview, as a known-HDR control.
 - `[L-cover-alpha-later]` **Could the 99% cover go to 100% once the menu
   bar has restyled, and does it matter?** Untested. Risks, from
   `[L-opaque-cover-freezes-menubar]`: an opaque cover might stop the menu
