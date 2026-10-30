@@ -208,8 +208,8 @@ display changed to its own image every time.
 | E3 | **With "Show menu bar background" on, all three backgrounds tracked their images** (olive over trees, purple over the neon planet, blue over sky), three changes, *observed*. On the ultrawide over the very white Ergo Proxy image, macOS drew white text on a light grey bar; a control with no cover (wallpaper set directly) did the same, so that's macOS's own choice. Background turned back off afterward (verified in Settings). |
 | E4 | Every Space on the ultrawide showed the current image, synced on arrival (*verified* in the log); the other two displays were unaffected. |
 | E5 | Mission Control showed the cover images on all three displays. |
-| E8 | *Author to check.* |
-| E12 | **Grows with every change: a leak in the experiment.** No cover: 77 MB right after launch. Cover at launch: 140–187 MB (two launches). After about nine changes: 344, then 373 MB; a fresh launch plus four changes: 336 MB. About 25–30 MB per change across three displays, so old cover windows or their images aren't being released. Must be fixed before any of this ships. The 77 MB no-cover figure, against 23 MB on one display, isn't explained either. |
+| E8 | Lock screen fine on three displays (*verified* by the author, 2026-10-30). Logout check in progress. |
+| E12 | **Grows with every change: a leak in the experiment.** No cover: 77 MB right after launch. Cover at launch: 140–187 MB (two launches). After about nine changes: 344, then 373 MB; a fresh launch plus four changes: 336 MB. About 25–30 MB per change across three displays, so old cover windows or their images aren't being released. Must be fixed before any of this ships. The 77 MB no-cover figure, against 23 MB on one display, isn't explained either. Later the same run, Activity Monitor showed 242 MB with no further changes (author): memory may be released slowly rather than leaked, or Activity Monitor's figure differs from `footprint`. Not yet measured. |
 
 ## Afterward
 
