@@ -254,32 +254,66 @@ image when there's more than one choice.
   - Arriving on a Space shows its own real wallpaper, with no cover, the
     same as without Phases. The next change made there fades in a new
     cover over it.
-  - Removing the cover happens off screen, so it can't be seen, and
-    macOS's motion for that change played long before (*inference* from
-    `[L-cover-three-displays]`: at 99% the motion stayed hidden while the
-    cover was up; not tested with the cover then removed).
+  - Removing the cover happens off screen, so it can't be seen: no frame
+    changed when it went, or after returning (*measured* 2026-10-31,
+    `[L-cover-own-space]`).
   - *Why:* the author wants each Space to be able to show its own
     wallpaper, toward a future choice of images per Space within a phase
     (author, 2026-10-31). A cover that joins every Space shows one image
     on all of them, which rules that out. The experiment's covers did
     that, along with syncing each Space's real wallpaper on arrival
     (`[L-cover-all-spaces]`); neither is used.
-  - *Also:* holds memory to one buffer per display, not one per Space.
-  - **Untested:** that a cover without `.canJoinAllSpaces`, at desktop
-    level, stays on the Space it was made on and slides with it during a
-    swipe. Standard AppKit behavior for ordinary windows (*recalled*); the
-    experiment only tested covers that joined every Space. Check before
-    the code relies on it.
+  - *Also:* holds memory to one buffer per display, not one per Space,
+    apart from pending changes `[D-change-stays-on-its-space]`.
+  - A cover without `.canJoinAllSpaces` stays on the Space it was made
+    on, slides away with it during a swipe, and reports itself off the
+    active Space once macOS announces the change (*verified* 2026-10-31,
+    one display, three Spaces, `[L-cover-own-space]`). Not yet tried on
+    more than one display.
   - Phases tells whether a cover's Space is showing by asking its window
     (`isOnActiveSpace`) whenever macOS reports a Space change. There's no
     public API that names Spaces (*recalled*), so the future per-Space
     choice needs its own investigation.
-  - **A Space change during a fade** finishes the fade at once, like any
-    interruption. The wallpaper is set on whichever Space is showing by
-    then, so if you've moved, it lands on the new Space without a fade.
-    Draft 32 behaves the same (*inference* from the code, not tested).
-    Fades last 0.5–3 s, so this is rare; accepted unless testing shows
-    otherwise.
+- `[D-change-stays-on-its-space]` **A change belongs to the Space it was
+  made on, even if you leave mid-fade.** When a fade ends (or is cut short
+  by another change), each display's new cover is checked:
+  - **Still showing:** the wallpaper is set and the old cover removed, as
+    in "A change, step by step".
+  - **Its Space is no longer showing:** the wallpaper isn't set yet. The
+    new cover stays on its Space, fully faded in, and the change is
+    **pending**. When that Space shows again, Phases sets the wallpaper
+    behind the cover, and from then on it's an ordinary cover
+    `[D-cover-per-space]`.
+  - A cover whose fade is still running, or whose change is pending, is
+    not removed on leaving its Space. The old cover under a pending one
+    is removed as usual (off screen).
+  - The Space you arrive on is left alone: it keeps its own image.
+  - *Why:* the public API sets the wallpaper only on the Space showing
+    (*recalled*), and macOS announces a Space change only after the swipe,
+    about 0.9–1.1 s after the key press (*verified*,
+    `[L-space-notify-after-swipe]`). With draft 33's first version, a
+    3 s fade left mid-way set the wallpaper on the arrival Space, which
+    hard-cut to the new image with no fade, while the Space left behind
+    never got it (*measured* 2026-10-31, `[L-space-leave-mid-fade]`).
+    Holding the cover keeps what you saw on the Space you left; setting
+    on return finishes the change where it was made.
+  - *Cost:* on returning, the menu bar keeps the old image's style until
+    the set lands, about 1 s after the swipe starts, then blinks and
+    restyles (*inference* from `[L-space-notify-after-swipe]` and
+    `[Q-menubar-blank]`). Each pending change holds a cover buffer until
+    you return: at most one per Space per display.
+  - *Rejected:* setting the real wallpaper when the fade starts, under a
+    cover still showing the old image. The menu bar would switch up to
+    3 s before the screen does, the draft 4 problem `[D-fade-in]`
+    `[Q-menubar-reads-wallpaper]`. Also rejected: dropping the change on
+    the Space left behind, because a fade you watched start would be
+    undone when you came back.
+  - **To verify in the build, before merging:** repeat the mid-fade runs
+    (3 s fade, leave at 0.3 s and 1.5 s), plus a 1 s fade that ends
+    during the swipe, before macOS announces it. In that last case,
+    whether `isOnActiveSpace` and the wallpaper set agree on which Space
+    is showing is untested; if they disagree, the change could still
+    land on the wrong Space.
 - `[D-cover-only-for-crossfade]` **No cover at all unless crossfades will
   actually play:** Transition is Crossfade and Reduce Motion is off.
   - With **Transition: None**, or with Reduce Motion on, Phases just asks
@@ -879,7 +913,8 @@ data. Phases saved by earlier versions load unchanged (no per-display images).
     cover buffer per display `[D-persistent-cover]`. During a fade it holds
     one more per changing display `[D-cover-iosurface]`, and gives the old
     one back when the fade ends. Leaving a Space gives its cover's buffer
-    back `[D-cover-per-space]`.
+    back `[D-cover-per-space]`, unless its change is still pending
+    `[D-change-stays-on-its-space]`.
   - **With Transition: None or Reduce Motion,** no cover buffers at all
     `[D-cover-only-for-crossfade]`. Turning crossfades off gives them back.
   - **Target:** after ten changes, footprint is within 30 MB of what it
