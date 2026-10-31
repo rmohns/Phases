@@ -47,18 +47,20 @@ borderless, click-through window just above the desktop picture
   delay might be. Unproven.
 - `[L-opaque-cover-freezes-menubar]` **A fully opaque full-screen cover
   stops the menu bar restyling for new wallpapers; a 99% opaque one
-  doesn't.** With the opaque cover, menu bar text stayed one color
-  through every change (white in one run, black in another), and with
-  "Show menu bar background" on, the background kept an earlier image's
-  color through changes, app switches, and 15 s. A control without the
-  persistent cover restyled normally. At 99% opacity, text and background
-  restyled promptly for every change, with or without the background
-  setting, and no twitch showed (frames before and after each fade
-  matched at noise level, 43 dB). *Measured* from recordings. Refines
-  `[Q-menubar-bg-follows-window]` and `[Q-menubar-reads-wallpaper]`;
-  possibly related to `[Q-menubar-restyle-on-app-switch]`. Fits
-  `[L-motion-waits-for-reveal]`: macOS may treat a fully covered desktop
-  as not visible.
+  doesn't.** *Measured* from recordings.
+  - **100% opaque:** menu bar text stayed one color through every change
+    (white in one run, black in another). With "Show menu bar
+    background" on, the background kept an earlier image's color through
+    changes, app switches, and 15 s.
+  - **Control,** without the persistent cover: restyled normally.
+  - **99% opaque:** text and background restyled promptly for every
+    change, with or without the background setting. No twitch: frames
+    before and after each fade matched at noise level (43 dB).
+  - **Related:** refines `[Q-menubar-bg-follows-window]` and
+    `[Q-menubar-reads-wallpaper]`; possibly related to
+    `[Q-menubar-restyle-on-app-switch]`. Fits
+    `[L-motion-waits-for-reveal]`: macOS may treat a fully covered
+    desktop as not visible.
 - `[L-cover-all-spaces]` **A cover with `.canJoinAllSpaces` and
   `.stationary` shows on every Space and in Mission Control, and slides
   with each Space during a swipe like a real wallpaper.** *Observed.*
@@ -79,58 +81,78 @@ borderless, click-through window just above the desktop picture
   twitch appeared just as the login window did. *Observed* by the author
   2026-10-30 with the experiment build; the redraw explanation is
   *recalled*, not tested. Not checked on `main`.
-- `[L-desktop-through-cover]` **Desktop features work through a cover:**
-  icons and widgets draw above it; right-click on the desktop opens
-  Finder's desktop menu; "Click wallpaper to show desktop" works; widgets
-  turn translucent over it when an app is in front; Calendar in full
-  screen and Stage Manager (turned on for the test) behaved normally.
-  *Observed.* Quitting Phases removes a cover in a hard cut; a Force Quit
-  shows nothing if the real wallpaper underneath matches.
+- `[L-desktop-through-cover]` **Desktop features work through a
+  cover.** *Observed.*
+  - Icons and widgets draw above it.
+  - Right-click on the desktop opens Finder's desktop menu.
+  - "Click wallpaper to show desktop" works.
+  - Widgets turn translucent over it when an app is in front.
+  - Calendar in full screen and Stage Manager (turned on for the test)
+    behaved normally.
+  - Quitting Phases removes a cover in a hard cut; a Force Quit shows
+    nothing if the real wallpaper underneath matches.
 - `[L-outside-change-hidden]` **A wallpaper set by anything else while a
   cover is up is hidden by the cover.** *Observed* (set through System
   Events). A user changing wallpaper in System Settings would see nothing
   happen.
 - `[L-cover-memory]` **One full-screen cover image costs about 23 MB at
-  3024 × 1964, and the experiment held it about three times** (Core
-  Animation, a large malloc buffer, and CG raster data, about 23 MB each).
-  Debug build, `footprint`: 23 MB with no cover; 86–93 MB with a cover at
-  launch; 102 MB after three changes (window-per-change version), growth
-  unexplained. *Measured.* Releasing Phases' own copies once the layer
-  has the image might bring it to about one copy (*hypothesis*).
-  **Update, three displays (2026-10-30, 99% cover B): it's a leak.**
-  77 MB with no cover; 140–187 MB with the cover at launch; then about
-  25–30 MB more with every change, reaching 373 MB after about nine
-  changes. Old cover windows or their images aren't released. *Measured.*
-  Must be fixed before any persistent cover ships (author, 2026-10-30).
-  The 77 MB no-cover figure, against 23 MB on one display, isn't
-  explained. Later in the same run, Activity Monitor showed 242 MB with no
-  further changes (*observed* by the author), so memory may be released
-  slowly rather than leaked, or Activity Monitor and `footprint` measure
-  differently. To pin down when fixing it.
+  3024 × 1964, and the experiment held it about three times.**
+  - **The three copies:** Core Animation, a large malloc buffer, and CG
+    raster data, about 23 MB each.
+  - **One display** (Debug build, `footprint`), *measured*:
+    - 23 MB with no cover.
+    - 86–93 MB with a cover at launch.
+    - 102 MB after three changes (window-per-change version); the growth
+      is unexplained.
+  - **Idea:** releasing Phases' own copies once the layer has the image
+    might bring it to about one copy (*hypothesis*).
+  - **Update, three displays (2026-10-30, 99% cover B): it's a leak.**
+    *Measured:*
+    - 77 MB with no cover.
+    - 140–187 MB with the cover at launch.
+    - Then about 25–30 MB more with every change, reaching 373 MB after
+      about nine changes. Old cover windows or their images aren't
+      released.
+    - Must be fixed before any persistent cover ships (author,
+      2026-10-30).
+  - **Loose ends, to pin down when fixing it:**
+    - The 77 MB no-cover figure, against 23 MB on one display, isn't
+      explained.
+    - Later in the same run, Activity Monitor showed 242 MB with no
+      further changes (*observed* by the author). So memory may be
+      released slowly rather than leaked, or Activity Monitor and
+      `footprint` measure differently.
 - `[L-menubar-lazy-restyle]` **macOS sometimes leaves menu bar text
   the wrong color for the wallpaper, with no cover involved, in either
-  direction.** The author has also seen dark text on a very dark
-  wallpaper, and the text corrects itself the moment any part of the menu
-  bar is clicked (*observed* by the author, several times before
-  2026-10-30). That's why we read it as macOS updating lazily.
-  Example: on the ultrawide, the white Ergo Proxy image got white text on a light grey
-  bar, with or without the cover; in the control, the wallpaper was set
-  directly with nothing from Phases running, and the text was still white
-  8 s later. *Observed* 2026-10-30, three displays. Fits the lazy restyle
-  in `[Q-menubar-restyle-on-app-switch]` (FB25326597): macOS doesn't
-  always restyle until something else happens, such as an app switch or
-  a click in the menu bar.
-  Rule this out before blaming Phases for wrong menu bar text.
-- `[L-cover-three-displays]` **The 99% cover held up on three displays**
-  (ultrawide main with three Spaces, built-in, portrait Cinema HD; each
-  with its own image): no twitch on any display (44–50 dB before and
-  after each fade), menu bar text and background tracked each display's
-  image, every ultrawide Space synced on arrival without touching the
-  other displays, and Mission Control showed the covers on all three.
-  *Measured/observed* 2026-10-30. Not tested: more than one Space on the
-  built-in or portrait display. Recording all three displays at once
-  starves `screencapture` (two dropped to a few frames per second);
-  record one display at a time for twitch checks.
+  direction.** Rule this out before blaming Phases for wrong menu bar
+  text.
+  - **Seen with no cover:** on the ultrawide, the white Ergo Proxy image
+    got white text on a light grey bar, with or without the cover. In
+    the control, the wallpaper was set directly with nothing from Phases
+    running, and the text was still white 8 s later. *Observed*
+    2026-10-30, three displays.
+  - **Other direction:** the author has also seen dark text on a very
+    dark wallpaper (*observed*, several times before 2026-10-30).
+  - **Why we call it lazy:** the text corrects itself the moment any
+    part of the menu bar is clicked (*observed* by the author). That
+    fits `[Q-menubar-restyle-on-app-switch]` (FB25326597): macOS doesn't
+    always restyle until something else happens, such as an app switch
+    or a click in the menu bar.
+- `[L-cover-three-displays]` **The 99% cover held up on three
+  displays.** *Measured/observed* 2026-10-30.
+  - **Setup:** ultrawide main with three Spaces, built-in, and portrait
+    Cinema HD, each with its own image.
+  - **Results:**
+    - No twitch on any display (44–50 dB before and after each fade).
+    - Menu bar text and background tracked each display's image.
+    - Every ultrawide Space synced on arrival without touching the
+      other displays.
+    - Mission Control showed the covers on all three.
+  - **Not tested:** more than one Space on the built-in or portrait
+    display.
+  - **Method note:** recording all three displays at once starves
+    `screencapture` (two dropped to a few frames per second). Record one
+    display at a time for twitch checks `[L-twitch-measurement]`.
 - `[L-backdrop-private-store]` **Backdrop (Cindori) puts video on the
   lock screen by registering entries in macOS's private wallpaper store,**
   `~/Library/Application Support/com.apple.wallpaper/Store/aerials/manifest/entries.json`,
@@ -149,73 +171,103 @@ with `MallocStackLogging=1` so `malloc_history` could name allocators (it
 adds 16–64 MB of "Performance Tool Data", subtracted below), and a
 control run without it. Tools: `footprint`, `vmmap`, `heap`,
 `malloc_history`, `leaks`. Changes made with Change Now from the menu.
+Why we looked: Phases runs all day in the background, so it has to stay
+lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
 
+- `[L-main-memory]` **The installed Release build of `main` measured
+  179 MB with its window closed.** Answered: mostly crossfade images,
+  plus the window's lasting cost; the entries below explain how.
+  - **The reading** (*measured* 2026-10-30 with `footprint`): 82 MB large
+    mallocs, 54 MB small, 9 MB QuickLook thumbnails. That's against
+    23 MB for a fresh Debug launch that never opened the window.
+  - **First guess:** the thumbnail grid isn't released when the window
+    closes (*hypothesis*). Sent to its own branch (author, 2026-10-30).
+  - **Update, same day: investigated** (the entries below). Mostly
+    crossfade images, not the grid; the grid is about 25 MB of it.
+  - **Correction, same day** (`[L-mem-fix-runs]`), *measured*:
+    - "Mostly crossfade images" holds: with covers fixed, ten changes
+      cost 2–3 MB instead of about 200.
+    - "The grid is about 25 MB" doesn't: the 25 MB was the whole
+      window's lasting cost, not the grid's. Releasing the grid gives
+      back about 10 MB of a 40–50 MB lasting cost; the rest is the
+      window itself and allocator-held memory.
 - `[L-mem-timeline]` **Footprint rises and falls with crossfades; it
-  isn't a steady leak on `main`.** Control run: 23 MB idle; after
-  successive changes 23 (nothing changed), 94, 148, 200, 207, 303 MB;
-  window open 208, closed 168; three idle minutes later 134 MB.
-  Logging run (tool data subtracted): 55 at idle after a launch-time
-  fade, then 89, 145, 218, 175 MB over four changes, flat at 174 after
-  two idle minutes. `leaks`: 0 leaks. *Measured.*
+  isn't a steady leak on `main`.** *Measured.*
+  - **Control run:** 23 MB idle; after successive changes 23 (nothing
+    changed), 94, 148, 200, 207, 303 MB; window open 208, closed 168;
+    three idle minutes later 134 MB.
+  - **Logging run** (tool data subtracted): 55 at idle after a
+    launch-time fade, then 89, 145, 218, 175 MB over four changes; flat
+    at 174 after two idle minutes.
+  - `leaks`: 0 leaks.
 - `[L-mem-cover-windows-freed]` **`main`'s cover windows are freed after
   each fade.** `heap` finds no cover `NSWindow`, `CALayer`, or view after
   fades. So the guess that ordered-out, never-closed windows stay alive
   is wrong for `main`. *Measured.* Not checked on the spike's persistent
   covers, which are meant to stay.
 - `[L-mem-ca-copy]` **Core Animation keeps its own full-screen copy of
-  each cover image, and it outlives the window.** `malloc_history` puts
-  the largest live blocks (9, 24, 29–43, and 63 MB, one per display and
-  image) in `CA::Render::copy_image` → `create_image_by_rendering`,
-  during the commit that first draws the cover's layer. CA redraws the
-  `CGImage` from `loadImage` into a new buffer instead of using it as is.
-  Copies from the last one or two changes were still resident after the
-  fade, 175 MB of them after six changes. *Measured.* They sit in
-  CoreGraphics' purgeable zone, and `footprint` counts most of them as
-  "Reclaimable" (86–114 MB): macOS may drop them under memory pressure,
-  but Activity Monitor still shows them. *Measured* (the column);
-  *recalled* (what macOS does under pressure, not tested here). Why CA
-  copies: a pixel-format or color-space mismatch between the decoded
-  image and what CA wants (*guess*, not checked). Who keeps the copy
-  alive after the window is freed: not found (*guess*: a CA or CG image
-  cache keyed by the image).
-  **Update, same day: the format guess was wrong; see
-  `[L-mem-ca-copy-test]`.**
+  each cover image, and it outlives the window.**
+  - **Where:** `malloc_history` puts the largest live blocks (9, 24,
+    29–43, and 63 MB, one per display and image) in
+    `CA::Render::copy_image` → `create_image_by_rendering`, during the
+    commit that first draws the cover's layer. CA redraws the `CGImage`
+    from `loadImage` into a new buffer instead of using it as is.
+    *Measured.*
+  - **How long:** copies from the last one or two changes were still
+    resident after the fade, 175 MB of them after six changes.
+    *Measured.*
+  - **Purgeable, but still counted:** they sit in CoreGraphics'
+    purgeable zone, and `footprint` counts most of them as "Reclaimable"
+    (86–114 MB). macOS may drop them under memory pressure, but Activity
+    Monitor still shows them. *Measured* (the column); *recalled* (what
+    macOS does under pressure, not tested here).
+  - **Open at the time:**
+    - Why CA copies: a pixel-format or color-space mismatch between the
+      decoded image and what CA wants (*guess*, not checked). **Update,
+      same day: this guess was wrong; see `[L-mem-ca-copy-test]`.**
+    - Who keeps the copy alive after the window is freed: not found
+      (*guess*: a CA or CG image cache keyed by the image).
 - `[L-mem-ca-copy-test]` Promoted to `[Q-cover-image-copied]` (2026-10-30).
 - `[L-mem-iosurface-color]` Promoted to `[Q-iosurface-color-tag]` (2026-10-30).
 - `[L-mem-pressure-relief]` **`malloc_zone_pressure_relief` didn't
-  release the freed-but-held blocks.** Installed `main`, three changes
-  (23 → 297, 229, 240 MB), then the call made inside the running app from
-  `lldb`: it returned 0 bytes released, and "Malloc Large (empty)" stayed
-  at 32.6 MB. *Measured* 2026-10-30. Yet footprint fell from 239 to
-  110 MB within the same few seconds. Cause unknown: the timing points
-  to Core Animation's purgeable copies `[L-mem-ca-copy]` going, perhaps
-  set off by the debugger pausing the app (*guess*), not to the call.
-  One run only; repeat without `lldb` before relying on it.
-  **Repeat without `lldb`, same day:** 23 → 83, 116, 144 MB over three
-  changes; then flat at 143 MB for 30 s; then a 2 s pause and resume
-  (`kill -STOP`/`-CONT`) changed nothing (143 MB for 10 s more); freed
-  blocks 58.7 MB. *Measured.* So the earlier drop wasn't a timer within
-  30 s and wasn't the pause itself. Still unexplained: something `lldb`
-  does when it runs an expression, or the relief call freeing purgeable
-  memory it doesn't count in its return value (*guesses*). Also
-  unexplained: the same three changes cost 297 MB in one run and 144 MB
-  in the other.
-  **Ten changes per run, same day** (fresh launch each, 6 s apart):
-  - Watch run: 23 → 83, 134, 141, 179, 184, 193, 216, 224, 257, 296 MB;
-    flat at 295 MB for 30 s after. Freed blocks 71 MB.
-  - Relief run: 23 → 84, 94, 166, 190, 222, 261, 259, **157**, 177,
-    190 MB; the relief call returned 0, and footprint stayed at 192 MB.
-    Freed blocks 32.6 MB before and after.
-
-  *Measured.* So memory stacks up with each change, by roughly 20–40 MB
-  per change across three displays, and only sometimes falls back on
-  its own: the relief run dropped 102 MB between changes 7 and 8 with
-  no help. That fits macOS purging CA's purgeable copies
-  `[L-mem-ca-copy]` when it chooses (*guess*), and makes the first
-  run's drop look like the same thing happening by chance, not the
-  relief call (*inference*). `malloc_zone_pressure_relief` returned 0
-  both times: it doesn't help. Whether the climb has a ceiling is not
-  known; 296 MB was the highest seen in ten changes.
+  release the freed-but-held blocks.** It returned 0 every time: it
+  doesn't help. Three rounds on installed `main`, 2026-10-30, all
+  *measured*:
+  - **Round 1, call made from `lldb`** inside the running app, after
+    three changes (23 → 297, 229, 240 MB):
+    - It returned 0 bytes released; "Malloc Large (empty)" stayed at
+      32.6 MB.
+    - Yet footprint fell from 239 to 110 MB within the same few seconds.
+      The timing pointed to Core Animation's purgeable copies
+      `[L-mem-ca-copy]` going, perhaps set off by the debugger pausing
+      the app (*guess*), not to the call.
+  - **Round 2, repeat without `lldb`:**
+    - 23 → 83, 116, 144 MB over three changes, then flat at 143 MB for
+      30 s.
+    - A 2 s pause and resume (`kill -STOP`/`-CONT`) changed nothing
+      (143 MB for 10 s more). Freed blocks 58.7 MB.
+    - So round 1's drop wasn't a timer within 30 s, and wasn't the pause
+      itself. Left open: something `lldb` does when it runs an
+      expression, or the call freeing purgeable memory it doesn't count
+      in its return value (*guesses*).
+  - **Round 3, two runs of ten changes** (fresh launch each, 6 s apart):
+    - Watch run: 23 → 83, 134, 141, 179, 184, 193, 216, 224, 257,
+      296 MB; flat at 295 MB for 30 s after. Freed blocks 71 MB.
+    - Relief run: 23 → 84, 94, 166, 190, 222, 261, 259, **157**, 177,
+      190 MB. The call returned 0, and footprint stayed at 192 MB. Freed
+      blocks 32.6 MB before and after.
+  - **What it adds up to:**
+    - Memory stacks up with each change, roughly 20–40 MB per change
+      across three displays, and only sometimes falls back on its own.
+      The relief run dropped 102 MB between changes 7 and 8 with no
+      help.
+    - That fits macOS purging CA's purgeable copies `[L-mem-ca-copy]`
+      when it chooses (*guess*). So round 1's drop was likely the same
+      thing happening by chance, not the call (*inference*).
+    - Runs vary widely: the same three changes cost 297 MB in round 1 and
+      144 MB in round 2. Unexplained.
+    - Whether the climb has a ceiling is not known; 296 MB was the
+      highest seen in ten changes.
 - `[L-mem-no-upscale]` **`loadImage` never scales an image up.** The
   max-pixel option only caps size, so a 2880 × 2160 file stays 2880 ×
   2160 (24.9 MB) on a larger screen; CA scales it when compositing.
@@ -306,20 +358,22 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
     *inference* from `heap` against `footprint`.
   - The 30 MB window bar assumed the grid was most of the window's cost
     (`[L-mem-window]`); at 22 images it isn't.
-  - **Whole-window release, same day** (experiment: the window's entire
-    content dropped 1 s after closing, not just the detail pane; Release
-    build, window only, no changes): idle 22; open 81, closed 30 s 60;
-    open again 84, closed 30 s 62 MB. *Measured.* 11 MB better than
-    dropping the pane alone, still 38–40 MB over idle, so it also fails
-    the 30 MB bar. A second open and close added 2 MB. Live heap after
-    the second close 23.2 MB (idle 7.8), Malloc Small 48 MB dirty,
-    CoreAnimation 1.1 MB. So most of what stays is freed-but-held
-    allocator memory `[L-mem-freed-held]` (about 25 MB, *inference*) plus
-    about 15 MB of live objects Phases no longer references (*inference*:
-    SwiftUI and AppKit caches).
-    Kept as a measurement only: the code went back to releasing the pane
-    (author, 2026-10-30), since 11 MB isn't worth rebuilding the sidebar
-    and its fragile helpers on every reopen.
+  - **Whole-window release, same day.** Experiment: the window's entire
+    content dropped 1 s after closing, not just the detail pane (Release
+    build, window only, no changes). Kept as a measurement only.
+    - Readings: idle 22; open 81, closed 30 s 60; open again 84, closed
+      30 s 62 MB. *Measured.*
+    - 11 MB better than dropping the pane alone, but still 38–40 MB over
+      idle, so it also fails the 30 MB bar. A second open and close
+      added 2 MB.
+    - After the second close: live heap 23.2 MB (idle 7.8), Malloc Small
+      48 MB dirty, CoreAnimation 1.1 MB. So most of what stays is
+      freed-but-held allocator memory `[L-mem-freed-held]` (about 25 MB,
+      *inference*) plus about 15 MB of live objects Phases no longer
+      references (*inference*: SwiftUI and AppKit caches).
+    - The code went back to releasing the pane (author, 2026-10-30):
+      11 MB isn't worth rebuilding the sidebar and its fragile helpers
+      on every reopen.
   - **Pane-only confirmation, same day,** under the new window check
     (Release, window only, two rounds): idle 24; open 80 (31
     `ThumbnailCell` view lists in `heap`), closed 30 s 70 (none); open 83
@@ -329,36 +383,25 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
 ## Open questions
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
-  bar runs out of room?** UI test run on `fix/cover-memory`, 2026-10-30,
-  two external displays (no built-in), Bartender not running: the driver
-  found Phases' menu bar item at x = 2630 but refused to click it ("isn't
-  this test instance's"), failing `deleteRemovesANewlyAddedPhase` and,
-  most likely, one `FocusTests` test whose message wasn't kept. *Measured*
-  (the refusal); the cause is a *guess*: the author runs the Cinema HD at
-  1000 × 1600, narrow enough that macOS may push status items off the
-  menu bar. A rerun of `FocusTests` alone passed all three. Matters beyond
-  tests: on that display a person might not reach Phases' menu at all.
-  To investigate on its own branch.
-  **Update, same day:** the author checked the narrow display: it had
-  run out of room, and macOS showed a chevron that expands the hidden
-  icons when clicked, so Phases stays reachable on macOS 27.2 (*observed*
-  by the author). Still open: whether macOS 26 does the same. Tracked as
-  GitHub issue #11; no action for now.
+  bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
+  open for macOS 26. Tracked as GitHub issue #11; no action for now.
+  - **How it came up:** a UI test run on `fix/cover-memory`, 2026-10-30,
+    two external displays (no built-in), Bartender not running.
+    - The driver found Phases' menu bar item at x = 2630 but refused to
+      click it ("isn't this test instance's"). *Measured.*
+    - That failed `deleteRemovesANewlyAddedPhase` and, most likely, one
+      `FocusTests` test whose message wasn't kept. A rerun of
+      `FocusTests` alone passed all three.
+    - Suspected cause (*guess*): the author runs the Cinema HD at
+      1000 × 1600, narrow enough that macOS may push status items off the
+      menu bar.
+  - **Why it matters beyond tests:** on that display a person might not
+    reach Phases' menu at all.
+  - **Update, same day:** the author checked the narrow display. It had
+    run out of room, and macOS showed a chevron that expands the hidden
+    icons when clicked, so Phases stays reachable on macOS 27.2
+    (*observed* by the author).
 
-- `[L-main-memory]` **The installed Release build of `main` measured
-  179 MB with its window closed** (82 MB large mallocs, 54 MB small, 9 MB
-  QuickLook thumbnails), against 23 MB for a fresh Debug launch that never
-  opened the window. *Measured* 2026-10-30 with `footprint`. Possibly the
-  thumbnail grid isn't released when the window closes (*hypothesis*).
-  To investigate on its own branch (author, 2026-10-30).
-  **Update 2026-10-30: investigated; see "Memory".** Mostly crossfade
-  images, not the grid; the grid is about 25 MB of it.
-  **Correction, same day (`[L-mem-fix-runs]`):** "mostly crossfade
-  images" holds: with covers fixed, ten changes cost 2–3 MB instead of
-  about 200. "The grid is about 25 MB" doesn't: the 25 MB was the whole
-  window's lasting cost, not the grid's. Releasing the grid gives back
-  about 10 MB of a 40–50 MB lasting cost; the rest is the window itself
-  and allocator-held memory. *Measured.*
 - `[L-hdr-wallpaper]` **How does macOS draw an HDR photo (an iPhone
   HEIC with a gain map) as wallpaper: SDR, or with HDR headroom?**
   - **Answer: SDR,** by the author's eye against a known-HDR control
@@ -435,17 +478,18 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
       way), not tested. The new cover will show it: an HDR photo should
       look the same before and after the cover comes off.
 - `[L-cover-alpha-later]` **Could the 99% cover go to 100% once the menu
-  bar has restyled, and does it matter?** Untested. Risks, from
-  `[L-opaque-cover-freezes-menubar]`: an opaque cover might stop the menu
-  bar restyling on Space arrival and on macOS's own late restyles
-  `[L-menubar-lazy-restyle]`, and every change would have to drop back to
-  99% first. Memory: opacity shouldn't change it; the window's backing
-  store is the same size either way, and the experiment's covers were
-  already marked non-opaque (`isOpaque = false`) at both settings
-  (*recalled* AppKit behavior, not measured). The cost of blending is GPU
-  compositing work, which is near zero while the desktop is still
-  (*believed*). Measure before acting on either (author and Mike,
-  2026-10-30).
+  bar has restyled, and does it matter?** Untested. Measure before
+  acting on any of this (author and Mike, 2026-10-30).
+  - **Risks,** from `[L-opaque-cover-freezes-menubar]`:
+    - An opaque cover might stop the menu bar restyling on Space arrival
+      and on macOS's own late restyles `[L-menubar-lazy-restyle]`.
+    - Every change would have to drop back to 99% first.
+  - **Memory: probably no difference.** The window's backing store is
+    the same size either way, and the experiment's covers were already
+    marked non-opaque (`isOpaque = false`) at both settings (*recalled*
+    AppKit behavior, not measured).
+  - **GPU:** blending costs compositing work, which is near zero while
+    the desktop is still (*believed*).
 - Design questions raised by the experiment (what System Settings
   changes do under the cover, display changes, a switch to turn the cover
   off, same-on-every-Space versus per Space, and how Pause, Quit, and
