@@ -34,6 +34,13 @@
   GitHub repo (github.com/rmohns/Phases); `origin` is Bitrig's hosted repo.
   "Push to GitHub" means `git push github …`. Say which remote, by name and
   URL, every time.
+- **Mark Claude's commits.** Every commit Claude makes, squash merges
+  included, ends with the trailer
+  `Co-Authored-By: Claude (Bitrig) <noreply@anthropic.com>`. Commits
+  without it are Robert's. Exception: every commit up to and including
+  `cf969a9` was made by Claude, before this rule existed. List the
+  marked ones with
+  `git log --format='%h %s %(trailers:key=Co-Authored-By,valueonly)'`.
 - Never install launch agents, daemons, or helpers without asking the user first.
 - Launch at Login stays opt-in, with a confirmation before registering.
 - Open the specs for review with Marked: `/opt/homebrew/bin/mk docs/SPEC.md`,
