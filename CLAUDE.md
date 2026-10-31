@@ -28,7 +28,8 @@
   so each change lands as one commit with spec, code, and errata together.
   Verification notes found after a merge ride along with the next change's
   commit instead of getting their own. A squash merge counts as merging
-  into `main`: build right after it.
+  into `main`: build right after it, unless the merge touched only docs
+  (`docs/`, `CLAUDE.md`, README); then skip the build.
 - **Two remotes; name the one you push to.** `github` is the author's
   GitHub repo (github.com/rmohns/Phases); `origin` is Bitrig's hosted repo.
   "Push to GitHub" means `git push github …`. Say which remote, by name and
