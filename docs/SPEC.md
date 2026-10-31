@@ -1,4 +1,4 @@
-# Phases — Specification (draft 32)
+# Phases — Specification (draft 33)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -183,7 +183,10 @@ image when there's more than one choice.
   standard). Considered and rejected: "ultrawide" vs. "wide" is fuzzy, and
   wrong guesses would surprise; explicit per-display choices are predictable.
 
-- Changes apply to the current Space on each display (macOS limitation; see "Platform notes and limitations").
+- With crossfades on, a change shows on every Space of each display
+  `[D-persistent-cover]`. With Transition: None or Reduce Motion, it
+  applies to the current Space only (macOS limitation; see "Platform
+  notes and limitations").
 
 ### When displays change
 - `[D-screen-change-no-reroll]` When macOS reports a display change
@@ -201,40 +204,160 @@ image when there's more than one choice.
   - When a change is needed, the whole phase is re-applied, so with Random
     a newly connected display can also give the other displays new picks.
     Unchanged from earlier drafts.
+  - Covers are redrawn, added, or removed first `[D-cover-follows-displays]`.
 
 ## Transitions
 
 - **App preference: Transition**: None or **Crossfade** (default).
 - **App preference: Duration**: 0.5 to 3 seconds (default 1 second), shown
   only when Crossfade is selected.
+- `[D-transition-note]` Under the Transition picker, a one-line note says
+  what each choice does beyond the animation: "Crossfade shows the same
+  wallpaper on every Space." or "None changes only the Space you're on."
+  - *Why:* the two settings now differ in more than the animation
+    `[D-persistent-cover]`, and nothing else on screen says so.
 - macOS has no transition for wallpapers set by apps, so Phases does it itself
-  by **fading the new image in over the old wallpaper** `[D-fade-in]`
-  (see *Why fade in* below):
-  1. **Cover:** on each screen whose image is changing, a borderless,
-     click-through window shows the *incoming* image, fully transparent.
-     `[D-cover-level]` It sits just above the desktop picture and below the
-     desktop icons, so icons
-     and windows don't flicker. It covers the full screen, including under the
-     menu bar.
-  2. **Fade in:** the cover fades to fully opaque over the chosen duration.
-     The real wallpaper hasn't changed yet.
-  3. **Switch:** the new wallpaper is set behind the now-opaque cover, which
-     shows the identical image.
-  4. **Remove:** `[D-cover-settle]` after a settle delay of **1.5 s**, to let
-     macOS finish drawing the new wallpaper (including its own brief
-     change motion), the cover is removed. This is invisible, since the
-     cover and the wallpaper match.
-     - *Why:* removing the cover before macOS has finished drawing lets
-       its motion show through as a twitch. A longer-lived cover can't be
-       seen, because it shows the same image as the wallpaper behind it,
-       so the delay errs long. macOS fights this; see
-       `[Q-wallpaper-motion-delay]` (timing and margin in ERRATA.md
-       "Crossfade settle timing").
-     - *Cost:* the menu bar's background restyles only when the cover
-       comes off, so it lags the fade by about 1.5 s; see
-       `[Q-menubar-bg-follows-window]`.
-- The cover draws the incoming image the way macOS will, using that screen's
+  by **fading the new image in over the old one** `[D-fade-in]`
+  (see *Why fade in* below), on a cover that then stays up
+  `[D-persistent-cover]`.
+
+### The persistent cover
+
+- `[D-persistent-cover]` **While crossfades are on, each display keeps a
+  cover showing its current image for as long as Phases runs.** The real
+  wallpaper is still set behind it, for the things that read it (menu bar
+  text, the lock screen, the login window).
+  - **The cover:** a borderless, click-through window showing the image.
+    `[D-cover-level]` It sits just above the desktop picture and below the
+    desktop icons, so icons and windows don't flicker. It covers the full
+    screen, including under the menu bar. Desktop icons, widgets,
+    right-clicks on the desktop, and "Click wallpaper to reveal desktop"
+    work through it (*observed* 2026-10-30, LEARNINGS.md
+    `[L-desktop-through-cover]`).
+  - **On every Space:** the cover joins every Space and slides with it
+    during a swipe, like a real wallpaper, so every Space on a display
+    shows the current image. Mission Control shows it too (*observed*
+    2026-10-30, `[L-cover-all-spaces]`).
+  - *Why:* three problems go away.
+    - **The twitch** `[Q-wallpaper-motion-delay]`: macOS's motion after a
+      change always plays behind the cover, never in view. Retires
+      `[D-cover-settle]`. Measured: no twitch on one display or three
+      (`[L-cover-three-displays]`).
+    - **Spaces:** a change no longer shows only on the current Space. Up
+      to draft 32, other Spaces kept old images until Phases' next change
+      happened while they were showing.
+    - **The menu bar background lag:** with the old cover, the background
+      restyled only when the cover came off, 1.5 s after the fade
+      `[Q-menubar-bg-follows-window]`. Now it restyles at the end of the
+      fade `[D-cover-opacity]`.
+  - *Cost:* memory. One cover buffer per display all the time
+    `[D-cover-iosurface]`, about 25–63 MB each at the author's display
+    sizes (*inference* from decoded image sizes, LEARNINGS.md
+    `[L-mem-fix-ideas]`). That's why the cover is up only when crossfades
+    are on `[D-cover-only-for-crossfade]`.
+  - Tested on branch `spike/persistent-cover` (docs/X-PERSISTENT-COVER.md
+    there), 2026-10-30, macOS 27.2, one display and three.
+- `[D-cover-only-for-crossfade]` **No cover at all unless crossfades will
+  actually play:** Transition is Crossfade and Reduce Motion is off.
+  - With **Transition: None**, or with Reduce Motion on, Phases just asks
+    macOS to change the wallpaper, as drafts before the cover did. Each
+    change applies to the current Space only (see "Platform notes and
+    limitations"), and Phases holds no cover memory.
+  - **Turning crossfades on** (in Settings, or Reduce Motion going off)
+    puts a cover up at once on each display, showing its current image
+    `[D-cover-at-launch]`. Invisible, since it matches what's there.
+  - **Turning crossfades off** removes every cover at once. The current
+    Space on each display already has the matching real wallpaper
+    `[D-space-sync]`, so nothing changes there; other Spaces go back to
+    showing their own real wallpaper, which may be an older image.
+  - *Why:* the cover's only job is to make transitions possible and keep
+    them clean; it isn't worth its memory without them (author,
+    2026-10-31). Reduce Motion counts as off because it turns every fade
+    into an instant switch `[D-no-fade-cases]`.
+- `[D-cover-opacity]` **The cover is 99% opaque, not 100%.**
+  - *Why:* a fully opaque cover stopped the menu bar restyling for new
+    wallpapers: text stayed one color through every change, and with
+    "Show menu bar background" on, the background kept an earlier image's
+    color through changes, app switches, and 15 s. At 99%, text and
+    background restyled promptly for every change, with or without the
+    background setting, on one display and three. *Measured* 2026-10-30.
+    macOS fights this; see LEARNINGS.md `[L-opaque-cover-freezes-menubar]`
+    (moves to ERRATA.md as `[Q-opaque-cover-freezes-menubar]` with the
+    code).
+  - The 1% that shows through is the real wallpaper, which is the same
+    image once set, so it can't be seen. No twitch shows through either:
+    frames before and after each fade matched at noise level (43–50 dB).
+    *Measured.*
+  - *Rejected:* taking an opaque cover off briefly once the wallpaper has
+    settled. The background restyled, but the twitch came back at that
+    moment, even 4 s after the set (*measured*, `[L-motion-waits-for-reveal]`).
+  - Whether the cover could go to 100% once the menu bar has restyled is
+    open and untested (`[L-cover-alpha-later]`); not part of this draft.
+- `[D-cover-at-launch]` **At launch, each display gets a cover showing its
+  current wallpaper,** read from macOS (image file, scaling, and fill
+  color), so the cover is in place before the first change.
+  - **Except a system wallpaper** (an Aerial or other dynamic wallpaper)
+    `[D-aerials-untouched]`: a still cover would freeze it. That display
+    gets no cover until Phases first changes its image; that change fades
+    in over the system wallpaper, as before, and its cover stays.
+  - Same for a display whose current image can't be read or drawn: no
+    cover until Phases' next change there.
+- `[D-space-sync]` **Arriving on a Space syncs its real wallpaper.** When
+  the active Space changes, Phases checks each covered display: if that
+  Space's real wallpaper isn't the cover's image, it sets it, invisibly,
+  behind the cover.
+  - *Why:* the lock screen and the login window show the real wallpaper
+    of the Space you were on, not the cover (*verified* by the author,
+    2026-10-30, `[L-lockscreen-uses-real-wallpaper]`), and the menu bar
+    text follows the real wallpaper `[Q-menubar-reads-wallpaper]`.
+  - *Cost:* arriving on a Space just synced, the menu bar keeps the old
+    image's style for about half a second, blinks, then restyles
+    (*observed* once, 2026-10-30). Accepted by the author (2026-10-29).
+  - Not while a fade is running: the fade's end sets the wallpaper on
+    whatever Space is current then.
+  - Only covered displays. Without a cover there's nothing to match, and
+    Phases leaves each Space's wallpaper alone.
+- `[D-cover-follows-displays]` **Covers follow display changes.** When a
+  display's frame or scale changes, its cover is redrawn at once, without
+  a fade, showing the same image at the new size. A disconnected
+  display's cover is removed. A newly connected display gets a cover by
+  the `[D-cover-at-launch]` rules, then the normal check runs
+  `[D-screen-change-no-reroll]`, which may fade in a new image.
+  - Only real geometry changes count. Hiding the Dock or toggling "Show
+    menu bar background" also sends the screen-change notification
+    `[Q-screen-params-notification]`, but changes no display's full frame,
+    so no cover is redrawn.
+  - *Why:* a cover that no longer fits its display would show plainly,
+    and the experiment didn't handle this (GitHub issue #6).
+
+### A change, step by step
+
+With crossfades on `[D-cover-only-for-crossfade]`:
+
+1. **New cover:** on each display whose image is changing, a new cover
+   showing the *incoming* image appears, fully transparent, above the
+   display's current cover (if it has one).
+2. **Fade in:** the new cover fades to 99% `[D-cover-opacity]` over the
+   chosen duration. The real wallpaper hasn't changed yet.
+3. **Switch:** the new wallpaper is set behind the covers, and the old
+   cover is removed at the same moment. Invisible: the new cover is on
+   top, and the old cover and the real wallpaper only show through its 1%.
+4. **Stay:** the new cover stays up until the next change on that display.
+   There's no settle delay and no removal step.
+
+- *Why a new window per change,* not a new image inside the same window:
+  the 99% results were all measured that way (variant B in the
+  experiment). A single window was tested only at 100%, where the menu
+  bar failed in both forms `[L-opaque-cover-freezes-menubar]`.
+- The cover draws the image the way macOS will, using that screen's
   scaling (fill, fit, stretch, or center) and fill color.
+- *Replaced:* `[D-cover-settle]` (drafts 5–32) removed the cover after a
+  settle delay, so macOS's motion `[Q-wallpaper-motion-delay]` would
+  finish behind it. The delay had to be raised from 0.5 s to 1.5 s on
+  macOS 27.2 (cause unconfirmed; see "The twitch returns" in ERRATA.md),
+  and it made the menu bar background lag the fade
+  `[Q-menubar-bg-follows-window]`. A cover that never comes off needs no
+  delay.
 - `[D-no-screenshots]` The cover is drawn from the image file. No screenshots and no Screen
   Recording permission.
 - `[D-cover-iosurface]` **Each cover holds one copy of its image, and only
@@ -267,26 +390,50 @@ image when there's more than one choice.
     system's image pipeline, so color matching depends on the tag. Measured
     within 1–5 of 255 of the system's own drawing on all three of the
     author's displays (2026-10-30, test harness, not yet in Phases).
-  - *Also:* this sets the floor for any longer-lived cover: one buffer per
-    display, for as long as it's up.
+  - *Also:* this sets the floor for the persistent cover
+    `[D-persistent-cover]`: one buffer per covered display, for as long as
+    crossfades are on, plus one more per changing display during a fade.
+    Draft 32 held a buffer only during a fade.
 - `[D-no-fade-cases]` **No fade (instant switch) when:**
-  - Transition is set to None
-  - Reduce Motion is on (System Settings › Accessibility › Display)
+  - Transition is set to None, or Reduce Motion is on (System Settings ›
+    Accessibility › Display). There's no cover in either case
+    `[D-cover-only-for-crossfade]`.
   - The incoming image file can't be read, or its cover buffer can't be
-    made `[D-cover-iosurface]` (that screen only: it switches without a
-    fade, at the same moment as the other screens finish fading)
-  - A screen's image isn't actually changing (that screen only)
+    made `[D-cover-iosurface]` (that screen only: its old cover is
+    removed and the wallpaper switches without a fade, at the same moment
+    as the other screens finish fading). That display stays uncovered
+    until a later change there gets a cover; an old cover left up would
+    hide the new wallpaper.
+  - A screen's image isn't actually changing (that screen only; its cover
+    stays as it is)
   - Restoring the original wallpaper on quit `[D-restore-on-quit]`
 - If another change starts while a fade is running, the running fade finishes
-  instantly (its wallpaper is set and its cover removed) and the new change
-  starts its own fade.
+  instantly (its cover jumps to 99%, its wallpaper is set, and the cover it
+  replaced is removed) and the new change starts its own fade.
 - *Why fade in `[D-fade-in]`:* the real wallpaper changes only at the end,
   behind an identical image, so nothing flashes and the menu bar switches
   once, at the end, just as it does when changing wallpaper in System
   Settings. The old wallpaper is never redrawn, so crossfades also work
   when the outgoing wallpaper is an Aerial. Draft 4 faded the old image
   out instead; macOS fought that; see `[Q-menubar-reads-wallpaper]` and
-  ERRATA.md "Why fade in, not fade out".
+  ERRATA.md "Why fade in, not fade out". Unchanged by the persistent
+  cover: the fade still runs on a new cover and the wallpaper is still set
+  at its end.
+- `[D-cover-pause-quit]` **Pause, Quit, and crashes:**
+  - **Pause** leaves the covers up and keeps syncing Spaces
+    `[D-space-sync]`. It stops scheduled changes, not what's on screen.
+  - **Quit** removes every cover at once, after any restore
+    `[D-restore-on-quit]` has set the real wallpaper. With restore on,
+    that's a hard cut to the original, as in draft 32 (restoring never
+    fades, `[D-no-fade-cases]`). With restore off, the current Space's
+    real wallpaper already matches, so nothing visible happens there.
+  - **Logout, restart, shutdown, Force Quit, or a crash** take the covers
+    with the process. What's left is each Space's real wallpaper, which
+    matches on every Space visited since the last change `[D-space-sync]`.
+    A Force Quit showed nothing (*observed* 2026-10-30).
+  - Other Spaces keep the image Phases last synced there; there's no
+    public way to restore a Space that isn't showing (see "Platform notes
+    and limitations").
 - `[D-no-focus-steal]` **Phases never activates itself to force a menu bar
   restyle.** That would steal focus from the user's app. macOS sometimes
   delays the restyle; see `[Q-menubar-restyle-on-app-switch]`.
@@ -532,7 +679,7 @@ extras don't show them. No global hotkey.
 - **Phase selected:** editor with name, trigger, offset, appearance condition,
   order, rotation, and the Images section (Display picker and thumbnail grid).
 - **Settings selected:** image folder and Include subfolders; display sharing
-  preference (see "Displays sharing the All Displays images"); transition and duration; Launch at Login; location status
+  preference (see "Displays sharing the All Displays images"); transition and duration, with the note `[D-transition-note]`; Launch at Login; location status
   with today's civil dawn and dusk and Update Now; and, at the bottom, a
   **Quitting** section with the **Restore original wallpaper when quitting**
   toggle and a note that says what quitting will do `[D-restore-on-quit]`,
@@ -694,6 +841,12 @@ extras don't show them. No global hotkey.
   - Logout, restart, shutdown, and **Pause** leave the current image in
     place regardless of the setting; at logout the record is kept for the
     next launch.
+  - **Only the current Space is restored.** The record holds each
+    display's wallpaper on the Space showing at launch, and Quit restores
+    whatever Space is showing then. With crossfades on, other Spaces that
+    were visited keep Phases' last image `[D-space-sync]`, including Spaces
+    that had an Aerial. New with draft 33: before the persistent cover,
+    Phases only ever changed Spaces while they were showing.
 - `[D-aerials-untouched]` **Aerials and other system wallpapers:** Phases
   reads (never writes) macOS's
   wallpaper store to detect them. The public API can't restore them, so those
@@ -707,6 +860,9 @@ extras don't show them. No global hotkey.
   so different images per display are supported.
 - It only affects the **currently active Space** on each screen. Other Spaces
   keep their own wallpaper. There is no public API to set every Space.
+  With crossfades on, the cover shows on every Space instead, and each
+  Space's real wallpaper is caught up when you arrive there
+  `[D-persistent-cover]` `[D-space-sync]`.
 - With "Displays have separate Spaces" on (the macOS default), each display has
   its own current Space, and the app sets each one.
 - `[D-single-timer]` Scheduling uses a single timer aimed at the next event, recalculated after
@@ -724,9 +880,13 @@ data. Phases saved by earlier versions load unchanged (no per-display images).
 
 - `[D-memory-flat]` **Memory doesn't build up with wallpaper changes.**
   Between changes, with the window closed, Phases should sit near its idle
-  launch figure, not climb change after change. During a fade it holds one
-  cover buffer per changing display `[D-cover-iosurface]`, and gives it
-  back when the cover goes.
+  launch figure, not climb change after change.
+  - **With crossfades on,** the idle figure includes one cover buffer per
+    covered display `[D-persistent-cover]`. During a fade it holds one more
+    per changing display `[D-cover-iosurface]`, and gives the old one back
+    when the fade ends.
+  - **With Transition: None or Reduce Motion,** no cover buffers at all
+    `[D-cover-only-for-crossfade]`. Turning crossfades off gives them back.
   - **Target:** after ten changes, footprint is within 30 MB of what it
     was after the first change (approved by the author, 2026-10-30).
   - Checked by hand, with at least two runs before a change and two after,
@@ -735,12 +895,20 @@ data. Phases saved by earlier versions load unchanged (no per-display images).
   - *Why:* Phases runs all day in the background. Draft 31 reached about
     300 MB after ten changes on three displays (measured 2026-10-30,
     LEARNINGS.md "Memory").
+  - The persistent-cover experiment grew about 25–30 MB per change on
+    three displays (`[L-cover-memory]`). It drew covers from CGImages, which
+    Core Animation copies `[Q-cover-image-copied]`; that copy is the likely
+    cause (*inference*, not measured on the experiment). The shipping
+    cover uses `[D-cover-iosurface]`, and must pass the target above before
+    it merges.
 
 ## Out of scope (v1)
 
 - Different schedules per weekday
 - Multiple folders or online image sources
-- Different wallpaper per Space
+- Choosing a different wallpaper per Space. With crossfades on, every
+  Space shows the same image `[D-persistent-cover]`; with None, Spaces
+  differ only because macOS changes one at a time.
 - Scaling/fill options (uses the current macOS fill setting)
 
 ## Known issues
@@ -753,7 +921,19 @@ data. Phases saved by earlier versions load unchanged (no per-display images).
 - The menu bar blinks once at the end of each change, and sometimes doesn't
   restyle until the frontmost app changes. Both are macOS behavior that
   Phases can't fix; see `[Q-menubar-blank]` and
-  `[Q-menubar-restyle-on-app-switch]` (FB25326597).
+  `[Q-menubar-restyle-on-app-switch]` (FB25326597). macOS also sometimes
+  leaves menu bar text the wrong color with no cover involved
+  (LEARNINGS.md `[L-menubar-lazy-restyle]`).
+- **With crossfades on, a wallpaper chosen in System Settings is hidden by
+  the cover,** so it looks as if nothing happened (*observed* 2026-10-30,
+  `[L-outside-change-hidden]`). The menu bar and lock screen follow the
+  new choice, and the next Space arrival `[D-space-sync]` or Phases change
+  puts Phases' image back. Workaround: set Transition to None first.
+  Handling it properly is GitHub issue #5.
+- At logout, a twitch was seen just as the login window appeared
+  (*observed* by the author with the experiment build, 2026-10-30,
+  `[L-login-dims-wallpaper]`). Not checked on draft 32; may be macOS
+  redrawing the wallpaper for the login window.
 
 ## Platform quirks
 
