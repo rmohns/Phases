@@ -72,3 +72,12 @@
 - **Diagnostics:** logging is built in and off by default
   `[D-diagnostics-switch]` (TESTING.md "Diagnostics"). Add log lines with
   `Diagnostics.logger(…)`; never write new logging infrastructure.
+- **Model rungs.** The main conversation handles specs, diagnosis, design,
+  and review. Mechanical work goes to a Sonnet subagent (`model: "sonnet"`):
+  code edits already pinned down by an approved spec, renames, doc
+  formatting, and builds/unit tests plus a summary of the output. The brief
+  names exact files, the relevant `[D-…]`/`[Q-…]` tags, and what done looks
+  like; the agent can't see this conversation. Don't delegate when the
+  brief would be longer than the edit, or when the work needs a call on a
+  tagged decision. Subagents never start UI test runs; those still need
+  Robert's yes. If the agent hits a surprise, it stops and reports back.
