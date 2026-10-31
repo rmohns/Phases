@@ -210,7 +210,7 @@ two layers.
   with frame-by-frame recordings ("Diagnostic procedures" in ERRATA.md);
   the screen-change rule `[D-screen-change-no-reroll]` is a Layer 1 test.
 
-## Memory checks (draft 32)
+## Memory checks (draft 32; covers, draft 33)
 
 - `[D-memory-protocol]` **Memory is checked by hand, ten changes per run,
   at least two runs before a change and two after.** This is how
@@ -220,13 +220,46 @@ two layers.
     <pid>`, which matches what Activity Monitor shows. No
     `MallocStackLogging` on pass/fail runs: it adds 16–64 MB of its own.
   - **Setup:** a fresh launch, the window closed, Transition set to
-    Crossfade, and every display connected. Note the display setup with
-    the results, since each change costs one cover per changing display.
+    Crossfade, Reduce Motion off, and every display connected. Note the
+    display setup with the results, since each display keeps one cover
+    after a change `[D-persistent-cover]`. Note each display's decoded
+    image size if known: a cover costs about width × height × 4 bytes.
   - **Run:** read the footprint at idle, then make ten changes with
     Change Now from the menu bar menu, about 6 s apart, reading the
-    footprint after each. Read it once more after 30 s idle.
+    footprint after each. Read it once more after 30 s idle. Stay on one
+    Space throughout: leaving a Space removes its covers
+    `[D-cover-per-space]`, which would hide growth.
   - **Pass:** after the tenth change, footprint is within 30 MB of what it
-    was after the first (`[D-memory-flat]`).
+    was after the first (`[D-memory-flat]`). The covers are already up
+    after the first change, so they're inside the comparison; what's
+    measured is growth, not the covers' cost.
+  - **Covers' cost and release** (draft 33), straight after the
+    30 s idle reading. Three readings, each after 30 s:
+    1. **Leave the Space:** switch every display to another Space (⌃→ on
+       each, or the one shared Space if "Displays have separate Spaces"
+       is off). Expect a drop of about the covers' size
+       `[D-cover-per-space]`.
+    2. **Come back** to the first Space. No cover should return (no
+       change has been made there since): footprint stays near reading 1.
+    3. **Make one change, then set Transition to None** in Settings, close
+       the window, and wait. Expect a drop of about the covers' size again
+       `[D-cover-only-for-crossfade]`. (Opening the window adds its own
+       lasting cost; see "Window" below. Read the footprint just before
+       opening it and subtract the window's share by doing the same
+       open-and-close once with Crossfade left on.)
+
+    **Pass:** readings 1 and 3 each fall by at least half the covers'
+    expected size. Not tighter: macOS may keep freed memory for a while
+    (LEARNINGS.md `[L-mem-freed-held]`), though cover buffers are
+    IOSurfaces, not malloc blocks, so they're expected to go promptly
+    (*inference*, not measured). Where the drop is short, check
+    `vmmap --summary` for IOSurface regions of the covers' size before
+    calling it a failure.
+  - **Baseline with no covers:** one more run of the ten changes with
+    Transition: None. Footprint should stay near idle (draft 32's
+    after-change figures were 28–31 MB on two displays,
+    `[L-mem-fix-runs]`, with covers that came off). It shows what the
+    persistent covers add, for the record; it isn't a pass mark.
   - **Window:** for `[D-grid-release-on-close]`, read the footprint, open
     the window, scroll through the whole grid so every thumbnail loads,
     read it again, close the window, and wait 30 s. Then do it a second
