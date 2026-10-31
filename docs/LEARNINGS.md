@@ -141,7 +141,10 @@ borderless, click-through window just above the desktop picture
   `spike/persistent-cover` ("Covers on their own Space" in
   `docs/X-PERSISTENT-COVER.md`). Supports `[D-cover-per-space]` on
   `feature/persistent-cover-transitions`. Not seen: the cover sliding
-  with its Space (an app window hid it).
+  with its Space (an app window hid it). **Update, run 2 the same day:**
+  the cover slid away with its Space during the swipe; Space 2 came in
+  showing its own image (*observed*). But see
+  `[L-space-leave-mid-fade]`.
 - `[L-space-notify-after-swipe]` **`activeSpaceDidChangeNotification`
   arrives after the swipe animation, about 0.9–1.1 s after ⌃←/⌃→, and
   until then `setDesktopImageURL` goes to the Space being left.** A
@@ -150,6 +153,20 @@ borderless, click-through window just above the desktop picture
   2026-10-31 (log timestamps, one run). Which Space a set reaches when
   the notification arrives mid-fade (a 3 s fade) is untested; it bears on
   `[D-cover-per-space]`.
+- `[L-space-leave-mid-fade]` **Leaving a Space mid-fade sends the
+  change to the wrong Space.** With a 3 s fade and ⌃→ at 0.3 s or 1.5 s
+  in, the notification arrived about 0.9 s after the key press, mid-fade;
+  the own-Space cover was removed, and the end-of-fade
+  `setDesktopImageURL` landed on the Space just arrived on. The Space left
+  behind kept its old image. When the images differed, the arrival Space
+  hard-cut to the new image about 0.9 s after the swipe ended, with no
+  fade. *Verified* 2026-10-31, macOS 27.2 (log, each Space's wallpaper
+  read back, recordings; two runs). Breaks `[D-cover-per-space]` as
+  drafted: the public API sets the wallpaper only on the active Space
+  (*recalled*), so a change can't be finished on a Space after leaving it.
+  Untested ideas: set the real wallpaper at the start of the fade, under
+  a cover still showing the old image; or, on leaving mid-fade, skip the
+  set and leave that Space unchanged until its next change.
 - `[L-backdrop-private-store]` **Backdrop (Cindori) puts video on the
   lock screen by registering entries in macOS's private wallpaper store,**
   `~/Library/Application Support/com.apple.wallpaper/Store/aerials/manifest/entries.json`,

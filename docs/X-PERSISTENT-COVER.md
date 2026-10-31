@@ -239,8 +239,24 @@ Phases' launch check set Space 1 to another Ergo Proxy image.
 | S3 | Menu bar restyle after each change | **Restyled to match each image** (*observed*, menu bar crops at 4 per second). Space 2, neon planet to Tokyo: the bar showed the new image at the end of the fade, white text before and after. Space 1, Misty Rocks (light grey bar, black text) to a blue-sky image: on return, blue bar with white text, sliding in with the Space, no blink. Space 1's first change (two pale images) gave no style change to see. Weak evidence: three changes, no change of text color seen while on the Space. |
 | S4 | Switch Spaces halfway through a fade | **The wallpaper landed on Space 1, where the change was made.** The ⌃→ came 0.2 s into a 1 s fade, but macOS reported the Space change 1.13 s after the key press, after the fade had already ended at 1.02 s and set the wallpaper. So with a 1 s fade the switch can't land before the set: the swipe outlasts the rest of the fade, and macOS still treats Space 1 as the active one until the swipe ends (*verified* in the log, one run). Space 2 kept Tokyo; returning to Space 1 showed the new image, no cover. **Not tested: a 3 s fade,** where the notification would arrive mid-fade, the fading cover would be removed, and the end-of-fade set would run with Space 2 active. Where that lands is the open risk. |
 
-Evidence: `/tmp/phases-own/` (run.log, t1/t2/t4 recordings, menu bar
-sheets); not kept.
+Run 2, same day and setup, but with Crossfade set to **3 s** for the run
+(put back to 1 s afterward), and Bitrig's window over about half of
+Space 1, so the cover could be seen.
+
+| # | Test | Result |
+|---|---|---|
+| S5 | Change on Space 1, let the fade finish, swipe to 2 and back | **The cover slid away with Space 1.** During the swipe, Space 2 came in showing its own image (Tokyo), with no trace of Space 1's cover over it. The cover was removed once the swipe ended (`isOnActiveSpace` false, *verified* in the log), and the return showed nothing after the swipe settled (*observed*, contact sheet; *measured*, per-frame differences). |
+| S6 | Swipe 0.3 s into the fade (Space 1 changing to Tokyo) | **The change was lost on Space 1 and set on Space 2 instead.** The notification arrived 0.91 s after ⌃→, with the fade running (`fading true`). The cover was removed and the end-of-fade set ran with Space 2 active. Space 1 kept its old image (neon planet). Nothing showed on Space 2 only because it already had Tokyo. *Verified* in the log and by reading each Space's wallpaper. |
+| S7 | Swipe 1.5 s into the fade (Space 1 changing to the neon planet) | **Same, and visible:** about 0.9 s after arriving on Space 2, its wallpaper hard-cut from Tokyo to the neon planet, with no fade (*measured*, one frame differs by 50.8 against a noise level near 2; *observed* in the contact sheet). Space 1 had no new image to lose: the neon planet was already there. |
+
+**So `[D-cover-per-space]` as written fails when you leave a Space
+during a fade.** The cover goes, the wallpaper is set on the Space you
+arrive on, and the Space you left never gets the change. With a 1 s fade
+this happens only if the swipe starts within about 0.1 s of the
+change (S4); with a 3 s fade, for most of the fade.
+
+Evidence: `/tmp/phases-own/` (run.log, run2.log, t1/t2/t4 and r1–r3
+recordings, menu bar and contact sheets); not kept.
 
 ## Afterward
 
