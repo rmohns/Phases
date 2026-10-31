@@ -40,7 +40,9 @@ would stop being true if a future macOS fixed the underlying behavior.
   (verified by the author, 2026-10-28), so the motion finishes within that
   time. Whether macOS 27.1 was faster is *unknown*: the draft 5 fix worked
   then with a 0.5 s delay, and the author believes (not certain) that was
-  on 27.1. Shapes `[D-cover-settle]`; history in "The twitch returns". If
+  on 27.1. Shaped `[D-cover-settle]` (drafts 5–32); since draft 33 the
+  persistent cover keeps it out of view `[D-persistent-cover]`. History in
+  "The twitch returns". If
   the twitch comes back again, measure the timing first, the same way (see
   "Diagnostic procedures").
   - *Correction:* draft 22 first said the wallpaper *appears* 0.55–0.65 s
@@ -58,7 +60,46 @@ would stop being true if a future macOS fixed the underlying behavior.
   the restyle followed app switching; that link is a guess. Explains the
   cost noted under `[D-cover-settle]`: the background now lags the fade by
   about 1.5 s instead of 0.5 s (verified by the author with draft 22,
-  2026-10-28).
+  2026-10-28). *Refined* 2026-10-30: with a cover that stays up, the
+  background follows the real wallpaper only if the cover is below 100%
+  opacity `[Q-opaque-cover-freezes-menubar]`.
+- `[Q-opaque-cover-freezes-menubar]` **A fully opaque full-screen cover
+  stops the menu bar restyling for new wallpapers; a 99% opaque one
+  doesn't (macOS 27.2).** *Measured* 2026-10-30 on one display and three.
+  Shapes `[D-cover-opacity]`. Promoted from LEARNINGS.md (2026-10-31); the
+  original entry, unchanged:
+  - `[L-opaque-cover-freezes-menubar]` **A fully opaque full-screen cover
+    stops the menu bar restyling for new wallpapers; a 99% opaque one
+    doesn't.** *Measured* from recordings.
+    - **100% opaque:** menu bar text stayed one color through every change
+      (white in one run, black in another). With "Show menu bar
+      background" on, the background kept an earlier image's color through
+      changes, app switches, and 15 s.
+    - **Control,** without the persistent cover: restyled normally.
+    - **99% opaque:** text and background restyled promptly for every
+      change, with or without the background setting. No twitch: frames
+      before and after each fade matched at noise level (43 dB).
+    - **Related:** refines `[Q-menubar-bg-follows-window]` and
+      `[Q-menubar-reads-wallpaper]`; possibly related to
+      `[Q-menubar-restyle-on-app-switch]`. Fits
+      `[L-motion-waits-for-reveal]`: macOS may treat a fully covered
+      desktop as not visible.
+- `[Q-space-notify-after-swipe]` **macOS announces a Space change only
+  after the swipe, about 0.9–1.1 s after the key press, and a wallpaper
+  set reaches only the Space showing at that moment (macOS 27.2).**
+  *Verified* 2026-10-31 (log timestamps, wallpapers read back per Space).
+  So a fade that ends after you've left its Space can't set the wallpaper
+  there. Shapes `[D-change-stays-on-its-space]`; see also LEARNINGS.md
+  `[L-space-leave-mid-fade]`. Promoted from LEARNINGS.md (2026-10-31); the
+  original entry, unchanged:
+  - `[L-space-notify-after-swipe]` **`activeSpaceDidChangeNotification`
+    arrives after the swipe animation, about 0.9–1.1 s after ⌃←/⌃→, and
+    until then `setDesktopImageURL` goes to the Space being left.** A
+    change started 0.2 s before a ⌃→ finished its 1 s fade during the
+    swipe, and the wallpaper landed on the Space it was made on. *Verified*
+    2026-10-31 (log timestamps, one run). Which Space a set reaches when
+    the notification arrives mid-fade (a 3 s fade) is untested; it bears on
+    `[D-cover-per-space]`.
 - `[Q-menubar-reads-wallpaper]` **macOS picks the menu bar's text color and
   shadow from the actual wallpaper, ignoring windows above it.** *Verified*
   2026-10-26 in draft 4 testing: setting the wallpaper at the start of a
@@ -361,18 +402,22 @@ would stop being true if a future macOS fixed the underlying behavior.
 
 How the tagged decisions route around the quirks above.
 
-### Crossfade settle timing
+### Persistent cover
 
-`[D-cover-settle]` removes the cover 1.5 s after the wallpaper is set.
+`[D-persistent-cover]` keeps the cover up after a crossfade instead of
+removing it after a settle delay.
 
-- *Why 1.5 s:* macOS plays its own motion 0.55–0.65 s after the wallpaper
-  is set `[Q-wallpaper-motion-delay]`. Draft 5's 0.5 s delay removed the
-  cover right as that motion played, bringing the twitch back (see "The
-  twitch returns"). 1.5 s leaves about 0.7 s of margin.
-- *Cost:* the menu bar's background lags the fade by about 1.5 s instead of
-  0.5 s `[Q-menubar-bg-follows-window]`. The menu bar's text and icon color
-  lag as before `[Q-menubar-restyle-on-app-switch]`.
-- Code: `CrossfadeController.settleDelay`.
+- *Opacity:* 0.99, because a fully opaque cover freezes the menu bar's
+  styling `[Q-opaque-cover-freezes-menubar]` `[D-cover-opacity]`.
+- *Spaces:* covers don't join every Space; a settled cover is removed on
+  `activeSpaceDidChangeNotification` once its window reports
+  `isOnActiveSpace` false `[D-cover-per-space]`.
+- *Leaving mid-fade:* the end of a fade checks `isOnActiveSpace` per
+  cover and holds the set for covers whose Space has gone, finishing it
+  when the Space shows again `[Q-space-notify-after-swipe]`
+  `[D-change-stays-on-its-space]`. Whether `isOnActiveSpace` and the set
+  agree during the swipe itself, before macOS announces it, is untested.
+- Code: `App/Model/CrossfadeController.swift`.
 
 ### Tall toolbar
 
@@ -561,11 +606,25 @@ The crossfade code's timing hadn't changed since draft 5. The author
 believes (not certain) the original fix was tested on macOS 27.1, so macOS
 27.2 may have made wallpaper changes slower. That's unconfirmed; the draft
 5 timing may also have been marginal from the start. The fix is a longer
-settle delay (1.5 s), not a new mechanism (see "Crossfade settle timing").
+settle delay (1.5 s), not a new mechanism (see "Crossfade settle timing (drafts 5–32)").
 
 The same recording showed a second, separate problem: turning System
 Settings' "Show menu bar background" on or off started a crossfade to a new
 image `[Q-screen-params-notification]`. See `[D-screen-change-no-reroll]`.
+
+### Crossfade settle timing (drafts 5–32)
+
+`[D-cover-settle]`, replaced in draft 33 by `[D-persistent-cover]`,
+removed the cover 1.5 s after the wallpaper was set.
+
+- *Why 1.5 s:* macOS plays its own motion 0.55–0.65 s after the wallpaper
+  is set `[Q-wallpaper-motion-delay]`. Draft 5's 0.5 s delay removed the
+  cover right as that motion played, bringing the twitch back (see "The
+  twitch returns"). 1.5 s leaves about 0.7 s of margin.
+- *Cost:* the menu bar's background lags the fade by about 1.5 s instead of
+  0.5 s `[Q-menubar-bg-follows-window]`. The menu bar's text and icon color
+  lag as before `[Q-menubar-restyle-on-app-switch]`.
+- Code was `CrossfadeController.settleDelay`, removed in draft 33.
 
 ### Sidebar collapse: first version
 

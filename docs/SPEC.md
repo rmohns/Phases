@@ -291,15 +291,16 @@ image when there's more than one choice.
   - *Why:* the public API sets the wallpaper only on the Space showing
     (*recalled*), and macOS announces a Space change only after the swipe,
     about 0.9–1.1 s after the key press (*verified*,
-    `[L-space-notify-after-swipe]`). With draft 33's first version, a
+    `[Q-space-notify-after-swipe]`). With draft 33's first version, a
     3 s fade left mid-way set the wallpaper on the arrival Space, which
     hard-cut to the new image with no fade, while the Space left behind
     never got it (*measured* 2026-10-31, `[L-space-leave-mid-fade]`).
     Holding the cover keeps what you saw on the Space you left; setting
-    on return finishes the change where it was made.
+    on return finishes the change where it was made. macOS fights this;
+    see `[Q-space-notify-after-swipe]`.
   - *Cost:* on returning, the menu bar keeps the old image's style until
     the set lands, about 1 s after the swipe starts, then blinks and
-    restyles (*inference* from `[L-space-notify-after-swipe]` and
+    restyles (*inference* from `[Q-space-notify-after-swipe]` and
     `[Q-menubar-blank]`). Each pending change holds a cover buffer until
     you return: at most one per Space per display.
   - *Rejected:* setting the real wallpaper when the fade starts, under a
@@ -337,9 +338,7 @@ image when there's more than one choice.
     color through changes, app switches, and 15 s. At 99%, text and
     background restyled promptly for every change, with or without the
     background setting, on one display and three. *Measured* 2026-10-30.
-    macOS fights this; see LEARNINGS.md `[L-opaque-cover-freezes-menubar]`
-    (moves to ERRATA.md as `[Q-opaque-cover-freezes-menubar]` with the
-    code).
+    macOS fights this; see `[Q-opaque-cover-freezes-menubar]`.
   - The 1% that shows through is the real wallpaper, which is the same
     image once set, so it can't be seen. No twitch shows through either:
     frames before and after each fade matched at noise level (43–50 dB).
@@ -381,7 +380,7 @@ With crossfades on `[D-cover-only-for-crossfade]`:
 - *Why a new window per change,* not a new image inside the same window:
   the 99% results were all measured that way (variant B in the
   experiment). A single window was tested only at 100%, where the menu
-  bar failed in both forms `[L-opaque-cover-freezes-menubar]`.
+  bar failed in both forms `[Q-opaque-cover-freezes-menubar]`.
 - The cover draws the image the way macOS will, using that screen's
   scaling (fill, fit, stretch, or center) and fill color.
 - *Replaced:* `[D-cover-settle]` (drafts 5–32) removed the cover after a

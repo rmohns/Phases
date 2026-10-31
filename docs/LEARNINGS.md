@@ -45,22 +45,7 @@ borderless, click-through window just above the desktop picture
   is a *hypothesis*. Bears on `[D-cover-settle]`: a longer settle delay
   alone may not be what fixes the twitch; partial visibility during the
   delay might be. Unproven.
-- `[L-opaque-cover-freezes-menubar]` **A fully opaque full-screen cover
-  stops the menu bar restyling for new wallpapers; a 99% opaque one
-  doesn't.** *Measured* from recordings.
-  - **100% opaque:** menu bar text stayed one color through every change
-    (white in one run, black in another). With "Show menu bar
-    background" on, the background kept an earlier image's color through
-    changes, app switches, and 15 s.
-  - **Control,** without the persistent cover: restyled normally.
-  - **99% opaque:** text and background restyled promptly for every
-    change, with or without the background setting. No twitch: frames
-    before and after each fade matched at noise level (43 dB).
-  - **Related:** refines `[Q-menubar-bg-follows-window]` and
-    `[Q-menubar-reads-wallpaper]`; possibly related to
-    `[Q-menubar-restyle-on-app-switch]`. Fits
-    `[L-motion-waits-for-reveal]`: macOS may treat a fully covered
-    desktop as not visible.
+- `[L-opaque-cover-freezes-menubar]` Promoted to `[Q-opaque-cover-freezes-menubar]` (2026-10-31).
 - `[L-cover-all-spaces]` **A cover with `.canJoinAllSpaces` and
   `.stationary` shows on every Space and in Mission Control, and slides
   with each Space during a swipe like a real wallpaper.** *Observed.*
@@ -167,14 +152,7 @@ borderless, click-through window just above the desktop picture
   day:** the cover slid away with its Space during the swipe; Space 2
   came in showing its own image (*observed*). But see
   `[L-space-leave-mid-fade]`.
-- `[L-space-notify-after-swipe]` **`activeSpaceDidChangeNotification`
-  arrives after the swipe animation, about 0.9–1.1 s after ⌃←/⌃→, and
-  until then `setDesktopImageURL` goes to the Space being left.** A
-  change started 0.2 s before a ⌃→ finished its 1 s fade during the
-  swipe, and the wallpaper landed on the Space it was made on. *Verified*
-  2026-10-31 (log timestamps, one run). Which Space a set reaches when
-  the notification arrives mid-fade (a 3 s fade) is untested; it bears on
-  `[D-cover-per-space]`.
+- `[L-space-notify-after-swipe]` Promoted to `[Q-space-notify-after-swipe]` (2026-10-31).
 - `[L-space-leave-mid-fade]` **Leaving a Space mid-fade sends the
   change to the wrong Space.** With a 3 s fade and ⌃→ at 0.3 s or 1.5 s
   in, the notification arrived about 0.9 s after the key press, mid-fade;
