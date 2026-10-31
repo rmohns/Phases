@@ -42,6 +42,12 @@ final class PersistentCover {
     return ms > 0 ? ms : 1500
   }())
 
+  /// Covers stay on the Space they were made on instead of joining every
+  /// Space, Space-arrival sync is off, and a cover whose Space stops
+  /// showing is removed. Tests [D-cover-per-space] (feature branch
+  /// `feature/persistent-cover-transitions`). `-PhasesCoverSpaces own`.
+  static let ownSpace = UserDefaults.standard.string(forKey: "PhasesCoverSpaces")?.lowercased() == "own"
+
   private struct Cover {
     var window: NSWindow
     var url: URL
@@ -66,7 +72,7 @@ final class PersistentCover {
 
   init(variant: Variant) {
     self.variant = variant
-    log.info("persistent cover on, variant \(variant.rawValue, privacy: .public), timing \(Self.timing.rawValue, privacy: .public), uncover \(Self.uncoverGap ?? 0) ms, alpha \(Double(Self.coverAlpha))")
+    log.info("persistent cover on, variant \(variant.rawValue, privacy: .public), timing \(Self.timing.rawValue, privacy: .public), uncover \(Self.uncoverGap ?? 0) ms, alpha \(Double(Self.coverAlpha)), spaces \(Self.ownSpace ? "own" : "all", privacy: .public)")
     spaceObserver = NSWorkspace.shared.notificationCenter.addObserver(
       forName: NSWorkspace.activeSpaceDidChangeNotification, object: nil, queue: .main
     ) { [weak self] _ in
@@ -231,6 +237,10 @@ final class PersistentCover {
   /// it's out of date. Invisible, since the cover is on top.
   private func syncSpace() {
     log.info("active Space changed")
+    if Self.ownSpace {
+      removeCoversOffActiveSpace()
+      return
+    }
     guard running == nil else { return }
     for screen in NSScreen.screens {
       guard let id = screen.displayID, let cover = covers[id] else { continue }
@@ -238,6 +248,19 @@ final class PersistentCover {
       guard current?.standardizedFileURL != cover.url.standardizedFileURL else { continue }
       log.info("Space on \(id) shows \(current?.lastPathComponent ?? "nil", privacy: .public); syncing")
       setWallpaper([WallpaperAssignment(screen: screen, url: cover.url)], reason: "Space sync")
+    }
+  }
+
+  /// [D-cover-per-space] A cover whose Space is no longer showing goes. Its
+  /// Space keeps the real wallpaper Phases set at the end of the fade.
+  private func removeCoversOffActiveSpace() {
+    for (id, cover) in covers {
+      let onActive = cover.window.isOnActiveSpace
+      log.info("cover window \(Diagnostics.id(cover.window), privacy: .public) on \(id): isOnActiveSpace \(onActive), fading \(self.running != nil)")
+      guard !onActive else { continue }
+      cover.window.orderOut(nil)
+      covers[id] = nil
+      log.info("cover window \(Diagnostics.id(cover.window), privacy: .public) removed on \(id): Space no longer showing, \(cover.url.lastPathComponent, privacy: .public)")
     }
   }
 
@@ -273,7 +296,7 @@ final class PersistentCover {
   private static func makeWindow(_ image: CGImage, for screen: NSScreen) -> NSWindow {
     let window = NSWindow(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
     window.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopWindow)) + 1)
-    window.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
+    window.collectionBehavior = ownSpace ? [.stationary, .ignoresCycle] : [.canJoinAllSpaces, .stationary, .ignoresCycle]
     window.ignoresMouseEvents = true
     window.hasShadow = false
     window.isOpaque = false
