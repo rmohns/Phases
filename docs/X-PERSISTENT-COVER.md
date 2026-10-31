@@ -65,6 +65,13 @@ wallpaper is showing, so it's in place before the first change. Launch
 with `open <Phases.app> --args -PhasesPersistentCover A
 -PhasesWallpaperTiming mid` (quit any running Phases first).
 
+- `-PhasesCoverSpaces own` (added 2026-10-31): tests `[D-cover-per-space]`
+  from SPEC.md on `feature/persistent-cover-transitions`. Covers leave out
+  `.canJoinAllSpaces`, so each stays on the Space it was made on;
+  Space-arrival sync is off; and on `activeSpaceDidChangeNotification`
+  any cover whose window reports `isOnActiveSpace == false` is removed.
+  Each check and removal is logged in `spike`. Only meant with B.
+
 Known gaps, on purpose: no handling of display connect/disconnect or
 resolution changes (a mismatched cover is expected there), and no Settings
 UI.
@@ -210,6 +217,30 @@ display changed to its own image every time.
 | E5 | Mission Control showed the cover images on all three displays. |
 | E8 | Lock screen and login window fine on three displays (*verified* by the author, 2026-10-30). |
 | E12 | **Grows with every change: a leak in the experiment.** No cover: 77 MB right after launch. Cover at launch: 140–187 MB (two launches). After about nine changes: 344, then 373 MB; a fresh launch plus four changes: 336 MB. About 25–30 MB per change across three displays, so old cover windows or their images aren't being released. Must be fixed before any of this ships. The 77 MB no-cover figure, against 23 MB on one display, isn't explained either. Later the same run, Activity Monitor showed 242 MB with no further changes (author): memory may be released slowly rather than leaked, or Activity Monitor's figure differs from `footprint`. Not yet measured. |
+
+### Covers on their own Space
+
+2026-10-31, macOS 27.2, built-in display only (3024 × 1964), Space 1 of
+three, Debug build, 99% cover B, `-PhasesCoverSpaces own`, Crossfade
+1 s, "Different picks per display". Driven by me with the author's
+go-ahead. Which image each Space held was read with
+`NSWorkspace.desktopImageURL(for:)` on that Space; recordings analyzed as
+above. **Caveat:** Bitrig's window filled almost all of Space 1, so on
+Space 1 only the menu bar, the Dock and a few edge pixels showed the
+wallpaper. Space 2's desktop was clear.
+
+Before launch: Space 1 Ergo Proxy, Spaces 2 and 3 the neon planet.
+Phases' launch check set Space 1 to another Ergo Proxy image.
+
+| # | Test | Result |
+|---|---|---|
+| S1 | Change on Space 1 (to Misty Rocks), swipe to 2 and back | **The cover was removed at every departure, never at the wrong time.** The Space change notification arrived about 0.9 s after the key press, once the swipe had finished, and the cover then reported `isOnActiveSpace` false (*verified* in the log, three of three departures). The removal fell while Space 1 was off screen: no frame change at that moment, and nothing after the return settled (*measured*, per-frame differences). On return Space 1 showed its real wallpaper, Misty Rocks, with no cover. Whether the cover slid with Space 1 couldn't be seen: Bitrig's window hid it. A window without `.canJoinAllSpaces` belongs to one Space and moves with it (*recalled*, not observed here). |
+| S2 | Do Spaces 2 and 3 keep their own images? | **Yes.** After the change on Space 1, Space 2 and 3 still had the neon planet. A change on Space 2 (to Tokyo) left Space 1 on Misty Rocks and Space 3 on the neon planet. A later change on Space 1 left Space 2 on Tokyo. *Verified* by reading each Space's wallpaper. |
+| S3 | Menu bar restyle after each change | **Restyled to match each image** (*observed*, menu bar crops at 4 per second). Space 2, neon planet to Tokyo: the bar showed the new image at the end of the fade, white text before and after. Space 1, Misty Rocks (light grey bar, black text) to a blue-sky image: on return, blue bar with white text, sliding in with the Space, no blink. Space 1's first change (two pale images) gave no style change to see. Weak evidence: three changes, no change of text color seen while on the Space. |
+| S4 | Switch Spaces halfway through a fade | **The wallpaper landed on Space 1, where the change was made.** The ⌃→ came 0.2 s into a 1 s fade, but macOS reported the Space change 1.13 s after the key press, after the fade had already ended at 1.02 s and set the wallpaper. So with a 1 s fade the switch can't land before the set: the swipe outlasts the rest of the fade, and macOS still treats Space 1 as the active one until the swipe ends (*verified* in the log, one run). Space 2 kept Tokyo; returning to Space 1 showed the new image, no cover. **Not tested: a 3 s fade,** where the notification would arrive mid-fade, the fading cover would be removed, and the end-of-fade set would run with Space 2 active. Where that lands is the open risk. |
+
+Evidence: `/tmp/phases-own/` (run.log, t1/t2/t4 recordings, menu bar
+sheets); not kept.
 
 ## Afterward
 

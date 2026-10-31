@@ -131,6 +131,25 @@ borderless, click-through window just above the desktop picture
   built-in or portrait display. Recording all three displays at once
   starves `screencapture` (two dropped to a few frames per second);
   record one display at a time for twitch checks.
+- `[L-cover-own-space]` **A cover without `.canJoinAllSpaces` stays on
+  its own Space, and can be removed when you leave it with nothing
+  visible.** On `activeSpaceDidChangeNotification` the departed Space's
+  cover reported `isOnActiveSpace` false every time (three of three), and
+  removing it then changed no frame. Each Space kept its own real
+  wallpaper through changes on the others. *Verified* 2026-10-31, macOS
+  27.2, one display, three Spaces, 99% cover, branch
+  `spike/persistent-cover` ("Covers on their own Space" in
+  `docs/X-PERSISTENT-COVER.md`). Supports `[D-cover-per-space]` on
+  `feature/persistent-cover-transitions`. Not seen: the cover sliding
+  with its Space (an app window hid it).
+- `[L-space-notify-after-swipe]` **`activeSpaceDidChangeNotification`
+  arrives after the swipe animation, about 0.9–1.1 s after ⌃←/⌃→, and
+  until then `setDesktopImageURL` goes to the Space being left.** A
+  change started 0.2 s before a ⌃→ finished its 1 s fade during the
+  swipe, and the wallpaper landed on the Space it was made on. *Verified*
+  2026-10-31 (log timestamps, one run). Which Space a set reaches when
+  the notification arrives mid-fade (a 3 s fade) is untested; it bears on
+  `[D-cover-per-space]`.
 - `[L-backdrop-private-store]` **Backdrop (Cindori) puts video on the
   lock screen by registering entries in macOS's private wallpaper store,**
   `~/Library/Application Support/com.apple.wallpaper/Store/aerials/manifest/entries.json`,
