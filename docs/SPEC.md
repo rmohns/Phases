@@ -309,12 +309,34 @@ image when there's more than one choice.
     `[Q-menubar-reads-wallpaper]`. Also rejected: dropping the change on
     the Space left behind, because a fade you watched start would be
     undone when you came back.
-  - **To verify in the build, before merging:** repeat the mid-fade runs
-    (3 s fade, leave at 0.3 s and 1.5 s), plus a 1 s fade that ends
-    during the swipe, before macOS announces it. In that last case,
-    whether `isOnActiveSpace` and the wallpaper set agree on which Space
-    is showing is untested; if they disagree, the change could still
-    land on the wrong Space.
+  - **How long a pending change lives:** only in memory, never saved. It
+    waits until its Space shows again, however long that takes, unless
+    it's dropped first. Dropped means its cover goes and its Space keeps
+    the older image. That happens on:
+    - Quit, logout, restart, shutdown, Force Quit, or a crash
+      `[D-cover-pause-quit]`;
+    - crossfades turning off (Transition: None or Reduce Motion)
+      `[D-cover-only-for-crossfade]`;
+    - its display disconnecting `[D-cover-follows-displays]`.
+      Reconnecting doesn't bring it back.
+  - **Pending changes can't pile up.** A change only starts on the Space
+    showing, and arriving on a Space sets its pending change. So each
+    display has at most one per Space. One brief exception: if a new
+    change starts on a Space before macOS has announced your arrival
+    there `[Q-space-notify-after-swipe]`, and you leave again mid-fade,
+    that Space holds two. On the next arrival the newer is set and the
+    older dropped. Worst case memory: one buffer per Space per display.
+  - *Why not saved across launches:* nothing public names a Space
+    (*recalled*), so a saved change couldn't find its Space again.
+  - *Untested:* deleting a Space in Mission Control while it holds a
+    pending change. macOS moves a deleted Space's windows to another
+    Space (*recalled*), so the change would land there when it shows.
+    That Space would then show the image its cover was already showing.
+  - **Checked by hand before merging** (TESTING.md `[D-cover-checks]`),
+    including a 1 s fade that ends during the swipe, before macOS
+    announces it. In that case, whether `isOnActiveSpace` and the
+    wallpaper set agree on which Space is showing is untested; if they
+    disagree, the change could still land on the wrong Space.
 - `[D-cover-only-for-crossfade]` **No cover at all unless crossfades will
   actually play:** Transition is Crossfade and Reduce Motion is off.
   - With **Transition: None**, or with Reduce Motion on, Phases just asks
@@ -459,10 +481,12 @@ With crossfades on `[D-cover-only-for-crossfade]`:
     `[D-restore-on-quit]` has set the real wallpaper. With restore on,
     that's a hard cut to the original, as in draft 32 (restoring never
     fades, `[D-no-fade-cases]`). With restore off, the real wallpaper
-    already matches, so nothing visible happens.
+    already matches, so nothing visible happens. Pending changes are
+    dropped `[D-change-stays-on-its-space]`.
   - **Logout, restart, shutdown, Force Quit, or a crash** take the covers
-    with the process, leaving the real wallpaper, which matches. A Force
-    Quit showed nothing (*observed* 2026-10-30).
+    with the process, leaving the real wallpaper, which matches, except
+    on a Space with a pending change: that Space keeps its older image. A
+    Force Quit showed nothing (*observed* 2026-10-30).
 - `[D-no-focus-steal]` **Phases never activates itself to force a menu bar
   restyle.** That would steal focus from the user's app. macOS sometimes
   delays the restyle; see `[Q-menubar-restyle-on-app-switch]`.

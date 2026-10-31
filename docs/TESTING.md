@@ -79,7 +79,9 @@ two layers.
   - *Why:* the 2026-10-28 sidebar investigation needed logging twice,
     and it was written from scratch both times (author's request).
   - Currently instrumented: the sidebar limits (`[D-sidebar-limits-watch]`,
-    category `sidebar`). What to log when chasing a platform bug is in
+    category `sidebar`), and covers (category `cover`: each cover made,
+    removed and why, redrawn or resized, held pending, and set on
+    returning to its Space; `[D-persistent-cover]`). What to log when chasing a platform bug is in
     ERRATA.md "Diagnostic procedures".
   - *Verified* 2026-10-28: with the switch on, a relaunch logged the
     sidebar's limit passes, restores, and resizes. The off state is
@@ -206,9 +208,66 @@ two layers.
   identifiers:** `sidebar`, `addPhase`, `deletePhase`, `phaseName`,
   `imageGrid`, `imageFolderName`. They're invisible to users, but renaming
   one breaks the tests.
-- **Not covered by UI tests:** crossfade timing (the twitch) is checked
-  with frame-by-frame recordings ("Diagnostic procedures" in ERRATA.md);
-  the screen-change rule `[D-screen-change-no-reroll]` is a Layer 1 test.
+- **Not covered by UI tests:** crossfade timing (the twitch) and the
+  persistent cover's Space behavior are checked by hand
+  (`[D-cover-checks]`); the screen-change rule
+  `[D-screen-change-no-reroll]` is a Layer 1 test.
+
+## Cover checks (draft 33)
+
+- `[D-cover-checks]` **The persistent cover is checked by hand before it
+  merges, and again after any change to `CrossfadeController`.** Frame
+  timing and Space behavior are out of reach of the unit and UI tests.
+  - **Ask first.** These press keys and click, so ask the author before
+    each run, as for UI tests (`[D-ui-test-runner]`), and announce when
+    it's done. Techniques: LEARNINGS.md `[L-synthetic-clicks]`,
+    `[L-twitch-measurement]`, `[L-settings-panes]`.
+  - **Setup:** a Release build, diagnostics on (`cover` category),
+    Crossfade, one display with three Spaces and no window covering the
+    desktop. Checks marked **(3)** are repeated on three displays.
+  - **Reading results:** each Space's wallpaper is read back by switching
+    to it and asking `NSWorkspace.desktopImageURL(for:)`. Cover windows
+    are listed with `CGWindowListCopyWindowInfo`: owner Phases, one level
+    above the desktop picture.
+  - **The checks,** each with what passes:
+    1. **Twitch (3):** five changes, each display recorded on its own.
+       Frames before and after each fade's end match at noise level
+       (about 40 dB or better). `[D-persistent-cover]`
+    2. **Menu bar (3):** text, and with "Show menu bar background"
+       turned on for the test, the background restyle to each image at
+       the end of its fade. A late restyle that a menu bar click fixes is
+       macOS's own (`[L-menubar-lazy-restyle]`), not a failure. Put the
+       setting back after. `[D-cover-opacity]`
+    3. **Own Space:** change on Space 1, then visit 2 and 3. Each keeps
+       its own image; the log shows Space 1's cover removed on leaving;
+       no frame changes at the removal or on returning.
+       `[D-cover-per-space]`
+    4. **Leave mid-fade:** 3 s fade, ⌃→ about 0.3 s in, then again about
+       1.5 s in. Space 2 never changes (no hard cut); the log shows the
+       change held pending; back on Space 1 the log shows it set, and the
+       read-back gives the new image there and the old one on Space 2.
+       `[D-change-stays-on-its-space]`
+    5. **Fade ends during the swipe:** 1 s fade, ⌃→ about 0.5 s in. The
+       change lands on Space 1, set directly or on return, never on
+       Space 2. The case nothing has tested yet.
+    6. **Pending dropped:** leave mid-fade as in 4, then set Transition to
+       None; repeat, then Quit. Each time the log shows the covers
+       removed, no cover windows remain, and Space 1 keeps its old image.
+    7. **No crossfades, no covers:** with Transition: None, and again
+       with Reduce Motion on, changes apply at once and no cover windows
+       exist. Turning Reduce Motion on with a cover up removes it.
+       `[D-cover-only-for-crossfade]`
+    8. **Displays (3):** change one display's resolution: its cover is
+       redrawn and fits (screenshot). Disconnect a display: the log shows
+       its cover removed. Hide the Dock: no redraw in the log.
+       `[D-cover-follows-displays]`
+    9. **Quit:** with restore on, a hard cut to the original and no cover
+       windows left; with restore off, nothing visible. `[D-cover-pause-quit]`
+  - **Record** results as *Verified* notes, with date, on the decision
+    each check covers in SPEC.md, and anything unexpected in LEARNINGS.md.
+  - *Why by hand:* the evidence is recordings, the log, and wallpapers
+    read back per Space. None of it fits an automated test that wouldn't
+    be flaky (author's standing approach for the twitch since draft 4).
 
 ## Memory checks (draft 32; covers, draft 33)
 
