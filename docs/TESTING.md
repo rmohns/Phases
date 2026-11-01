@@ -246,8 +246,8 @@ two layers.
     or closed, goes above 500 MB, tell the author. It doesn't fail the
     run; it's a signal to look at refactoring, decided when it happens,
     not built ahead of time (author, 2026-10-30).
-  - **Clicks are real mouse events,** so ask the author before each run,
-    the same as UI tests (`[D-ui-test-runner]`). The techniques are in
+  - **Clicks are real mouse events,** so ask the author first, the same
+    as UI tests (`[D-ui-test-runner]`). The techniques are in
     LEARNINGS.md `[L-synthetic-clicks]` and `[L-memory-tools]`.
   - **Record** each run's figures in LEARNINGS.md "Memory", with the date,
     macOS version, build, and displays.

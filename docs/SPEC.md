@@ -319,6 +319,13 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
 
 ## Interface
 
+- `[D-content-vs-tools]` **Controls stay clearly separate from content.**
+  A control never blends into the wallpaper or images behind it. Where
+  Liquid Glass-style translucency costs legibility or findability, Phases
+  doesn't follow it.
+  - *Why:* the author's standing design principle, moved here from
+    CLAUDE.md (2026-11-01) so it carries a tag like other decisions.
+
 ### Icons
 - **App icon:** the supplied artwork (landscape in a circle between two lunar
   crescents, blue gradient).

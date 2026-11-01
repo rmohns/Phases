@@ -21,13 +21,16 @@
 - **Spec first, always.** SPEC.md changes are approved by the user before
   any code is written, then land in the same commit as the code. The build
   must meet the spec, not the other way around. If the code needs to differ
-  from the spec, change the spec first and say so.
+  from the spec, change the spec first and say so. SPEC.md is this
+  project's ISA: don't create a separate one.
 - **One branch per change, squash-merged.** Start each change on its own
   branch: the spec edit goes first (open it in Marked for review), then
   code and ERRATA notes follow on the same branch. Squash-merge into `main`
   so each change lands as one commit with spec, code, and errata together.
-  Verification notes found after a merge ride along with the next change's
-  commit instead of getting their own. A squash merge counts as merging
+  Notes that change no decision (*Verified* notes, test results,
+  LEARNINGS.md entries) can be committed straight to `main`; spec and
+  TESTING.md decisions still go through a branch and approval. A squash
+  merge counts as merging
   into `main`: build right after it, unless the merge touched only docs
   (`docs/`, `CLAUDE.md`, README); then skip the build.
 - **Two remotes; name the one you push to.** `github` is the author's
@@ -37,18 +40,11 @@
 - **Mark Claude's commits.** Every commit Claude makes, squash merges
   included, ends with the trailer
   `Co-Authored-By: Claude (Bitrig) <noreply@anthropic.com>`. Commits
-  without it are Robert's. Exception: every commit up to and including
-  `cf969a9` was made by Claude, before this rule existed. List the
-  marked ones with
-  `git log --format='%h %s %(trailers:key=Co-Authored-By,valueonly)'`.
+  without it are Robert's, except those up to `cf969a9`, all Claude's.
 - Never install launch agents, daemons, or helpers without asking the user first.
-- Launch at Login stays opt-in, with a confirmation before registering.
 - Open the specs for review with Marked: `/opt/homebrew/bin/mk docs/SPEC.md`,
   `/opt/homebrew/bin/mk docs/ERRATA.md`, `/opt/homebrew/bin/mk docs/TESTING.md`,
   and `/opt/homebrew/bin/mk docs/LEARNINGS.md`.
-- **Design principle:** keep a clear separation between content and tools.
-  Controls must never blend into the content behind them; don't follow
-  Liquid Glass-style translucency where it costs legibility or findability.
 - **Tagged decisions:** deliberate choices carry a `[D-…]` tag in SPEC.md (or TESTING.md) and
   in a comment on the code that enforces them (see SPEC.md "Design
   decisions"). Before changing tagged code, re-read the decision; if the
@@ -74,15 +70,15 @@
   locally) before trusting it. If no test is practical, "Guarded by" says
   why (for example, frame timing) and names the manual procedure; a bare
   "Nothing yet" isn't allowed. A regression fix doesn't merge without one
-  or the other. UI test runs drive the mouse and keyboard, so ask before
-  each run (see TESTING.md "Layer 2: UI tests").
+  or the other. UI test runs drive the mouse and keyboard, so ask first
+  (see TESTING.md "Layer 2: UI tests").
 - **Diagnostics:** logging is built in and off by default
   `[D-diagnostics-switch]` (TESTING.md "Diagnostics"). Add log lines with
   `Diagnostics.logger(…)`; never write new logging infrastructure.
 - **Model rungs.** The main conversation handles specs, diagnosis, design,
   and review. Mechanical work goes to a Sonnet subagent (`model: "sonnet"`):
-  code edits already pinned down by an approved spec, renames, doc
-  formatting, and builds/unit tests plus a summary of the output. The brief
+  code edits already pinned down by an approved spec, renames, and doc
+  formatting. Run builds and unit tests directly; they're one command. The brief
   names exact files, the relevant `[D-…]`/`[Q-…]` tags, and what done looks
   like; the agent can't see this conversation. Don't delegate when the
   brief would be longer than the edit, or when the work needs a call on a
