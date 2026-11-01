@@ -320,9 +320,10 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
 ## Interface
 
 - `[D-content-vs-tools]` **Controls stay clearly separate from content.**
-  A control never blends into the wallpaper or images behind it. Where
-  Liquid Glass-style translucency costs legibility or findability, Phases
-  doesn't follow it.
+  By default, a control doesn't blend into the wallpaper or images behind
+  it; an exception has to be a deliberate, stated choice. Where Liquid
+  Glass-style translucency costs legibility or findability, Phases doesn't
+  follow it.
   - *Why:* the author's standing design principle, moved here from
     CLAUDE.md (2026-11-01) so it carries a tag like other decisions.
 

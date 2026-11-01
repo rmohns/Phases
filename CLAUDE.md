@@ -1,7 +1,8 @@
 # Phases: project rules
 
-- **Start of every conversation:** read `docs/SPEC.md` and `docs/ERRATA.md`
-  first. Both live in `docs/`, along with README images (`docs/images/`).
+- **Before touching code, the spec, or tests:** read `docs/SPEC.md` and
+  `docs/ERRATA.md`. Conversations about rules, git, or general questions
+  can skip them; the bullets below carry the doc rules. Both live in `docs/`, along with README images (`docs/images/`).
   SPEC.md is the source of truth for what the app does and why. ERRATA.md
   holds what macOS/SwiftUI/AppKit do to Phases and how it routes around
   them: platform quirks, workaround mechanics, design history, diagnostic
@@ -18,14 +19,19 @@
   open questions). Record findings there as they happen, not at the end.
   Entries move between the two as code starts or stops depending on them
   (LEARNINGS.md "Promotion" and "Demotion").
-- **Spec first, always.** SPEC.md changes are approved by the user before
-  any code is written, then land in the same commit as the code. The build
-  must meet the spec, not the other way around. If the code needs to differ
-  from the spec, change the spec first and say so. SPEC.md is this
-  project's ISA: don't create a separate one.
+- **Spec first, for design.** Changes to behavior, interface, or user
+  experience start with a SPEC.md change the user approves before any code
+  is written, landing in the same commit as the code. A bug fix that only
+  makes the app do what SPEC.md already says needs no spec change; it
+  needs one only if it changes intended behavior. Spec first is an app
+  design and architecture rule, not a debugging rule. The build must meet
+  the spec, not the other way around: if the code needs to differ from the
+  spec, change the spec first and say so. SPEC.md is this project's ISA:
+  don't create a separate one.
 - **One branch per change, squash-merged.** Start each change on its own
-  branch: the spec edit goes first (open it in Marked for review), then
-  code and ERRATA notes follow on the same branch. Squash-merge into `main`
+  branch: the spec edit, if the change needs one, goes first (open it in
+  Marked for review), then code and ERRATA notes follow on the same
+  branch. Squash-merge into `main`
   so each change lands as one commit with spec, code, and errata together.
   Notes that change no decision (*Verified* notes, test results,
   LEARNINGS.md entries) can be committed straight to `main`; spec and
