@@ -218,8 +218,8 @@ two layers.
 - `[D-cover-checks]` **The persistent cover is checked by hand before it
   merges, and again after any change to `CrossfadeController`.** Frame
   timing and Space behavior are out of reach of the unit and UI tests.
-  - **Ask first.** These press keys and click, so ask the author before
-    each run, as for UI tests (`[D-ui-test-runner]`), and announce when
+  - **Ask first.** These press keys and click, so ask the author first,
+    as for UI tests (`[D-ui-test-runner]`), and announce when
     it's done. Techniques: LEARNINGS.md `[L-synthetic-clicks]`,
     `[L-twitch-measurement]`, `[L-settings-panes]`.
   - **Setup:** a Release build, diagnostics on (`cover` category),
