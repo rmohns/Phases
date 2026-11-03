@@ -45,22 +45,7 @@ borderless, click-through window just above the desktop picture
   is a *hypothesis*. Bears on `[D-cover-settle]`: a longer settle delay
   alone may not be what fixes the twitch; partial visibility during the
   delay might be. Unproven.
-- `[L-opaque-cover-freezes-menubar]` **A fully opaque full-screen cover
-  stops the menu bar restyling for new wallpapers; a 99% opaque one
-  doesn't.** *Measured* from recordings.
-  - **100% opaque:** menu bar text stayed one color through every change
-    (white in one run, black in another). With "Show menu bar
-    background" on, the background kept an earlier image's color through
-    changes, app switches, and 15 s.
-  - **Control,** without the persistent cover: restyled normally.
-  - **99% opaque:** text and background restyled promptly for every
-    change, with or without the background setting. No twitch: frames
-    before and after each fade matched at noise level (43 dB).
-  - **Related:** refines `[Q-menubar-bg-follows-window]` and
-    `[Q-menubar-reads-wallpaper]`; possibly related to
-    `[Q-menubar-restyle-on-app-switch]`. Fits
-    `[L-motion-waits-for-reveal]`: macOS may treat a fully covered
-    desktop as not visible.
+- `[L-opaque-cover-freezes-menubar]` Promoted to `[Q-opaque-cover-freezes-menubar]` (2026-10-31).
 - `[L-cover-all-spaces]` **A cover with `.canJoinAllSpaces` and
   `.stationary` shows on every Space and in Mission Control, and slides
   with each Space during a swipe like a real wallpaper.** *Observed.*
@@ -153,6 +138,75 @@ borderless, click-through window just above the desktop picture
   - **Method note:** recording all three displays at once starves
     `screencapture` (two dropped to a few frames per second). Record one
     display at a time for twitch checks `[L-twitch-measurement]`.
+- `[L-cover-own-space]` **A cover without `.canJoinAllSpaces` stays on
+  its own Space, and can be removed when you leave it with nothing
+  visible.** On `activeSpaceDidChangeNotification` the departed Space's
+  cover reported `isOnActiveSpace` false every time (three of three), and
+  removing it then changed no frame. Each Space kept its own real
+  wallpaper through changes on the others. *Verified* 2026-10-31, macOS
+  27.2, one display, three Spaces, 99% cover, branch
+  `spike/persistent-cover` ("Covers on their own Space" in
+  `docs/X-PERSISTENT-COVER.md`). Supports `[D-cover-per-space]` on
+  `feature/persistent-cover-transitions`. Not seen at first: the cover
+  sliding with its Space (an app window hid it). **Update, run 2 the same
+  day:** the cover slid away with its Space during the swipe; Space 2
+  came in showing its own image (*observed*). But see
+  `[L-space-leave-mid-fade]`.
+- `[L-space-notify-after-swipe]` Promoted to `[Q-space-notify-after-swipe]` (2026-10-31).
+- `[L-space-leave-mid-fade]` **Leaving a Space mid-fade sends the
+  change to the wrong Space.** With a 3 s fade and ⌃→ at 0.3 s or 1.5 s
+  in, the notification arrived about 0.9 s after the key press, mid-fade;
+  the own-Space cover was removed, and the end-of-fade
+  `setDesktopImageURL` landed on the Space just arrived on. The Space left
+  behind kept its old image. When the images differed, the arrival Space
+  hard-cut to the new image about 0.9 s after the swipe ended, with no
+  fade. *Verified* 2026-10-31, macOS 27.2 (log, each Space's wallpaper
+  read back, recordings; two runs). Breaks `[D-cover-per-space]` as
+  drafted: the public API sets the wallpaper only on the active Space
+  (*recalled*), so a change can't be finished on a Space after leaving it.
+  Untested ideas: set the real wallpaper at the start of the fade, under
+  a cover still showing the old image; or, on leaving mid-fade, skip the
+  set and leave that Space unchanged until its next change. **Update,
+  same day:** draft 33 takes neither; it holds the cover and sets the
+  wallpaper on return `[D-change-stays-on-its-space]` (untested).
+- `[L-swipe-set-race]` Promoted to `[Q-set-target-decided-late]` (2026-11-03).
+- `[L-swipe-set-read]` **Reading the wallpaper just before a set doesn't
+  predict which Space the set reaches.** Hypothesis: if
+  `desktopImageURL(for:)` still returns the departing Space's image, the
+  set goes there too, so a mismatch could hold the change as pending.
+  *Falsified* 2026-11-03: branch `spike/set-target-read` (`f05ebef`) logged
+  the read just before each set; 16 trials as in `[Q-set-target-decided-late]`
+  (1 s fade, ⌃→ 0.3–0.45 s after the cover appeared), Release build,
+  macOS 27.2.
+  - **Trial h10, decisive:** Space 1 had Angelie, Space 2 Tokyo. The read
+    returned Angelie (Space 1's) with `isOnActiveSpace` true, the set
+    went out 0.48 s after the key press, and the new image (Misty Rocks)
+    landed on Space 2; Space 1 kept Angelie.
+  - **Trial h2:** a second misfire, uninformative for the read (both
+    Spaces had Angelie).
+  - **The other 11 informative trials** landed on Space 1, with sets
+    from 0.1 s before to 0.4 s after the key press.
+  - **Likely reason** (*inference*): the set call returns at once and
+    macOS's wallpaper agent picks the target Space when it handles it,
+    later. So no check made at the moment of the set can be trusted.
+  - Misfire rate across both sittings: 3 in 19 informative trials.
+- `[L-misfire-not-seen]` **With `[D-reset-on-quick-return]` in, the
+  misfire didn't happen in 24 informative trials** (build `3c891b6`,
+  same setup and timings as `[L-swipe-set-read]`, swipe 0.3–0.5 s after
+  the cover appeared). Before, it hit 3 of 19. By chance alone, 0 in 24
+  at that rate is about 2% (*calculation*). The change shouldn't affect
+  where a set lands: Space 2 is read 6 s after the swipe, before the
+  return. Unexplained; what differs between sittings isn't known.
+  *Measured* 2026-11-03.
+- `[L-swipe-before-cover]` **A swipe that starts before the cover appears
+  takes the change with it.** Change Now's cover appeared 0.6–1.15 s
+  after the menu click (the image decode). Twice, ⌃→ sent 0.3–0.4 s after
+  the click put the new cover on Space 2: it was later removed on leaving
+  Space 2, and the wallpaper set landed there, while Space 1 kept its
+  image. *Observed* 2026-11-03, two runs, both with Space 2's own image
+  picked, so nothing visible changed. With different images, Space 2
+  would fade to the change made on Space 1. Bears on the spec's "a
+  change only starts on the Space showing".
 - `[L-backdrop-private-store]` **Backdrop (Cindori) puts video on the
   lock screen by registering entries in macOS's private wallpaper store,**
   `~/Library/Application Support/com.apple.wallpaper/Store/aerials/manifest/entries.json`,
@@ -379,6 +433,30 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     `ThumbnailCell` view lists in `heap`), closed 30 s 70 (none); open 83
     (31), closed 30 s 73 (none). *Measured.* Passes: the grid is released
     each time, and the second close is 3 MB above the first (limit 5).
+- `[L-mem-draft33-runs]` **`[D-memory-protocol]` runs of draft 33
+  (persistent covers), 2026-11-03.** Release build of
+  `feature/persistent-cover-transitions` from Bitrig's build folder,
+  macOS 27.2, three displays (LG Ultrawide 5160×2160 px with three
+  Spaces, built-in 3024×1964, Cinema HD 2200×3520), 30 images, Crossfade
+  1 s, schedule paused for the run, `footprint` in MB. *Measured.*
+  - **Run A:** idle 23; changes 1–10: 137, 98, 110, 87, 141, 95, 99, 95,
+    100, 100; 30 s idle 100. Passes (tenth below first).
+  - **Run B:** idle 23; 113, 98, 98, 98, 140, 99, 117, 87, 99, 87; 30 s
+    idle 87. Passes.
+  - **Covers' cost and release** (after run B): leaving the Space 87 → 63
+    (only the main display has other Spaces; its cover held the
+    2880×2160 image, about 25 MB, so the full size came back). Back on
+    the Space: 63, no cover returned. Window open and close with
+    Crossfade: 124. One change: 194 (covers about 101 MB: 66 + 24 + 11
+    from decoded sizes). Transition: None, window closed, 30 s: 80, a
+    114 MB drop. Passes.
+  - **Baseline, Transition: None:** idle 23, 28–29 after every change.
+  - **Window** (Morning, grid scrolled to the end): before 28; open 86,
+    closed 30 s 84; open 92, closed 89; a third round: open 93, closed
+    90. `heap` found 34 `ThumbnailCell` lines with the window open and
+    none after any close. Second close 5 MB above the first, at the
+    limit; the third added 1 MB. Passes, just.
+  - Nothing near 500 MB.
 
 ## Open questions
 
@@ -553,5 +631,21 @@ techniques belong in TESTING.md; these are the ad hoc ones.
   other items come and go. Check what's under the pointer
   (`CGWindowListCopyWindowInfo`) before each click. *Verified*
   2026-10-30. See also "Open here" in ERRATA.md on System Events clicks.
+- `[L-cover-check-driving]` **What the 2026-11-03 cover checks needed.**
+  - **Change Now's fade starts 0.6–1.15 s after the click** (decode), so
+    "⌃→ 0.3 s into the fade" has to be timed from the cover window
+    appearing (poll `CGWindowListCopyWindowInfo`), not from the click
+    (`[L-swipe-before-cover]`).
+  - **Random picks often repeat a Space's current image,** which makes a
+    trial uninformative; read the wallpaper first and repeat.
+  - **The 30-minute rotation** fired mid-trial at 11:00; pause the
+    schedule for the run (Change Now still works) and put it back.
+  - **Transition is a segmented picker:** AX radio buttons "None" and
+    "Crossfade". Reduce Motion is the `AX_REDUCE_MOTION` checkbox on
+    `x-apple.systempreferences:com.apple.Accessibility-Settings.extension?Motion`
+    (not the Display pane, macOS 27.2).
+  - **The test build asks for location** (its own signature), a prompt
+    left unanswered on screen.
+  - *Verified* 2026-11-03.
 - `[L-no-fullscreen-apps]` Activity Monitor doesn't support full screen
   (it only zooms); use Calendar to test full screen. Author, 2026-10-30.

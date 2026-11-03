@@ -25,7 +25,11 @@ final class WallpaperScheduler {
   }
 
   var transitionStyle: TransitionStyle {
-    didSet { SettingsStore.defaults.set(transitionStyle.rawValue, forKey: Keys.transitionStyle) }
+    didSet {
+      SettingsStore.defaults.set(transitionStyle.rawValue, forKey: Keys.transitionStyle)
+      // [D-cover-only-for-crossfade] No crossfades, no covers.
+      if transitionStyle != .crossfade { crossfade.removeAllCovers(reason: "Transition set to None") }
+    }
   }
 
   /// Crossfade length in seconds, within `TransitionStyle.durationRange`.
@@ -414,6 +418,8 @@ final class WallpaperScheduler {
     // fires for Dock and menu bar changes, so only fix displays whose image no longer fits.
     let screens: @Sendable (Notification) -> Void = { [weak self] _ in
       Task { @MainActor in
+        // [D-cover-follows-displays]
+        self?.crossfade.screensChanged()
         self?.refreshDisplays()
         self?.evaluate(reloadingLibrary: false)
       }
@@ -443,9 +449,12 @@ final class WallpaperScheduler {
   private func restoreOriginalWallpaper() {
     timer?.invalidate()
     crossfade.finishRunningFade()
+    // [D-cover-pause-quit] At logout or shutdown the covers go with the process.
     guard !isPoweringOff else { return }
     if restoresWallpaperOnQuit { restorePoint?.restore() }
     restorePoint = nil
+    // [D-cover-pause-quit] After the restore, so the real wallpaper is in place.
+    crossfade.removeAllCovers(reason: "Quit")
   }
 
   private static func systemIsDark() -> Bool {

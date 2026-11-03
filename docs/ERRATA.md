@@ -40,7 +40,9 @@ would stop being true if a future macOS fixed the underlying behavior.
   (verified by the author, 2026-10-28), so the motion finishes within that
   time. Whether macOS 27.1 was faster is *unknown*: the draft 5 fix worked
   then with a 0.5 s delay, and the author believes (not certain) that was
-  on 27.1. Shapes `[D-cover-settle]`; history in "The twitch returns". If
+  on 27.1. Shaped `[D-cover-settle]` (drafts 5–32); since draft 33 the
+  persistent cover keeps it out of view `[D-persistent-cover]`. History in
+  "The twitch returns". If
   the twitch comes back again, measure the timing first, the same way (see
   "Diagnostic procedures").
   - *Correction:* draft 22 first said the wallpaper *appears* 0.55–0.65 s
@@ -58,7 +60,83 @@ would stop being true if a future macOS fixed the underlying behavior.
   the restyle followed app switching; that link is a guess. Explains the
   cost noted under `[D-cover-settle]`: the background now lags the fade by
   about 1.5 s instead of 0.5 s (verified by the author with draft 22,
-  2026-10-28).
+  2026-10-28). *Refined* 2026-10-30: with a cover that stays up, the
+  background follows the real wallpaper only if the cover is below 100%
+  opacity `[Q-opaque-cover-freezes-menubar]`.
+- `[Q-opaque-cover-freezes-menubar]` **A fully opaque full-screen cover
+  stops the menu bar restyling for new wallpapers; a 99% opaque one
+  doesn't (macOS 27.2).** *Measured* 2026-10-30 on one display and three.
+  Shapes `[D-cover-opacity]`. Promoted from LEARNINGS.md (2026-10-31); the
+  original entry, unchanged:
+  - `[L-opaque-cover-freezes-menubar]` **A fully opaque full-screen cover
+    stops the menu bar restyling for new wallpapers; a 99% opaque one
+    doesn't.** *Measured* from recordings.
+    - **100% opaque:** menu bar text stayed one color through every change
+      (white in one run, black in another). With "Show menu bar
+      background" on, the background kept an earlier image's color through
+      changes, app switches, and 15 s.
+    - **Control,** without the persistent cover: restyled normally.
+    - **99% opaque:** text and background restyled promptly for every
+      change, with or without the background setting. No twitch: frames
+      before and after each fade matched at noise level (43 dB).
+    - **Related:** refines `[Q-menubar-bg-follows-window]` and
+      `[Q-menubar-reads-wallpaper]`; possibly related to
+      `[Q-menubar-restyle-on-app-switch]`. Fits
+      `[L-motion-waits-for-reveal]`: macOS may treat a fully covered
+      desktop as not visible.
+- `[Q-space-notify-after-swipe]` **macOS announces a Space change only
+  after the swipe, about 0.9–1.1 s after the key press, and a wallpaper
+  set reaches only the Space showing at that moment (macOS 27.2).**
+  *Verified* 2026-10-31 (log timestamps, wallpapers read back per Space).
+  So a fade that ends after you've left its Space can't set the wallpaper
+  there. Shapes `[D-change-stays-on-its-space]`; see also LEARNINGS.md
+  `[L-space-leave-mid-fade]`. Promoted from LEARNINGS.md (2026-10-31); the
+  original entry, unchanged:
+  - `[L-space-notify-after-swipe]` **`activeSpaceDidChangeNotification`
+    arrives after the swipe animation, about 0.9–1.1 s after ⌃←/⌃→, and
+    until then `setDesktopImageURL` goes to the Space being left.** A
+    change started 0.2 s before a ⌃→ finished its 1 s fade during the
+    swipe, and the wallpaper landed on the Space it was made on. *Verified*
+    2026-10-31 (log timestamps, one run). Which Space a set reaches when
+    the notification arrives mid-fade (a 3 s fade) is untested; it bears on
+    `[D-cover-per-space]`.
+- `[Q-set-target-decided-late]` **A wallpaper set made early in a Space
+  swipe can land on the arrival Space, even while the departing Space's
+  windows still report `isOnActiveSpace` true and `desktopImageURL(for:)`
+  still returns the departing Space's image (macOS 27.2).** *Measured*
+  2026-11-03: 3 of 19 trials with the set 0.25–0.48 s after ⌃→; sets
+  from 0.1 s before to 0.45 s after the key press otherwise landed on the
+  departing Space. Likely (*inference*): the set call returns at once and
+  the wallpaper agent picks the Space when it handles it. Corrects the
+  "until then" in `[Q-space-notify-after-swipe]`. Shapes
+  `[D-reset-on-quick-return]`; the rejected pre-set check is LEARNINGS.md
+  `[L-swipe-set-read]`. Promoted from LEARNINGS.md (2026-11-03); the
+  original entry, unchanged:
+  - `[L-swipe-set-race]` **A fade that ends during the swipe can still set
+    the wallpaper on the arrival Space, even though the cover says its own
+    Space is showing.** Cover check 5, draft 33 Release build, 2026-11-03,
+    macOS 27.2, ultrawide with three Spaces, 1 s fade, ⌃→ sent 0.4 s after
+    the cover window appeared (about 0.7 s into the fade). *Measured* (log,
+    wallpapers read back per Space, recordings).
+    - **Trial 6 of 6 informative ones:** fade ended about 0.25 s after the
+      key press; no "pending" line, so `isOnActiveSpace` was still true
+      and Phases set the wallpaper then. Space 2 read back the new image
+      and Space 1 its old one. The recording shows Space 2 settle on its
+      own image after the swipe, then hard-cut to the new one under 0.5 s
+      later: the `[L-space-leave-mid-fade]` symptom.
+    - **The other five** (trials 2, 4, 5, 8, 9) landed on Space 1: four set
+      directly (fade ending 0.1–0.45 s after the key press), one through
+      the pending path. Trials 2 and 4 had the same 0.25 s timing as the
+      failure, so it isn't a clean threshold.
+    - **So:** during roughly the first half-second of a swipe, the
+      `isOnActiveSpace` answer and the Space `setDesktopImageURL` targets
+      can disagree. Corrects the *recalled* reading of
+      `[Q-space-notify-after-swipe]` that sets go to the Space being left
+      until the notification. Cause not established; no fix tried
+      (author's rule: diagnose and explain first).
+    - **Notification timing:** in all six trials the "Space left" removal
+      logged 0.51–0.53 s after the key press, against 0.9–1.1 s on
+      2026-10-31. Unexplained; synthetic ⌃→ both times.
 - `[Q-menubar-reads-wallpaper]` **macOS picks the menu bar's text color and
   shadow from the actual wallpaper, ignoring windows above it.** *Verified*
   2026-10-26 in draft 4 testing: setting the wallpaper at the start of a
@@ -330,7 +408,7 @@ would stop being true if a future macOS fixed the underlying behavior.
   why the unit tests are a Swift package run with `swift test` (see
   TESTING.md). *Re-verified* 2026-10-29 with a
   `bundle.ui-testing` target and a scheme naming it in `testTargets`: same
-  message. So Layer 2 drives the app through the AX API instead of
+  message. So the Interface tests drive the app through the AX API instead of
   XCUITest `[D-ui-test-runner]`.
 
 - `[Q-launch-activate-refused]` **A menu bar app launched in the
@@ -361,18 +439,22 @@ would stop being true if a future macOS fixed the underlying behavior.
 
 How the tagged decisions route around the quirks above.
 
-### Crossfade settle timing
+### Persistent cover
 
-`[D-cover-settle]` removes the cover 1.5 s after the wallpaper is set.
+`[D-persistent-cover]` keeps the cover up after a crossfade instead of
+removing it after a settle delay.
 
-- *Why 1.5 s:* macOS plays its own motion 0.55–0.65 s after the wallpaper
-  is set `[Q-wallpaper-motion-delay]`. Draft 5's 0.5 s delay removed the
-  cover right as that motion played, bringing the twitch back (see "The
-  twitch returns"). 1.5 s leaves about 0.7 s of margin.
-- *Cost:* the menu bar's background lags the fade by about 1.5 s instead of
-  0.5 s `[Q-menubar-bg-follows-window]`. The menu bar's text and icon color
-  lag as before `[Q-menubar-restyle-on-app-switch]`.
-- Code: `CrossfadeController.settleDelay`.
+- *Opacity:* 0.99, because a fully opaque cover freezes the menu bar's
+  styling `[Q-opaque-cover-freezes-menubar]` `[D-cover-opacity]`.
+- *Spaces:* covers don't join every Space; a settled cover is removed on
+  `activeSpaceDidChangeNotification` once its window reports
+  `isOnActiveSpace` false `[D-cover-per-space]`.
+- *Leaving mid-fade:* the end of a fade checks `isOnActiveSpace` per
+  cover and holds the set for covers whose Space has gone, finishing it
+  when the Space shows again `[Q-space-notify-after-swipe]`
+  `[D-change-stays-on-its-space]`. Whether `isOnActiveSpace` and the set
+  agree during the swipe itself, before macOS announces it, is untested.
+- Code: `App/Model/CrossfadeController.swift`.
 
 ### Tall toolbar
 
@@ -561,11 +643,25 @@ The crossfade code's timing hadn't changed since draft 5. The author
 believes (not certain) the original fix was tested on macOS 27.1, so macOS
 27.2 may have made wallpaper changes slower. That's unconfirmed; the draft
 5 timing may also have been marginal from the start. The fix is a longer
-settle delay (1.5 s), not a new mechanism (see "Crossfade settle timing").
+settle delay (1.5 s), not a new mechanism (see "Crossfade settle timing (drafts 5–32)").
 
 The same recording showed a second, separate problem: turning System
 Settings' "Show menu bar background" on or off started a crossfade to a new
 image `[Q-screen-params-notification]`. See `[D-screen-change-no-reroll]`.
+
+### Crossfade settle timing (drafts 5–32)
+
+`[D-cover-settle]`, replaced in draft 33 by `[D-persistent-cover]`,
+removed the cover 1.5 s after the wallpaper was set.
+
+- *Why 1.5 s:* macOS plays its own motion 0.55–0.65 s after the wallpaper
+  is set `[Q-wallpaper-motion-delay]`. Draft 5's 0.5 s delay removed the
+  cover right as that motion played, bringing the twitch back (see "The
+  twitch returns"). 1.5 s leaves about 0.7 s of margin.
+- *Cost:* the menu bar's background lags the fade by about 1.5 s instead of
+  0.5 s `[Q-menubar-bg-follows-window]`. The menu bar's text and icon color
+  lag as before `[Q-menubar-restyle-on-app-switch]`.
+- Code was `CrossfadeController.settleDelay`, removed in draft 33.
 
 ### Sidebar collapse: first version
 
@@ -653,7 +749,7 @@ Logging is switched on and read as described under "Diagnostics" in TESTING.md
 ## Regressions found so far
 
 Bugs found in testing and fixed, oldest first, with how a test could guard
-each one (see "Layer 2: UI tests" in TESTING.md). UI tests live in
+each one (see "Interface tests" in TESTING.md). UI tests live in
 `UITests/Tests/PhasesUITests/`, unit tests in `UnitTests/Tests/`. Design changes made after
 review (menu bar icon legibility, sidebar width limits, branding panel
 dimming) aren't listed; neither is the unreproduced black desktop (see
@@ -671,12 +767,12 @@ the fix, or, if none is practical, the reason and the manual procedure
 | 2026-10-27 (draft 10) | Branding tagline cut off after its first line, because sidebar rows default to one line (*git only*, commit 58555d3) | Allow two lines on the tagline | `AppearanceTests/brandingPanelScreenshot` (screenshot for review; the panel's AX label is fixed text) |
 | 2026-10-28 | Dragging the sidebar divider past its minimum collapsed the sidebar, with no way to reopen it; the first fix flickered and broke the 240 pt minimum `[Q-sidebar-collapse]` | Non-collapsible split view item `[D-sidebar-always-visible]` | `SidebarTests/dividerDraggedFarLeftKeepsSidebarOpen` |
 | 2026-10-28 (draft 13) | − did nothing: it started disabled and never re-enabled when a phase was selected `[Q-safe-area-inset-refresh]` | +/− bar as its own view bound to the selection `[D-sidebar-footer-view]` | `PhaseListTests/deleteRemovesANewlyAddedPhase` (adds a phase, then deletes it) |
-| 2026-10-28 (draft 15) | Deleting a phase always selected the first phase | Select the next phase down `[D-delete-selects-next]` | `PhaseListSelectionTests` (Layer 1); `PhaseListTests/deletingAMiddlePhaseSelectsTheOneBelow` |
+| 2026-10-28 (draft 15) | Deleting a phase always selected the first phase | Select the next phase down `[D-delete-selects-next]` | `PhaseListSelectionTests` (unit test); `PhaseListTests/deletingAMiddlePhaseSelectsTheOneBelow` |
 | 2026-10-28 (draft 17; draft 18's fix didn't work) | The Name field had focus with its text selected when the window opened, so any keypress renamed the phase `[Q-default-focus-loses]` | Move focus to the sidebar a run-loop pass after the window appears `[D-initial-focus-sidebar]` | `FocusTests/typingAfterReopeningDoesNotRenameThePhase` (reopen path `[Q-closed-window-keeps-focus]`; failed without the fix, passed with it, 2026-10-29). First open: manual only `[Q-launch-activate-refused]`: open from the menu, type a letter |
-| 2026-10-28 (draft 19) | Tab visited only the on-screen thumbnails, didn't scroll, then jumped back to the sidebar `[Q-lazy-grid-tab]` | Grid is one Tab stop with an arrow-key cursor `[D-grid-one-tab-stop]` | `ImageGridNavigationTests` (Layer 1); `FocusTests/gridIsOneTabStopAndArrowsScroll` |
+| 2026-10-28 (draft 19) | Tab visited only the on-screen thumbnails, didn't scroll, then jumped back to the sidebar `[Q-lazy-grid-tab]` | Grid is one Tab stop with an arrow-key cursor `[D-grid-one-tab-stop]` | `ImageGridNavigationTests` (unit test); `FocusTests/gridIsOneTabStopAndArrowsScroll` |
 | 2026-10-28 | Title bar became short and crowded after the sidebar toggle was removed; then the fix made it 66 pt tall `[Q-no-items-no-toolbar]` `[Q-empty-toolbar-66pt]` | Hand-made empty unified toolbar, icon-only `[D-tall-toolbar]` | `AppearanceTests/toolbarIs52PointsTall` (AX toolbar frame; matching AppKit's measure is unverified). Cause of the 66 pt only theorized |
 | 2026-10-28 | Sidebar could be dragged far below 240 pt and far above 320 pt again, right after the toolbar helper was added | One helper, toolbar first, then sidebar limits `[D-window-helper-order]` | `SidebarTests/dividerStaysWithin240To320`. Appeared fixed; the real cause was found later (draft 22 row) |
 | 2026-10-28 (draft 21, macOS 27.2) | The crossfade twitch returned: the cover was removed while macOS was still showing the new wallpaper `[Q-wallpaper-motion-delay]` | Settle delay raised from 0.5 s to 1.5 s `[D-cover-settle]`; see "The twitch returns" | Not suited to XCUITest (frame timing); checked with frame-by-frame recordings |
-| 2026-10-28 (draft 21) | Hiding the Dock or toggling "Show menu bar background" crossfaded to a new image `[Q-screen-params-notification]` | Screen changes run the normal check instead of re-applying `[D-screen-change-no-reroll]` | `WallpaperCheckTests` (Layer 1; check pulled out into `WallpaperCheck`). The handler's wiring to that check isn't tested |
+| 2026-10-28 (draft 21) | Hiding the Dock or toggling "Show menu bar background" crossfaded to a new image `[Q-screen-params-notification]` | Screen changes run the normal check instead of re-applying `[D-screen-change-no-reroll]` | `WallpaperCheckTests` (unit test; check pulled out into `WallpaperCheck`). The handler's wiring to that check isn't tested |
 | 2026-10-28 (draft 22) | Sidebar width limits gone again: drags from very narrow to very wide | Cause logged: SwiftUI rewrites the split view item's limits seconds after the window opens `[Q-split-item-rewrite]`. Fix: watch the item and put the limits back `[D-sidebar-limits-watch]`; verified 2026-10-28 | `SlowSidebarTests` (`PHASES_UI_SLOW=1`) and `SidebarTests/dividerStaysWithin240To320`, both switching the detail pane before dragging; failed without the watch (sidebar collapsed), passed with it, 2026-10-29 |
 | 2026-10-29 (found by the UI tests) | A long image folder name squeezed Settings' Choose… button to a 16 pt sliver: the name's `.layoutPriority(1)` takes its full width first | `.fixedSize()` on Choose… | `AppearanceTests/imageFolderNameScreenshot` (button at least 60 pt); failed on the old build at 16 pt, passed on the fix, 2026-10-29 |
