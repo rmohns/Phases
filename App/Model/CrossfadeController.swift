@@ -19,6 +19,12 @@ final class CrossfadeController {
   /// restyling for new wallpapers [Q-opaque-cover-freezes-menubar].
   private static let coverOpacity: CGFloat = 0.99
 
+  /// [D-reset-on-quick-return] Leaving a Space this soon after its set may
+  /// mean the set reached the arrival Space [Q-set-target-decided-late].
+  /// Longer than macOS's 0.5–1.1 s to announce a Space change
+  /// [Q-space-notify-after-swipe].
+  private static let quickReturnWindow: TimeInterval = 1.5
+
   private enum CoverState {
     /// Fading in; owned by the running fade.
     case fading
@@ -36,6 +42,8 @@ final class CrossfadeController {
     var frame: CGRect
     var scale: CGFloat
     var state: CoverState
+    /// When its wallpaper was last set [D-reset-on-quick-return].
+    var setAt: Date?
 
     init(window: NSWindow, url: URL, screen: NSScreen, displayID: CGDirectDisplayID, state: CoverState) {
       self.window = window
@@ -200,6 +208,7 @@ final class CrossfadeController {
         // Space showing; if this cover's Space has gone, hold the change.
         if incoming.window.isOnActiveSpace {
           incoming.state = .settled
+          incoming.setAt = Date()
           toSet.append(entry.assignment)
         } else {
           incoming.state = .pending
@@ -221,12 +230,19 @@ final class CrossfadeController {
   /// that Space keeps the same image as its real wallpaper.
   /// [D-change-stays-on-its-space] A pending cover whose Space is showing
   /// again gets its wallpaper set.
+  /// [D-reset-on-quick-return] A settled cover left within
+  /// `quickReturnWindow` of its set goes back to pending instead.
   private func activeSpaceChanged() {
     for cover in covers {
       switch cover.state {
       case .fading:
         continue
       case .settled where !cover.window.isOnActiveSpace:
+        if let setAt = cover.setAt, Date().timeIntervalSince(setAt) < Self.quickReturnWindow {
+          cover.state = .pending
+          diagLog.log("cover \(Diagnostics.id(cover.window), privacy: .public) pending again on \(cover.displayID): Space left \(Date().timeIntervalSince(setAt), format: .fixed(precision: 2)) s after the set, \(cover.url.lastPathComponent, privacy: .public)")
+          continue
+        }
         diagLog.log("cover \(Diagnostics.id(cover.window), privacy: .public) removed on \(cover.displayID): Space left")
         remove(cover)
       case .pending where cover.window.isOnActiveSpace:
@@ -241,6 +257,7 @@ final class CrossfadeController {
           remove(other)
         }
         cover.state = .settled
+        cover.setAt = Date()
         WallpaperSetter.apply([WallpaperAssignment(screen: screen, url: cover.url)])
         diagLog.log("cover \(Diagnostics.id(cover.window), privacy: .public) back on its Space; wallpaper set on \(cover.displayID): \(cover.url.lastPathComponent, privacy: .public)")
       default:
