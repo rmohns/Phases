@@ -194,6 +194,26 @@ borderless, click-through window just above the desktop picture
   - **Notification timing:** in all six trials the "Space left" removal
     logged 0.51–0.53 s after the key press, against 0.9–1.1 s on
     2026-10-31. Unexplained; synthetic ⌃→ both times.
+- `[L-swipe-set-read]` **Reading the wallpaper just before a set doesn't
+  predict which Space the set reaches.** Hypothesis: if
+  `desktopImageURL(for:)` still returns the departing Space's image, the
+  set goes there too, so a mismatch could hold the change as pending.
+  *Falsified* 2026-11-03: branch `spike/set-target-read` (`f05ebef`) logged
+  the read just before each set; 16 trials as in `[L-swipe-set-race]`
+  (1 s fade, ⌃→ 0.3–0.45 s after the cover appeared), Release build,
+  macOS 27.2.
+  - **Trial h10, decisive:** Space 1 had Angelie, Space 2 Tokyo. The read
+    returned Angelie (Space 1's) with `isOnActiveSpace` true, the set
+    went out 0.48 s after the key press, and the new image (Misty Rocks)
+    landed on Space 2; Space 1 kept Angelie.
+  - **Trial h2:** a second misfire, uninformative for the read (both
+    Spaces had Angelie).
+  - **The other 11 informative trials** landed on Space 1, with sets
+    from 0.1 s before to 0.4 s after the key press.
+  - **Likely reason** (*inference*): the set call returns at once and
+    macOS's wallpaper agent picks the target Space when it handles it,
+    later. So no check made at the moment of the set can be trusted.
+  - Misfire rate across both sittings: 3 in 19 informative trials.
 - `[L-swipe-before-cover]` **A swipe that starts before the cover appears
   takes the change with it.** Change Now's cover appeared 0.6–1.15 s
   after the menu click (the image decode). Twice, ⌃→ sent 0.3–0.4 s after
