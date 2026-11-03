@@ -550,6 +550,19 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     an inactive menu bar app may sit idle with SwiftUI's `openWindow`
     queued and never carried out. The experiment build had a delayed
     log line too, and `open` activates Phases first, which also wakes it.
+  - Timers-off check, 2026-11-03 18:06 (Claude, 3 runs): **invalid.** All
+    3 passed, but every run logged the +0.5 s and +2 s lines, so the
+    harness launched an older build, not the timers-off one built at
+    18:06 (*verified* from the log).
+  - **Cause: the harness's "newest build" pick is broken** (*verified*,
+    `stat`, 18:07). It compares the `Phases.app` bundles' modification
+    dates, but Bitrig gives every bundle the same date (12:36:03 for all
+    three builds present), so the pick among ties follows directory
+    order: effectively arbitrary. Only the executable inside carries the
+    build time (17:47, 18:00, 18:06). Any UI test run made while several
+    builds sat in the Builds folder may have tested an older build than
+    intended. Which build each earlier relaunch run used is known only
+    from its log format.
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
