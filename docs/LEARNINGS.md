@@ -521,6 +521,17 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     later, visible and key. The author saw it open on Space 1 and called
     that acceptable (*observed*, same run). It's what `[D-open-here]`
     already promises for "Open Phases…".
+  - **UI test failure, 2026-11-03, `feature/reopen-window` at `d4b73d3`**
+    (Claude): `RelaunchTests/relaunchWithTheWindowClosedShowsIt` failed
+    twice (the second run was an accident of a piped command). The test
+    sends the reopen Apple event straight to the process. The log shows
+    the handler fired and the opening routine ran (`relaunched`, then
+    the Space mover's line), but the window never showed and Phases
+    ended with no Dock icon (*verified*). Unlike the experiment's `open`,
+    nothing activated Phases first: in every experiment run, "became
+    active" was logged *before* the reopen call (*verified*), so Launch
+    Services activates, then reopens. Hypothesis, untested: the routine
+    fails when Phases isn't already active.
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
