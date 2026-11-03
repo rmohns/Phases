@@ -539,6 +539,17 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     pass on the same code point to something intermittent (*hypothesis*).
     The +0.5 s and +2 s lines never logged: the test force-quits Phases
     as soon as the window appears (*likely*, not checked).
+  - Five more runs, 2026-11-03 18:02–18:04 (Claude), the test holding
+    Phases 3 s after the window appears: **5 of 5 passed** (*verified*).
+    Each logged inactive accessory at the reopen call, then active,
+    regular, and the window visible and key 0.5 s later. So: 6 of 6
+    pass on the build with the delayed log lines, 0 of 2 on the build
+    without them.
+  - *Hypothesis* (untested): the delayed log lines are what make it
+    work. They're timers that wake Phases' main run loop; without them,
+    an inactive menu bar app may sit idle with SwiftUI's `openWindow`
+    queued and never carried out. The experiment build had a delayed
+    log line too, and `open` activates Phases first, which also wakes it.
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
