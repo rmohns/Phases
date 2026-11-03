@@ -598,6 +598,15 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     run out of room, and macOS showed a chevron that expands the hidden
     icons when clicked, so Phases stays reachable on macOS 27.2
     (*observed* by the author).
+  - **Seen again, 2026-11-03** (Claude, `feature/reopen-window`, fast
+    suite twice): the same refusal, "the menu bar item at (2541.0, 31.5)
+    isn't this test instance's," at launch. 17:51: `brandingPanelScreenshot`
+    (build not known, see the harness note under `[L-reopen-event]`).
+    18:11: `brandingPanelScreenshot` and `gridIsOneTabStopAndArrowsScroll`
+    (build of 18:11:16, printed by the harness); the other 11 passed
+    (*verified*). Same x every time, wide display, no leftover Phases
+    afterward. *Guess:* the previous test's force-quit instance still
+    owns that spot for a moment.
 
 - `[L-hdr-wallpaper]` **How does macOS draw an HDR photo (an iPhone
   HEIC with a gain map) as wallpaper: SDR, or with HDR headroom?**
