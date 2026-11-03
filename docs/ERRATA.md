@@ -100,6 +100,43 @@ would stop being true if a future macOS fixed the underlying behavior.
     2026-10-31 (log timestamps, one run). Which Space a set reaches when
     the notification arrives mid-fade (a 3 s fade) is untested; it bears on
     `[D-cover-per-space]`.
+- `[Q-set-target-decided-late]` **A wallpaper set made early in a Space
+  swipe can land on the arrival Space, even while the departing Space's
+  windows still report `isOnActiveSpace` true and `desktopImageURL(for:)`
+  still returns the departing Space's image (macOS 27.2).** *Measured*
+  2026-11-03: 3 of 19 trials with the set 0.25–0.48 s after ⌃→; sets
+  from 0.1 s before to 0.45 s after the key press otherwise landed on the
+  departing Space. Likely (*inference*): the set call returns at once and
+  the wallpaper agent picks the Space when it handles it. Corrects the
+  "until then" in `[Q-space-notify-after-swipe]`. Shapes
+  `[D-reset-on-quick-return]`; the rejected pre-set check is LEARNINGS.md
+  `[L-swipe-set-read]`. Promoted from LEARNINGS.md (2026-11-03); the
+  original entry, unchanged:
+  - `[L-swipe-set-race]` **A fade that ends during the swipe can still set
+    the wallpaper on the arrival Space, even though the cover says its own
+    Space is showing.** Cover check 5, draft 33 Release build, 2026-11-03,
+    macOS 27.2, ultrawide with three Spaces, 1 s fade, ⌃→ sent 0.4 s after
+    the cover window appeared (about 0.7 s into the fade). *Measured* (log,
+    wallpapers read back per Space, recordings).
+    - **Trial 6 of 6 informative ones:** fade ended about 0.25 s after the
+      key press; no "pending" line, so `isOnActiveSpace` was still true
+      and Phases set the wallpaper then. Space 2 read back the new image
+      and Space 1 its old one. The recording shows Space 2 settle on its
+      own image after the swipe, then hard-cut to the new one under 0.5 s
+      later: the `[L-space-leave-mid-fade]` symptom.
+    - **The other five** (trials 2, 4, 5, 8, 9) landed on Space 1: four set
+      directly (fade ending 0.1–0.45 s after the key press), one through
+      the pending path. Trials 2 and 4 had the same 0.25 s timing as the
+      failure, so it isn't a clean threshold.
+    - **So:** during roughly the first half-second of a swipe, the
+      `isOnActiveSpace` answer and the Space `setDesktopImageURL` targets
+      can disagree. Corrects the *recalled* reading of
+      `[Q-space-notify-after-swipe]` that sets go to the Space being left
+      until the notification. Cause not established; no fix tried
+      (author's rule: diagnose and explain first).
+    - **Notification timing:** in all six trials the "Space left" removal
+      logged 0.51–0.53 s after the key press, against 0.9–1.1 s on
+      2026-10-31. Unexplained; synthetic ⌃→ both times.
 - `[Q-menubar-reads-wallpaper]` **macOS picks the menu bar's text color and
   shadow from the actual wallpaper, ignoring windows above it.** *Verified*
   2026-10-26 in draft 4 testing: setting the wallpaper at the start of a

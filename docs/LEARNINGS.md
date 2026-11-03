@@ -169,37 +169,13 @@ borderless, click-through window just above the desktop picture
   set and leave that Space unchanged until its next change. **Update,
   same day:** draft 33 takes neither; it holds the cover and sets the
   wallpaper on return `[D-change-stays-on-its-space]` (untested).
-- `[L-swipe-set-race]` **A fade that ends during the swipe can still set
-  the wallpaper on the arrival Space, even though the cover says its own
-  Space is showing.** Cover check 5, draft 33 Release build, 2026-11-03,
-  macOS 27.2, ultrawide with three Spaces, 1 s fade, ⌃→ sent 0.4 s after
-  the cover window appeared (about 0.7 s into the fade). *Measured* (log,
-  wallpapers read back per Space, recordings).
-  - **Trial 6 of 6 informative ones:** fade ended about 0.25 s after the
-    key press; no "pending" line, so `isOnActiveSpace` was still true
-    and Phases set the wallpaper then. Space 2 read back the new image
-    and Space 1 its old one. The recording shows Space 2 settle on its
-    own image after the swipe, then hard-cut to the new one under 0.5 s
-    later: the `[L-space-leave-mid-fade]` symptom.
-  - **The other five** (trials 2, 4, 5, 8, 9) landed on Space 1: four set
-    directly (fade ending 0.1–0.45 s after the key press), one through
-    the pending path. Trials 2 and 4 had the same 0.25 s timing as the
-    failure, so it isn't a clean threshold.
-  - **So:** during roughly the first half-second of a swipe, the
-    `isOnActiveSpace` answer and the Space `setDesktopImageURL` targets
-    can disagree. Corrects the *recalled* reading of
-    `[Q-space-notify-after-swipe]` that sets go to the Space being left
-    until the notification. Cause not established; no fix tried
-    (author's rule: diagnose and explain first).
-  - **Notification timing:** in all six trials the "Space left" removal
-    logged 0.51–0.53 s after the key press, against 0.9–1.1 s on
-    2026-10-31. Unexplained; synthetic ⌃→ both times.
+- `[L-swipe-set-race]` Promoted to `[Q-set-target-decided-late]` (2026-11-03).
 - `[L-swipe-set-read]` **Reading the wallpaper just before a set doesn't
   predict which Space the set reaches.** Hypothesis: if
   `desktopImageURL(for:)` still returns the departing Space's image, the
   set goes there too, so a mismatch could hold the change as pending.
   *Falsified* 2026-11-03: branch `spike/set-target-read` (`f05ebef`) logged
-  the read just before each set; 16 trials as in `[L-swipe-set-race]`
+  the read just before each set; 16 trials as in `[Q-set-target-decided-late]`
   (1 s fade, ⌃→ 0.3–0.45 s after the cover appeared), Release build,
   macOS 27.2.
   - **Trial h10, decisive:** Space 1 had Angelie, Space 2 Tokyo. The read

@@ -296,6 +296,30 @@ image when there's more than one choice.
     **pending**. When that Space shows again, Phases sets the wallpaper
     behind the cover, and from then on it's an ordinary cover
     `[D-cover-per-space]`.
+  - `[D-reset-on-quick-return]` **Left just after the set:** if its Space
+    stops showing within 1.5 s of its wallpaper being set, the cover
+    isn't removed. It goes back to pending, and the wallpaper is set
+    again when that Space shows again.
+    - *Why:* a set made early in a swipe can land on the Space you're
+      arriving on, even though the cover still reports its own Space as
+      showing (3 of 19 trials, 2026-11-03). Nothing Phases can check at
+      the moment of the set tells it where the set will go. Setting
+      again on return makes sure the Space the change was made on gets
+      it. If the first set did land there, the second changes nothing
+      visible apart from the usual menu bar blink `[Q-menubar-blank]`.
+      macOS fights this; see `[Q-set-target-decided-late]`.
+    - *What it can't fix:* in that misfire, the Space you arrive on
+      hard-cuts to the new image and keeps it until its own next change.
+      Phases never learns what that Space showed before, so it can't put
+      it back.
+    - *1.5 s:* longer than the 0.5–1.1 s macOS takes to announce a Space
+      change `[Q-space-notify-after-swipe]`, so every set made during a
+      swipe falls inside it. *Cost:* that cover's buffer is held until
+      you return, as for any pending change.
+    - *Rejected:* reading the wallpaper just before the set and holding
+      the change if it no longer matches the Space's image. The read
+      pointed at the right Space while the set went to the other
+      (LEARNINGS.md `[L-swipe-set-read]`).
   - A cover whose fade is still running, or whose change is pending, is
     not removed on leaving its Space. The old cover under a pending one
     is removed as usual (off screen).
@@ -360,8 +384,9 @@ image when there's more than one choice.
     swipe; `isOnActiveSpace` still said the cover's Space was showing,
     so the wallpaper was set, but it landed on Space 2, which hard-cut
     to the new image with no fade, while Space 1 kept its old one. The
-    other 5 landed on Space 1. LEARNINGS.md `[L-swipe-set-race]`. Open;
-    `[D-cover-checks]` isn't passed until it's resolved.
+    other 5 landed on Space 1. `[Q-set-target-decided-late]`. Answered
+    by `[D-reset-on-quick-return]` (approved by the author, 2026-11-03);
+    not yet rechecked.
 - `[D-cover-only-for-crossfade]` **No cover at all unless crossfades will
   actually play:** Transition is Crossfade and Reduce Motion is off.
   - With **Transition: None**, or with Reduce Motion on, Phases just asks

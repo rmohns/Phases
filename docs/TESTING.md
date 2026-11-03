@@ -267,9 +267,14 @@ Each with what passes:
    change held pending; back on Space 1 the log shows it set, and the
    read-back gives the new image there and the old one on Space 2.
    `[D-change-stays-on-its-space]`
-5. **Fade ends during the swipe:** 1 s fade, ⌃→ about 0.5 s in. The
-   change lands on Space 1, set directly or on return, never on
-   Space 2. The case nothing has tested yet.
+5. **Fade ends during the swipe:** 1 s fade, ⌃→ about 0.5 s in, timed
+   from the cover window appearing, not the click; at least ten trials
+   where Spaces 1 and 2 had different images. Every trial ends with
+   Space 1 showing the new image once you're back, set directly or on
+   return. Space 2 hard-cutting to the new image now and then is
+   macOS's own `[Q-set-target-decided-late]`, not a failure; the log
+   should show the change pending again and set on return.
+   `[D-reset-on-quick-return]`
 6. **Pending dropped:** leave mid-fade as in 4, then set Transition to
    None; repeat, then Quit. Each time the log shows the covers
    removed, no cover windows remain, and Space 1 keeps its old image.
