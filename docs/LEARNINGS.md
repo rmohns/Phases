@@ -485,6 +485,12 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     re-show it. Same gap as run 1. The author saw focus leave Bitrig and
     nothing else (*observed*, same run): today a relaunch takes focus
     from the user's app and shows nothing in exchange.
+  - Run 4, mode `none`, window minimized (2026-11-03, same method;
+    *verified* from the log): reopen arrives with
+    `hasVisibleWindows=true` even though the only window is minimized
+    (AppKit counts it), and AppKit's default handling un-minimizes it:
+    0.5 s later it's visible, key, not minimized. The author saw it come
+    up from the Dock with focus (*observed*, same run). Nothing to add.
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
