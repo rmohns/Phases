@@ -381,6 +381,18 @@ would stop being true if a future macOS fixed the underlying behavior.
   either: the menu still showed, then vanished once the menus were clicked
   (*verified* 2026-10-29, author). Shapes `[D-app-menu]`, which keeps the
   menu; see "View menu removal" under "Design history".
+- `[Q-reopen-ignores-closed-window]` **Launching Phases while it runs
+  activates it but shows nothing if the window is closed or was never
+  opened (macOS 27.2, SwiftUI `Window` with
+  `.defaultLaunchBehavior(.suppressed)`).** *Verified* 2026-11-03 from the
+  diagnostics log (Claude, relaunching with `open`) and seen by the
+  author: the reopen call does reach a menu bar accessory, and
+  activation is granted (a relaunch isn't a background launch, so
+  `[Q-launch-activate-refused]` doesn't apply), but neither AppKit nor
+  SwiftUI re-shows the window, and focus leaves the user's app for
+  nothing. An open or minimized window is handled on its own. Shapes
+  `[D-reopen-shows-window]`; see "Relaunch opens the window" under
+  "Workarounds". Experiment record: `[L-reopen-event]` in LEARNINGS.md.
 
 ### Tools
 
@@ -529,6 +541,22 @@ switch. *Verified* 2026-10-29 (author, by hand); Finder seems to be
 treated specially because it owns the desktop on every Space (recalled
 explanation). UI test rerun the same day: same pass. Code:
 `App/Model/FocusHandoff.swift`, `App/Model/HandoffChoice.swift`.
+
+### Relaunch opens the window
+
+`[D-reopen-shows-window]`: an app delegate (`ReopenHandler`) answers
+`applicationShouldHandleReopen` by posting a notification and returning
+`false`, so AppKit does nothing of its own. The menu bar icon's view
+(`MenuBarLabel`) receives it and runs the shared opening routine
+(`OpenWindowAction.showPhasesWindow()`), because only a SwiftUI view can
+call `openWindow`, and the menu bar icon is the one view alive while the
+window is closed. The delegate routes every case, minimized and open
+included, so the relaunch always behaves like "Open Phases…",
+`[D-open-here]` included. *Verified* 2026-11-03 on
+`experiment/reopen-window`: never opened, closed, minimized, and closed
+on another Space all ended with the window visible, key, on the current
+Space, and Phases regular (log and author's eyes; `[L-reopen-event]`
+runs 5a–5c and 6).
 
 ### Branding panel insets
 

@@ -3,13 +3,14 @@ import SwiftUI
 @main
 struct AppDefinition: App {
   @State private var scheduler = WallpaperScheduler()
+  // [D-reopen-shows-window] Launching Phases while it runs opens the window.
+  @NSApplicationDelegateAdaptor private var reopenHandler: ReopenHandler
 
   var body: some Scene {
     MenuBarExtra {
       MenuContent(scheduler: scheduler)
     } label: {
-      Image(nsImage: Self.menuBarIcon)
-        .accessibilityLabel("Phases")
+      MenuBarLabel()
     }
 
     // [D-one-window] Everything, Settings included, lives in this one window.
@@ -23,13 +24,4 @@ struct AppDefinition: App {
     .defaultLaunchBehavior(.suppressed)
     .commands { PhasesCommands(scheduler: scheduler) }
   }
-
-  /// [D-menubar-icon] Solid shapes, drawn at 20 pt as a template so macOS
-  /// colors it for light and dark menu bars.
-  private static let menuBarIcon: NSImage = {
-    let image = NSImage(named: "MenuBarIcon") ?? NSImage()
-    image.size = NSSize(width: 20, height: 20)
-    image.isTemplate = true
-    return image
-  }()
 }
