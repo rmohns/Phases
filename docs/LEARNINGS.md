@@ -476,7 +476,8 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
   - Run 2, mode `none`, window open behind Bitrig (2026-11-03, same
     method; *verified* from the log): Phases became active (regular,
     policy 0) and the window came forward as key, on the active Space.
-    Plain activation already covers this case; nothing to add.
+    Plain activation already covers this case; nothing to add. The
+    author saw the window come to the front (*observed*, same run).
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
