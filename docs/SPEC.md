@@ -1,4 +1,4 @@
-# Phases — Specification (draft 33)
+# Phases — Specification (draft 34)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -904,6 +904,24 @@ extras don't show them. No global hotkey.
     first). Nothing persistent changes on the window. Details and the
     approaches that failed: ERRATA.md "Open here".
   - macOS fights this; see `[Q-activate-switches-space]`.
+- `[D-reopen-shows-window]` **Launching Phases while it's already running
+  shows the window** (from Finder, Spotlight, Launchpad, the Dock, or
+  `open`). It behaves exactly like "Open Phases…": Dock icon first
+  `[D-dock-while-open]`, window brought to the current Space
+  `[D-open-here]`, focus on the sidebar `[D-initial-focus-sidebar]`. An
+  open window comes to the front; a minimized one is restored.
+  - *Why:* a menu bar app has no other sign that it's running, so
+    launching it again is how people look for it. Before draft 34, a
+    relaunch made Phases the active app and showed nothing: focus left
+    the user's app for no visible reason (GitHub issue #13; seen
+    2026-11-03, `[L-reopen-event]`).
+  - *Scope:* only a relaunch while running. A fresh launch still shows
+    nothing (Launch at Login must stay silent); showing the window on a
+    true first launch is GitHub issue #14.
+  - *How:* "Open Phases…", Settings…, and the relaunch share one
+    window-opening routine, so they can't drift apart. macOS delivers the
+    relaunch to Phases, but SwiftUI ignores it when the window is closed
+    or was never opened; see `[Q-reopen-ignores-closed-window]`.
 - `[D-app-menu]` **While the window is open, Phases has a standard menu
   bar,** trimmed to what applies:
   - **Phases** (app menu): About Phases, **Settings… ⌘,** (opens the window
