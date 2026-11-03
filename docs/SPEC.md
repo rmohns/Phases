@@ -320,6 +320,14 @@ image when there's more than one choice.
       the change if it no longer matches the Space's image. The read
       pointed at the right Space while the set went to the other
       (LEARNINGS.md `[L-swipe-set-read]`).
+    - *Verified* 2026-11-03, Release build `3c891b6` (cover check 5, 28
+      trials, 24 informative): Space 1 showed the new image on return
+      every time and Space 2 kept its own; 23 trials logged "pending
+      again" 0.05–0.84 s after the set, then the set on return, with no
+      visible change on return (recordings). The misfire itself didn't
+      occur in these runs, so the return set after a real misfire is
+      unobserved; it's the same ordinary set, made with no swipe under
+      way (LEARNINGS.md `[L-misfire-not-seen]`).
   - A cover whose fade is still running, or whose change is pending, is
     not removed on leaving its Space. The old cover under a pending one
     is removed as usual (off screen).
@@ -385,8 +393,8 @@ image when there's more than one choice.
     so the wallpaper was set, but it landed on Space 2, which hard-cut
     to the new image with no fade, while Space 1 kept its old one. The
     other 5 landed on Space 1. `[Q-set-target-decided-late]`. Answered
-    by `[D-reset-on-quick-return]` (approved by the author, 2026-11-03);
-    not yet rechecked.
+    by `[D-reset-on-quick-return]` (approved by the author, 2026-11-03).
+    Checks 3–6 rerun on that build the same day: all pass.
 - `[D-cover-only-for-crossfade]` **No cover at all unless crossfades will
   actually play:** Transition is Crossfade and Reduce Motion is off.
   - With **Transition: None**, or with Reduce Motion on, Phases just asks
@@ -447,8 +455,12 @@ image when there's more than one choice.
     main display from 2580×1080 to 1720×720 points logged every
     display's cover redrawn (the others moved in the arrangement), and
     the main one filled the screen (screenshot). Hiding and showing the
-    Dock logged nothing. Disconnecting a display wasn't run: it needs
-    hands.
+    Dock logged nothing. Disconnecting the Cinema HD (by the author, same
+    day, build `3c891b6`) logged its cover removed ("display 3 gone")
+    and the other two redrawn, since macOS rearranged the displays and
+    changed the main one to 2614×1094. Reconnecting restored both;
+    the other covers were redrawn again and the Cinema had no cover
+    until its next change.
 
 ### A change, step by step
 

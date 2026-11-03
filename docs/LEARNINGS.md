@@ -190,6 +190,14 @@ borderless, click-through window just above the desktop picture
     macOS's wallpaper agent picks the target Space when it handles it,
     later. So no check made at the moment of the set can be trusted.
   - Misfire rate across both sittings: 3 in 19 informative trials.
+- `[L-misfire-not-seen]` **With `[D-reset-on-quick-return]` in, the
+  misfire didn't happen in 24 informative trials** (build `3c891b6`,
+  same setup and timings as `[L-swipe-set-read]`, swipe 0.3–0.5 s after
+  the cover appeared). Before, it hit 3 of 19. By chance alone, 0 in 24
+  at that rate is about 2% (*calculation*). The change shouldn't affect
+  where a set lands: Space 2 is read 6 s after the swipe, before the
+  return. Unexplained; what differs between sittings isn't known.
+  *Measured* 2026-11-03.
 - `[L-swipe-before-cover]` **A swipe that starts before the cover appears
   takes the change with it.** Change Now's cover appeared 0.6–1.15 s
   after the menu click (the image decode). Twice, ⌃→ sent 0.3–0.4 s after
