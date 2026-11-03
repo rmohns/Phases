@@ -55,6 +55,8 @@ final class CrossfadeController {
     var incoming: Cover?
     /// The cover showing when the fade started, removed when it ends.
     var outgoing: Cover?
+    /// Spike [L-swipe-set-race]: the image its Space had when the fade began.
+    var before: URL?
   }
 
   /// Every cover, on whichever Space it belongs to [D-cover-per-space].
@@ -107,7 +109,7 @@ final class CrossfadeController {
         incoming.window.orderFrontRegardless()
         covers.append(incoming)
       }
-      entries.append(FadeEntry(assignment: assignment, incoming: incoming, outgoing: outgoing))
+      entries.append(FadeEntry(assignment: assignment, incoming: incoming, outgoing: outgoing, before: currentURL))
     }
 
     guard entries.contains(where: { $0.incoming != nil }) else {
@@ -208,6 +210,14 @@ final class CrossfadeController {
       } else {
         toSet.append(entry.assignment)
       }
+    }
+    // Spike [L-swipe-set-race]: what macOS reads for each display just before
+    // the set, against what its Space had when the fade began.
+    for entry in entries {
+      let screen = entry.assignment.screen
+      let read = NSWorkspace.shared.desktopImageURL(for: screen)?.lastPathComponent ?? "nil"
+      let onSpace = entry.incoming?.window.isOnActiveSpace.description ?? "-"
+      diagLog.log("pre-set read on \(screen.displayID ?? 0): read=\(read, privacy: .public) before=\(entry.before?.lastPathComponent ?? "nil", privacy: .public) new=\(entry.assignment.url.lastPathComponent, privacy: .public) onActiveSpace=\(onSpace, privacy: .public)")
     }
     WallpaperSetter.apply(toSet)
     for entry in entries {
