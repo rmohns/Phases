@@ -478,6 +478,11 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     policy 0) and the window came forward as key, on the active Space.
     Plain activation already covers this case; nothing to add. The
     author saw the window come to the front (*observed*, same run).
+  - Run 3, mode `none`, window closed after being open (2026-11-03,
+    same method; *verified* from the log): reopen arrives
+    (`hasVisibleWindows=false`), Phases becomes active as an accessory
+    (policy 1), and the kept, hidden window stays hidden. SwiftUI doesn't
+    re-show it. Same gap as run 1.
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
