@@ -27,7 +27,7 @@ extension PhasesUITests {
     /// whatever had focus: leave the cursor in the Name field, close,
     /// reopen, and a keypress renamed the phase (hand check, 2026-10-29).
     /// The first-open case can't be driven: Phases is never active when
-    /// a test opens its window (see TESTING.md "Layer 2: UI tests").
+    /// a test opens its window (see TESTING.md "Interface tests").
     @Test func typingAfterReopeningDoesNotRenameThePhase() async throws {
       try await withPhases { app in
         try await app.click(app.element("phaseName"))

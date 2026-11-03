@@ -77,7 +77,7 @@
   why (for example, frame timing) and names the manual procedure; a bare
   "Nothing yet" isn't allowed. A regression fix doesn't merge without one
   or the other. UI test runs drive the mouse and keyboard, so ask first
-  (see TESTING.md "Layer 2: UI tests").
+  (see TESTING.md "Interface tests").
 - **Diagnostics:** logging is built in and off by default
   `[D-diagnostics-switch]` (TESTING.md "Diagnostics"). Add log lines with
   `Diagnostics.logger(…)`; never write new logging infrastructure.

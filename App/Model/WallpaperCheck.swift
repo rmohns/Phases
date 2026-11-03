@@ -1,7 +1,7 @@
 import Foundation
 
 /// What the scheduler's normal check does with what's already applied. Pure,
-/// so Layer 1 can test it. Screen changes run this same check
+/// so the unit tests can test it. Screen changes run this same check
 /// [D-screen-change-no-reroll].
 enum WallpaperCheck {
   enum Action: Equatable {

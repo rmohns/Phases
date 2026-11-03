@@ -371,7 +371,7 @@ would stop being true if a future macOS fixed the underlying behavior.
   why the unit tests are a Swift package run with `swift test` (see
   TESTING.md). *Re-verified* 2026-10-29 with a
   `bundle.ui-testing` target and a scheme naming it in `testTargets`: same
-  message. So Layer 2 drives the app through the AX API instead of
+  message. So the Interface tests drive the app through the AX API instead of
   XCUITest `[D-ui-test-runner]`.
 
 - `[Q-launch-activate-refused]` **A menu bar app launched in the
@@ -712,7 +712,7 @@ Logging is switched on and read as described under "Diagnostics" in TESTING.md
 ## Regressions found so far
 
 Bugs found in testing and fixed, oldest first, with how a test could guard
-each one (see "Layer 2: UI tests" in TESTING.md). UI tests live in
+each one (see "Interface tests" in TESTING.md). UI tests live in
 `UITests/Tests/PhasesUITests/`, unit tests in `UnitTests/Tests/`. Design changes made after
 review (menu bar icon legibility, sidebar width limits, branding panel
 dimming) aren't listed; neither is the unreproduced black desktop (see
@@ -730,12 +730,12 @@ the fix, or, if none is practical, the reason and the manual procedure
 | 2026-10-27 (draft 10) | Branding tagline cut off after its first line, because sidebar rows default to one line (*git only*, commit 58555d3) | Allow two lines on the tagline | `AppearanceTests/brandingPanelScreenshot` (screenshot for review; the panel's AX label is fixed text) |
 | 2026-10-28 | Dragging the sidebar divider past its minimum collapsed the sidebar, with no way to reopen it; the first fix flickered and broke the 240 pt minimum `[Q-sidebar-collapse]` | Non-collapsible split view item `[D-sidebar-always-visible]` | `SidebarTests/dividerDraggedFarLeftKeepsSidebarOpen` |
 | 2026-10-28 (draft 13) | − did nothing: it started disabled and never re-enabled when a phase was selected `[Q-safe-area-inset-refresh]` | +/− bar as its own view bound to the selection `[D-sidebar-footer-view]` | `PhaseListTests/deleteRemovesANewlyAddedPhase` (adds a phase, then deletes it) |
-| 2026-10-28 (draft 15) | Deleting a phase always selected the first phase | Select the next phase down `[D-delete-selects-next]` | `PhaseListSelectionTests` (Layer 1); `PhaseListTests/deletingAMiddlePhaseSelectsTheOneBelow` |
+| 2026-10-28 (draft 15) | Deleting a phase always selected the first phase | Select the next phase down `[D-delete-selects-next]` | `PhaseListSelectionTests` (unit test); `PhaseListTests/deletingAMiddlePhaseSelectsTheOneBelow` |
 | 2026-10-28 (draft 17; draft 18's fix didn't work) | The Name field had focus with its text selected when the window opened, so any keypress renamed the phase `[Q-default-focus-loses]` | Move focus to the sidebar a run-loop pass after the window appears `[D-initial-focus-sidebar]` | `FocusTests/typingAfterReopeningDoesNotRenameThePhase` (reopen path `[Q-closed-window-keeps-focus]`; failed without the fix, passed with it, 2026-10-29). First open: manual only `[Q-launch-activate-refused]`: open from the menu, type a letter |
-| 2026-10-28 (draft 19) | Tab visited only the on-screen thumbnails, didn't scroll, then jumped back to the sidebar `[Q-lazy-grid-tab]` | Grid is one Tab stop with an arrow-key cursor `[D-grid-one-tab-stop]` | `ImageGridNavigationTests` (Layer 1); `FocusTests/gridIsOneTabStopAndArrowsScroll` |
+| 2026-10-28 (draft 19) | Tab visited only the on-screen thumbnails, didn't scroll, then jumped back to the sidebar `[Q-lazy-grid-tab]` | Grid is one Tab stop with an arrow-key cursor `[D-grid-one-tab-stop]` | `ImageGridNavigationTests` (unit test); `FocusTests/gridIsOneTabStopAndArrowsScroll` |
 | 2026-10-28 | Title bar became short and crowded after the sidebar toggle was removed; then the fix made it 66 pt tall `[Q-no-items-no-toolbar]` `[Q-empty-toolbar-66pt]` | Hand-made empty unified toolbar, icon-only `[D-tall-toolbar]` | `AppearanceTests/toolbarIs52PointsTall` (AX toolbar frame; matching AppKit's measure is unverified). Cause of the 66 pt only theorized |
 | 2026-10-28 | Sidebar could be dragged far below 240 pt and far above 320 pt again, right after the toolbar helper was added | One helper, toolbar first, then sidebar limits `[D-window-helper-order]` | `SidebarTests/dividerStaysWithin240To320`. Appeared fixed; the real cause was found later (draft 22 row) |
 | 2026-10-28 (draft 21, macOS 27.2) | The crossfade twitch returned: the cover was removed while macOS was still showing the new wallpaper `[Q-wallpaper-motion-delay]` | Settle delay raised from 0.5 s to 1.5 s `[D-cover-settle]`; see "The twitch returns" | Not suited to XCUITest (frame timing); checked with frame-by-frame recordings |
-| 2026-10-28 (draft 21) | Hiding the Dock or toggling "Show menu bar background" crossfaded to a new image `[Q-screen-params-notification]` | Screen changes run the normal check instead of re-applying `[D-screen-change-no-reroll]` | `WallpaperCheckTests` (Layer 1; check pulled out into `WallpaperCheck`). The handler's wiring to that check isn't tested |
+| 2026-10-28 (draft 21) | Hiding the Dock or toggling "Show menu bar background" crossfaded to a new image `[Q-screen-params-notification]` | Screen changes run the normal check instead of re-applying `[D-screen-change-no-reroll]` | `WallpaperCheckTests` (unit test; check pulled out into `WallpaperCheck`). The handler's wiring to that check isn't tested |
 | 2026-10-28 (draft 22) | Sidebar width limits gone again: drags from very narrow to very wide | Cause logged: SwiftUI rewrites the split view item's limits seconds after the window opens `[Q-split-item-rewrite]`. Fix: watch the item and put the limits back `[D-sidebar-limits-watch]`; verified 2026-10-28 | `SlowSidebarTests` (`PHASES_UI_SLOW=1`) and `SidebarTests/dividerStaysWithin240To320`, both switching the detail pane before dragging; failed without the watch (sidebar collapsed), passed with it, 2026-10-29 |
 | 2026-10-29 (found by the UI tests) | A long image folder name squeezed Settings' Choose… button to a 16 pt sliver: the name's `.layoutPriority(1)` takes its full width first | `.fixedSize()` on Choose… | `AppearanceTests/imageFolderNameScreenshot` (button at least 60 pt); failed on the old build at 16 pt, passed on the fix, 2026-10-29 |
