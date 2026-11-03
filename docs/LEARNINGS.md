@@ -510,9 +510,16 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     call, and activation is granted. SwiftUI and AppKit handle the open
     and minimized cases on their own but ignore a closed or never-opened
     window. Handing the request to the menu bar icon's view, which runs
-    the "Open Phases…" routine, covers all three. Not tested: a closed
-    window on another Space (`[D-open-here]` is the same routine the menu
-    uses). The mode switch was deleted after the runs.
+    the "Open Phases…" routine, covers all three. The mode switch was
+    deleted after the runs (the running process had already read
+    `label`, so run 6 still used it).
+  - Run 6, mode `label`, window moved to Space 2 and closed there, author
+    back on Space 1 (2026-11-03, author's request, same method;
+    *verified* from the log): the window was off the active Space, the
+    `[D-open-here]` flag moved it, and it arrived on Space 1 140 ms
+    later, visible and key. The author saw it open on Space 1 and called
+    that acceptable (*observed*, same run). It's what `[D-open-here]`
+    already promises for "Open Phases…".
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
