@@ -563,6 +563,19 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     builds sat in the Builds folder may have tested an older build than
     intended. Which build each earlier relaunch run used is known only
     from its log format.
+  - Harness fixed (pick by executable date, print the build). Timers-off
+    check redone, 2026-11-03 18:09–18:10 (Claude, 3 runs, build of
+    18:09:32 confirmed by the harness's printout and by the missing
+    timer lines): **3 of 3 passed** (*verified*). The timer hypothesis is
+    wrong.
+  - The experiment Phases (pid 79653) quit at 17:48:36, before the
+    failing runs (*verified*, system log), so a second instance wasn't
+    the cause either.
+  - **Still unexplained:** the two 17:49 failures ran the same relaunch
+    code (their log format shows it) and never got the window. Since
+    then, 9 of 9 runs passed. The failing runs logged nothing after the
+    opening routine started, so where it stopped is unknown. The only
+    known difference: they were the session's first relaunch test runs.
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
