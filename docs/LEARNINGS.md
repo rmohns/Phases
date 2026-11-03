@@ -501,7 +501,18 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
   - Run 5b, mode `label`, window closed with ⌘W (2026-11-03, same
     method; *verified* from the log): the label re-showed the kept
     window; 0.5 s later Phases was regular and the window visible and
-    key on the active Space.
+    key on the active Space. The author saw it (*observed*, same run).
+  - Run 5c, mode `label`, window minimized (2026-11-03, same method;
+    *verified* from the log): the label's open routine un-minimized it;
+    0.5 s later visible, key, not minimized. The author saw it come back
+    up from the Dock (*observed*, same run).
+  - **Answer (2026-11-03):** a menu bar accessory does get the reopen
+    call, and activation is granted. SwiftUI and AppKit handle the open
+    and minimized cases on their own but ignore a closed or never-opened
+    window. Handing the request to the menu bar icon's view, which runs
+    the "Open Phases…" routine, covers all three. Not tested: a closed
+    window on another Space (`[D-open-here]` is the same routine the menu
+    uses). The mode switch was deleted after the runs.
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
