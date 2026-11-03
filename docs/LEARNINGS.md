@@ -577,6 +577,11 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     code, 9 of them with the timer lines). The failing runs logged nothing after the
     opening routine started, so where it stopped is unknown. The only
     known difference: they were the session's first relaunch test runs.
+  - Ten more runs, 2026-11-03 18:19–18:22 (Claude, author's request,
+    pinned with `PHASES_APP` to the 18:11:16 build of the committed
+    code, since another conversation was active in the workspace):
+    **10 of 10 passed** (*verified*). Tally since the two failures: 22 of
+    22.
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
