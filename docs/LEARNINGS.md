@@ -573,7 +573,8 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     the cause either.
   - **Still unexplained:** the two 17:49 failures ran the same relaunch
     code (their log format shows it) and never got the window. Since
-    then, 9 of 9 runs passed. The failing runs logged nothing after the
+    then, 12 of 12 runs passed (1 + 5 + 3 + 3; all ran this relaunch
+    code, 9 of them with the timer lines). The failing runs logged nothing after the
     opening routine started, so where it stopped is unknown. The only
     known difference: they were the session's first relaunch test runs.
 
