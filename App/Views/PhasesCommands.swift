@@ -24,7 +24,7 @@ struct PhasesCommands: Commands {
     // [D-one-window] Settings is a sidebar item, not its own window.
     CommandGroup(replacing: .appSettings) {
       Button("Settings…") {
-        openWindow(id: PhasesWindow.windowID)
+        openWindow.showPhasesWindow()
         selection?.wrappedValue = .settings
       }
       .keyboardShortcut(",")

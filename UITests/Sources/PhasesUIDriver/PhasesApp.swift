@@ -88,6 +88,29 @@ public final class PhasesApp {
     try await Task.sleep(for: .seconds(1))
   }
 
+  /// Launches Phases again while this instance runs, the way Finder does:
+  /// a reopen Apple event, sent to this process only, so a Phases the
+  /// author is running is left alone [D-reopen-shows-window].
+  public func relaunch() throws {
+    let event = NSAppleEventDescriptor(
+      eventClass: AEEventClass(kCoreEventClass),
+      eventID: AEEventID(kAEReopenApplication),
+      targetDescriptor: NSAppleEventDescriptor(processIdentifier: running.processIdentifier),
+      returnID: AEReturnID(kAutoGenerateReturnID),
+      transactionID: AETransactionID(kAnyTransactionID)
+    )
+    _ = try event.sendEvent(options: [.noReply], timeout: 5)
+  }
+
+  /// Waits for the window to show after `relaunch()`, without opening it
+  /// any other way.
+  public func waitForWindow() async throws {
+    _ = try await waitFor("the Phases window", timeout: .seconds(10)) { windowIfOpen }
+  }
+
+  /// Whether Phases has a Dock icon right now [D-dock-while-open].
+  public var hasDockIcon: Bool { running.activationPolicy == .regular }
+
   /// Opens the window the way the author does: a real click on the menu
   /// bar item, then on Open Phases…. AX presses opened it without
   /// activating Phases the way a click does, which skipped the focus bug
@@ -175,11 +198,16 @@ public final class PhasesApp {
     guard let newest else {
       throw UITestFailure("No built Phases.app under \(builds.path(percentEncoded: false)); build first, or set PHASES_APP.")
     }
+    print("Testing \(newest.path(percentEncoded: false)), built \(modified(newest))")
     return newest
   }
 
-  private static func modified(_ url: URL) -> Date {
-    (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
+  /// When the app was built: its executable's date. Bitrig gives every
+  /// `Phases.app` bundle the same date, so the bundle's own can't tell
+  /// builds apart (TESTING.md "Interface tests", 2026-11-03).
+  private static func modified(_ app: URL) -> Date {
+    let executable = app.appending(path: "Contents/MacOS/Phases")
+    return (try? executable.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
   }
 
   // MARK: - Reading the window

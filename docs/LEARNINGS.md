@@ -456,8 +456,9 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
 
 - `[L-reopen-event]` **What happens when Phases is launched again while
   it's running, and can the menu bar icon's view open the window?**
-  (Issue #13, macOS 27.2.) Open; experiment on branch
+  (Issue #13, macOS 27.2.) Answered; experiment on branch
   `experiment/reopen-window`, started 2026-11-03.
+  - Promoted to `[Q-reopen-ignores-closed-window]` (2026-11-03).
   - Setup: an app delegate logs `applicationShouldHandleReopen`, then the
     window's state 0.5 s later, under diagnostics category `reopen`.
     Mode switch `PhasesReopenMode`: `none` (log only, AppKit and SwiftUI
@@ -520,6 +521,67 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     later, visible and key. The author saw it open on Space 1 and called
     that acceptable (*observed*, same run). It's what `[D-open-here]`
     already promises for "Open Phases…".
+  - **UI test failure, 2026-11-03, `feature/reopen-window` at `d4b73d3`**
+    (Claude): `RelaunchTests/relaunchWithTheWindowClosedShowsIt` failed
+    twice (the second run was an accident of a piped command). The test
+    sends the reopen Apple event straight to the process. The log shows
+    the handler fired and the opening routine ran (`relaunched`, then
+    the Space mover's line), but the window never showed and Phases
+    ended with no Dock icon (*verified*). Unlike the experiment's `open`,
+    nothing activated Phases first: in every experiment run, "became
+    active" was logged *before* the reopen call (*verified*), so Launch
+    Services activates, then reopens. Hypothesis, untested: the routine
+    fails when Phases isn't already active.
+  - Rerun with state logging, 2026-11-03 18:00 (Claude, one run): the
+    test **passed**, with `active=false policy=1` logged at the reopen
+    call (*verified*). So "fails when not active" is wrong: the routine
+    can show the window from an inactive accessory. Two failures and one
+    pass on the same code point to something intermittent (*hypothesis*).
+    The +0.5 s and +2 s lines never logged: the test force-quits Phases
+    as soon as the window appears (*likely*, not checked).
+  - Five more runs, 2026-11-03 18:02–18:04 (Claude), the test holding
+    Phases 3 s after the window appears: **5 of 5 passed** (*verified*).
+    Each logged inactive accessory at the reopen call, then active,
+    regular, and the window visible and key 0.5 s later. So: 6 of 6
+    pass on the build with the delayed log lines, 0 of 2 on the build
+    without them.
+  - *Hypothesis* (untested): the delayed log lines are what make it
+    work. They're timers that wake Phases' main run loop; without them,
+    an inactive menu bar app may sit idle with SwiftUI's `openWindow`
+    queued and never carried out. The experiment build had a delayed
+    log line too, and `open` activates Phases first, which also wakes it.
+  - Timers-off check, 2026-11-03 18:06 (Claude, 3 runs): **invalid.** All
+    3 passed, but every run logged the +0.5 s and +2 s lines, so the
+    harness launched an older build, not the timers-off one built at
+    18:06 (*verified* from the log).
+  - **Cause: the harness's "newest build" pick is broken** (*verified*,
+    `stat`, 18:07). It compares the `Phases.app` bundles' modification
+    dates, but Bitrig gives every bundle the same date (12:36:03 for all
+    three builds present), so the pick among ties follows directory
+    order: effectively arbitrary. Only the executable inside carries the
+    build time (17:47, 18:00, 18:06). Any UI test run made while several
+    builds sat in the Builds folder may have tested an older build than
+    intended. Which build each earlier relaunch run used is known only
+    from its log format.
+  - Harness fixed (pick by executable date, print the build). Timers-off
+    check redone, 2026-11-03 18:09–18:10 (Claude, 3 runs, build of
+    18:09:32 confirmed by the harness's printout and by the missing
+    timer lines): **3 of 3 passed** (*verified*). The timer hypothesis is
+    wrong.
+  - The experiment Phases (pid 79653) quit at 17:48:36, before the
+    failing runs (*verified*, system log), so a second instance wasn't
+    the cause either.
+  - **Still unexplained:** the two 17:49 failures ran the same relaunch
+    code (their log format shows it) and never got the window. Since
+    then, 12 of 12 runs passed (1 + 5 + 3 + 3; all ran this relaunch
+    code, 9 of them with the timer lines). The failing runs logged nothing after the
+    opening routine started, so where it stopped is unknown. The only
+    known difference: they were the session's first relaunch test runs.
+  - Ten more runs, 2026-11-03 18:19–18:22 (Claude, author's request,
+    pinned with `PHASES_APP` to the 18:11:16 build of the committed
+    code, since another conversation was active in the workspace):
+    **10 of 10 passed** (*verified*). Tally since the two failures: 22 of
+    22.
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
@@ -541,6 +603,15 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     run out of room, and macOS showed a chevron that expands the hidden
     icons when clicked, so Phases stays reachable on macOS 27.2
     (*observed* by the author).
+  - **Seen again, 2026-11-03** (Claude, `feature/reopen-window`, fast
+    suite twice): the same refusal, "the menu bar item at (2541.0, 31.5)
+    isn't this test instance's," at launch. 17:51: `brandingPanelScreenshot`
+    (build not known, see the harness note under `[L-reopen-event]`).
+    18:11: `brandingPanelScreenshot` and `gridIsOneTabStopAndArrowsScroll`
+    (build of 18:11:16, printed by the harness); the other 11 passed
+    (*verified*). Same x every time, wide display, no leftover Phases
+    afterward. *Guess:* the previous test's force-quit instance still
+    owns that spot for a moment.
 
 - `[L-hdr-wallpaper]` **How does macOS draw an HDR photo (an iPhone
   HEIC with a gain map) as wallpaper: SDR, or with HDR headroom?**

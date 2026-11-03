@@ -141,8 +141,9 @@ The pure logic that decides what the app does:
   screenshot checks) for the app that runs `swift test`.
 - **Suites:**
   - *Fast* (the default, about a minute): sidebar width limits, the +/−
-    buttons, delete selection, initial focus, the grid's Tab stop, and
-    the toolbar height.
+    buttons, delete selection, initial focus, the grid's Tab stop, the
+    toolbar height, and a relaunch with the window closed
+    `[D-reopen-shows-window]`.
   - *Slow* (`PHASES_UI_SLOW=1 swift test`, about two minutes): the
     sidebar limits again after waiting 30 s, across three launches,
     because SwiftUI's rewrite lands seconds after the window opens
@@ -161,6 +162,12 @@ The pure logic that decides what the app does:
     finds controls by accessibility identifier `[D-ui-test-ids]`, clicks,
     drags, and types with synthetic mouse and key events, reads results
     back through the AX API, and force-quits the instance after each test.
+  - *Which build:* the newest by its executable's modification date, and
+    the harness prints the path and date. Until 2026-11-03 it compared
+    the `Phases.app` bundles' dates, which Bitrig sets the same on every
+    build, so with several builds present it could test a stale one
+    (*verified* 2026-11-03, `stat`; `[L-reopen-event]`). Runs before
+    then may have tested an older build than intended.
   - *Safety:* before any click or keystroke, the harness checks that the
     test instance of Phases is frontmost; if not, the test fails without
     sending input, so a stray keystroke can't land in another app.
@@ -181,6 +188,14 @@ The pure logic that decides what the app does:
   identifiers:** `sidebar`, `addPhase`, `deletePhase`, `phaseName`,
   `imageGrid`, `imageFolderName`. They're invisible to users, but renaming
   one breaks the tests.
+
+- **Relaunch:** the harness relaunches its own instance by sending it a
+  reopen Apple event, as Finder does, rather than `open`, which could
+  reach a Phases the author is running. Only the closed-window case is a
+  test: the harness always opens the window at launch, so "never opened"
+  can't happen under test. That case, minimized, and closed on another
+  Space were checked by hand on the experiment build, which used the
+  same routing (`[L-reopen-event]`, 2026-11-03).
 
 #### Not covered here
 
