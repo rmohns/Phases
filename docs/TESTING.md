@@ -8,8 +8,7 @@ someone using Phases ever see or care about this line? No → here.
 
 Decisions here carry `[D-…]` tags and follow the same rules as SPEC.md's:
 the author approves changes before code is written, and the code that
-enforces a decision carries its tag. Cross-references use tags or quoted
-section titles, never numbers `[D-refs-by-id]`.
+enforces a decision carries its tag.
 
 Regressions found in testing (the − button doing nothing, the Name field
 taking focus, Tab skipping the grid) are why Phases has tests.
@@ -102,10 +101,15 @@ The pure logic that decides what the app does:
     Interface tests are `swift test` in `UITests/` (`PHASES_UI_SLOW=1`
     adds the slow suite), and the Cover and Memory checks follow the steps
     in their sections. When Claude runs one, it asks first and names the
-    check and parts ("Cover checks 1–7 and 9, one display"); one yes
-    covers what was named, in that sitting. Each run starts with a spoken
-    warning that finishes before the first synthetic input and ends with
-    a spoken announcement that it's done.
+    check and parts ("Cover checks 1–7 and 9, one display"), following
+    the author's standing rule for mouse and keyboard runs (one yes per
+    named set, spoken warnings before and after).
+  - **Hands-off windows** (2026-11-03). When the author opens one ("I'm
+    hands-off for 30 minutes", "tonight"), Claude may run the Interface
+    tests, either suite, as often as needed until it ends, without asking
+    each time. The spoken warnings still apply. Cover and Memory checks
+    change the real wallpaper and settings, so they still need a named
+    yes.
   - *Why:* the memory runs take most of a sitting and matter only when
     memory could change. Tying each check to the code it guards keeps a
     small change from costing an hour of hands-off time (author,

@@ -10,22 +10,13 @@ would stop being true if a future macOS fixed the underlying behavior.
   shapes. A spec decision that fights the platform points back with one
   line: "macOS fights this; see `[Q-…]`." Code comments carry both tags, so
   searching for either finds the spec, this file, and the code.
-- Each quirk says whether it was **verified** (tested or measured, with
-  date) or is **recalled** (believed from past knowledge, not tested here).
-  Keep corrections and history; don't silently rewrite an entry.
-- Cross-references use a tag or a quoted section title, never a section
-  number `[D-refs-by-id]`.
-- New quirks go here, with a new `[Q-…]` ID, when they're found.
-- Only quirks the code on `main` depends on live here. Findings that don't
-  shape code go in LEARNINGS.md; they're promoted here when code starts
-  depending on them (see LEARNINGS.md "Promotion").
-- **Demotion:** when the code a `[Q-…]` entry shapes is removed from
-  `main`, the entry moves to LEARNINGS.md in the same change, keeping its
-  `[Q-…]` tag alongside a new `[L-…]` tag so old comments and commits still
-  find it, and leaves a one-line pointer here: "Demoted to `[L-…]` (date)."
-  This duplicates LEARNINGS.md "Demotion" on purpose: this file is read
-  every session and LEARNINGS.md isn't, so the rule has to be here when the
-  code is being removed. Keep the two copies in sync.
+- Each quirk carries an evidence label: verified (with date), observed,
+  or recalled.
+- Only quirks the code on `main` depends on live here. Findings that
+  don't shape code go in LEARNINGS.md. Entries move between the two as
+  code starts or stops depending on them.
+- The rules for all of this (evidence labels, promotion and demotion,
+  references by tag `[D-refs-by-id]`) are in CLAUDE.md.
 
 ## Quirks
 

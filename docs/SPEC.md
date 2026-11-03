@@ -29,7 +29,7 @@ in the code.
   carry both tags where relevant, so one search finds spec, errata, and
   code.
 - `[D-refs-by-id]` **Cross-references use a `[D-…]` or `[Q-…]` tag or a
-  section title, never a section number,** in this spec, ERRATA.md, and
+  section title, never a section number,** in every file in `docs/` and in
   code comments. Sections aren't numbered, so adding one never breaks a
   reference. Prefer the tag when one covers the point; otherwise quote the
   section title, e.g. see "Persistence".

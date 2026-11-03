@@ -8,24 +8,12 @@ another way.
 
 - **Sorting test:** does it shape code on `main` right now? Yes → SPEC.md
   or ERRATA.md. No → here.
-- Each entry has a stable `[L-…]` tag, a date and macOS version, and says
-  how we know: **verified** (tested or measured, by whom), **observed**
-  (seen, not measured or repeated), or **recalled** (believed from past
-  knowledge, not tested here). Hypotheses are labeled as such.
+- Each entry has a stable `[L-…]` tag, a date and macOS version, and an
+  evidence label: verified, observed, or recalled.
 - Entries cite the `[D-…]` and `[Q-…]` tags they relate to, and where the
   evidence lives (an experiment doc, a branch).
-- **Promotion:** when a learning starts shaping code, it moves to ERRATA.md
-  as a `[Q-…]` entry (or to SPEC.md as a decision) in the same change, and
-  leaves a one-line pointer here: "Promoted to `[Q-…]` (date)."
-- **Demotion:** when the code a `[Q-…]` entry shapes is removed from
-  `main`, the entry moves here in the same change, keeping its `[Q-…]` tag
-  alongside a new `[L-…]` tag so old comments and commits still find it,
-  and leaves a one-line pointer in ERRATA.md: "Demoted to `[L-…]` (date)."
-  ERRATA.md holds only quirks the current code depends on. ERRATA.md
-  carries a deliberate copy of this rule; keep the two in sync.
-- Keep corrections and history; don't silently rewrite an entry.
-- Cross-references use a tag or a quoted section title, never a section
-  number `[D-refs-by-id]`.
+- The rules for all of this (evidence labels, promotion and demotion,
+  references by tag `[D-refs-by-id]`) are in CLAUDE.md.
 
 ## Wallpaper, covers, and the menu bar
 
