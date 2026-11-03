@@ -15,7 +15,6 @@ extension PhasesUITests {
         try await waitUntil("the Dock icon to go") { !app.hasDockIcon }
         try app.relaunch()
         try await app.waitForWindow()
-        try await Task.sleep(for: .seconds(3)) // TEMPORARY: let the diagnostics log
         #expect(app.hasDockIcon, "The window came back without a Dock icon")
       }
     }
