@@ -164,7 +164,8 @@ borderless, click-through window just above the desktop picture
   predict which Space the set reaches.** Hypothesis: if
   `desktopImageURL(for:)` still returns the departing Space's image, the
   set goes there too, so a mismatch could hold the change as pending.
-  *Falsified* 2026-11-03: branch `spike/set-target-read` (`f05ebef`) logged
+  *Falsified* 2026-11-03: branch `spike/set-target-read` (`f05ebef`; tag
+  `archive/spike/set-target-read`) logged
   the read just before each set; 16 trials as in `[Q-set-target-decided-late]`
   (1 s fade, ⌃→ 0.3–0.45 s after the cover appeared), Release build,
   macOS 27.2.
