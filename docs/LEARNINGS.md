@@ -491,6 +491,12 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     (AppKit counts it), and AppKit's default handling un-minimizes it:
     0.5 s later it's visible, key, not minimized. The author saw it come
     up from the Dock with focus (*observed*, same run). Nothing to add.
+  - Run 5a, mode `label`, window never opened (2026-11-03, same method;
+    *verified* from the log): the menu bar icon's view received the
+    request in the same millisecond as the reopen call and opened the
+    window. 0.5 s later Phases was regular (policy 0), the window
+    visible, key, and on the active Space. So the label view is alive
+    and able to call `openWindow` while no window exists.
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
