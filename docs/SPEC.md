@@ -247,6 +247,12 @@ image when there's more than one choice.
     are on `[D-cover-only-for-crossfade]`.
   - Tested on branch `spike/persistent-cover` (docs/X-PERSISTENT-COVER.md
     there), 2026-10-30, macOS 27.2, one display and three.
+  - *Verified* 2026-11-03, draft 33 Release build, macOS 27.2, three
+    displays (cover check 1): no twitch. Five changes per display, each
+    display recorded on its own; the frame 0.1 s after each fade's end
+    matched the frame 1.5 s later at 44–48 dB. The only later change is
+    a one-frame step of about one grey level some 0.65 s after the fade:
+    the real wallpaper switching behind the cover's 1%.
 - `[D-cover-per-space]` **Each Space keeps its own wallpaper.** A cover
   belongs to the Space it was made on, and is removed once that Space is
   no longer showing on its display. The Space keeps its real wallpaper,
@@ -274,6 +280,12 @@ image when there's more than one choice.
     (`isOnActiveSpace`) whenever macOS reports a Space change. There's no
     public API that names Spaces (*recalled*), so the future per-Space
     choice needs its own investigation.
+  - *Verified* 2026-11-03, draft 33, three displays, three Spaces on the
+    main one (cover check 3): after a change on Space 1, Spaces 2 and 3
+    kept their own image and Space 1 kept the new one (read back on
+    each); the log showed Space 1's cover removed on leaving; the
+    recording shows only the four swipes, no frame change at the removal
+    or on returning.
 - `[D-change-stays-on-its-space]` **A change belongs to the Space it was
   made on, even if you leave mid-fade.** When a fade ends (or is cut short
   by another change), each display's new cover is checked:
@@ -337,6 +349,19 @@ image when there's more than one choice.
     announces it. In that case, whether `isOnActiveSpace` and the
     wallpaper set agree on which Space is showing is untested; if they
     disagree, the change could still land on the wrong Space.
+  - *Verified* 2026-11-03, draft 33 (cover checks 4 and 6): leaving a 3 s
+    fade about 0.5 s and 1.2 s in, the log showed the change held
+    pending, Space 2 kept its image with no cut, and on return the log
+    showed it set and Space 1 read back the new image. Setting
+    Transition to None, or quitting, while a change was pending removed
+    every cover, and Space 1 kept its old image.
+  - **Fails** 2026-11-03 (cover check 5, 1 s fade, ⌃→ about 0.7 s in):
+    in 1 of 6 trials they disagreed. The fade ended 0.25 s into the
+    swipe; `isOnActiveSpace` still said the cover's Space was showing,
+    so the wallpaper was set, but it landed on Space 2, which hard-cut
+    to the new image with no fade, while Space 1 kept its old one. The
+    other 5 landed on Space 1. LEARNINGS.md `[L-swipe-set-race]`. Open;
+    `[D-cover-checks]` isn't passed until it's resolved.
 - `[D-cover-only-for-crossfade]` **No cover at all unless crossfades will
   actually play:** Transition is Crossfade and Reduce Motion is off.
   - With **Transition: None**, or with Reduce Motion on, Phases just asks
@@ -353,6 +378,11 @@ image when there's more than one choice.
     them clean; it isn't worth its memory without them (author,
     2026-10-31). Reduce Motion counts as off because it turns every fade
     into an instant switch `[D-no-fade-cases]`.
+  - *Verified* 2026-11-03, draft 33 (cover checks 6 and 7): with
+    Transition: None, and with Crossfade plus Reduce Motion, changes cut
+    in one frame and no cover window existed. Turning Reduce Motion on,
+    or Transition to None, with covers up logged their removal and left
+    none.
 - `[D-cover-opacity]` **The cover is 99% opaque, not 100%.**
   - *Why:* a fully opaque cover stopped the menu bar restyling for new
     wallpapers: text stayed one color through every change, and with
@@ -370,6 +400,12 @@ image when there's more than one choice.
     moment, even 4 s after the set (*measured*, `[L-motion-waits-for-reveal]`).
   - Whether the cover could go to 100% once the menu bar has restyled is
     open and untested (`[L-cover-alpha-later]`); not part of this draft.
+  - *Verified* 2026-11-03, draft 33, three displays, "Show menu bar
+    background" on (the author's setting; cover check 2): text and
+    background restyled to each new image on every display, 0.4–0.8 s
+    after the fade ended, when macOS applied the set, with the one-frame
+    blink `[Q-menubar-blank]`. During the fade the bar keeps the old
+    image's background `[Q-menubar-bg-follows-window]`.
 - `[D-cover-follows-displays]` **Covers follow display changes.** When a
   display's frame or scale changes, its cover is redrawn at once, without
   a fade, showing the same image at the new size. A disconnected
@@ -382,6 +418,12 @@ image when there's more than one choice.
     so no cover is redrawn.
   - *Why:* a cover that no longer fits its display would show plainly,
     and the experiment didn't handle this (GitHub issue #6).
+  - *Verified* 2026-11-03, draft 33 (cover check 8, partly): changing the
+    main display from 2580×1080 to 1720×720 points logged every
+    display's cover redrawn (the others moved in the arrangement), and
+    the main one filled the screen (screenshot). Hiding and showing the
+    Dock logged nothing. Disconnecting a display wasn't run: it needs
+    hands.
 
 ### A change, step by step
 
@@ -487,6 +529,11 @@ With crossfades on `[D-cover-only-for-crossfade]`:
     with the process, leaving the real wallpaper, which matches, except
     on a Space with a pending change: that Space keeps its older image. A
     Force Quit showed nothing (*observed* 2026-10-30).
+  - *Verified* 2026-11-03, draft 33 (cover check 9): with restore on,
+    Quit was a one-frame cut back to each display's pre-launch image;
+    with restore off, nothing moved. No cover windows remained either
+    way. Quit was sent as an Apple Event, which skips the "Quit Phases?"
+    alert but runs the same termination path.
 - `[D-no-focus-steal]` **Phases never activates itself to force a menu bar
   restyle.** That would steal focus from the user's app. macOS sometimes
   delays the restyle; see `[Q-menubar-restyle-on-app-switch]`.
@@ -953,6 +1000,9 @@ data. Phases saved by earlier versions load unchanged (no per-display images).
   - Checked by hand, with at least two runs before a change and two after,
     because runs vary widely (one run measured 297 MB after three changes,
     another 144 MB). Procedure: TESTING.md `[D-memory-protocol]`.
+  - *Verified* 2026-11-03, draft 33 with persistent covers, three
+    displays: two runs pass (137 → 100 MB and 113 → 87 MB, first change
+    to tenth). Figures in LEARNINGS.md `[L-mem-draft33-runs]`.
   - *Why:* Phases runs all day in the background. Draft 31 reached about
     300 MB after ten changes on three displays (measured 2026-10-30,
     LEARNINGS.md "Memory").
