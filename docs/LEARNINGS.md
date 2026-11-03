@@ -532,6 +532,13 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     active" was logged *before* the reopen call (*verified*), so Launch
     Services activates, then reopens. Hypothesis, untested: the routine
     fails when Phases isn't already active.
+  - Rerun with state logging, 2026-11-03 18:00 (Claude, one run): the
+    test **passed**, with `active=false policy=1` logged at the reopen
+    call (*verified*). So "fails when not active" is wrong: the routine
+    can show the window from an inactive accessory. Two failures and one
+    pass on the same code point to something intermittent (*hypothesis*).
+    The +0.5 s and +2 s lines never logged: the test force-quits Phases
+    as soon as the window appears (*likely*, not checked).
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still

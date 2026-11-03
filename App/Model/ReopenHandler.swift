@@ -17,9 +17,29 @@ extension Notification.Name {
 /// the one view that's always alive.
 final class ReopenHandler: NSObject, NSApplicationDelegate {
   func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-    diagLog.log("relaunched; hasVisibleWindows=\(flag)")
+    diagLog.log("relaunched; hasVisibleWindows=\(flag) \(Self.state(), privacy: .public)")
     NotificationCenter.default.post(name: .phasesRelaunched, object: nil)
+    if Diagnostics.isEnabled {
+      for delay in [0.5, 2.0] {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+          diagLog.log("relaunch +\(delay)s: \(Self.state(), privacy: .public)")
+        }
+      }
+    }
     // The view does the whole job, minimized windows included.
     return false
+  }
+
+  /// For the log: whether Phases is active, its activation policy, and the
+  /// window's state.
+  @MainActor
+  private static func state() -> String {
+    let window = NSApp.windows.first {
+      $0.identifier?.rawValue.hasPrefix(PhasesWindow.windowID) == true
+    }
+    let windowState = window.map {
+      "visible=\($0.isVisible) key=\($0.isKeyWindow) minimized=\($0.isMiniaturized) onActiveSpace=\($0.isOnActiveSpace)"
+    } ?? "no window"
+    return "active=\(NSApp.isActive) policy=\(NSApp.activationPolicy().rawValue) \(windowState)"
   }
 }
