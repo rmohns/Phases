@@ -3,13 +3,14 @@ import SwiftUI
 @main
 struct AppDefinition: App {
   @State private var scheduler = WallpaperScheduler()
+  // EXPERIMENT (issue #13): reopen handling.
+  @NSApplicationDelegateAdaptor private var reopenDelegate: ReopenExperimentDelegate
 
   var body: some Scene {
     MenuBarExtra {
       MenuContent(scheduler: scheduler)
     } label: {
-      Image(nsImage: Self.menuBarIcon)
-        .accessibilityLabel("Phases")
+      ReopenExperimentLabel(image: Self.menuBarIcon)
     }
 
     // [D-one-window] Everything, Settings included, lives in this one window.

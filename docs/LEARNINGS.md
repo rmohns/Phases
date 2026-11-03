@@ -454,6 +454,20 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
 
 ## Open questions
 
+- `[L-reopen-event]` **What happens when Phases is launched again while
+  it's running, and can the menu bar icon's view open the window?**
+  (Issue #13, macOS 27.2.) Open; experiment on branch
+  `experiment/reopen-window`, started 2026-11-03.
+  - Setup: an app delegate logs `applicationShouldHandleReopen`, then the
+    window's state 0.5 s later, under diagnostics category `reopen`.
+    Mode switch `PhasesReopenMode`: `none` (log only, AppKit and SwiftUI
+    defaults) or `label` (the menu bar icon's view opens the window the
+    way "Open Phases…" does).
+  - Questions: does a menu bar accessory get the reopen call at all; does
+    SwiftUI already show a `.suppressed` `Window` on reopen; does the
+    label view stay alive to act on a request while the window is closed;
+    does activation succeed `[Q-launch-activate-refused]`.
+
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
   open for macOS 26. Tracked as GitHub issue #11; no action for now.
