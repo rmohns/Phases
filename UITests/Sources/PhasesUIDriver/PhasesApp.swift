@@ -198,11 +198,16 @@ public final class PhasesApp {
     guard let newest else {
       throw UITestFailure("No built Phases.app under \(builds.path(percentEncoded: false)); build first, or set PHASES_APP.")
     }
+    print("Testing \(newest.path(percentEncoded: false)), built \(modified(newest))")
     return newest
   }
 
-  private static func modified(_ url: URL) -> Date {
-    (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
+  /// When the app was built: its executable's date. Bitrig gives every
+  /// `Phases.app` bundle the same date, so the bundle's own can't tell
+  /// builds apart (TESTING.md "Interface tests", 2026-11-03).
+  private static func modified(_ app: URL) -> Date {
+    let executable = app.appending(path: "Contents/MacOS/Phases")
+    return (try? executable.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
   }
 
   // MARK: - Reading the window

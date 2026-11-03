@@ -162,6 +162,12 @@ The pure logic that decides what the app does:
     finds controls by accessibility identifier `[D-ui-test-ids]`, clicks,
     drags, and types with synthetic mouse and key events, reads results
     back through the AX API, and force-quits the instance after each test.
+  - *Which build:* the newest by its executable's modification date, and
+    the harness prints the path and date. Until 2026-11-03 it compared
+    the `Phases.app` bundles' dates, which Bitrig sets the same on every
+    build, so with several builds present it could test a stale one
+    (*verified* 2026-11-03, `stat`; `[L-reopen-event]`). Runs before
+    then may have tested an older build than intended.
   - *Safety:* before any click or keystroke, the harness checks that the
     test instance of Phases is frontmost; if not, the test fails without
     sending input, so a stray keystroke can't land in another app.
