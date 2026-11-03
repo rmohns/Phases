@@ -454,6 +454,73 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
 
 ## Open questions
 
+- `[L-reopen-event]` **What happens when Phases is launched again while
+  it's running, and can the menu bar icon's view open the window?**
+  (Issue #13, macOS 27.2.) Open; experiment on branch
+  `experiment/reopen-window`, started 2026-11-03.
+  - Setup: an app delegate logs `applicationShouldHandleReopen`, then the
+    window's state 0.5 s later, under diagnostics category `reopen`.
+    Mode switch `PhasesReopenMode`: `none` (log only, AppKit and SwiftUI
+    defaults) or `label` (the menu bar icon's view opens the window the
+    way "Open Phases…" does).
+  - Questions: does a menu bar accessory get the reopen call at all; does
+    SwiftUI already show a `.suppressed` `Window` on reopen; does the
+    label view stay alive to act on a request while the window is closed;
+    does activation succeed `[Q-launch-activate-refused]`.
+  - Run 1, mode `none`, window never opened (2026-11-03, Claude, `open`
+    from Terminal, read from the log; *verified*): the reopen call
+    arrives (`hasVisibleWindows=false`), Phases becomes active, still an
+    accessory (policy 1), and SwiftUI creates no window, so nothing
+    shows. So a menu bar accessory does get reopen, and activation is
+    granted on a relaunch, unlike `[Q-launch-activate-refused]`.
+  - Run 2, mode `none`, window open behind Bitrig (2026-11-03, same
+    method; *verified* from the log): Phases became active (regular,
+    policy 0) and the window came forward as key, on the active Space.
+    Plain activation already covers this case; nothing to add. The
+    author saw the window come to the front (*observed*, same run).
+  - Run 3, mode `none`, window closed after being open (2026-11-03,
+    same method; *verified* from the log): reopen arrives
+    (`hasVisibleWindows=false`), Phases becomes active as an accessory
+    (policy 1), and the kept, hidden window stays hidden. SwiftUI doesn't
+    re-show it. Same gap as run 1. The author saw focus leave Bitrig and
+    nothing else (*observed*, same run): today a relaunch takes focus
+    from the user's app and shows nothing in exchange.
+  - Run 4, mode `none`, window minimized (2026-11-03, same method;
+    *verified* from the log): reopen arrives with
+    `hasVisibleWindows=true` even though the only window is minimized
+    (AppKit counts it), and AppKit's default handling un-minimizes it:
+    0.5 s later it's visible, key, not minimized. The author saw it come
+    up from the Dock with focus (*observed*, same run). Nothing to add.
+  - Run 5a, mode `label`, window never opened (2026-11-03, same method;
+    *verified* from the log): the menu bar icon's view received the
+    request in the same millisecond as the reopen call and opened the
+    window. 0.5 s later Phases was regular (policy 0), the window
+    visible, key, and on the active Space. So the label view is alive
+    and able to call `openWindow` while no window exists. The author saw
+    the window open (*observed*, same run).
+  - Run 5b, mode `label`, window closed with ⌘W (2026-11-03, same
+    method; *verified* from the log): the label re-showed the kept
+    window; 0.5 s later Phases was regular and the window visible and
+    key on the active Space. The author saw it (*observed*, same run).
+  - Run 5c, mode `label`, window minimized (2026-11-03, same method;
+    *verified* from the log): the label's open routine un-minimized it;
+    0.5 s later visible, key, not minimized. The author saw it come back
+    up from the Dock (*observed*, same run).
+  - **Answer (2026-11-03):** a menu bar accessory does get the reopen
+    call, and activation is granted. SwiftUI and AppKit handle the open
+    and minimized cases on their own but ignore a closed or never-opened
+    window. Handing the request to the menu bar icon's view, which runs
+    the "Open Phases…" routine, covers all three. The mode switch was
+    deleted after the runs (the running process had already read
+    `label`, so run 6 still used it).
+  - Run 6, mode `label`, window moved to Space 2 and closed there, author
+    back on Space 1 (2026-11-03, author's request, same method;
+    *verified* from the log): the window was off the active Space, the
+    `[D-open-here]` flag moved it, and it arrived on Space 1 140 ms
+    later, visible and key. The author saw it open on Space 1 and called
+    that acceptable (*observed*, same run). It's what `[D-open-here]`
+    already promises for "Open Phases…".
+
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
   open for macOS 26. Tracked as GitHub issue #11; no action for now.
