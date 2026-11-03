@@ -467,6 +467,12 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     SwiftUI already show a `.suppressed` `Window` on reopen; does the
     label view stay alive to act on a request while the window is closed;
     does activation succeed `[Q-launch-activate-refused]`.
+  - Run 1, mode `none`, window never opened (2026-11-03, Claude, `open`
+    from Terminal, read from the log; *verified*): the reopen call
+    arrives (`hasVisibleWindows=false`), Phases becomes active, still an
+    accessory (policy 1), and SwiftUI creates no window, so nothing
+    shows. So a menu bar accessory does get reopen, and activation is
+    granted on a relaunch, unlike `[Q-launch-activate-refused]`.
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
