@@ -496,7 +496,12 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     request in the same millisecond as the reopen call and opened the
     window. 0.5 s later Phases was regular (policy 0), the window
     visible, key, and on the active Space. So the label view is alive
-    and able to call `openWindow` while no window exists.
+    and able to call `openWindow` while no window exists. The author saw
+    the window open (*observed*, same run).
+  - Run 5b, mode `label`, window closed with ⌘W (2026-11-03, same
+    method; *verified* from the log): the label re-showed the kept
+    window; 0.5 s later Phases was regular and the window visible and
+    key on the active Space.
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
