@@ -245,8 +245,9 @@ image when there's more than one choice.
     sizes (*inference* from decoded image sizes, LEARNINGS.md
     `[L-mem-fix-ideas]`). That's why there's a cover only when crossfades
     are on `[D-cover-only-for-crossfade]`.
-  - Tested on branch `spike/persistent-cover` (docs/X-PERSISTENT-COVER.md
-    there), 2026-10-30, macOS 27.2, one display and three.
+  - Tested on branch `spike/persistent-cover`, now tag
+    `archive/spike/persistent-cover` (docs/X-PERSISTENT-COVER.md there),
+    2026-10-30, macOS 27.2, one display and three.
   - *Verified* 2026-11-03, draft 33 Release build, macOS 27.2, three
     displays (cover check 1): no twitch. Five changes per display, each
     display recorded on its own; the frame 0.1 s after each fade's end

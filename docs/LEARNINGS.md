@@ -19,7 +19,8 @@ another way.
 
 Source for this section unless noted: the persistent-cover experiment,
 2026-10-30, macOS 27.2, one built-in display (3024 × 1964); branch
-`spike/persistent-cover`, `docs/X-PERSISTENT-COVER.md`. A "cover" is a
+`spike/persistent-cover` (tag `archive/spike/persistent-cover`),
+`docs/X-PERSISTENT-COVER.md`. A "cover" is a
 borderless, click-through window just above the desktop picture
 `[D-cover-level]`.
 
@@ -133,9 +134,10 @@ borderless, click-through window just above the desktop picture
   removing it then changed no frame. Each Space kept its own real
   wallpaper through changes on the others. *Verified* 2026-10-31, macOS
   27.2, one display, three Spaces, 99% cover, branch
-  `spike/persistent-cover` ("Covers on their own Space" in
-  `docs/X-PERSISTENT-COVER.md`). Supports `[D-cover-per-space]` on
-  `feature/persistent-cover-transitions`. Not seen at first: the cover
+  `spike/persistent-cover` (tag `archive/spike/persistent-cover`;
+  "Covers on their own Space" in `docs/X-PERSISTENT-COVER.md`). Supports
+  `[D-cover-per-space]` on `feature/persistent-cover-transitions` (tag
+  `archive/feature/persistent-cover-transitions`). Not seen at first: the cover
   sliding with its Space (an app window hid it). **Update, run 2 the same
   day:** the cover slid away with its Space during the swipe; Space 2
   came in showing its own image (*observed*). But see
@@ -205,7 +207,8 @@ borderless, click-through window just above the desktop picture
 
 ## Memory
 
-Source for this section: branch `investigate/memory`, 2026-10-30,
+Source for this section: branch `investigate/memory` (tag
+`archive/investigate/memory`), 2026-10-30,
 macOS 27.2, three displays (built-in, LG Ultrawide, Cinema HD). Measured
 on the installed Release build of `main` (built 2026-10-29; no `App/`
 changes on `main` since), the window closed unless noted. Two runs: one
@@ -372,7 +375,8 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
   macOS 27.2; two displays (LG Ultrawide, Cinema HD rotated; no built-in),
   Different per Display, Crossfade 1 s, diagnostics switched on (author's
   setting). Before = installed Release of `main` (built 2026-10-29); after
-  = Release of `fix/cover-memory` (code as of `18130ee`), run from its
+  = Release of `fix/cover-memory` (tag `archive/fix/cover-memory`; code
+  as of `18130ee`), run from its
   build folder, not installed. Ten Change Now clicks 6 s apart, then 30 s
   idle, then the window check. *Measured:*
 
@@ -423,7 +427,8 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     each time, and the second close is 3 MB above the first (limit 5).
 - `[L-mem-draft33-runs]` **`[D-memory-protocol]` runs of draft 33
   (persistent covers), 2026-11-03.** Release build of
-  `feature/persistent-cover-transitions` from Bitrig's build folder,
+  `feature/persistent-cover-transitions` (tag
+  `archive/feature/persistent-cover-transitions`) from Bitrig's build folder,
   macOS 27.2, three displays (LG Ultrawide 5160×2160 px with three
   Spaces, built-in 3024×1964, Cinema HD 2200×3520), 30 images, Crossfade
   1 s, schedule paused for the run, `footprint` in MB. *Measured.*
@@ -451,7 +456,8 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
   open for macOS 26. Tracked as GitHub issue #11; no action for now.
-  - **How it came up:** a UI test run on `fix/cover-memory`, 2026-10-30,
+  - **How it came up:** a UI test run on `fix/cover-memory` (tag
+    `archive/fix/cover-memory`), 2026-10-30,
     two external displays (no built-in), Bartender not running.
     - The driver found Phases' menu bar item at x = 2630 but refused to
       click it ("isn't this test instance's"). *Measured.*
