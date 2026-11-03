@@ -553,8 +553,8 @@ call `openWindow`, and the menu bar icon is the one view alive while the
 window is closed. The delegate routes every case, minimized and open
 included, so the relaunch always behaves like "Open Phases…",
 `[D-open-here]` included. *Verified* 2026-11-03 on
-`experiment/reopen-window`: never opened, closed, minimized, and closed
-on another Space all ended with the window visible, key, on the current
+`experiment/reopen-window` (tag `archive/experiment/reopen-window`):
+never opened, closed, minimized, and closed on another Space all ended with the window visible, key, on the current
 Space, and Phases regular (log and author's eyes; `[L-reopen-event]`
 runs 5a–5c and 6).
 

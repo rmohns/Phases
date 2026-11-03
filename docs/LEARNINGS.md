@@ -457,7 +457,8 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
 - `[L-reopen-event]` **What happens when Phases is launched again while
   it's running, and can the menu bar icon's view open the window?**
   (Issue #13, macOS 27.2.) Answered; experiment on branch
-  `experiment/reopen-window`, started 2026-11-03.
+  `experiment/reopen-window` (tag `archive/experiment/reopen-window`),
+  started 2026-11-03.
   - Promoted to `[Q-reopen-ignores-closed-window]` (2026-11-03).
   - Setup: an app delegate logs `applicationShouldHandleReopen`, then the
     window's state 0.5 s later, under diagnostics category `reopen`.
@@ -522,6 +523,7 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     that acceptable (*observed*, same run). It's what `[D-open-here]`
     already promises for "Open Phases…".
   - **UI test failure, 2026-11-03, `feature/reopen-window` at `d4b73d3`**
+    (tag `archive/feature/reopen-window`)
     (Claude): `RelaunchTests/relaunchWithTheWindowClosedShowsIt` failed
     twice (the second run was an accident of a piped command). The test
     sends the reopen Apple event straight to the process. The log shows
