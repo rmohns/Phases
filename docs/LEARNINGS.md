@@ -482,7 +482,9 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     same method; *verified* from the log): reopen arrives
     (`hasVisibleWindows=false`), Phases becomes active as an accessory
     (policy 1), and the kept, hidden window stays hidden. SwiftUI doesn't
-    re-show it. Same gap as run 1.
+    re-show it. Same gap as run 1. The author saw focus leave Bitrig and
+    nothing else (*observed*, same run): today a relaunch takes focus
+    from the user's app and shows nothing in exchange.
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
