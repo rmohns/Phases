@@ -585,6 +585,35 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     **10 of 10 passed** (*verified*). Tally since the two failures: 22 of
     22.
 
+- `[L-menubar-launcher-setting]` **A Phases launched by Bitrig follows
+  Bitrig's own switch in System Settings → Menu Bar.**
+  - **How it came up, 2026-11-04:** after the UI test runs, the build
+    launched with Bitrig's Run button had no menu bar icon. The process
+    was running, idle, and an accessory app (*verified*, `ps`,
+    `sample`), and Accessibility reported no menu bar item for it at all
+    (*verified*). The system log said nothing. Phases' own entry in
+    Menu Bar settings was on.
+  - **Cause (found by the author):** Bitrig's entry in that list was
+    off. Turning it on made Phases' icon appear; toggling it shows and
+    hides Phases' icon in step (*verified* by the author, repeated
+    toggles).
+  - **Why, hypothesis (author's, untested):** macOS charges a menu bar
+    icon to the app that launched the process (its topmost parent), and
+    the child inherits that app's setting. It fits how macOS attributes
+    privacy permissions to a "responsible" app (*recalled*), but nothing
+    here tested it.
+  - **Apple's docs don't mention it** (searched 2026-11-04: the HIG's
+    "Menu bar extras", `MenuBarExtra`, `NSStatusItem`). The HIG only
+    says the system hides extras to make room, and that people can hide
+    them.
+  - **Not checked:** whether copies launched by the UI tests (`swift test`
+    from Claude's shell inside Bitrig) follow the same switch. They had
+    icons during today's runs, but when Bitrig's switch went off isn't
+    known. Also unchecked: whether an installed copy opened from Finder
+    is affected (it shouldn't be, if the hypothesis holds).
+  - **If an icon is ever missing:** check the launching app's entry in
+    Menu Bar settings, not just Phases'.
+
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
   open for macOS 26. Tracked as GitHub issue #11; no action for now.
