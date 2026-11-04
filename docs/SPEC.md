@@ -102,6 +102,12 @@ image when there's more than one choice.
 - **App preference: Include subfolders** (off by default). When on, the folder is
   scanned recursively, skipping hidden folders and packages (app bundles, Photos
   libraries, etc.).
+  - *Verified* 2026-11-04 by the author (`main` at `3ec6dee`, issue #15), with
+    a folder two levels deep: turning the setting on shows the subfolder
+    images at once, under one heading per folder path; rotation sets the
+    wallpaper correctly for top + first level, top + first + second, first +
+    second, and top + second; arrow keys cross subfolder headings. Symlinked
+    folders are untested (issue #18).
 - Supported formats: JPEG, PNG, HEIC, TIFF.
 - `[D-relative-paths]` Images are identified by their path relative to the folder (e.g.
   `Winter/snow.jpg`), so top-level selections stay valid when subfolders are
