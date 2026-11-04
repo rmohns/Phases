@@ -171,6 +171,12 @@ The pure logic that decides what the app does:
   - *Safety:* before any click or keystroke, the harness checks that the
     test instance of Phases is frontmost; if not, the test fails without
     sending input, so a stray keystroke can't land in another app.
+    Clicks outside the window (the menu bar item, its menu) go only to a
+    point the test instance owns. The harness rechecks for up to 2 s
+    before refusing, since the menu bar can still be rearranging after
+    the previous test's instance quits, and the refusal names the
+    process that owned the point (author's approval, 2026-11-04;
+    `[L-menubar-overflow]`).
   - *Why:* `bitrig test` can't run test targets in a Project.json project
     `[Q-bitrig-test-targets]`, and the AX API reads these controls
     reliably where System Events doesn't `[Q-system-events-ax]`.
@@ -242,6 +248,10 @@ The pure logic that decides what the app does:
   The relaunch and sidebar tests passed. Not yet a clean pass.
   Rerun the same day, no other Phases running: 11 of 13, the same
   refusal in two other tests (`[L-menubar-overflow]`).
+- *Verified* 2026-11-04 (Claude, `fix/menubar-hit-retry`, same app
+  build): with the 2 s recheck, the fast suite passed 13 of 13 (116 s).
+  The harness doesn't log whether a recheck was needed, so this one run
+  doesn't show the recheck was what fixed it.
 
 ### Cover checks (draft 33)
 

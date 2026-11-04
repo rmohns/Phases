@@ -671,6 +671,20 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     the Focus tests press X to prove it doesn't rename the phase, and a
     key nothing handles beeps. The run's output has no timestamps, so
     which tests the beeps came from is unknown.
+  - Beeps again in the 13-of-13 run (author). The run's output shows the
+    sidebar outline had focus at every X press (*verified*, the tests'
+    "Focused on" lines; 3 presses in that run, 2 in the rerun before it,
+    where the reopen test failed before pressing). No phase starts with
+    X, and a list's type-to-select beeps when nothing matches
+    (*recalled*, not tested here). That fits, but nothing ties a beep to
+    a press yet.
+  - **Answered, 2026-11-04:** the author pressed keys in the sidebar by
+    hand: focus behaves as the tests expect, and a key that matches no
+    phase beeps (*verified* by the author). The beeps are macOS's, not a
+    failure.
+  - **Harness fix, 2026-11-04** (`fix/menubar-hit-retry`, approved by the
+    author): the ownership check rechecks for up to 2 s and names the
+    owner when it refuses. First run with it: 13 of 13 (*verified*).
 
 - `[L-hdr-wallpaper]` **How does macOS draw an HDR photo (an iPhone
   HEIC with a gain map) as wallpaper: SDR, or with HDR headroom?**
