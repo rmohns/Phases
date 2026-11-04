@@ -166,17 +166,45 @@ public final class PhasesApp {
   /// [D-ui-test-runner] For clicks outside the window (menu bar, menu):
   /// clicks only if the point belongs to this test instance, so a hidden
   /// item `[Q-bartender-menubar]` can't turn into a click on another app.
+  /// Rechecks for up to 2 s, rereading the frame each time: right after
+  /// the previous test's instance quits, the menu bar is still rearranging
+  /// and the point can briefly belong to something else (2026-11-04).
   private func clickOwnElement(_ node: AXNode, what: String) async throws {
-    guard let frame = node.frame else { throw UITestFailure("No frame for \(what)") }
-    let point = CGPoint(x: frame.midX, y: frame.midY)
+    let clock = ContinuousClock()
+    let deadline = clock.now + .seconds(2)
+    var lastFailure = "no frame"
+    while true {
+      if let frame = node.frame {
+        let point = CGPoint(x: frame.midX, y: frame.midY)
+        let owner = ownerPID(at: point)
+        if owner == running.processIdentifier {
+          try await SyntheticInput.click(at: point)
+          return
+        }
+        lastFailure = "at \(point) belongs to \(Self.describe(owner))"
+      }
+      guard clock.now < deadline else {
+        throw UITestFailure("\(what) isn't this test instance's for 2 s: \(lastFailure) (hidden by a menu bar manager?); sent no click")
+      }
+      try await Task.sleep(for: .milliseconds(100))
+    }
+  }
+
+  /// The process owning the AX element at a screen point, if any.
+  private func ownerPID(at point: CGPoint) -> pid_t? {
     var hit: AXUIElement?
     var pid: pid_t = 0
     guard AXUIElementCopyElementAtPosition(AXUIElementCreateSystemWide(), Float(point.x), Float(point.y), &hit) == .success,
-      let hit, AXUIElementGetPid(hit, &pid) == .success, pid == running.processIdentifier
-    else {
-      throw UITestFailure("\(what) at \(point) isn't this test instance's (hidden by a menu bar manager?); sent no click")
-    }
-    try await SyntheticInput.click(at: point)
+      let hit, AXUIElementGetPid(hit, &pid) == .success
+    else { return nil }
+    return pid
+  }
+
+  private static func describe(_ pid: pid_t?) -> String {
+    guard let pid else { return "nothing AX can see" }
+    let app = NSRunningApplication(processIdentifier: pid)
+    let name = app?.localizedName ?? app?.bundleIdentifier ?? "unknown"
+    return "\(name) (pid \(pid))"
   }
 
   /// `PHASES_APP`, or the newest Debug build Bitrig made for this project.
