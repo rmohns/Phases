@@ -462,6 +462,9 @@ image when there's more than one choice.
     changed the main one to 2614×1094. Reconnecting restored both;
     the other covers were redrawn again and the Cinema had no cover
     until its next change.
+  - Accepted by the author, 2026-11-04: a reconnected display having no
+    cover until its next change is left as is. Nobody using Phases can
+    see the difference.
 
 ### A change, step by step
 

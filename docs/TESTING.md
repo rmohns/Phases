@@ -234,6 +234,12 @@ The pure logic that decides what the app does:
   - *Side effect:* without the focus fix, the grid's Tab test also fails,
     because focus starts on the window instead of the sidebar.
   - The brand panel screenshot has no assertion, so it can't fail.
+- 2026-11-04 (Claude, `main` at `63249c1`, Debug build of 22:53:03,
+  built-in display only): the slow suite passed 3 of 3 launches (146 s,
+  *verified*). The fast suite failed with 2 issues (111 s): one was the
+  menu bar refusal in `deletingAMiddlePhaseSelectsTheOneBelow`
+  (LEARNINGS.md `[L-menubar-overflow]`); the other's message was lost.
+  The relaunch and sidebar tests passed. Not yet a clean pass.
 
 ### Cover checks (draft 33)
 

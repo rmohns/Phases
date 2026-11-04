@@ -614,6 +614,16 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     (*verified*). Same x every time, wide display, no leftover Phases
     afterward. *Guess:* the previous test's force-quit instance still
     owns that spot for a moment.
+  - **Seen again, 2026-11-04** (Claude, `main` at `63249c1`, Debug build
+    of 22:53:03 printed by the harness, built-in display only, 3024 ×
+    1964 Retina with the notch): `deletingAMiddlePhaseSelectsTheOneBelow`
+    refused "the menu bar item at (987.0, 15.5) isn't this test
+    instance's." The fast suite logged 2 issues; the other's message
+    was lost (output cut off), so which test it hit is unknown. The
+    installed Phases (`/Applications`, pid 99271) was running throughout
+    (*verified* afterward, `pgrep`). *Hypotheses*, untested: the item
+    found was the installed Phases' icon, or the notch left too little
+    room right of it and hid the test instance's icon.
 
 - `[L-hdr-wallpaper]` **How does macOS draw an HDR photo (an iPhone
   HEIC with a gain map) as wallpaper: SDR, or with HDR headroom?**
