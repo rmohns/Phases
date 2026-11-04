@@ -624,6 +624,24 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     (*verified* afterward, `pgrep`). *Hypotheses*, untested: the item
     found was the installed Phases' icon, or the notch left too little
     room right of it and hid the test instance's icon.
+  - **Rerun, 2026-11-04** (Claude, same build, built-in display only, the
+    notch area disabled by the author's resolution, no other Phases
+    running, *verified* with `pgrep` before the run): 11 of 13 passed.
+    `brandingPanelScreenshot` and `typingAfterReopeningDoesNotRenameThePhase`
+    refused "the menu bar item at (1023.0, 15.5) isn't this test
+    instance's"; `deletingAMiddlePhaseSelectsTheOneBelow`, which failed
+    the first run, passed. That rules out the installed Phases and the
+    notch. Both failing tests were the second in their suite, right after
+    another test's instance was force-quit (*observed*, two cases).
+    *Hypothesis*, untested: the harness hit-tests the item while the menu
+    bar is still re-laying out after the old instance's item went away,
+    so the point briefly belongs to something else. The refusal message
+    doesn't name the owner it found, so the log can't confirm this.
+  - The author heard a system beep the 2nd and 4th time a window
+    appeared in this run (*observed*, author). *Hypothesis*, untested:
+    the Focus tests press X to prove it doesn't rename the phase, and a
+    key nothing handles beeps. The run's output has no timestamps, so
+    which tests the beeps came from is unknown.
 
 - `[L-hdr-wallpaper]` **How does macOS draw an HDR photo (an iPhone
   HEIC with a gain map) as wallpaper: SDR, or with HDR headroom?**

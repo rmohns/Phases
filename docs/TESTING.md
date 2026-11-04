@@ -240,6 +240,8 @@ The pure logic that decides what the app does:
   menu bar refusal in `deletingAMiddlePhaseSelectsTheOneBelow`
   (LEARNINGS.md `[L-menubar-overflow]`); the other's message was lost.
   The relaunch and sidebar tests passed. Not yet a clean pass.
+  Rerun the same day, no other Phases running: 11 of 13, the same
+  refusal in two other tests (`[L-menubar-overflow]`).
 
 ### Cover checks (draft 33)
 
