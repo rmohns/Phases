@@ -682,7 +682,7 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     hand: focus behaves as the tests expect, and a key that matches no
     phase beeps (*verified* by the author). The beeps are macOS's, not a
     failure.
-  - **Harness fix, 2026-11-04** (`fix/menubar-hit-retry`, approved by the
+  - **Harness fix, 2026-11-04** (`fix/menubar-hit-retry`, tag `archive/fix/menubar-hit-retry`, approved by the
     author): the ownership check rechecks for up to 2 s and names the
     owner when it refuses. First run with it: 13 of 13 (*verified*).
 

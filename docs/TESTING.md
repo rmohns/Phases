@@ -248,7 +248,7 @@ The pure logic that decides what the app does:
   The relaunch and sidebar tests passed. Not yet a clean pass.
   Rerun the same day, no other Phases running: 11 of 13, the same
   refusal in two other tests (`[L-menubar-overflow]`).
-- *Verified* 2026-11-04 (Claude, `fix/menubar-hit-retry`, same app
+- *Verified* 2026-11-04 (Claude, `fix/menubar-hit-retry`, tag `archive/fix/menubar-hit-retry`, same app
   build): with the 2 s recheck, the fast suite passed 13 of 13 (116 s).
   The harness doesn't log whether a recheck was needed, so this one run
   doesn't show the recheck was what fixed it.
