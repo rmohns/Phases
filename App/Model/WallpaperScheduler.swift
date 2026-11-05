@@ -203,17 +203,28 @@ final class WallpaperScheduler {
   /// Phases in the order they occur through the day, "Always" first.
   var phasesByTime: [Phase] {
     let reference = Calendar.current.startOfDay(for: Date())
+    // Sorts by the saved location even while access is denied, so a phase
+    // that can't run [D-phase-cant-run] keeps its place in the list.
+    let sorter = ScheduleEngine(phases: phases, location: location.coordinate, isDarkMode: isDarkMode)
     return phases.sorted { lhs, rhs in
-      let l = engine.occurrence(of: lhs.trigger, dayOffset: 0, from: reference) ?? .distantPast
-      let r = engine.occurrence(of: rhs.trigger, dayOffset: 0, from: reference) ?? .distantPast
+      let l = sorter.occurrence(of: lhs.trigger, dayOffset: 0, from: reference) ?? .distantPast
+      let r = sorter.occurrence(of: rhs.trigger, dayOffset: 0, from: reference) ?? .distantPast
       return l < r
     }
   }
 
   // MARK: - Scheduling
 
+  /// [D-phase-cant-run] Skips every disabled phase, whatever the reason.
+  /// [D-denied-means-off] Uses only a location the schedule may use.
   private var engine: ScheduleEngine {
-    ScheduleEngine(phases: phases, location: location.coordinate, isDarkMode: isDarkMode)
+    ScheduleEngine(
+      phases: PhaseAvailability.runnablePhases(
+        phases, savedLocation: location.coordinate, isLocationDenied: location.isDenied
+      ),
+      location: location.usableCoordinate,
+      isDarkMode: isDarkMode
+    )
   }
 
   /// Brings the wallpaper up to date. Safe to call any time: it only changes

@@ -32,7 +32,11 @@ struct PhasesWindow: View {
         }
         Section("Phases") {
           ForEach(scheduler.phasesByTime) { phase in
-            PhaseRow(phase: phase, isActive: phase.id == scheduler.activePhase?.id)
+            PhaseRow(
+              phase: phase,
+              isActive: phase.id == scheduler.activePhase?.id,
+              availability: scheduler.location.availability(of: phase)
+            )
               .tag(SidebarItem.phase(phase.id))
           }
         }
@@ -248,12 +252,15 @@ enum SidebarItem: Hashable {
 private struct PhaseRow: View {
   var phase: Phase
   var isActive: Bool
+  var availability: PhaseAvailability
 
   var body: some View {
     Label {
       VStack(alignment: .leading, spacing: 2) {
         HStack(spacing: 4) {
           Text(phase.name)
+            // [D-phase-cant-run] Dimmed when the phase can't run.
+            .foregroundStyle(availability.isDisabled ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
           if isActive {
             Text("Active")
               .font(.caption2.weight(.semibold))
@@ -266,12 +273,21 @@ private struct PhaseRow: View {
             Image(systemName: symbol)
               .accessibilityLabel("\(phase.appearance.title) Mode only")
           }
+          // [D-row-status-not-cause] The status only, whatever the reason;
+          // the phase editor names the cause.
+          if availability.isDisabled {
+            Image(systemName: "exclamationmark.triangle.fill")
+              .foregroundStyle(.orange)
+              .accessibilityHidden(true)
+            Text("Phase disabled")
+          }
         }
         .font(.caption)
         .foregroundStyle(.secondary)
       }
     } icon: {
       Image(systemName: phase.trigger.kind.systemImage)
+        .opacity(availability.isDisabled ? 0.5 : 1)
     }
     .padding(.vertical, 2)
     .accessibilityElement(children: .combine)

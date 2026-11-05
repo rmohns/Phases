@@ -1,4 +1,4 @@
-# Phases — Specification (draft 35)
+# Phases — Specification (draft 36)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -651,6 +651,63 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
 - If permission is denied: dawn/dusk phases are disabled and marked with a
   warning, and the menu explains how to turn it on in System Settings. Clock and
   "Always" phases keep working.
+- `[D-denied-means-off]` **Denied means no location at all, saved or
+  fresh.** While permission is denied or restricted, the schedule ignores
+  the saved location, so dawn/dusk phases don't run on an old one. The
+  saved location is kept, so turning access back on works at once.
+  - *Why:* until draft 36 the schedule kept using the saved location after
+    access was turned off, so those phases still ran while the editor and
+    menu said they were skipped (found by reading the code, 2026-11-05,
+    issue #16). Turning access off reads as "stop using my location"
+    (author's call, 2026-11-05).
+- `[D-phase-cant-run]` **A phase that can't run is flagged in the
+  sidebar.** A dawn/dusk phase can't run when there is no usable location:
+  access is denied (**Location off**), or it was never granted and no
+  location has been saved yet (**No location yet**). Its row is dimmed
+  (name and icon), and the trigger line ends with an orange
+  `exclamationmark.triangle.fill` and **Phase disabled**. VoiceOver reads
+  "Phase disabled". Such a phase is never the active one, so it never
+  shows "Active".
+  - `[D-row-status-not-cause]` **The row shows the status; the editor
+    shows the cause.** The sidebar row always says "Phase disabled",
+    whatever the reason. The phase editor's warning names the reason
+    ("Location access is off, so this phase is skipped." or "No location
+    yet, so this phase is skipped.").
+    - *Why:* the row is for scanning the schedule; clicking it shows why.
+      One status also covers any later reason a phase can't run, such as
+      the user turning a phase off, without changing the row (author's
+      call, 2026-11-05). Replaces the first draft 36 wording, where the
+      row named the reason ("Location off", "No location yet").
+  - The rule ("can this phase run, and if not, why") lives in a small model
+    function next to `ScheduleEngine`, not in the view, so the unit tests
+    can check it (see TESTING.md). The schedule and the sidebar use the
+    same rule, so the flag can't disagree with what actually runs.
+  - **Disabled is one status with any number of reasons.** The schedule
+    skips every disabled phase, whatever the reason, and the row shows the
+    same status for all of them. A future reason (such as the user turning
+    a phase off) adds a reason and its editor message; the row and the
+    schedule need no change (author's request, 2026-11-05).
+  - *Why:* the issue (#16): a dawn/dusk phase silently did nothing, and
+    only its editor said so. The sidebar is where the user scans the
+    schedule.
+  - *Observed* 2026-11-05 by Claude, draft 36 build, location access
+    turned off by the author: two dusk phases showed dimmed with the
+    warning and "Location off"; clock phases unchanged; list order
+    unchanged (one window screenshot). A second screenshot, after the
+    author selected Dusk: the editor showed "Location access is off, so
+    this phase is skipped."; the selected flagged row (inactive window,
+    grey highlight) stayed dimmed with the warning legible. Not yet seen:
+    a flagged row on the accent highlight (window in front), "No location
+    yet".
+  - *Observed* 2026-11-05 by Claude, after `[D-row-status-not-cause]`:
+    with access on, the dusk phases showed no flag; after the author
+    turned access off, with Phases still running and no relaunch, both
+    rows read "Phase disabled", dimmed with the warning (two window
+    screenshots).
+  - *Verified* 2026-11-05 by the author: a flagged row selected with the
+    window in front (accent highlight) reads correctly. "No location
+    yet" is covered by unit tests only; reaching it on a real Mac means
+    resetting Location Services state (author's call to leave it).
 
 ## Interface
 
@@ -761,7 +818,8 @@ extras don't show them. No global hotkey.
      bottoms often end up offscreen.
   3. **"Phases" section:** the phase list, sorted by start time, with the
      active phase marked. Phase rows are two lines (name plus trigger), which
-     also sets them apart from the one-line Settings row.
+     also sets them apart from the one-line Settings row. A phase that can't
+     run is dimmed and flagged `[D-phase-cant-run]`.
   - + / − buttons below the list add and remove phases. − removes the
     selected phase and is dimmed when no phase is selected.
   - `[D-delete-selects-next]` **After deleting a phase, the next phase down

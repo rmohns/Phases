@@ -1,0 +1,59 @@
+import Foundation
+
+/// [D-phase-cant-run] Whether a phase can run, and if not, why. The schedule
+/// and the sidebar share this rule, so the flag never disagrees with what runs.
+/// Any reason disables a phase the same way: the sidebar shows only the status
+/// [D-row-status-not-cause], and the schedule skips it. A new reason is a new
+/// `DisabledReason` case plus a check in `init`.
+enum PhaseAvailability: Equatable {
+  case runs
+  case disabled(DisabledReason)
+
+  init(phase: Phase, savedLocation: SolarCalculator.Coordinate?, isLocationDenied: Bool) {
+    if phase.trigger.usesLocation
+      && Self.usableLocation(saved: savedLocation, isDenied: isLocationDenied) == nil {
+      self = .disabled(isLocationDenied ? .locationOff : .noLocationYet)
+    } else {
+      self = .runs
+    }
+  }
+
+  var isDisabled: Bool {
+    if case .disabled = self { true } else { false }
+  }
+
+  /// Sentence for the phase editor naming the cause; nil when the phase runs.
+  var editorMessage: String? {
+    if case .disabled(let reason) = self { reason.editorMessage } else { nil }
+  }
+
+  /// [D-denied-means-off] While access is denied the schedule ignores the
+  /// saved location; it's kept so turning access back on works at once.
+  static func usableLocation(saved: SolarCalculator.Coordinate?, isDenied: Bool) -> SolarCalculator.Coordinate? {
+    isDenied ? nil : saved
+  }
+
+  /// The phases the schedule may use: every phase that isn't disabled.
+  static func runnablePhases(
+    _ phases: [Phase], savedLocation: SolarCalculator.Coordinate?, isLocationDenied: Bool
+  ) -> [Phase] {
+    phases.filter {
+      !PhaseAvailability(phase: $0, savedLocation: savedLocation, isLocationDenied: isLocationDenied).isDisabled
+    }
+  }
+}
+
+/// Why a phase can't run. Shown only in the phase editor [D-row-status-not-cause].
+enum DisabledReason: Equatable {
+  /// Location access is denied or restricted.
+  case locationOff
+  /// Access was never granted and no location has been saved yet.
+  case noLocationYet
+
+  var editorMessage: String {
+    switch self {
+    case .locationOff: "Location access is off, so this phase is skipped."
+    case .noLocationYet: "No location yet, so this phase is skipped."
+    }
+  }
+}

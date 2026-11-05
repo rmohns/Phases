@@ -57,6 +57,10 @@ The pure logic that decides what the app does:
 - `ImageGridNavigation`: arrow-key movement `[D-grid-one-tab-stop]`
 - `PhaseListSelection`: which phase is selected after a delete
   `[D-delete-selects-next]`
+- `PhaseAvailability`: whether a phase can run and why not
+  `[D-phase-cant-run]`, that the schedule drops every disabled phase, and
+  that a denied dawn phase never becomes active even with a saved
+  location `[D-denied-means-off]`
 - `AppVersion`: the spec draft constant matches SPEC.md's title
   `[D-version-in-settings]`
 - `FolderScan`: which images the folder scan finds and what it names

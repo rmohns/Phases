@@ -29,8 +29,9 @@ struct PhaseEditor: View {
             }
           }
           .pickerStyle(.segmented)
-          if phase.wrappedValue.trigger.usesLocation && scheduler.location.isDenied {
-            Label("Location access is off, so this phase is skipped.", systemImage: "exclamationmark.triangle")
+          // [D-phase-cant-run] Same rule as the sidebar flag.
+          if let message = scheduler.location.availability(of: phase.wrappedValue).editorMessage {
+            Label(message, systemImage: "exclamationmark.triangle")
               .foregroundStyle(.orange)
           }
         }

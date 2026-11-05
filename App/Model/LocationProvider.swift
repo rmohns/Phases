@@ -36,6 +36,17 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
     authorizationStatus == .denied || authorizationStatus == .restricted
   }
 
+  /// [D-denied-means-off] The location the schedule may use: none while
+  /// access is denied, even if one was saved earlier.
+  var usableCoordinate: SolarCalculator.Coordinate? {
+    PhaseAvailability.usableLocation(saved: coordinate, isDenied: isDenied)
+  }
+
+  /// [D-phase-cant-run] Whether this phase can run right now.
+  func availability(of phase: Phase) -> PhaseAvailability {
+    PhaseAvailability(phase: phase, savedLocation: coordinate, isLocationDenied: isDenied)
+  }
+
   /// Asks for permission if needed, then fetches a fresh location.
   func refresh() {
     switch authorizationStatus {
