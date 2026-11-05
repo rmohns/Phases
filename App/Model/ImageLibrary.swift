@@ -1,7 +1,6 @@
 import AppKit
 import Observation
 import QuickLookThumbnailing
-import UniformTypeIdentifiers
 
 /// The user's wallpaper folder and the images in it, optionally including
 /// subfolders. [D-relative-paths] Images are identified by their path
@@ -16,6 +15,9 @@ final class ImageLibrary {
     didSet { imageNameSet = Set(imageNames) }
   }
   @ObservationIgnored private var imageNameSet: Set<String> = []
+  /// Where each image is read from. Not always folder + name: the file
+  /// system follows symlinks in a path but not aliases [D-follow-links].
+  @ObservationIgnored private var imageURLs: [String: URL] = [:]
 
   var includesSubfolders: Bool {
     didSet {
@@ -26,7 +28,6 @@ final class ImageLibrary {
 
   private static let bookmarkKey = "imageFolderBookmark"
   private static let subfoldersKey = "includesSubfolders"
-  private static let supportedTypes: [UTType] = [.jpeg, .png, .heic, .tiff]
 
   init() {
     includesSubfolders = SettingsStore.defaults.bool(forKey: Self.subfoldersKey)
@@ -45,38 +46,13 @@ final class ImageLibrary {
   func reload() {
     guard let folderURL else {
       imageNames = []
+      imageURLs = [:]
       return
     }
-    var options: FileManager.DirectoryEnumerationOptions = [.skipsHiddenFiles, .skipsPackageDescendants]
-    if !includesSubfolders { options.insert(.skipsSubdirectoryDescendants) }
-    guard let enumerator = FileManager.default.enumerator(
-      at: folderURL,
-      includingPropertiesForKeys: [.contentTypeKey],
-      options: options
-    ) else {
-      imageNames = []
-      return
-    }
-
-    let basePath = folderURL.standardizedFileURL.path(percentEncoded: false)
-    let prefix = basePath.hasSuffix("/") ? basePath : basePath + "/"
-    var names: [String] = []
-    for case let url as URL in enumerator {
-      guard let type = try? url.resourceValues(forKeys: [.contentTypeKey]).contentType,
-        Self.supportedTypes.contains(where: { type.conforms(to: $0) })
-      else { continue }
-      let path = url.standardizedFileURL.path(percentEncoded: false)
-      guard path.hasPrefix(prefix) else { continue }
-      names.append(String(path.dropFirst(prefix.count)))
-    }
-    imageNames = names.sorted { lhs, rhs in
-      let l = Self.folder(of: lhs), r = Self.folder(of: rhs)
-      if l != r {
-        if l.isEmpty || r.isEmpty { return l.isEmpty }
-        return l.localizedStandardCompare(r) == .orderedAscending
-      }
-      return lhs.localizedStandardCompare(rhs) == .orderedAscending
-    }
+    // [D-follow-links] [D-scan-each-folder-once]
+    let items = FolderScan.items(in: folderURL, includesSubfolders: includesSubfolders)
+    imageURLs = Dictionary(items.map { ($0.name, $0.url) }) { first, _ in first }
+    imageNames = items.map(\.name)
   }
 
   /// Images grouped by subfolder ("" for the top level), in display order.
@@ -95,7 +71,7 @@ final class ImageLibrary {
 
   /// The subfolder part of a relative path, or "" for a top-level file.
   static func folder(of name: String) -> String {
-    (name as NSString).deletingLastPathComponent
+    FolderScan.folder(of: name)
   }
 
   static func fileName(of name: String) -> String {
@@ -103,7 +79,7 @@ final class ImageLibrary {
   }
 
   func url(for name: String) -> URL? {
-    folderURL?.appendingPathComponent(name)
+    imageURLs[name] ?? folderURL?.appendingPathComponent(name)
   }
 
   func contains(_ name: String) -> Bool {

@@ -1,4 +1,4 @@
-# Phases — Specification (draft 34)
+# Phases — Specification (draft 35)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -107,8 +107,49 @@ image when there's more than one choice.
     images at once, under one heading per folder path; rotation sets the
     wallpaper correctly for top + first level, top + first + second, first +
     second, and top + second; arrow keys cross subfolder headings. Symlinked
-    folders are untested (issue #18).
+    folders weren't followed at the time (issue #17; this note said #18 by
+    mistake until draft 35); see `[D-follow-links]`.
 - Supported formats: JPEG, PNG, HEIC, TIFF.
+- `[D-follow-links]` **Symlinks and Finder aliases count as what they point
+  to,** for images and for folders.
+  - A link or alias to an image is listed under its own name, in the
+    folder that holds it: `_link.png`, or `Winter/_link.png`.
+  - A link or alias to a folder counts as a subfolder, even though the file
+    system says it's something else (author, 2026-11-04). Phases follows it
+    only when Include subfolders is on, and lists its images under the
+    link's name, e.g. `Linked/snow.jpg` `[D-relative-paths]`.
+  - The other subfolder rules apply to what a link points to: hidden
+    links, and links to hidden folders or packages, are skipped.
+  - Broken links and aliases, and ones pointing at anything other than a
+    supported image or a folder, are skipped like any other unsupported
+    file.
+  - A link to something macOS protects (Desktop, Documents, Downloads,
+    iCloud Drive, network or removable drives) may make macOS ask for
+    permission the first time (*recalled*, not tested with Phases). If
+    access is refused, that item is skipped. Whether to show it as "can't
+    open" instead is open (issue #20).
+  - Two links to the same image list it twice, once under each name.
+    That's accepted (author, 2026-11-04).
+  - *Why:* until draft 35 the scan skipped every symlink and alias, so
+    images and folders reached that way never appeared (issue #17;
+    *verified* 2026-11-04 by Claude with a test folder: symlinks report
+    the type `public.symlink`, aliases `com.apple.alias-file`, and the
+    scan didn't descend into a symlinked folder).
+  - *Verified* 2026-11-04 by the author, draft 35 build, on the real
+    wallpaper folder with Finder aliases: "seems to be working fine."
+    Symlinks and loops are covered by the unit tests, not checked by
+    hand.
+- `[D-scan-each-folder-once]` **Each folder is scanned at most once,**
+  identified by where it really is, not the path that reached it. This
+  includes the chosen folder itself, so a link back to it, or to a folder
+  above it, adds nothing, and the scan always ends.
+  - When a folder can be reached both directly and through a link, the
+    direct path names it (author, 2026-11-04).
+  - When only links reach it, the first one in display order names it
+    (top-level first, then Finder sort order).
+  - *Why:* following links makes loops possible (a folder linked to itself,
+    or A → B → A). Without this rule the scan would never end, or would
+    list one folder's images over and over.
 - `[D-relative-paths]` Images are identified by their path relative to the folder (e.g.
   `Winter/snow.jpg`), so top-level selections stay valid when subfolders are
   turned on. Turning subfolders off makes subfolder images show as missing

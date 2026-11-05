@@ -59,6 +59,10 @@ The pure logic that decides what the app does:
   `[D-delete-selects-next]`
 - `AppVersion`: the spec draft constant matches SPEC.md's title
   `[D-version-in-settings]`
+- `FolderScan`: which images the folder scan finds and what it names
+  them, following symlinks and aliases `[D-follow-links]` and ending on
+  loops `[D-scan-each-folder-once]` (draft 35). These tests build folders
+  in the temporary directory, never the user's.
 - `WallpaperCheck`: what the scheduler's normal check does with what's
   already applied, including a screen change that leaves every image
   fitting `[D-screen-change-no-reroll]` (draft 31)
