@@ -92,6 +92,11 @@
   included, ends with the trailer
   `Co-Authored-By: Claude (Bitrig) <noreply@anthropic.com>`. Commits
   without it are Robert's, except those up to `cf969a9`, all Claude's.
+- **Sign Claude's GitHub writing.** `gh` posts as Robert's account, so
+  every issue, comment, PR description, or review Claude writes on
+  GitHub says it's from Claude: open with `**Claude (Bitrig):**` (or end
+  with `— Claude (Bitrig)` when a lead-in would read badly, as in an
+  issue body). Never write as if Robert said it.
 - Never install launch agents, daemons, or helpers without asking the user first.
 - Open the docs for review with Marked: `/opt/homebrew/bin/mk docs/SPEC.md`,
   `/opt/homebrew/bin/mk docs/ERRATA.md`, `/opt/homebrew/bin/mk docs/TESTING.md`,
