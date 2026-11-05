@@ -82,6 +82,12 @@ final class ImageLibrary {
     imageURLs[name] ?? folderURL?.appendingPathComponent(name)
   }
 
+  /// The library image at `url`, following links, or nil if it isn't one.
+  func name(for url: URL) -> String? {
+    let target = url.resolvingSymlinksInPath().standardizedFileURL
+    return imageNames.first { self.url(for: $0)?.resolvingSymlinksInPath().standardizedFileURL == target }
+  }
+
   func contains(_ name: String) -> Bool {
     imageNameSet.contains(name)
   }
