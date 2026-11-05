@@ -343,7 +343,7 @@ final class WallpaperScheduler {
   /// Display UUID → image. Displays with their own selection draw from it;
   /// the rest share the All Displays selection per the display mode (spec "Displays sharing the All Displays images").
   private func pickImages(for phase: Phase, step: Int) -> [String: String] {
-    let previous = appliedState?.imagesByDisplay ?? [:]
+    let showing = imagesShowing()
     let connected = NSScreen.screens.compactMap(\.displayUUID)
     var picks: [String: String] = [:]
     var sharing: [String] = []
@@ -356,44 +356,56 @@ final class WallpaperScheduler {
         continue
       }
       let pool = imagePool(for: uuid, in: phase)
-      if let name = pick(from: pool, count: 1, order: phase.order, step: step, avoiding: [previous[uuid]].compactMap { $0 }).first {
+      if let name = pick(from: pool, count: 1, order: phase.order, step: step, showing: [showing[uuid] ?? []]).first {
         picks[uuid] = name
       }
     }
 
     let shared = library.availableImages(phase.imageNames)
     if !sharing.isEmpty, !shared.isEmpty {
-      let current = sharing.compactMap { previous[$0] }
+      let current = sharing.map { showing[$0] ?? [] }
       switch displayMode {
       case .sameOnAll:
-        if let name = pick(from: shared, count: 1, order: phase.order, step: step, avoiding: current).first {
+        let name = phase.order == .random
+          ? RandomPicker.shared(from: shared, showing: current)
+          : pick(from: shared, count: 1, order: phase.order, step: step, showing: current).first
+        if let name {
           for uuid in sharing { picks[uuid] = name }
         }
       case .differentPerDisplay:
-        let names = pick(from: shared, count: sharing.count, order: phase.order, step: step, avoiding: current)
+        let names = pick(from: shared, count: sharing.count, order: phase.order, step: step, showing: current)
         for (uuid, name) in zip(sharing, names) { picks[uuid] = name }
       }
     }
     return picks
   }
 
-  /// In order: consecutive images starting at `step`. Random: distinct where
-  /// possible, preferring ones not currently showing.
-  private func pick(from pool: [String], count: Int, order: ImageOrder, step: Int, avoiding current: [String]) -> [String] {
+  /// Display UUID → the images it may be showing: what Phases last set there,
+  /// and what macOS reports for the current Space, which differs after a
+  /// Space switch [D-cover-per-space] or a wallpaper set outside Phases.
+  private func imagesShowing() -> [String: Set<String>] {
+    var showing: [String: Set<String>] = [:]
+    for (uuid, name) in appliedState?.imagesByDisplay ?? [:] { showing[uuid, default: []].insert(name) }
+    for screen in NSScreen.screens {
+      guard let uuid = screen.displayUUID,
+        let url = NSWorkspace.shared.desktopImageURL(for: screen),
+        let name = library.name(for: url)
+      else { continue }
+      showing[uuid, default: []].insert(name)
+    }
+    return showing
+  }
+
+  /// In order: consecutive images starting at `step`. Random: each display
+  /// gets an image it isn't showing where possible (issue #10).
+  private func pick(from pool: [String], count: Int, order: ImageOrder, step: Int, showing: [Set<String>]) -> [String] {
     guard !pool.isEmpty, count > 0 else { return [] }
     switch order {
     case .inOrder:
       return (0..<count).map { pool[(step + $0) % pool.count] }
     case .random:
-      return randomPick(from: pool, count: count, avoiding: current)
+      return RandomPicker.perDisplay(from: pool, showing: showing)
     }
-  }
-
-  /// Distinct images where possible, preferring ones not currently showing.
-  private func randomPick(from available: [String], count: Int, avoiding current: [String]) -> [String] {
-    let fresh = available.filter { !current.contains($0) }.shuffled()
-    let pool = fresh.count >= count ? fresh : fresh + available.filter(current.contains).shuffled()
-    return (0..<count).map { pool[$0 % pool.count] }
   }
 
   // MARK: - System events
