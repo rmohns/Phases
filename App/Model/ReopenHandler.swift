@@ -16,6 +16,14 @@ extension Notification.Name {
 /// a SwiftUI window, so this hands the request to the menu bar icon's view,
 /// the one view that's always alive.
 final class ReopenHandler: NSObject, NSApplicationDelegate {
+  // EXPERIMENT ONLY [Q-launch-activate-refused]
+  func applicationDidFinishLaunching(_ notification: Notification) {
+    MainActor.assumeIsolated {
+      FirstLaunchExperiment.launchFinished = true
+      diagLog.log("didFinishLaunching: \(FirstLaunchExperiment.state(), privacy: .public)")
+    }
+  }
+
   func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
     diagLog.log("relaunched; hasVisibleWindows=\(flag) \(Self.state(), privacy: .public)")
     NotificationCenter.default.post(name: .phasesRelaunched, object: nil)
