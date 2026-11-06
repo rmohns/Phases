@@ -37,6 +37,18 @@ struct RestorePoint: Codable, Equatable {
     })
   }
 
+  /// [D-outside-change-pauses] This record with the given displays' entries
+  /// taken from `fresh`: a wallpaper picked outside Phases becomes that
+  /// display's original.
+  func replacing(_ displayIDs: Set<CGDirectDisplayID>, from fresh: RestorePoint) -> RestorePoint {
+    var result = self
+    for display in fresh.displays where displayIDs.contains(display.displayID) {
+      result.displays.removeAll { $0.displayID == display.displayID }
+      result.displays.append(display)
+    }
+    return result
+  }
+
   /// Displays whose original wallpaper couldn't be restored.
   var systemWallpaperCount: Int {
     displays.filter(\.isSystemWallpaper).count

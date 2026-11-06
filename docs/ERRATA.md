@@ -159,6 +159,27 @@ would stop being true if a future macOS fixed the underlying behavior.
   that notification could trigger. The likely reason, that these change
   each screen's visible frame, is *recalled*, not checked. Display UUIDs
   don't change. Shapes `[D-screen-change-no-reroll]`.
+- `[Q-wallpaper-store]` **No public API reports a wallpaper picked in
+  System Settings, and `desktopImageURL(for:)` can't be trusted to name
+  it (macOS 27.2).** Phases reads macOS's private store instead,
+  `~/Library/Application Support/com.apple.wallpaper/Store/Index.plist`
+  (*verified* 2026-11-06 by Claude, author picking, `[L-store-watch]`):
+  - It holds Desktop entries for all displays, per display, and per Space
+    (a Space's default and its per-display entries). Each has a provider
+    (`com.apple.wallpaper.choice.image` for stills), a nested
+    Configuration property list naming the file, `LastSet`, and `LastUse`.
+  - A pick moves `LastSet` on the showing Space's entries only; each Space
+    keeps its own. Opening or quitting System Settings and switching
+    Spaces move only `LastUse`.
+  - macOS replaces the file on every write (a folder `write` plus a
+    `delete` of the old file), so watching the file loses it; watch the
+    folder. The write lands about 0.25–1 s after a set.
+  - For an Aerial, the entry names no file and `desktopImageURL` reports
+    `DefaultDesktop.heic`. After a Space switch, `desktopImageURL` kept
+    reporting the other Space's image (*observed*).
+  - Undocumented: a macOS update could move or reshape it, which would
+    silently turn detection off (nothing reads as a change). Shapes
+    `[D-outside-change-rule]`; `[D-aerials-untouched]` reads the same file.
 - `[Q-cover-image-copied]` **Core Animation copies every CGImage set as a
   layer's `contents`, a full-screen copy per cover, and the copy outlives
   the window; an IOSurface it shows as is (macOS 27.2).** *Measured*

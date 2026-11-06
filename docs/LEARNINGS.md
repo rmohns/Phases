@@ -456,7 +456,8 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
 
 - `[L-store-watch]` **Can Phases hear a wallpaper change made in System
   Settings by watching macOS's wallpaper store?** (Issue #5, macOS 27.2.)
-  Open; experiment on branch `experiment/wallpaper-store-watch`, started
+  Promoted to `[Q-wallpaper-store]` (2026-11-06); the notes below stay as
+  the record, and two displays is still untested. Experiment on branch `experiment/wallpaper-store-watch`, started
   2026-11-06. Agreed behavior if it works (author, 2026-11-06): an outside
   change pauses all of Phases; how to tell the user is undecided.
   - Setup: `WallpaperStoreWatcher` watches

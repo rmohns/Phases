@@ -1,4 +1,4 @@
-# Phases — Specification (draft 36)
+# Phases — Specification (draft 37)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -606,7 +606,8 @@ With crossfades on `[D-cover-only-for-crossfade]`:
   at its end.
 - `[D-cover-pause-quit]` **Pause, Quit, and crashes:**
   - **Pause** leaves any cover up. It stops scheduled changes, not what's
-    on screen.
+    on screen. The exception is a pause caused by an outside change, which
+    fades out the changed display's cover `[D-outside-change-pauses]`.
   - **Quit** removes every cover at once, after any restore
     `[D-restore-on-quit]` has set the real wallpaper. With restore on,
     that's a hard cut to the original, as in draft 32 (restoring never
@@ -638,6 +639,61 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
    showing now had the Mac stayed awake. For In order, that means skipping ahead
    by the number of missed rotations; for Random, a single new random pick. The
    rotation clock stays aligned to the original schedule.
+
+## Wallpaper changed outside Phases
+
+- `[D-outside-change-pauses]` **When someone picks a wallpaper in System
+  Settings (or any other app), Phases pauses everything** and steps
+  aside until it's resumed. Nothing is asked first.
+  - *Why:* picking a wallpaper is a clear statement of what the person
+    wants on screen now. Before this, Phases hid the pick behind its cover
+    and then overrode it at its next change, 9 s and 23 s later in the
+    experiment (*verified* 2026-11-06, LEARNINGS.md `[L-store-watch]`), so
+    the pick looked broken. Pausing is the author's call (2026-11-06,
+    GitHub issue #5).
+- **What pausing does:**
+  - Scheduled changes stop, exactly as with **Pause Schedule** in the menu: it's the
+    same paused state, saved across launches, with a reason attached
+    (see "Interface" below).
+  - Any cover on the changed display fades out over the Transition
+    duration, revealing the pick. Covers on other displays stay, as with
+    Pause `[D-cover-pause-quit]`. With Transition set to None it's a cut.
+  - The pick becomes that display's "original" in the restore record, so
+    Quit restores it, not the wallpaper from before Phases launched
+    `[D-restore-on-quit]`. An Aerial pick marks the display as an Aerial,
+    which Quit leaves alone `[D-aerials-untouched]`.
+- **Resuming** (any of the controls under "Interface") applies the active
+  phase's image right away, with the usual transition, and the schedule
+  carries on. The restore record keeps the pick.
+- **Change Now while paused** changes the image once and stays paused, as
+  it does today with Pause Schedule.
+- `[D-outside-change-rule]` **How a change is recognised:** Phases watches
+  macOS's wallpaper store (read only, as `[D-aerials-untouched]` already
+  does), event-driven with no polling. A change counts as outside when an
+  entry for a display (macOS only sets the showing Space's) gets a new
+  "last set" time and its image isn't one Phases set on that display in
+  the last 10 seconds. Store details: ERRATA.md `[Q-wallpaper-store]`.
+  - Writes that change only the "last used" time are ignored: opening or
+    quitting System Settings and switching Spaces make them (*verified*
+    2026-11-06, `[L-store-watch]`).
+  - The store, not `NSWorkspace`, is the source: for an Aerial,
+    `desktopImageURL` reports a placeholder (`DefaultDesktop.heic`), and
+    it kept reporting one Space's image while another Space was showing
+    (*observed* 2026-11-06).
+  - The rule is a pure function, unit-tested `[D-tests-unhosted]`.
+  - A pick of the same image Phases already shows isn't noticed. Nothing
+    on screen changes, so nothing needs to.
+- `[D-outside-change-notice]` **Telling the user:**
+  - **Once, when it happens:** one macOS notification: "Phases paused.
+    You chose a new wallpaper in System Settings. Phases won't change it
+    until you resume." with a **Resume** action. Permission is asked the
+    first time it's needed, not at launch. If it's denied, the lasting
+    signs below still show.
+  - **Lasting:** the menu bar icon's paused look, the menu's status line,
+    and the top of Settings (see "Interface").
+  - *Why both:* the pick itself is what the person was looking at, so a
+    notification is the only sign they'll get in the moment; the lasting
+    signs answer "why isn't it changing?" later without nagging.
 
 ## Location
 
@@ -731,6 +787,13 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
     the inner landscape became a squiggle and the outlined crescents blurred.
     Solid shapes and a larger central circle fixed it, checked by rendering
     both at actual menu bar pixel sizes.
+  - `[D-menubar-icon-paused]` **While paused, for any reason, the icon
+    shows a small pause badge** (two bars) at its lower right, still a
+    template image.
+    - *Why:* a pause caused by an outside change `[D-outside-change-pauses]`
+      happens without the person choosing Pause, so they need a sign that
+      lasts without opening anything. Manual pause gets the same badge so
+      one look means one thing.
 
 ### Menu bar menu
 `[D-menu-status-header]` Kept short. Status is a single section header, not separate dimmed items,
@@ -742,8 +805,23 @@ following the pattern of Apple's own menu bar extras (e.g. Time Machine's
     (weekday added if it's not today)
   - "All Day": an active phase with no upcoming phase change
   - "Dusk · Paused" while paused; "No active phase" if none applies
+  - "Paused · wallpaper changed in System Settings" while Phases has
+    paused itself for an outside change `[D-outside-change-notice]`, in
+    place of the phase line. **Resume Schedule** resumes.
+    - *Why:* it's status, so it stays in the header, the way Apple's own
+      menu bar extras show status. Draft 37 first added it as a second,
+      dimmed line, which made two hard-to-read lines (author,
+      2026-11-06). The HIG has no guidance on status lines in menus; it
+      reserves dimming for unavailable items (*verified* 2026-11-06,
+      HIG "Menus").
 - **Change Now**: advances to the next image in the active phase
-- **Pause Schedule** (checkmark when paused; saved across launches)
+- `[D-menu-pause-verb]` **Pause Schedule**, which reads **Resume Schedule**
+  while paused (for any reason). The pause is saved across launches.
+  - *Why:* a command names what it will do. A checked "Pause Schedule"
+    reads as a state and leaves people working out what unchecking means
+    (author, 2026-11-06). The HIG allows either; it suggests a verb when
+    a changeable label could be read as a state (*verified* 2026-11-06,
+    HIG "Menus"). Draft 36 and earlier used a checkmark.
 - **Open Phases…**: opens the Phases window
 - If location access is denied and a phase needs it, one extra dimmed line
   says so (see "Location").
@@ -932,7 +1010,16 @@ extras don't show them. No global hotkey.
       requirement; see also `[D-single-timer]`).
 - **Phase selected:** editor with name, trigger, offset, appearance condition,
   order, rotation, and the Images section (Display picker and thumbnail grid).
-- **Settings selected:** image folder and Include subfolders; display sharing
+- `[D-settings-schedule-switch]` **Settings starts with a Schedule
+  section:** a **Change wallpaper on schedule** switch, the inverse of
+  the menu's Pause Schedule (one state, two controls). When it's off, a note under it
+  says why: "Paused from the menu" or "Paused at 9:06 AM because the
+  wallpaper was changed in System Settings." Turning it on resumes
+  `[D-outside-change-pauses]`.
+  - *Why:* resuming shouldn't depend on finding a menu item; the window is
+    where someone goes to ask why Phases stopped. Placed at the top for
+    now; a broader Settings cleanup may move it (author, 2026-11-06).
+- **Settings selected:** the Schedule section above, then image folder and Include subfolders; display sharing
   preference (see "Displays sharing the All Displays images"); transition and duration; Launch at Login; location status
   with today's civil dawn and dusk and Update Now; and, at the bottom, a
   **Quitting** section with the **Restore original wallpaper when quitting**
@@ -1101,6 +1188,8 @@ extras don't show them. No global hotkey.
   wallpaper (image file plus fill/scaling options), keyed by display ID.
 - The record is saved to disk and kept until it's been restored. After a crash
   or Force Quit, the next launch reuses it instead of recording Phases' own image.
+- A wallpaper picked outside Phases while it runs replaces that display's
+  entry in the record `[D-outside-change-pauses]`.
 - `[D-restore-on-quit]` **App preference: Restore original wallpaper when
   quitting**, **on by default**. When on, an actual **Quit** restores each
   display's original and clears the record. When off, Quit leaves Phases'
@@ -1200,14 +1289,6 @@ data. Phases saved by earlier versions load unchanged (no per-display images).
   `[Q-menubar-restyle-on-app-switch]` (FB25326597). macOS also sometimes
   leaves menu bar text the wrong color with no cover involved
   (LEARNINGS.md `[L-menubar-lazy-restyle]`).
-- **With crossfades on, a wallpaper chosen in System Settings is hidden by
-  the cover** until you leave that Space or Phases next changes, so at
-  first it looks as if nothing happened (*observed* 2026-10-30,
-  `[L-outside-change-hidden]`). The menu bar and lock screen follow the
-  new choice meanwhile. Accepted for now (author, 2026-10-31).
-  Workaround: set Transition to None first. A possible later enhancement:
-  notice the change and ask whether to quit Phases or do something else
-  (to be decided; GitHub issue #5).
 - At logout, a twitch was seen just as the login window appeared
   (*observed* by the author with the experiment build, 2026-10-30,
   `[L-login-dims-wallpaper]`). Not checked on draft 32; may be macOS

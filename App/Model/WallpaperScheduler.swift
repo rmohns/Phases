@@ -47,11 +47,27 @@ final class WallpaperScheduler {
     didSet { SettingsStore.defaults.set(asksBeforeQuitting, forKey: Keys.asksBeforeQuitting) }
   }
 
+  /// Pause Schedule, and the inverse of Settings' "Change wallpaper on
+  /// schedule" [D-settings-schedule-switch]: one state, two controls.
   var isPaused: Bool {
     didSet {
       SettingsStore.defaults.set(isPaused, forKey: Keys.isPaused)
+      if !isPaused, pausedForOutsideChangeAt != nil {
+        // [D-outside-change-pauses] Resuming puts the phase's image back
+        // over the pick at once: forgetting what's applied makes the
+        // check below apply again.
+        pausedForOutsideChangeAt = nil
+        appliedState?.imagesByDisplay = [:]
+        notifier.withdraw()
+      }
       evaluate()
     }
+  }
+
+  /// [D-outside-change-pauses] When Phases paused itself because a
+  /// wallpaper was picked elsewhere; nil for a pause from the menu.
+  private(set) var pausedForOutsideChangeAt: Date? {
+    didSet { Self.save(pausedForOutsideChangeAt, forKey: Keys.pausedForOutsideChangeAt) }
   }
 
   private(set) var appliedState: AppliedState? {
@@ -77,6 +93,7 @@ final class WallpaperScheduler {
 
   @ObservationIgnored private var timer: Timer?
   @ObservationIgnored private let crossfade = CrossfadeController()
+  @ObservationIgnored private let notifier = PauseNotifier()
   @ObservationIgnored private var appearanceObservation: NSKeyValueObservation?
   /// Set at logout, restart, or shutdown, so only a real Quit restores.
   @ObservationIgnored private var isPoweringOff = false
@@ -99,6 +116,7 @@ final class WallpaperScheduler {
     static let crossfadeDuration = "crossfadeDuration"
     static let restoresWallpaperOnQuit = "restoresWallpaperOnQuit"
     static let asksBeforeQuitting = "asksBeforeQuitting"
+    static let pausedForOutsideChangeAt = "pausedForOutsideChangeAt"
   }
 
   init() {
@@ -108,6 +126,7 @@ final class WallpaperScheduler {
       ?? (UITestMode.isOn ? UITestMode.fixturePhases : [Phase(name: "All Day", trigger: .always)])
     displayMode = defaults.string(forKey: Keys.displayMode).flatMap(DisplayMode.init) ?? .sameOnAll
     isPaused = defaults.bool(forKey: Keys.isPaused)
+    pausedForOutsideChangeAt = Self.load(Date.self, forKey: Keys.pausedForOutsideChangeAt)
     restoresWallpaperOnQuit = defaults.object(forKey: Keys.restoresWallpaperOnQuit) as? Bool ?? true
     asksBeforeQuitting = defaults.object(forKey: Keys.asksBeforeQuitting) as? Bool ?? true
     transitionStyle = defaults.string(forKey: Keys.transitionStyle).flatMap(TransitionStyle.init) ?? .crossfade
@@ -125,6 +144,7 @@ final class WallpaperScheduler {
     location.onChange = { [weak self] in self?.evaluate() }
     if needsLocation { location.refresh() }
     observeSystemEvents()
+    watchForOutsideChanges()
     evaluate()
   }
 
@@ -405,6 +425,36 @@ final class WallpaperScheduler {
       return (0..<count).map { pool[(step + $0) % pool.count] }
     case .random:
       return RandomPicker.perDisplay(from: pool, showing: showing)
+    }
+  }
+
+  // MARK: - Wallpaper changed outside Phases
+
+  private func watchForOutsideChanges() {
+    // [D-ui-test-mode] Test mode never changes the wallpaper, so it has
+    // nothing to step aside from.
+    guard !UITestMode.isOn else { return }
+    notifier.onResume = { [weak self] in self?.isPaused = false }
+    WallpaperStoreWatcher.shared.onOutsideChange = { [weak self] changes in self?.wallpaperChangedOutside(changes) }
+    WallpaperStoreWatcher.shared.start()
+  }
+
+  /// [D-outside-change-pauses] Steps aside: reveals the pick, makes it the
+  /// original that Quit restores, and pauses everything.
+  private func wallpaperChangedOutside(_ changes: [OutsideChange]) {
+    let screens = NSScreen.screens.filter { screen in
+      changes.contains { $0.displayUUID == nil || $0.displayUUID == screen.displayUUID }
+    }
+    let displayIDs = Set(screens.compactMap(\.displayID))
+    crossfade.revealWallpaper(on: displayIDs, duration: transitionStyle == .crossfade ? crossfadeDuration : nil)
+    if let restorePoint {
+      self.restorePoint = restorePoint.replacing(displayIDs, from: RestorePoint.capture())
+    }
+    let wasPaused = isPaused
+    pausedForOutsideChangeAt = Date()
+    if !wasPaused {
+      isPaused = true
+      notifier.notifyPaused()
     }
   }
 

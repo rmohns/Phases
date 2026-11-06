@@ -19,6 +19,8 @@ enum WallpaperSetter {
     guard !UITestMode.isOn else { return }
     for assignment in assignments {
       let options = NSWorkspace.shared.desktopImageOptions(for: assignment.screen) ?? [:]
+      // [D-outside-change-rule]
+      WallpaperStoreWatcher.shared.noteOwnSet(assignment.url, on: assignment.screen)
       do {
         try NSWorkspace.shared.setDesktopImageURL(assignment.url, for: assignment.screen, options: options)
       } catch {

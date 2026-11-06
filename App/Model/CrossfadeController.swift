@@ -144,6 +144,42 @@ final class CrossfadeController {
     completeFade()
   }
 
+  /// [D-outside-change-pauses] [D-cover-pause-quit] A wallpaper was picked
+  /// outside Phases on these displays: any fade in progress there is dropped
+  /// without setting anything, the showing covers fade out (or go at once
+  /// with a nil duration) to reveal the pick, and pending covers go too, so
+  /// no other Space gets Phases' image later.
+  func revealWallpaper(on displayIDs: Set<CGDirectDisplayID>, duration: TimeInterval?) {
+    if let entries = running, entries.contains(where: { $0.assignment.screen.displayID.map(displayIDs.contains) ?? false }) {
+      fadeTask?.cancel()
+      fadeTask = nil
+      running = nil
+      for entry in entries {
+        if let incoming = entry.incoming { remove(incoming) }
+      }
+      diagLog.log("fade dropped: wallpaper picked outside Phases")
+    }
+    let leaving = covers.filter { displayIDs.contains($0.displayID) }
+    guard !leaving.isEmpty else { return }
+    covers.removeAll { cover in leaving.contains { $0 === cover } }
+    diagLog.log("revealing an outside pick: \(leaving.count) cover(s) going")
+    let showing = leaving.filter { $0.window.isOnActiveSpace }
+    for cover in leaving where !cover.window.isOnActiveSpace { Self.discard(cover) }
+    guard let duration, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else {
+      for cover in showing { Self.discard(cover) }
+      return
+    }
+    let windows = showing.map(\.window)
+    Task {
+      await NSAnimationContext.runAnimationGroup { context in
+        context.duration = duration
+        context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        for window in windows { window.animator().alphaValue = 0 }
+      }
+      for cover in showing { Self.discard(cover) }
+    }
+  }
+
   /// [D-cover-only-for-crossfade] [D-cover-pause-quit] Takes every cover
   /// down: crossfades turned off, or Quit (after any restore). Pending
   /// changes are dropped; their Spaces keep the image they had.

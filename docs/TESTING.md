@@ -70,6 +70,11 @@ The pure logic that decides what the app does:
 - `WallpaperCheck`: what the scheduler's normal check does with what's
   already applied, including a screen change that leaves every image
   fitting `[D-screen-change-no-reroll]` (draft 31)
+- `OutsideChangeRule`: which store changes count as a wallpaper picked
+  outside Phases (System Settings picks and Aerials yes; Phases' own sets,
+  "last used"-only writes, and an unreadable store no), and reading
+  entries and file names from a store built in the test
+  `[D-outside-change-rule]` (draft 37)
 
 ### Rules
 
@@ -483,6 +488,34 @@ Each with what passes:
 - Footprint swings with when macOS chooses to purge, so a pass mark needs
   several runs and judgment. An automated test would be flaky or too
   loose to catch anything.
+
+### Outside change check (draft 37)
+
+- `[D-outside-change-check]` **Pausing for a wallpaper picked elsewhere
+  is checked by hand** before it merges, and after any change to
+  `WallpaperStoreWatcher` or `OutsideChangeRule`. It needs the real
+  wallpaper and System Settings, out of reach of the unit tests.
+  - Build: the newest Bitrig Debug build, crossfades on, diagnostics on
+    (log category `store`).
+  - 1. Let Phases change once (Change Now): no outside change logged.
+  - 2. Pick a still in System Settings › Wallpaper: the cover fades out,
+    the pick shows, the menu bar icon gets its pause badge, one
+    notification appears, the menu header reads "Paused · wallpaper
+    changed in System Settings", and Settings' switch is off with the time.
+  - 3. Open and quit System Settings, and switch Spaces: nothing more is
+    logged as an outside change.
+  - 4. Resume from the notification, the menu, and the Settings switch
+    in turn (re-pausing with a pick each time): the phase's image comes
+    back at once with a crossfade, the badge goes, the schedule resumes.
+  - 5. Pick an Aerial: same as step 2.
+  - 6. With restore on, pick a still, then Quit: the pick stays (it's the
+    new original).
+  - *Verified* 2026-11-06 by the author on the draft 37 build: picks in
+    System Settings paused Phases with one notification each, Resume
+    worked from the notification and Settings, and the new menu header
+    and Resume Schedule item read correctly. Claude checked steps 1–2 in
+    the log (detection about 2 s after the pick, no false pause on
+    Phases' own sets). Two displays untested.
 
 ## Shared tools
 

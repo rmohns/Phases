@@ -18,7 +18,10 @@ struct MenuContent: View {
       }
       .disabled(scheduler.activePhase == nil)
 
-      Toggle("Pause Schedule", isOn: $scheduler.isPaused)
+      // [D-menu-pause-verb] A command that says what it will do, not a checkmark.
+      Button(scheduler.isPaused ? "Resume Schedule" : "Pause Schedule") {
+        scheduler.isPaused.toggle()
+      }
     }
 
     Divider()
@@ -29,7 +32,11 @@ struct MenuContent: View {
   }
 
   /// [D-menu-status-header] One compact line, e.g. "Dusk · until 7:13 PM".
+  /// [D-outside-change-notice] An outside change replaces the phase line.
   private var statusLine: String {
+    if scheduler.isPaused && scheduler.pausedForOutsideChangeAt != nil {
+      return "Paused · wallpaper changed in System Settings"
+    }
     guard let phase = scheduler.activePhase else { return "No active phase" }
     if scheduler.isPaused { return "\(phase.name) · Paused" }
     guard let ends = scheduler.activePhaseEnds else { return phase.name }
