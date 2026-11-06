@@ -448,6 +448,16 @@ would stop being true if a future macOS fixed the underlying behavior.
   can't reproduce a first open, and the first-open half of
   `[D-initial-focus-sidebar]` stays a manual check. Shapes
   `[D-ui-test-runner]`.
+  - *Verified* 2026-11-06 by the author, draft 43 build
+    (`spec/starter-phases`): it happens on a real Finder launch too. With
+    the test-mode switches saved in Phases' settings, a double-click in
+    Finder made a first launch `[D-first-launch-shows-window]`: the window
+    opened but stayed behind the frontmost app. Launched from Bitrig's
+    shell (`open -n`), same result. So it isn't only an artifact of
+    launching from Bitrig. Why `NSApp.activate()` is refused even when
+    the user launched the app is not yet known; the window is opened
+    from the menu bar icon's `.task` at launch, possibly before the
+    launch has finished (*hypothesis*).
 - `[Q-closed-window-keeps-focus]` **Closing the Phases window only hides
   it; on reopen it still has whatever had focus, with the text cursor and
   selection where they were (macOS 27.2).** *Verified* 2026-10-29 by the
