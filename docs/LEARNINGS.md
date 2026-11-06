@@ -905,6 +905,20 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     visible) but Phases stayed inactive and Finder frontmost at +0.5 s
     and +2 s. So launch timing isn't the cause; `NSApp.activate()` is
     refused even after the launch finishes.
+  - *A false success, 2026-11-06:* one double-click "worked" because
+    Phases was still running (window closed, not quit), so it was a
+    relaunch `[D-reopen-shows-window]`, where activation is granted.
+    The log showed `relaunched`, not `try 3`. Quit from the app menu
+    between runs.
+  - *Try 3 (after launch finished, open the window, then
+    `NSRunningApplication.current.activate(from: frontmost)`): works.*
+    *Verified* 2026-11-06, two Finder launches by the author plus the
+    log: `activate(from: com.apple.finder)` returned true, and at
+    +0.5 s Phases was active and frontmost with its window key. Not
+    tried: whether it works without waiting for the launch to finish,
+    or when the launcher isn't Finder (Spotlight, the Dock, Terminal).
+    Try 2 (deprecated forced activation) not needed and not run, per
+    the author's preference.
 
 ## Driving and measuring the Mac in tests
 
