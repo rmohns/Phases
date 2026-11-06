@@ -17,6 +17,17 @@ struct PhaseTests {
       == .clockTime(minutes: 23 * 60 + 55))
   }
 
+  /// `[D-starter-phases]` Morning, Afternoon, Evening on clock times, none
+  /// needing a location, and one always active.
+  @Test func starterPhasesCoverTheDayWithoutLocation() {
+    let starters = Phase.starterPhases
+    #expect(starters.map(\.name) == ["Morning", "Afternoon", "Evening"])
+    #expect(starters.map(\.trigger) == [.clockTime(minutes: 420), .clockTime(minutes: 720), .clockTime(minutes: 1080)])
+    #expect(!starters.contains { $0.trigger.usesLocation })
+    let engine = ScheduleEngine(phases: starters, location: nil, isDarkMode: false)
+    #expect(engine.activePhase(at: TestCalendar.date(2026, 11, 6, 3, 0))?.phase.name == "Evening")
+  }
+
   /// `[D-duplicate-phase]`
   @Test func duplicateCopiesEverySettingWithANewIDAndName() {
     var original = Phase(name: "Morning", trigger: .solar(.dawn, offsetMinutes: 30))

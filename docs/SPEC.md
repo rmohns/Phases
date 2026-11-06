@@ -1,4 +1,4 @@
-# Phases — Specification (draft 42)
+# Phases — Specification (draft 43)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -59,6 +59,18 @@ current system appearance, the one whose start trigger fired most recently
 (looking back up to two days). So if "Night" starts at dusk and "Day" starts at
 dawn, at 2 am "Night" is active. If no timed phase qualifies, the first matching
 "Always" phase is used.
+
+`[D-starter-phases]` **A new user starts with three phases:** Morning
+(7:00 AM), Afternoon (12:00 PM), and Evening (6:00 PM), all Clock Time
+triggers with no images yet. They cover the whole day, so one is always
+active, and they need no location.
+- *Why:* they show at a glance how phases divide the day, and give a new
+  user something to fill in rather than an empty list (author,
+  2026-11-06, after seeing the UI-test phases on a first launch). Draft
+  42 and earlier started with one "All Day" phase on the Always trigger.
+- Clock times, not dawn and dusk, so a first launch never asks for
+  location.
+- Only when there are no saved phases at all. Existing users keep theirs.
 
 **Pure periodic changes** (no time-of-day switching) is just a single phase with
 the "Always" trigger plus a rotation interval.

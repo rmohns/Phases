@@ -22,6 +22,16 @@ struct Phase: Identifiable, Codable, Hashable {
     isRotating ? rotation.seconds : nil
   }
 
+  /// [D-starter-phases] What a new user starts with: three clock-time
+  /// phases covering the day, so one is always active without a location.
+  static var starterPhases: [Phase] {
+    [
+      Phase(name: "Morning", trigger: .clockTime(minutes: 7 * 60)),
+      Phase(name: "Afternoon", trigger: .clockTime(minutes: 12 * 60)),
+      Phase(name: "Evening", trigger: .clockTime(minutes: 18 * 60)),
+    ]
+  }
+
   /// [D-duplicate-phase] Every setting, a new ID, and a Finder-style name.
   func duplicate() -> Phase {
     var copy = self
