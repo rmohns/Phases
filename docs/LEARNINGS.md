@@ -884,6 +884,22 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
   Transition: None treat the cover) are tracked as GitHub issues labeled
   "planning" (author, 2026-10-30), not here.
 
+- `[L-first-launch-activation]` **The first-launch window opens behind
+  the frontmost app** `[D-first-launch-shows-window]`
+  `[Q-launch-activate-refused]`. Experiment branch
+  `experiment/first-launch-activation`; tries switched with the
+  `PhasesActivationTry` setting, read from the `firstLaunch` diagnostics.
+  - *Verified* 2026-11-06 (diagnostics log): at a Finder launch, the
+    menu bar icon's `.task` runs about 3 ms *before*
+    `applicationDidFinishLaunching`. Phases is inactive both times, with
+    Finder frontmost and the activation policy accessory.
+  - *Try 1, first two runs: invalid.* Waiting on
+    `NotificationCenter.notifications(named: didFinishLaunching)` never
+    resumed: the sequence registered after the notification had posted.
+    So the code never opened the window. The windows the author saw
+    appeared 8 s and 4 s after launch (*hypothesis*: opened from the menu
+    bar by hand). Fixed by having the app delegate resume a continuation.
+
 ## Driving and measuring the Mac in tests
 
 How the experiment's UI runs were done, for next time. Test-suite

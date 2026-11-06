@@ -14,7 +14,14 @@ private let diagLog = Diagnostics.logger("firstLaunch")
 @MainActor
 enum FirstLaunchExperiment {
   /// Set by the app delegate when AppKit finishes launching.
-  static var launchFinished = false
+  static var launchFinished = false {
+    didSet {
+      guard launchFinished else { return }
+      waiter?.resume()
+      waiter = nil
+    }
+  }
+  private static var waiter: CheckedContinuation<Void, Never>?
 
   static var tryNumber: Int { UserDefaults.standard.integer(forKey: "PhasesActivationTry") }
 
@@ -22,9 +29,9 @@ enum FirstLaunchExperiment {
     let attempt = tryNumber
     diagLog.log("try \(attempt); at task: finished=\(launchFinished) \(state(), privacy: .public)")
     if attempt != 0 && !launchFinished {
-      for await _ in NotificationCenter.default.notifications(named: NSApplication.didFinishLaunchingNotification) {
-        break
-      }
+      // The notification sequence missed the launch (registered too late,
+      // 2026-11-06), so the delegate resumes this instead.
+      await withCheckedContinuation { waiter = $0 }
       diagLog.log("launch finished: \(state(), privacy: .public)")
     }
     let frontmost = NSWorkspace.shared.frontmostApplication
