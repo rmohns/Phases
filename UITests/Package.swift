@@ -10,6 +10,9 @@ let package = Package(
   platforms: [.macOS("26.0")],
   targets: [
     .target(name: "PhasesUIDriver"),
+    // [D-input-driver] One-off mouse and keyboard driving from the shell,
+    // through the same SyntheticInput the tests use.
+    .executableTarget(name: "phases-drive", dependencies: ["PhasesUIDriver"]),
     .testTarget(name: "PhasesUITests", dependencies: ["PhasesUIDriver"]),
   ],
   swiftLanguageModes: [.v5]

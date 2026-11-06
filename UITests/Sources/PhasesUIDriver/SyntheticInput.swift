@@ -2,8 +2,9 @@ import CoreGraphics
 import Foundation
 
 /// Real mouse and key events, posted the way hardware posts them. Only
-/// `PhasesApp` calls these, after checking that the test instance is
-/// frontmost [D-ui-test-runner].
+/// `PhasesApp`, after checking that the test instance is frontmost
+/// [D-ui-test-runner], and the `phases-drive` command [D-input-driver]
+/// call these.
 public enum SyntheticInput {
   public enum Key: CGKeyCode {
     case tab = 48
@@ -11,7 +12,7 @@ public enum SyntheticInput {
     case x = 7
   }
 
-  static func click(at point: CGPoint) async throws {
+  package static func click(at point: CGPoint) async throws {
     post(.mouseMoved, at: point)
     try await pause(0.05)
     post(.leftMouseDown, at: point)
@@ -19,13 +20,13 @@ public enum SyntheticInput {
     try await pause(0.2)
   }
 
-  static func move(to point: CGPoint) async throws {
+  package static func move(to point: CGPoint) async throws {
     post(.mouseMoved, at: point)
     try await pause(0.5)
   }
 
   /// Presses at `start`, moves to `end` in steps, and releases there.
-  static func drag(from start: CGPoint, to end: CGPoint, steps: Int = 30) async throws {
+  package static func drag(from start: CGPoint, to end: CGPoint, steps: Int = 30) async throws {
     post(.mouseMoved, at: start)
     try await pause(0.1)
     post(.leftMouseDown, at: start)
@@ -39,7 +40,7 @@ public enum SyntheticInput {
     try await pause(0.4)
   }
 
-  static func press(_ key: Key, shift: Bool = false) async throws {
+  package static func press(_ key: Key, shift: Bool = false) async throws {
     let source = CGEventSource(stateID: .hidSystemState)
     for isDown in [true, false] {
       let event = CGEvent(keyboardEventSource: source, virtualKey: key.rawValue, keyDown: isDown)
