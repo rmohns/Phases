@@ -14,6 +14,8 @@ struct Phase: Identifiable, Codable, Hashable {
   var isRotating = false
   var rotation = RotationInterval(value: 30, unit: .minutes)
   var appearance: AppearanceCondition = .any
+  /// [D-phase-turn-off] False when the user has turned the phase off.
+  var isOn = true
 
   /// The rotation interval in seconds, or nil when rotation is off.
   var rotationSeconds: TimeInterval? {
@@ -44,6 +46,7 @@ extension Phase {
     rotation = try container.decodeIfPresent(RotationInterval.self, forKey: .rotation)
       ?? RotationInterval(value: 30, unit: .minutes)
     appearance = try container.decodeIfPresent(AppearanceCondition.self, forKey: .appearance) ?? .any
+    isOn = try container.decodeIfPresent(Bool.self, forKey: .isOn) ?? true
   }
 }
 

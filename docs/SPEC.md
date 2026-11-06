@@ -1,4 +1,4 @@
-# Phases — Specification (draft 41)
+# Phases — Specification (draft 42)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -52,6 +52,7 @@ Each phase has:
 | Order | Random or In order |
 | Rotation | Optional: change to the next image every N minutes or hours while the phase is active |
 | Appearance | Only in: **Any** (default), **Light**, or **Dark** mode (see "Light and Dark Mode") |
+| On | Whether the phase is used; on by default. A phase turned off is skipped `[D-phase-turn-off]` |
 
 **Which phase is active:** among phases whose appearance condition matches the
 current system appearance, the one whose start trigger fired most recently
@@ -734,6 +735,29 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
       the user turning a phase off, without changing the row (author's
       call, 2026-11-05). Replaces the first draft 36 wording, where the
       row named the reason ("Location off", "No location yet").
+  - `[D-phase-turn-off]` **A phase can be turned off** without deleting
+    it, keeping all its settings and images, and turned back on later.
+    Turned off is a reason a phase can't run: the schedule skips it, and
+    its row shows "Phase disabled" like any other `[D-row-status-not-cause]`.
+    - **Controls:** a **Use this phase** switch in the editor's first
+      section, under Name; and **Turn Off** (or **Turn On**) in both the
+      action menu and the row's context menu `[D-phase-actions]`, after
+      Duplicate.
+    - **Editor message:** "This phase is turned off, so it's skipped."
+    - **Turned off wins.** A phase that is both turned off and missing a
+      location names only "turned off" in the editor, since turning it
+      back on is the first thing the user would do (author, 2026-11-06).
+    - **Turning off the active phase** switches at once to whichever
+      phase should now be active, just as deleting it does: any change
+      to the phase list re-checks the schedule (verified by reading
+      `WallpaperScheduler.phases`, Claude, 2026-11-06).
+    - The menu bar says nothing about turned-off phases; it's a choice,
+      not a problem to report.
+    - Phases saved by earlier versions load as on.
+    - *Why:* until now the only way to stop a phase was to delete it and
+      lose its settings (GitHub issue #21). "Use this phase" says what
+      the switch does in the editor's own terms; a bare "On" or
+      "Enabled" next to the name could read as a status.
   - The rule ("can this phase run, and if not, why") lives in a small model
     function next to `ScheduleEngine`, not in the view, so the unit tests
     can check it (see TESTING.md). The schedule and the sidebar use the
@@ -958,9 +982,9 @@ extras don't show them. No global hotkey.
       24 × 23 pt cell with the same 1 pt divider before it
       `[D-sidebar-footer-style]`, showing an ellipsis (`ellipsis`, no
       menu arrow). Clicking it opens a menu of commands for the selected
-      phase: **Duplicate**. It's dimmed when no phase is selected, like
+      phase: **Duplicate** and **Turn Off** (or **Turn On**) `[D-phase-turn-off]`. It's dimmed when no phase is selected, like
       − . Accessibility label "Phase Actions".
-    - **A context menu** on each phase row: **Duplicate**, then a
+    - **A context menu** on each phase row: **Duplicate**, **Turn Off** (or **Turn On**), then a
       separator and **Delete**. It acts on the row clicked, whether or
       not it's the selected one. Deleting the selected phase selects the
       next one `[D-delete-selects-next]`; deleting another phase leaves
@@ -969,9 +993,9 @@ extras don't show them. No global hotkey.
       (Finder's and Mail's old gear menus), even if Apple uses it less
       now; it makes the commands findable without knowing to
       Control-click (author, 2026-11-06). The context menu is where Mac
-      users look first for commands on a list item. One menu item is
-      thin for an action menu, but more will join it (turning a phase
-      off, GitHub issue #21).
+      users look first for commands on a list item. The action menu started (draft 41) with
+      Duplicate alone; Turn Off / Turn On joined it in draft 42
+      (GitHub issue #21).
   - `[D-sidebar-footer-view]` The + / − buttons are their own view, bound
     to the sidebar selection, not inline in the window's body.
     - *Why:* in draft 13, − did nothing: it started disabled and stayed

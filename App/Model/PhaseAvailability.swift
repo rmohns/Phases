@@ -10,7 +10,10 @@ enum PhaseAvailability: Equatable {
   case disabled(DisabledReason)
 
   init(phase: Phase, savedLocation: SolarCalculator.Coordinate?, isLocationDenied: Bool) {
-    if phase.trigger.usesLocation
+    // [D-phase-turn-off] Turned off wins over any other reason.
+    if !phase.isOn {
+      self = .disabled(.turnedOff)
+    } else if phase.trigger.usesLocation
       && Self.usableLocation(saved: savedLocation, isDenied: isLocationDenied) == nil {
       self = .disabled(isLocationDenied ? .locationOff : .noLocationYet)
     } else {
@@ -45,6 +48,8 @@ enum PhaseAvailability: Equatable {
 
 /// Why a phase can't run. Shown only in the phase editor [D-row-status-not-cause].
 enum DisabledReason: Equatable {
+  /// The user turned the phase off [D-phase-turn-off].
+  case turnedOff
   /// Location access is denied or restricted.
   case locationOff
   /// Access was never granted and no location has been saved yet.
@@ -52,6 +57,7 @@ enum DisabledReason: Equatable {
 
   var editorMessage: String {
     switch self {
+    case .turnedOff: "This phase is turned off, so it's skipped."
     case .locationOff: "Location access is off, so this phase is skipped."
     case .noLocationYet: "No location yet, so this phase is skipped."
     }

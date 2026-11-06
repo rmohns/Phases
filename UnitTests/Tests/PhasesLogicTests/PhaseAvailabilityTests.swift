@@ -18,6 +18,26 @@ struct PhaseAvailabilityTests {
     #expect(availability(clock, saved: nil, denied: true) == .runs)
   }
 
+  /// [D-phase-turn-off] Turned off disables any phase, and wins over a
+  /// missing location.
+  @Test func turnedOffPhasesNeverRun() {
+    var off = clock
+    off.isOn = false
+    #expect(availability(off, saved: haverhill, denied: false) == .disabled(.turnedOff))
+    var offDawn = dawn
+    offDawn.isOn = false
+    #expect(availability(offDawn, saved: nil, denied: true) == .disabled(.turnedOff))
+    #expect(PhaseAvailability.runnablePhases([clock, off], savedLocation: nil, isLocationDenied: false) == [clock])
+  }
+
+  /// [D-phase-turn-off] Phases saved before the switch existed load as on.
+  @Test func olderSavedPhasesLoadAsOn() throws {
+    var saved = try JSONSerialization.jsonObject(with: JSONEncoder().encode(clock)) as! [String: Any]
+    saved.removeValue(forKey: "isOn")
+    let data = try JSONSerialization.data(withJSONObject: saved)
+    #expect(try JSONDecoder().decode(Phase.self, from: data).isOn)
+  }
+
   @Test func solarPhaseRunsWithASavedLocation() {
     #expect(availability(dawn, saved: haverhill, denied: false) == .runs)
   }
