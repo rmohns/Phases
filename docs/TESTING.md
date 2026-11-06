@@ -118,6 +118,35 @@ The pure logic that decides what the app does:
     each time. The spoken warnings still apply. Cover and Memory checks
     change the real wallpaper and settings, so they still need a named
     yes.
+  - `[D-input-lands]` **Prove the input landed before trusting a
+    result** (author, 2026-11-06). Synthetic input can fail without an
+    error, so a run where it did is a failed run, not a finding.
+    - **New setups:** before driving an app other than Phases (System
+      Settings, Finder), move the pointer once and confirm it on screen:
+      the author watching, or a screenshot with the cursor
+      (`screencapture -C`). Reading the position back
+      (`swift run phases-drive where`) isn't proof by itself; see
+      *Findings*.
+    - **Every action:** check its effect through something that doesn't
+      depend on the click: the diagnostics log, an AX read, the
+      wallpaper store, a screenshot. "No change" counts only once the
+      click has been shown to land.
+    - **AX press isn't a click.** Pressing a System Settings wallpaper
+      thumbnail through System Events returns without error and selects
+      nothing (*observed* once, 2026-11-06, macOS 27.2). Use real mouse
+      events there, as for menus (ERRATA.md "Open here").
+    - *Findings* (2026-11-06, Claude, author watching), one display:
+      - About 08:33: a one-off CGEvent helper built in `/tmp`, then
+        `SyntheticInput.move` from `swift test`, each read back exactly on
+        target, but the author saw no pointer move either time
+        (*observed*). So a read-back position alone doesn't show the
+        pointer moved on screen.
+      - About 08:40: `phases-drive move` twice. The author saw the
+        pointer jump both times, and `screencapture -C` showed it at each
+        target (*verified*).
+      - Why the earlier moves didn't show is unknown; the calls were the
+        same. The 08:40 run differed in reading the position first and
+        screenshotting between moves. Untested.
   - *Why:* the memory runs take most of a sitting and matter only when
     memory could change. Tying each check to the code it guards keeps a
     small change from costing an hour of hands-off time (author,
@@ -458,6 +487,27 @@ Each with what passes:
 ## Shared tools
 
 Used by both groups. Reference, not steps.
+
+### Input driver
+
+- `[D-input-driver]` **All mouse and keyboard driving goes through
+  `PhasesUIDriver`'s `SyntheticInput`** (author, 2026-11-06): the UI
+  tests, and one-off driving from the shell with `phases-drive`. No
+  new input helpers; if something's missing (a key, a right-click), add
+  it to `SyntheticInput` and `phases-drive`.
+  - From `UITests/`: `swift run phases-drive where`,
+    `… move <x> <y>`, `… click <x> <y>`, `… key tab|down|x [shift]`.
+    Points are global, top-left origin, the same as accessibility
+    positions. It's a hands-on check `[D-hands-on-checks]`; prove each
+    action landed `[D-input-lands]`.
+  - *Why:* on 2026-11-06 Claude wrote a throwaway CGEvent helper to
+    click in System Settings instead of using the driver, then lost time
+    working out whether the helper was why the click failed. A tool with
+    a history is easier to trust and fix. `phases-drive` exists because
+    `SyntheticInput` could only run inside `swift test`, which made a
+    one-off helper look easier.
+  - Its functions are `package` access, so the tests and `phases-drive`
+    can call them and nothing outside `UITests/` can.
 
 ### Diagnostics
 

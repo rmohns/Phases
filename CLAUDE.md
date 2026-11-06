@@ -71,7 +71,10 @@
   `[D-tests-unhosted]`. Anything that drives the mouse and keyboard or
   touches the real wallpaper is a hands-on check `[D-hands-on-checks]`:
   ask per the global "Mouse and keyboard driving" rule, hands-off windows
-  included. Subagents never start one.
+  included. Subagents never start one. Drive the mouse and keyboard
+  only through `UITests/Sources/PhasesUIDriver` (from the shell:
+  `swift run phases-drive` in `UITests/`) `[D-input-driver]`. Never
+  write a new input helper; if the driver lacks something, add it there.
 - **Every regression gets a guard.** When a fix for a regression lands,
   its branch also adds (a) a row to ERRATA.md "Regressions found so far"
   and (b) a test that fails without the fix: a UI test, a unit test, or a
