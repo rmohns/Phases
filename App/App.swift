@@ -10,7 +10,7 @@ struct AppDefinition: App {
     MenuBarExtra {
       MenuContent(scheduler: scheduler)
     } label: {
-      MenuBarLabel(isPaused: scheduler.isPaused)
+      MenuBarLabel(isPaused: scheduler.isPaused, isFirstLaunch: scheduler.isFirstLaunch)
     }
 
     // [D-one-window] Everything, Settings included, lives in this one window.

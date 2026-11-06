@@ -1,4 +1,4 @@
-# Phases — Specification (draft 38)
+# Phases — Specification (draft 39)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -1125,13 +1125,30 @@ extras don't show them. No global hotkey.
     relaunch made Phases the active app and showed nothing: focus left
     the user's app for no visible reason (GitHub issue #13; seen
     2026-11-03, `[L-reopen-event]`).
-  - *Scope:* only a relaunch while running. A fresh launch still shows
-    nothing (Launch at Login must stay silent); showing the window on a
-    true first launch is GitHub issue #14.
-  - *How:* "Open Phases…", Settings…, and the relaunch share one
-    window-opening routine, so they can't drift apart. macOS delivers the
-    relaunch to Phases, but SwiftUI ignores it when the window is closed
-    or was never opened; see `[Q-reopen-ignores-closed-window]`.
+  - *Scope:* only a relaunch while running. A fresh launch shows nothing
+    (Launch at Login must stay silent), except the very first launch
+    `[D-first-launch-shows-window]`.
+  - *How:* "Open Phases…", Settings…, the relaunch, and the first launch
+    share one window-opening routine, so they can't drift apart. macOS
+    delivers the relaunch to Phases, but SwiftUI ignores it when the
+    window is closed or was never opened; see
+    `[Q-reopen-ignores-closed-window]`.
+- `[D-first-launch-shows-window]` **The first launch opens the window,**
+  exactly as "Open Phases…" does `[D-reopen-shows-window]`. Every later
+  launch starts in the menu bar only.
+  - **First launch** means this user account has no saved Phases settings
+    at all. Phases records that it has launched, and a launch with that
+    record, or with any settings saved by an earlier version, is not a
+    first launch. So updating Phases never pops the window open for
+    someone who already uses it. Erasing Phases' settings on purpose
+    makes the next launch a first launch again, which is fine.
+  - Launch at Login can't trigger it: it can only be turned on from
+    inside Phases `[D-login-consent]`, by which time the launch is
+    recorded.
+  - *Why:* someone opening Phases for the first time should find its
+    settings straight away instead of a menu bar icon they may not
+    notice (GitHub issue #14, author). An onboarding screen may come
+    later.
 - `[D-app-menu]` **While the window is open, Phases has a standard menu
   bar,** trimmed to what applies:
   - **Phases** (app menu): About Phases, **Settings… ⌘,** (opens the window

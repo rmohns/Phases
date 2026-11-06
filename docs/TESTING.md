@@ -75,6 +75,10 @@ The pure logic that decides what the app does:
   "last used"-only writes, and an unreadable store no), and reading
   entries and file names from a store built in the test
   `[D-outside-change-rule]` (draft 37)
+- `FirstLaunch`: which launches count as a first launch: none recorded
+  and no saved settings yes; a recorded launch or settings from an
+  earlier version no; test mode only with its switch
+  `[D-first-launch-shows-window]` (draft 39)
 
 ### Rules
 
@@ -606,7 +610,13 @@ neither can leak into normal use.
     (2026-10-29). If Phases still isn't frontmost
     `[Q-launch-activate-refused]`, the tests bring it forward through the
     AX API;
-  - never ask for location `[D-test-no-location-prompt]`.
+  - never ask for location `[D-test-no-location-prompt]`;
+  - never count as a first launch `[D-first-launch-shows-window]`, even
+    though its store starts empty, unless launched with
+    `-PhasesUITestFirstLaunch YES` as well. That switch makes the launch
+    a first launch, so a test can check the window opens on its own.
+    *Why:* every test-mode launch starts with no settings, so without
+    this every test would start with the window already open.
   - AppKit's own saved window frame and sidebar layout live in the normal
     settings, outside the separate store. The UI tests record both before
     each launch, clear them so the test starts from the defaults, and put

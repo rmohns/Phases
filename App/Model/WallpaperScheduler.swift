@@ -8,6 +8,8 @@ final class WallpaperScheduler {
   let library = ImageLibrary()
   let location = LocationProvider()
   let launchAtLogin = LaunchAtLogin()
+  /// [D-first-launch-shows-window] True when this launch opens the window.
+  let isFirstLaunch: Bool
 
   var phases: [Phase] {
     didSet {
@@ -121,6 +123,16 @@ final class WallpaperScheduler {
 
   init() {
     let defaults = SettingsStore.defaults
+    // [D-first-launch-shows-window] Checked before anything below is saved.
+    // Any of these keys means an earlier version has run.
+    isFirstLaunch = FirstLaunch.isFirstLaunch(
+      hasRecordedLaunch: defaults.bool(forKey: FirstLaunch.recordKey),
+      hasSavedSettings: [Keys.phases, Keys.appliedState, Keys.restorePoint, Keys.knownDisplays, Keys.isPaused]
+        .contains { defaults.object(forKey: $0) != nil },
+      isUITestMode: UITestMode.isOn,
+      testForcesFirstLaunch: UITestMode.forcesFirstLaunch
+    )
+    defaults.set(true, forKey: FirstLaunch.recordKey)
     // [D-ui-test-mode] Test mode's store starts empty, so it gets the fixtures.
     phases = Self.load([Phase].self, forKey: Keys.phases)
       ?? (UITestMode.isOn ? UITestMode.fixturePhases : [Phase(name: "All Day", trigger: .always)])

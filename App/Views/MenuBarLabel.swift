@@ -1,15 +1,21 @@
 import SwiftUI
 
 /// The menu bar icon. Also opens the window on a relaunch while running
-/// [D-reopen-shows-window]: it's the one view alive while the window is
-/// closed.
+/// [D-reopen-shows-window] and on the first launch
+/// [D-first-launch-shows-window]: it's the one view alive while the window
+/// is closed.
 struct MenuBarLabel: View {
   var isPaused: Bool
+  var isFirstLaunch: Bool
   @Environment(\.openWindow) private var openWindow
 
   var body: some View {
     Image(nsImage: isPaused ? Self.pausedIcon : Self.icon)
       .accessibilityLabel(isPaused ? "Phases, paused" : "Phases")
+      // Runs once, when the icon first appears at launch.
+      .task {
+        if isFirstLaunch { openWindow.showPhasesWindow() }
+      }
       .onReceive(NotificationCenter.default.publisher(for: .phasesRelaunched)) { _ in
         openWindow.showPhasesWindow()
       }
