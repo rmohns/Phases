@@ -66,8 +66,13 @@ struct PhasesWindow: View {
     } detail: {
       if holdsDetail {
         detail
+          // [D-window-min-size] The editor never gets narrower than this,
+          // whatever the sidebar's width.
+          .navigationSplitViewColumnWidth(min: 460, ideal: 720)
       }
     }
+    // [D-window-min-size]
+    .frame(minHeight: 480)
     // [D-app-menu] For Settings… in the app menu.
     .focusedSceneValue(\.sidebarSelection, $selection)
     .onAppear {
