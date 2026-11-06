@@ -19,6 +19,14 @@ struct Phase: Identifiable, Codable, Hashable {
   var rotationSeconds: TimeInterval? {
     isRotating ? rotation.seconds : nil
   }
+
+  /// [D-duplicate-phase] Every setting, a new ID, and a Finder-style name.
+  func duplicate() -> Phase {
+    var copy = self
+    copy.id = UUID()
+    copy.name = "\(name) copy"
+    return copy
+  }
 }
 
 extension Phase {

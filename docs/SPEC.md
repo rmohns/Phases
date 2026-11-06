@@ -1,4 +1,4 @@
-# Phases — Specification (draft 40)
+# Phases — Specification (draft 41)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -939,6 +939,39 @@ extras don't show them. No global hotkey.
       (`[Q-system-events-ax]`), so the original gap is unconfirmed. With the
       labels, the AX API reports "Add Phase" and "Delete Phase" (verified
       2026-10-28).
+  - `[D-duplicate-phase]` **Duplicate makes a copy of a phase** with every
+    setting: start trigger, appearance, order, rotation, and its All
+    Displays and per-display images. It's named like a Finder copy
+    ("Morning copy"), and selected once made. It keeps the original's
+    start time; the user changes it from there.
+    - Two phases with the same start time tie, and the one saved first
+      wins, so the original stays active and duplicating never changes
+      the wallpaper (verified by reading `ScheduleEngine.activePhase`,
+      Claude, 2026-11-06). The copy is saved after the original.
+    - The copy starts its own In Order position, from the first image.
+    - *Why:* the quick way to make a variant of an existing phase (GitHub
+      issue #24). Keeping the start time follows the author's call
+      (2026-11-06).
+  - `[D-phase-actions]` **Phase actions live in two places that list the
+    same commands:**
+    - **An action menu** in the sidebar footer, right of − : a third
+      24 × 23 pt cell with the same 1 pt divider before it
+      `[D-sidebar-footer-style]`, showing an ellipsis (`ellipsis`, no
+      menu arrow). Clicking it opens a menu of commands for the selected
+      phase: **Duplicate**. It's dimmed when no phase is selected, like
+      − . Accessibility label "Phase Actions".
+    - **A context menu** on each phase row: **Duplicate**, then a
+      separator and **Delete**. It acts on the row clicked, whether or
+      not it's the selected one. Deleting the selected phase selects the
+      next one `[D-delete-selects-next]`; deleting another phase leaves
+      the selection alone.
+    - *Why:* an action menu beside + / − is long-standing Mac practice
+      (Finder's and Mail's old gear menus), even if Apple uses it less
+      now; it makes the commands findable without knowing to
+      Control-click (author, 2026-11-06). The context menu is where Mac
+      users look first for commands on a list item. One menu item is
+      thin for an action menu, but more will join it (turning a phase
+      off, GitHub issue #21).
   - `[D-sidebar-footer-view]` The + / − buttons are their own view, bound
     to the sidebar selection, not inline in the window's body.
     - *Why:* in draft 13, − did nothing: it started disabled and stayed

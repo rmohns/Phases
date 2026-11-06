@@ -229,6 +229,15 @@ final class WallpaperScheduler {
     return phase
   }
 
+  /// [D-duplicate-phase] Saved after the original, so the original wins
+  /// the start-time tie and stays active.
+  func duplicatePhase(id: Phase.ID) -> Phase? {
+    guard let original = phases.first(where: { $0.id == id }) else { return nil }
+    let copy = original.duplicate()
+    phases.append(copy)
+    return copy
+  }
+
   func deletePhase(id: Phase.ID) {
     phases.removeAll { $0.id == id }
   }
