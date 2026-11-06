@@ -899,6 +899,12 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     So the code never opened the window. The windows the author saw
     appeared 8 s and 4 s after launch (*hypothesis*: opened from the menu
     bar by hand). Fixed by having the app delegate resume a continuation.
+  - *Try 1 (open after launch finished): fails.* *Verified* 2026-11-06,
+    one Finder launch by the author plus the log: the window opened
+    after `didFinishLaunching` (policy switched to regular, window
+    visible) but Phases stayed inactive and Finder frontmost at +0.5 s
+    and +2 s. So launch timing isn't the cause; `NSApp.activate()` is
+    refused even after the launch finishes.
 
 ## Driving and measuring the Mac in tests
 
