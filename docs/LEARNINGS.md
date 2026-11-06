@@ -454,6 +454,67 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
 
 ## Open questions
 
+- `[L-store-watch]` **Can Phases hear a wallpaper change made in System
+  Settings by watching macOS's wallpaper store?** (Issue #5, macOS 27.2.)
+  Open; experiment on branch `experiment/wallpaper-store-watch`, started
+  2026-11-06. Agreed behavior if it works (author, 2026-11-06): an outside
+  change pauses all of Phases; how to tell the user is undecided.
+  - Setup: `WallpaperStoreWatcher` watches
+    `~/Library/Application Support/com.apple.wallpaper/Store/` (folder,
+    for atomic replaces) and `Index.plist` in it (in-place writes,
+    reopened after a replace), with `DispatchSource` file-system sources,
+    no polling. On each event it logs the flags, every store Desktop entry
+    that changed (provider, image file, LastSet, LastUse), and each
+    screen's `desktopImageURL`. `WallpaperSetter` logs `phases-set` just
+    before each of Phases' own sets. Diagnostics category `store`; runs
+    only with diagnostics on. Logs only, changes nothing.
+  - Questions: (1) does picking a picture in System Settings fire an
+    event, and how soon; (2) do Phases' own sets fire one too (likely,
+    *hypothesis*), and can they be told apart from outside ones; (3) do
+    Space switches fire one (LastUse may change); (4) is the file
+    replaced or written in place; (5) choosing an Aerial or dynamic
+    wallpaper: what changes.
+  - Hypothesis (*recalled*, not tested): System Settings writes
+    Index.plist when a picture is chosen.
+  - **Results, one display, Debug build `ebe00f8`** (2026-11-06, read
+    from the `store` log by Claude; picks made by the author; *verified*):
+    - **(1) Yes.** Picks at 08:17:51 and 08:29:38 each fired a folder
+      event within about 0.3 s. The display's Desktop entry got a new
+      image and a new `LastSet`, with no `phases-set` line before it.
+    - **(2) Yes, Phases' own sets fire one too,** about 0.25 s after the
+      `phases-set` line, with the same shape (new image, new `LastSet`).
+      Five of five.
+    - **(4) Replaced, not written in place:** every change is a folder
+      `write` plus a `delete` on the old file. Watching the folder is
+      what works; the file watch only sees the old copy go.
+    - **Opening and quitting System Settings** (pane opened at 08:23:30
+      and 08:29:36, quit at 08:23:38 and 08:29:42) each write the store
+      twice in a row, changing only `LastUse`. So "the store changed"
+      isn't an outside change by itself; a new `LastSet` with an image
+      Phases didn't just set is.
+    - **Phases overrode both picks** at its next change: 9 s later
+      (08:18:00) and 23 s later (08:30:02). The current behavior issue #5
+      describes.
+    - Still open: (3) Space switches, (5) Aerials, two displays.
+  - **Driving System Settings failed** (2026-11-06, Claude). An AX press
+    on a "Your Photos" thumbnail returned without error and did nothing.
+    CGEvent clicks from a one-off helper (`/tmp`, same calls as
+    `SyntheticInput`) didn't move the pointer (author watching). The
+    helper passed `AXIsProcessTrusted` and `CGPreflightPostEventAccess`,
+    and the shell can write outside the project, so a file sandbox isn't
+    it. Cause unknown; earlier CGEvent clicks worked
+    (`[L-synthetic-clicks]`).
+    - *Follow-up* (2026-11-06, about 08:33): a move-only version of the
+      same helper, and `SyntheticInput.move` run from `swift test`, both
+      read back on target, but the author saw no pointer move either time
+      (*observed*). Only one display was connected.
+    - *Follow-up* (about 08:40): `phases-drive move` (same
+      `SyntheticInput`) moved the pointer twice; the author saw both, and
+      `screencapture -C` showed it at each target (*verified*). Why the
+      08:33 moves didn't show is still unknown. Driving now goes through
+      `phases-drive` (TESTING.md `[D-input-driver]`, `[D-input-lands]`);
+      the System Settings click hasn't been retried with it.
+
 - `[L-reopen-event]` **What happens when Phases is launched again while
   it's running, and can the menu bar icon's view open the window?**
   (Issue #13, macOS 27.2.) Answered; experiment on branch
