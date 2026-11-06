@@ -1,4 +1,4 @@
-# Phases — Specification (draft 39)
+# Phases — Specification (draft 40)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -900,6 +900,16 @@ extras don't show them. No global hotkey.
      run is dimmed and flagged `[D-phase-cant-run]`.
   - + / − buttons below the list add and remove phases. − removes the
     selected phase and is dimmed when no phase is selected.
+  - `[D-new-phase-now]` **A new phase starts at the current time,** as a
+    Clock Time trigger rounded down to the nearest 5 minutes (2:37 PM
+    becomes 2:35 PM), named "New Phase", and selected.
+    - Starting now usually makes it the active phase at once, so the
+      wallpaper may change as soon as it has images. That's intended: if
+      the user then moves its start, the schedule re-evaluates and
+      switches back as needed (author, 2026-11-06).
+    - *Why:* the time someone adds a phase is a likelier start than a
+      fixed one; draft 38 and earlier always used 9:00 AM (GitHub issue
+      #25). Rounding keeps the time picker on a tidy value.
   - `[D-delete-selects-next]` **After deleting a phase, the next phase down
     is selected.** That is the phase that moves into the deleted one's
     place in the time-sorted list. If the deleted phase was last, the one

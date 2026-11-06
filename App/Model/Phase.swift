@@ -90,6 +90,13 @@ enum PhaseTrigger: Codable, Hashable {
   var usesLocation: Bool {
     if case .solar = self { true } else { false }
   }
+
+  /// [D-new-phase-now] A clock time at `date`, rounded down to 5 minutes.
+  static func clockTime(roundingDown date: Date, calendar: Calendar = .current) -> PhaseTrigger {
+    let parts = calendar.dateComponents([.hour, .minute], from: date)
+    let minutes = (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
+    return .clockTime(minutes: minutes - minutes % 5)
+  }
 }
 
 /// Flat list of trigger types, for pickers.
