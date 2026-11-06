@@ -726,19 +726,26 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
   "Phase disabled". Such a phase is never the active one, so it never
   shows "Active".
   - `[D-row-status-not-cause]` **The row shows the status; the editor
-    shows the cause.** The sidebar row always says "Phase disabled",
-    whatever the reason. The phase editor's warning names the reason
-    ("Location access is off, so this phase is skipped." or "No location
-    yet, so this phase is skipped.").
+    shows the cause.** The sidebar row says "Phase disabled" for every
+    reason Phases can't run a phase, the one exception being a phase the
+    user turned off, which reads "Off" `[D-phase-turn-off]`. The phase
+    editor's warning names the reason ("Location access is off, so this
+    phase is skipped." or "No location yet, so this phase is skipped.").
     - *Why:* the row is for scanning the schedule; clicking it shows why.
-      One status also covers any later reason a phase can't run, such as
-      the user turning a phase off, without changing the row (author's
-      call, 2026-11-05). Replaces the first draft 36 wording, where the
-      row named the reason ("Location off", "No location yet").
+      One status also covers any later reason a phase can't run without
+      changing the row (author's call, 2026-11-05). Replaces the first
+      draft 36 wording, where the row named the reason ("Location off",
+      "No location yet").
+    - *Why "Off" is the exception:* turning a phase off is the user's
+      choice, not a problem. "Phase disabled" with a warning read as an
+      error for it (author, after trying draft 42, 2026-11-06). Draft 42
+      first showed "Phase disabled" for it too.
   - `[D-phase-turn-off]` **A phase can be turned off** without deleting
     it, keeping all its settings and images, and turned back on later.
-    Turned off is a reason a phase can't run: the schedule skips it, and
-    its row shows "Phase disabled" like any other `[D-row-status-not-cause]`.
+    Turned off is a reason a phase can't run: the schedule skips it.
+    Its row is dimmed like any phase that can't run, and its trigger line
+    ends with **Off**, with no warning symbol `[D-row-status-not-cause]`.
+    VoiceOver reads "Off".
     - **Controls:** a **Use this phase** switch in the editor's first
       section, under Name; and **Turn Off** (or **Turn On**) in both the
       action menu and the row's context menu `[D-phase-actions]`, after

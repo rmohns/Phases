@@ -330,13 +330,15 @@ private struct PhaseRow: View {
             Image(systemName: symbol)
               .accessibilityLabel("\(phase.appearance.title) Mode only")
           }
-          // [D-row-status-not-cause] The status only, whatever the reason;
-          // the phase editor names the cause.
-          if availability.isDisabled {
+          // [D-row-status-not-cause] The status only; the phase editor names
+          // the cause. [D-phase-turn-off] "Off", with no warning.
+          if availability.rowShowsWarning {
             Image(systemName: "exclamationmark.triangle.fill")
               .foregroundStyle(.orange)
               .accessibilityHidden(true)
-            Text("Phase disabled")
+          }
+          if let status = availability.rowStatus {
+            Text(status)
           }
         }
         .font(.caption)

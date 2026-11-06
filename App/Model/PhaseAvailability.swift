@@ -25,6 +25,22 @@ enum PhaseAvailability: Equatable {
     if case .disabled = self { true } else { false }
   }
 
+  /// [D-row-status-not-cause] The sidebar row's status; nil when the phase
+  /// runs. A phase the user turned off reads "Off" [D-phase-turn-off].
+  var rowStatus: String? {
+    switch self {
+    case .runs: nil
+    case .disabled(.turnedOff): "Off"
+    case .disabled: "Phase disabled"
+    }
+  }
+
+  /// Whether the row's status carries a warning symbol: not for a phase
+  /// the user turned off, which is a choice, not a problem.
+  var rowShowsWarning: Bool {
+    isDisabled && self != .disabled(.turnedOff)
+  }
+
   /// Sentence for the phase editor naming the cause; nil when the phase runs.
   var editorMessage: String? {
     if case .disabled(let reason) = self { reason.editorMessage } else { nil }
