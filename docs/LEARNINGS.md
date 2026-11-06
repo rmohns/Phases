@@ -495,7 +495,46 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     - **Phases overrode both picks** at its next change: 9 s later
       (08:18:00) and 23 s later (08:30:02). The current behavior issue #5
       describes.
-    - Still open: (3) Space switches, (5) Aerials, two displays.
+    - **(5) Aerials** (2026-11-06, Golden Gate Sunset picked at 09:06:23
+      with `phases-drive click`, confirmed by screenshot; *verified* from
+      the log by Claude): a folder event within about 1 s, and the
+      current Space's entry got a new `LastSet`, so the detection rule
+      catches it. The entry reads provider `default` with no file URL,
+      and `desktopImageURL` reports `DefaultDesktop.heic`: only the store
+      says what was picked. Phases didn't override it in 105 s
+      (*observed*; its next scheduled change may simply not have come).
+      Picking the canyon still back at 09:08:12 looked like any other
+      pick.
+    - **Spaces keep their own entries** (*verified*, same log): picks
+      changed only `space/D37B581D/…`; `space/272B14E4/…` kept its image.
+      So the rule has to read the current Space's entry.
+    - **(3) Space switch, first try failed** (09:08:24, Claude): System
+      Settings still had focus, so `phases-drive key right control`
+      moved its thumbnail selection and set the next photo (Ergo Proxy),
+      on this Space only. No switch happened. Whether synthetic
+      Control+arrow reaches Mission Control at all is untested. Next try:
+      quit System Settings and focus the desktop first.
+    - **(3) Second try, also no switch** (09:10:44, Claude): System
+      Settings quit, a `phases-drive click` on bare desktop made Finder
+      frontmost, then `key right control`. The click itself set off
+      "Click wallpaper to reveal desktop" (all windows pushed to the
+      edges; the author named it), which looked like a switch in the
+      screenshot. But the wallpaper stayed this Space's Ergo Proxy and
+      the store logged nothing after the keypress (*verified*). So
+      synthetic Control+Right didn't reach Mission Control (*observed*,
+      one clean try). To focus the desktop, use `osascript -e 'tell app
+      "Finder" to activate'`, never a wallpaper click. Space switches
+      are left to the author's hands.
+    - **(3) Space switches are noise** (2026-11-06; the author switched
+      by hand at 09:11:24 and back at 09:11:35, the other Space showing
+      the canyon; *verified* from the log by Claude): each switch wrote
+      the store twice about 1 s apart, changing only `LastUse` on both
+      Spaces' entries, never `LastSet`. The rule holds. But
+      `desktopImageURL` reported Ergo Proxy (this Space's image) through
+      all four events, including while the canyon Space was showing
+      (*observed*; it may lag the switch, or not follow Spaces). Another
+      reason to read the store, not `NSWorkspace`.
+    - Still open: two displays.
   - **Driving System Settings failed** (2026-11-06, Claude). An AX press
     on a "Your Photos" thumbnail returned without error and did nothing.
     CGEvent clicks from a one-off helper (`/tmp`, same calls as
@@ -512,8 +551,11 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
       `SyntheticInput`) moved the pointer twice; the author saw both, and
       `screencapture -C` showed it at each target (*verified*). Why the
       08:33 moves didn't show is still unknown. Driving now goes through
-      `phases-drive` (TESTING.md `[D-input-driver]`, `[D-input-lands]`);
-      the System Settings click hasn't been retried with it.
+      `phases-drive` (TESTING.md `[D-input-driver]`, `[D-input-lands]`).
+    - *Follow-up* (09:06): `phases-drive click` on a System Settings
+      thumbnail worked twice, confirmed by screenshot and the store log
+      (*verified*). The author didn't notice the first change; the
+      screenshot is the proof `[D-input-lands]` asks for.
 
 - `[L-reopen-event]` **What happens when Phases is launched again while
   it's running, and can the menu bar icon's view open the window?**
