@@ -617,13 +617,32 @@ took window screenshots with the window in front and behind Finder.
     such.
   - **Leaving full screen doesn't pause Phases** (*observed* by the
     author, 2026-11-07: started in full screen in Bitrig, resumed Phases,
-    left full screen). Fits the hypothesis: a Space going away removes
-    entries, which the rule never reads. Nothing on the display-change
-    path is involved.
-  - Still open: a snapshot diff of `Index.plist` across a new Space, to
-    confirm new `space/<id>/…` keys and see which image and `LastSet`
-    they carry; and whether a real pick on a never-picked Space also
-    shows up only as a new key, which decides the fix.
+    left full screen). The first explanation offered for this (entries
+    removed, and the rule never reads removed entries) was wrong; see the
+    store reading below.
+  - **The store, read 2026-11-07 about 23:36 UTC** (copied, read only,
+    by Claude with the author's go-ahead; *verified*):
+    - **A new Space's entries are copies.** Spaces created at 23:28:36,
+      23:28:37, and 23:32:02 each got a `default` entry and one for
+      display `37D8832A`. Each carries the display's image and its
+      `LastSet` of 13:30:02.893007, exactly as in `display/37D8832A`,
+      which was Phases' last scheduled set. Only `LastUse` is the time
+      the Space was made. macOS doesn't stamp a new `LastSet`.
+    - So the rule sees keys missing from the earlier reading, with an
+      image Phases didn't set in the last 10 seconds, and counts them.
+      The `default` entry has no display, so every display pauses.
+    - **Entries outlive their Spaces.** The store holds 381 Spaces,
+      many last used in September and October. Leaving full screen
+      doesn't pause Phases because no entry's `LastSet` moves; nothing
+      is removed.
+    - **Unexplained:** Space `2A1F37A9` got `IMG_0761.JPG` with `LastSet`
+      23:31:54.7266 and `LastUse` 5 ms later, 1.5 s after Space
+      `D37B581D` got `IMG_1971.JPG` (about when the author resumed
+      Phases). Diagnostics were off (`PhasesDiagnostics = 0`), so there
+      is no `phases-set` log to say whose sets these were.
+  - Still open: whether a real pick on a never-picked Space stamps the
+    current time in `LastSet` (expected, *hypothesis*), which the fix
+    relies on.
 
 - `[L-reopen-event]` **What happens when Phases is launched again while
   it's running, and can the menu bar icon's view open the window?**
