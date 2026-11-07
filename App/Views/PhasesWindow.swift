@@ -35,6 +35,7 @@ struct PhasesWindow: View {
             PhaseRow(
               phase: phase,
               isActive: phase.id == scheduler.activePhase?.id,
+              isSelected: selection == .phase(phase.id),
               availability: scheduler.location.availability(of: phase)
             )
               .tag(SidebarItem.phase(phase.id))
@@ -309,7 +310,7 @@ enum SidebarItem: Hashable {
 // EXPERIMENT (issue #22, not for main): launch switches choosing how the row
 // draws the "Active" badge and the warning triangle on the selection
 // highlight. Read once at launch, like PhasesDiagnostics.
-//   PhasesExpBadge:       tint (main's) | adaptive
+//   PhasesExpBadge:       tint (main's) | adaptive | selected
 //   PhasesExpTriangle:    orange (main's) | adaptive | multicolor | inherit
 //   PhasesExpTriangleAll: YES shows the triangle on every row
 private enum RowExperiment {
@@ -323,13 +324,19 @@ private let rowDiagLog = Diagnostics.logger("row")
 private struct PhaseRow: View {
   var phase: Phase
   var isActive: Bool
+  var isSelected: Bool
   var availability: PhaseAvailability
   @Environment(\.backgroundProminence) private var backgroundProminence
+  @Environment(\.appearsActive) private var appearsActive
 
   private var onHighlight: Bool { backgroundProminence == .increased }
 
   private var badgeStyle: AnyShapeStyle {
-    RowExperiment.badge == "adaptive" && onHighlight ? AnyShapeStyle(.primary) : AnyShapeStyle(.tint)
+    switch RowExperiment.badge {
+    case "adaptive": onHighlight ? AnyShapeStyle(.primary) : AnyShapeStyle(.tint)
+    case "selected": isSelected && appearsActive ? AnyShapeStyle(.primary) : AnyShapeStyle(.tint)
+    default: AnyShapeStyle(.tint)
+    }
   }
 
   @ViewBuilder private var triangle: some View {
@@ -386,6 +393,9 @@ private struct PhaseRow: View {
     .accessibilityElement(children: .combine)
     .onChange(of: backgroundProminence, initial: true) { _, prominence in
       rowDiagLog.info("\(phase.name, privacy: .public): backgroundProminence \(String(describing: prominence), privacy: .public), badge \(RowExperiment.badge, privacy: .public), triangle \(RowExperiment.triangle, privacy: .public)")
+    }
+    .onChange(of: [isSelected, appearsActive], initial: true) { _, state in
+      rowDiagLog.info("\(phase.name, privacy: .public): isSelected \(state[0], privacy: .public), appearsActive \(state[1], privacy: .public)")
     }
   }
 }
