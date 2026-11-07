@@ -504,7 +504,20 @@ took window screenshots with the window in front and behind Finder.
   - So the accent highlight follows "selected, window in front, and the
     sidebar has focus" (*verified* for these three cases). Adding the
     window's existing `sidebarFocused` to the condition should match all
-    three (*hypothesis*, not run).
+    three (*hypothesis*, not run). Confirmed by run 6, below.
+- `[L-row-selection-focus]` **Selected, window in front, and sidebar
+  focused: that rule matches the highlight in every case tried.** Run 6
+  (commit 7693bb0) passes the window's `sidebarFocused` into `PhaseRow`
+  and uses `.primary` only when all three are true. *Verified*
+  2026-11-06 by Claude (screenshots, log), Highlight Color blue:
+  - Sidebar focused: blue highlight, white badge.
+  - Focus moved to the Name field: grey highlight, accent badge.
+  - Clicked back on the row: blue highlight, white badge again.
+  - Window behind Finder: grey highlight, accent badge.
+  - The log followed each step. `sidebarFocused` stays true while the
+    window is in the background; `appearsActive` covers that case.
+  - Not tried: other Highlight Colors, light mode, keyboard focus moves
+    (Tab) out of the sidebar.
 
 ## Open questions
 
