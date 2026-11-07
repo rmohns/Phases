@@ -452,6 +452,42 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
     limit; the third added 1 MB. Passes, just.
   - Nothing near 500 MB.
 
+## Sidebar rows
+
+Source for this section: the issue #22 experiment, 2026-11-06, macOS
+27.2, branch `experiment/active-badge-highlight` (commit 204231c), run by
+Claude with the author's yes. Highlight Color was blue. Each run
+relaunched Phases with a launch switch choosing the variant, selected
+the active phase (Nighttime) by clicking Dusk and pressing Down, and
+took window screenshots with the window in front and behind Finder.
+
+- `[L-tint-on-highlight]` **An explicit `.tint` style doesn't change on
+  the selection highlight, so tint-coloured text on a selected row in
+  the front window disappears.** *Verified* (run 1, main's code): the
+  "Active" badge on the selected active row couldn't be seen on the
+  highlight; with the window behind Finder (grey highlight) it showed
+  in the accent colour. Issue #22's cause, confirmed. The highlight
+  follows System Settings → Appearance → Highlight Color (the author,
+  on the issue), so this happens with every colour.
+- `[L-background-prominence-mac-list]` **`backgroundProminence` stays
+  `.standard` on a selected `List` sidebar row.** *Verified* (all four
+  runs, diagnostics log): the row logged `.standard` at launch and never
+  logged a change when selected in the front window. A style switched on
+  `.increased` therefore never switches: run 2's badge still vanished
+  and its triangle stayed orange. Not usable for #22.
+- `[L-row-styles-on-highlight]` **What does adapt on the highlight.**
+  *Verified* (screenshots):
+  - Hierarchical styles (`.primary`, `.secondary`) and a symbol with no
+    style of its own turn white or near white on the highlight, and
+    grey otherwise (run 4's triangle, the trigger line).
+  - The row's leading `Label` icon is accent-coloured normally and white
+    on the highlight, with no code of ours doing it.
+  - A `.multicolor` `exclamationmark.triangle.fill` is yellow with a
+    dark mark and stays yellow on the highlight (run 3). Readable on
+    blue, not adaptive.
+  - An explicit `.orange` stays orange (runs 1–2), so it would vanish
+    on an orange highlight (*hypothesis*, not run).
+
 ## Open questions
 
 - `[L-store-watch]` **Can Phases hear a wallpaper change made in System
