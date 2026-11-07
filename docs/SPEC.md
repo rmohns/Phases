@@ -1,4 +1,4 @@
-# Phases — Specification (draft 37)
+# Phases — Specification (draft 38)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -960,6 +960,21 @@ extras don't show them. No global hotkey.
     branding panel's fixed-size icon and text looked lost in a huge panel
     (found in testing, 2026-10-27). 320 pt leaves room for long phase names
     while keeping the editor the primary area.
+- `[D-window-min-size]` **Minimum window size.** The editor pane can't
+  be made narrower than **460 pt**, so the window's minimum width is the
+  sidebar's current width plus 460 pt (700 pt with the sidebar at its
+  240 pt minimum `[D-sidebar-width]`). The window can't be made shorter
+  than **480 pt**. The window opens at 960 × 680 pt, as before. A saved
+  window frame smaller than the minimum opens at the minimum.
+  - *Why:* without a minimum, the window could be dragged down to a
+    sliver where the editor's controls and image grid are unusable
+    (GitHub issue #12). Rare, but odd window states do happen, and a
+    minimum costs nothing.
+  - *The numbers* are estimates, not measured (Claude, 2026-11-06): 460 pt
+    leaves room for the editor's label column, the three-segment "Only
+    in" picker, and two or three thumbnail columns; 480 pt shows the Name
+    and Starts sections plus part of the next. Adjust after a look at the
+    real window.
 - `[D-tall-toolbar]` **Full-height toolbar over the detail pane only.** The
   window keeps macOS's tall unified toolbar, like System Settings and
   Bitrig, even though it has no toolbar buttons. The sidebar stays full
