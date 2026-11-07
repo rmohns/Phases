@@ -458,6 +458,23 @@ would stop being true if a future macOS fixed the underlying behavior.
     the user launched the app is not yet known; the window is opened
     from the menu bar icon's `.task` at launch, possibly before the
     launch has finished (*hypothesis*).
+  - *Timing ruled out, workaround found:* *verified* 2026-11-06 on
+    `experiment/first-launch-activation` (Finder launches by the author
+    plus the diagnostics log). The menu bar icon's `.task` does run
+    about 3 ms before `applicationDidFinishLaunching`, but opening the
+    window after the launch finished changed nothing: Phases stayed
+    inactive, Finder frontmost, at +0.5 s and +2 s. Then calling
+    `NSRunningApplication.current.activate(from:)` with the app that was
+    frontmost (Finder) returned true and brought Phases and its window
+    to the front, in 2 of 2 launches. The deprecated
+    `activate(ignoringOtherApps:)` wasn't tried (author's preference).
+    Shapes `[D-first-launch-shows-window]`; see "First launch comes to
+    the front" under "Workarounds".
+  - A relaunch while running is granted activation without help
+    `[D-reopen-shows-window]`. During the experiment, one double-click
+    looked like a success only because Phases hadn't quit (window
+    closed), so it was a relaunch. Quit from the app menu between
+    first-launch checks.
 - `[Q-closed-window-keeps-focus]` **Closing the Phases window only hides
   it; on reopen it still has whatever had focus, with the text cursor and
   selection where they were (macOS 27.2).** *Verified* 2026-10-29 by the
@@ -588,6 +605,24 @@ included, so the relaunch always behaves like "Open Phases…",
 never opened, closed, minimized, and closed on another Space all ended with the window visible, key, on the current
 Space, and Phases regular (log and author's eyes; `[L-reopen-event]`
 runs 5a–5c and 6).
+
+### First launch comes to the front
+
+`[D-first-launch-shows-window]` `[Q-launch-activate-refused]`: the menu
+bar icon's view (`MenuBarLabel`) starts the first-launch window from its
+`.task`, through `FirstLaunchWindow.open`. That waits until the app
+delegate (`ReopenHandler`) reports `applicationDidFinishLaunching`,
+notes the frontmost app, runs the shared opening routine
+(`showPhasesWindow()`), and then calls
+`NSRunningApplication.current.activate(from:)` with the noted app.
+*Verified* 2026-11-06 for Finder launches (see the quirk), and again by
+the author on the shipping code (`fix/14-first-launch-front`, test mode
+with the first-launch switch, one Finder double-click): the window opened
+in front, and Quit Phases quit. Not yet
+checked: launches from Spotlight, the Dock, or Terminal, and whether the
+wait for the launch to finish is needed (it was kept because that's
+what was tested). The author will check Spotlight and the Dock with a
+copy in Applications.
 
 ### Branding panel insets
 

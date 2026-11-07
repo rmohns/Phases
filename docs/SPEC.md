@@ -1,4 +1,4 @@
-# Phases — Specification (draft 43)
+# Phases — Specification (draft 44)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -1235,6 +1235,9 @@ extras don't show them. No global hotkey.
     settings straight away instead of a menu bar icon they may not
     notice (GitHub issue #14, author). An onboarding screen may come
     later.
+  - The window comes to the front, like any app the user just opened.
+    macOS fights this; see `[Q-launch-activate-refused]` (*How* in
+    ERRATA.md "First launch comes to the front").
 - `[D-app-menu]` **While the window is open, Phases has a standard menu
   bar,** trimmed to what applies:
   - **Phases** (app menu): About Phases, **Settings… ⌘,** (opens the window

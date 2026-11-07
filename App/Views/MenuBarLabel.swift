@@ -14,7 +14,9 @@ struct MenuBarLabel: View {
       .accessibilityLabel(isPaused ? "Phases, paused" : "Phases")
       // Runs once, when the icon first appears at launch.
       .task {
-        if isFirstLaunch { openWindow.showPhasesWindow() }
+        // [Q-launch-activate-refused] Waits for the launch to finish, then
+        // takes activation so the window comes to the front.
+        if isFirstLaunch { await FirstLaunchWindow.open(openWindow) }
       }
       .onReceive(NotificationCenter.default.publisher(for: .phasesRelaunched)) { _ in
         openWindow.showPhasesWindow()

@@ -883,6 +883,9 @@ lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
   off, same-on-every-Space versus per Space, and how Pause, Quit, and
   Transition: None treat the cover) are tracked as GitHub issues labeled
   "planning" (author, 2026-10-30), not here.
+- `[L-first-launch-activation]` First-launch window staying behind:
+  promoted to `[Q-launch-activate-refused]` (2026-11-06). The run-by-run
+  record is on `experiment/first-launch-activation`.
 
 ## Driving and measuring the Mac in tests
 
