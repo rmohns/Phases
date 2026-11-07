@@ -67,7 +67,7 @@ The pure logic that decides what the app does:
 - `SidebarHighlight`: a row has the colored highlight only when it's
   selected, the window is in front, and the sidebar has focus
   `[D-active-badge]` (draft 45)
-- `AppVersion`: the spec draft constant matches SPEC.md's title
+- `AppVersion`: the build number in `Project.json` matches SPEC.md's title
   `[D-version-in-settings]`
 - `FolderScan`: which images the folder scan finds and what it names
   them, following symlinks and aliases `[D-follow-links]` and ending on

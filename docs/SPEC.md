@@ -1,4 +1,4 @@
-# Phases — Specification (draft 46)
+# Phases — Specification (draft 47)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -1190,18 +1190,28 @@ extras don't show them. No global hotkey.
   earlier had a Quit Phases button here).
 - `[D-version-in-settings]` **About section,** last in Settings, below
   Quitting, one line each:
-  - **Version:** the app's version and build number, e.g. "1.0 (1)".
-  - **Spec:** the SPEC.md draft the build was made against, e.g. "Draft 23".
+  - **Version:** the app's version and build number, e.g. "0.1 (47)".
+  - **Spec:** the SPEC.md draft the build was made against, e.g. "Draft 47".
   - **Built:** the date and time this copy of the app was built (taken
     from the app's executable file).
   - *Why:* during testing, the author needs to tell which build is
-    running. The version and build number never change for a personal
-    app, so the spec draft and build time are what actually tell builds
-    apart.
-  - *How:* the draft number is a constant in the code
+    running. The build number *is* the spec draft, so Finder's Get Info,
+    the standard About panel, and this section all name the same draft;
+    the build time tells apart builds of one draft.
+  - *Version scheme:* "0.1" until the author calls Phases finished; the
+    build number is the SPEC.md draft number.
+  - *How:* the draft number is set in one place, the build number
+    (`CURRENT_PROJECT_VERSION` in `Project.json`). The Info.plist takes
+    its version and build number from those build settings rather than
+    repeating them, and the Spec line reads the app's build number
     (`App/Model/AppVersion.swift`). A unit test reads SPEC.md's title and
-    fails if the constant doesn't match it, so the number can't drift
+    fails if `Project.json` doesn't match it, so the number can't drift
     from the spec `[D-tests-carry-tags]`. Bump it with each new draft.
+  - *Replaced:* through draft 46 the version was a fixed "1.0 (1)" on the
+    theory that a personal app's version never changes, and the draft was
+    a separate constant in the code. The constant was missed in the
+    draft 46 change, leaving Settings at "Draft 45" (verified 2026-11-06
+    by Claude: the unit test failed on `main`).
 
 ### Dock icon and app menu
 
