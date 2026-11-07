@@ -238,6 +238,13 @@ final class WallpaperScheduler {
     return copy
   }
 
+  /// [D-phase-turn-off] Turning off the active phase switches at once,
+  /// since every change to `phases` re-checks the schedule.
+  func togglePhase(id: Phase.ID) {
+    guard let index = phases.firstIndex(where: { $0.id == id }) else { return }
+    phases[index].isOn.toggle()
+  }
+
   func deletePhase(id: Phase.ID) {
     phases.removeAll { $0.id == id }
   }

@@ -60,7 +60,10 @@ The pure logic that decides what the app does:
 - `PhaseAvailability`: whether a phase can run and why not
   `[D-phase-cant-run]`, that the schedule drops every disabled phase, and
   that a denied dawn phase never becomes active even with a saved
-  location `[D-denied-means-off]`
+  location `[D-denied-means-off]`; a phase turned off never runs, even
+  without a location problem, and older saved phases load as on
+  `[D-phase-turn-off]` (draft 42), and the row reads "Off" with no
+  warning for it, "Phase disabled" with one otherwise (draft 42)
 - `AppVersion`: the spec draft constant matches SPEC.md's title
   `[D-version-in-settings]`
 - `FolderScan`: which images the folder scan finds and what it names

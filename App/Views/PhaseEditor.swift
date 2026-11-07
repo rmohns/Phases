@@ -14,6 +14,9 @@ struct PhaseEditor: View {
           TextField("Name", text: phase.name)
             // [D-ui-test-ids]
             .accessibilityIdentifier("phaseName")
+          // [D-phase-turn-off]
+          Toggle("Use this phase", isOn: phase.isOn)
+            .accessibilityIdentifier("phaseIsOn")
         }
 
         Section("Starts") {

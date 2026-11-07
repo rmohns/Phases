@@ -41,6 +41,8 @@ struct PhasesWindow: View {
               // [D-phase-actions] Acts on the row clicked, selected or not.
               .contextMenu {
                 Button("Duplicate") { duplicatePhase(phase.id, scheduler: scheduler, selection: &selection) }
+                // [D-phase-turn-off]
+                Button(phase.isOn ? "Turn Off" : "Turn On") { scheduler.togglePhase(id: phase.id) }
                 Divider()
                 Button("Delete") { deletePhase(phase.id, scheduler: scheduler, selection: &selection) }
               }
@@ -164,6 +166,11 @@ private struct SidebarFooter: View {
             guard let id = selectedPhaseID else { return }
             duplicatePhase(id, scheduler: scheduler, selection: &selection)
           }
+          // [D-phase-turn-off]
+          Button(selectedPhase?.isOn == false ? "Turn On" : "Turn Off") {
+            guard let id = selectedPhaseID else { return }
+            scheduler.togglePhase(id: id)
+          }
         } label: {
           cell("Phase Actions", systemImage: "ellipsis")
         }
@@ -195,6 +202,10 @@ private struct SidebarFooter: View {
 
   private var selectedPhaseID: Phase.ID? {
     if case .phase(let id) = selection { id } else { nil }
+  }
+
+  private var selectedPhase: Phase? {
+    selectedPhaseID.flatMap { id in scheduler.phases.first { $0.id == id } }
   }
 }
 
@@ -319,13 +330,15 @@ private struct PhaseRow: View {
             Image(systemName: symbol)
               .accessibilityLabel("\(phase.appearance.title) Mode only")
           }
-          // [D-row-status-not-cause] The status only, whatever the reason;
-          // the phase editor names the cause.
-          if availability.isDisabled {
+          // [D-row-status-not-cause] The status only; the phase editor names
+          // the cause. [D-phase-turn-off] "Off", with no warning.
+          if availability.rowShowsWarning {
             Image(systemName: "exclamationmark.triangle.fill")
               .foregroundStyle(.orange)
               .accessibilityHidden(true)
-            Text("Phase disabled")
+          }
+          if let status = availability.rowStatus {
+            Text(status)
           }
         }
         .font(.caption)
