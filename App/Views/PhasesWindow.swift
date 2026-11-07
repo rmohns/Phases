@@ -36,6 +36,7 @@ struct PhasesWindow: View {
               phase: phase,
               isActive: phase.id == scheduler.activePhase?.id,
               isSelected: selection == .phase(phase.id),
+              sidebarFocused: sidebarFocused,
               availability: scheduler.location.availability(of: phase)
             )
               .tag(SidebarItem.phase(phase.id))
@@ -310,7 +311,7 @@ enum SidebarItem: Hashable {
 // EXPERIMENT (issue #22, not for main): launch switches choosing how the row
 // draws the "Active" badge and the warning triangle on the selection
 // highlight. Read once at launch, like PhasesDiagnostics.
-//   PhasesExpBadge:       tint (main's) | adaptive | selected
+//   PhasesExpBadge:       tint (main's) | adaptive | selected | focused
 //   PhasesExpTriangle:    orange (main's) | adaptive | multicolor | inherit
 //   PhasesExpTriangleAll: YES shows the triangle on every row
 private enum RowExperiment {
@@ -325,6 +326,7 @@ private struct PhaseRow: View {
   var phase: Phase
   var isActive: Bool
   var isSelected: Bool
+  var sidebarFocused: Bool
   var availability: PhaseAvailability
   @Environment(\.backgroundProminence) private var backgroundProminence
   @Environment(\.appearsActive) private var appearsActive
@@ -335,6 +337,7 @@ private struct PhaseRow: View {
     switch RowExperiment.badge {
     case "adaptive": onHighlight ? AnyShapeStyle(.primary) : AnyShapeStyle(.tint)
     case "selected": isSelected && appearsActive ? AnyShapeStyle(.primary) : AnyShapeStyle(.tint)
+    case "focused": isSelected && appearsActive && sidebarFocused ? AnyShapeStyle(.primary) : AnyShapeStyle(.tint)
     default: AnyShapeStyle(.tint)
     }
   }
@@ -394,8 +397,8 @@ private struct PhaseRow: View {
     .onChange(of: backgroundProminence, initial: true) { _, prominence in
       rowDiagLog.info("\(phase.name, privacy: .public): backgroundProminence \(String(describing: prominence), privacy: .public), badge \(RowExperiment.badge, privacy: .public), triangle \(RowExperiment.triangle, privacy: .public)")
     }
-    .onChange(of: [isSelected, appearsActive], initial: true) { _, state in
-      rowDiagLog.info("\(phase.name, privacy: .public): isSelected \(state[0], privacy: .public), appearsActive \(state[1], privacy: .public)")
+    .onChange(of: [isSelected, appearsActive, sidebarFocused], initial: true) { _, state in
+      rowDiagLog.info("\(phase.name, privacy: .public): isSelected \(state[0], privacy: .public), appearsActive \(state[1], privacy: .public), sidebarFocused \(state[2], privacy: .public)")
     }
   }
 }
