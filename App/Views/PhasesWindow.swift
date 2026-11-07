@@ -11,6 +11,9 @@ struct PhasesWindow: View {
   /// moment, so SwiftUI drops the detail pane and the grid's thumbnails.
   @State private var holdsDetail = true
   @State private var isOpen = true
+  /// [D-brand-egg] Held by the window, not the panel row, so scrolling the
+  /// panel away doesn't reset it.
+  @State private var showsMeme = false
   @FocusState private var sidebarFocused: Bool
 
   var body: some View {
@@ -18,7 +21,7 @@ struct PhasesWindow: View {
       List(selection: $selection) {
         // [D-brand-scrolls] First list item, so it scrolls away with long
         // phase lists; never pinned.
-        SidebarBranding(scheduler: scheduler)
+        SidebarBranding(scheduler: scheduler, showsMeme: $showsMeme)
           .selectionDisabled()
           .listRowSeparator(.hidden)
           // [D-brand-inset] [Q-list-row-padding] Sides line up with the traffic lights and row
@@ -123,6 +126,8 @@ struct PhasesWindow: View {
   /// so nothing visibly blanks; a reopen in the meantime keeps it.
   private func windowClosed() {
     isOpen = false
+    // [D-brand-egg] The window's state outlives a close, so reset explicitly.
+    showsMeme = false
     DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
       if !isOpen { holdsDetail = false }
     }
@@ -215,6 +220,7 @@ private struct SidebarFooter: View {
 /// over the current wallpaper, or the icon's gradient before any is applied.
 private struct SidebarBranding: View {
   var scheduler: WallpaperScheduler
+  @Binding var showsMeme: Bool
   @State private var wallpaper: NSImage?
   @Environment(\.displayScale) private var displayScale
 
@@ -224,7 +230,12 @@ private struct SidebarBranding: View {
       .aspectRatio(16 / 10, contentMode: .fit)
       .frame(maxWidth: .infinity)
       .background {
-        if let wallpaper {
+        if showsMeme {
+          // [D-brand-egg] The meme alone: no icon, text, or gradient.
+          Image("VibeCodingMeme")
+            .resizable()
+            .scaledToFill()
+        } else if let wallpaper {
           // [D-brand-legibility] No overall dimming; a gradient behind the
           // text only.
           Image(nsImage: wallpaper)
@@ -247,30 +258,14 @@ private struct SidebarBranding: View {
         }
       }
       .overlay {
-        // [D-brand-layout] 52 pt icon, two-line tagline with a chosen break.
-        VStack(spacing: 4) {
-          Image(nsImage: NSApp.applicationIconImage)
-            .resizable()
-            .frame(width: 52, height: 52)
-            .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
-          // [D-brand-fixed-text] Fixed sizes: a decorative, fixed-shape panel.
-          Text("Phases")
-            .font(.system(size: 15, weight: .semibold))
-          // Sidebar list rows default to one line, which would cut this off
-          // at the line break; allow both lines explicitly.
-          Text("Wallpaper for every\nphase of your day")
-            .font(.system(size: 12, weight: .light))
-            .lineLimit(2)
-            .multilineTextAlignment(.center)
-            .fixedSize()
+        if !showsMeme {
+          brandText
         }
-        .foregroundStyle(.white)
-        .shadow(color: .black.opacity(0.5), radius: 3, y: 1)
-        .padding(.horizontal, 10)
       }
       .clipShape(shape)
       .overlay(shape.strokeBorder(.separator))
       .animation(.smooth, value: wallpaper)
+      .animation(.smooth, value: showsMeme)
       .task(id: scheduler.currentImageName) {
         guard let name = scheduler.currentImageName else {
           wallpaper = nil
@@ -280,8 +275,39 @@ private struct SidebarBranding: View {
           wallpaper = image
         }
       }
+      // [D-brand-egg] One-way; no pointer change, no selection change.
+      .contentShape(shape)
+      .onTapGesture { showsMeme = true }
       .accessibilityElement(children: .ignore)
-      .accessibilityLabel("Phases. Wallpaper for every phase of your day")
+      .accessibilityAddTraits(.isButton)
+      .accessibilityLabel(showsMeme
+        ? "Meme: three women in a convertible. Get in loser, we're going vibe coding."
+        : "Phases. Wallpaper for every phase of your day")
+      .accessibilityHint(showsMeme ? "" : "Get in.")
+      .accessibilityAction { showsMeme = true }
+  }
+
+  private var brandText: some View {
+    // [D-brand-layout] 52 pt icon, two-line tagline with a chosen break.
+    VStack(spacing: 4) {
+      Image(nsImage: NSApp.applicationIconImage)
+        .resizable()
+        .frame(width: 52, height: 52)
+        .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+      // [D-brand-fixed-text] Fixed sizes: a decorative, fixed-shape panel.
+      Text("Phases")
+        .font(.system(size: 15, weight: .semibold))
+      // Sidebar list rows default to one line, which would cut this off
+      // at the line break; allow both lines explicitly.
+      Text("Wallpaper for every\nphase of your day")
+        .font(.system(size: 12, weight: .light))
+        .lineLimit(2)
+        .multilineTextAlignment(.center)
+        .fixedSize()
+    }
+    .foregroundStyle(.white)
+    .shadow(color: .black.opacity(0.5), radius: 3, y: 1)
+    .padding(.horizontal, 10)
   }
 }
 

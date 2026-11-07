@@ -1,4 +1,4 @@
-# Phases — Specification (draft 45)
+# Phases — Specification (draft 46)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -938,6 +938,34 @@ extras don't show them. No global hotkey.
      - `[D-brand-scrolls]` It's the first item in the sidebar list, so it
        **scrolls away** when
        there are enough phases to scroll; it's never pinned.
+     - `[D-brand-egg]` **Easter egg: click the panel and it turns into a
+       meme.** Clicking anywhere on the panel replaces it with the "Get in
+       loser, we're going vibe coding" meme (Mean Girls convertible still,
+       632 × 396 px, bundled with the app). The meme fills the panel alone:
+       no icon, name, tagline, or bottom gradient `[D-brand-legibility]`.
+       It crossfades in with the panel's existing smooth animation.
+       - **One-way, until the window closes.** Further clicks do nothing.
+         Closing the Phases window resets it, so the next open shows the
+         normal panel. The window's state outlives a close (see
+         `[D-grid-release-on-close]`), so the reset happens explicitly when
+         the window closes, alongside the thumbnail release; it doesn't
+         rely on the view going away.
+       - **Scrolling doesn't reset it.** The flag belongs to the window,
+         not the panel row, so it survives the panel scrolling offscreen
+         `[D-brand-scrolls]`.
+       - **No hints.** The pointer doesn't change over the panel, and
+         clicking it doesn't change the sidebar selection. It stays a
+         surprise.
+       - **VoiceOver gets it too.** The panel is a button. Before: label
+         "Phases. Wallpaper for every phase of your day", hint "Get in."
+         After: label "Meme: three women in a convertible. Get in loser,
+         we're going vibe coding." with no hint.
+       - The meme is 632 × 396 px, 1.6:1, the panel's own 16:10, so it
+         fills the panel without a visible crop.
+       - *Why:* the author asked for an utterly stupid easter egg
+         (2026-11-06). The meme's own text takes the tagline's place
+         instead of fighting it, and resetting on close keeps the joke
+         from becoming the app's look.
   2. `[D-settings-at-top]` **"App" section:** a **Settings** row (gear icon). It sits at the top so
      it's always visible however many phases there are; the HIG advises
      against putting important items at the bottom of a sidebar, since window
