@@ -76,7 +76,8 @@ The pure logic that decides what the app does:
   entries and file names from a store built in the test
   `[D-outside-change-rule]` (draft 37)
 - `Phase`: a new phase starts now, rounded down to 5 minutes
-  `[D-new-phase-now]` (draft 40)
+  `[D-new-phase-now]` (draft 40); a duplicate copies every setting
+  with a new ID and a "copy" name `[D-duplicate-phase]` (draft 41)
 - `FirstLaunch`: which launches count as a first launch: none recorded
   and no saved settings yes; a recorded launch or settings from an
   earlier version no; test mode only with its switch

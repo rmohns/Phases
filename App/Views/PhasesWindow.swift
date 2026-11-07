@@ -38,6 +38,12 @@ struct PhasesWindow: View {
               availability: scheduler.location.availability(of: phase)
             )
               .tag(SidebarItem.phase(phase.id))
+              // [D-phase-actions] Acts on the row clicked, selected or not.
+              .contextMenu {
+                Button("Duplicate") { duplicatePhase(phase.id, scheduler: scheduler, selection: &selection) }
+                Divider()
+                Button("Delete") { deletePhase(phase.id, scheduler: scheduler, selection: &selection) }
+              }
           }
         }
       }
@@ -140,26 +146,43 @@ private struct SidebarFooter: View {
         // title through, so name the button explicitly.
         .accessibilityLabel("Add Phase")
         .accessibilityIdentifier("addPhase")
-        Rectangle()
-          .fill(.separator)
-          .frame(width: 1, height: 16)
+        divider
         Button {
           guard let id = selectedPhaseID else { return }
-          // [D-delete-selects-next] Select the phase that takes the deleted
-          // one's place, or the one above if it was last.
-          let next = PhaseListSelection.afterDeleting(id, from: scheduler.phasesByTime.map(\.id))
-          scheduler.deletePhase(id: id)
-          selection = next.map { .phase($0) } ?? .settings
+          deletePhase(id, scheduler: scheduler, selection: &selection)
         } label: {
           cell("Delete Phase", systemImage: "minus")
         }
         .accessibilityLabel("Delete Phase")
         .accessibilityIdentifier("deletePhase")
         .disabled(selectedPhaseID == nil)
+        divider
+        // [D-phase-actions] Commands for the selected phase; the rows'
+        // context menu lists the same ones.
+        Menu {
+          Button("Duplicate") {
+            guard let id = selectedPhaseID else { return }
+            duplicatePhase(id, scheduler: scheduler, selection: &selection)
+          }
+        } label: {
+          cell("Phase Actions", systemImage: "ellipsis")
+        }
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .accessibilityLabel("Phase Actions")
+        .accessibilityIdentifier("phaseActions")
+        .disabled(selectedPhaseID == nil)
         Spacer()
       }
       .buttonStyle(.borderless)
     }
+  }
+
+  /// The 1 pt divider between cells.
+  private var divider: some View {
+    Rectangle()
+      .fill(.separator)
+      .frame(width: 1, height: 16)
   }
 
   /// An icon in a fully clickable 24 × 23 pt cell.
@@ -246,6 +269,24 @@ private struct SidebarBranding: View {
       }
       .accessibilityElement(children: .ignore)
       .accessibilityLabel("Phases. Wallpaper for every phase of your day")
+  }
+}
+
+/// [D-delete-selects-next] Deleting the selected phase selects the one that
+/// takes its place, or the one above if it was last. Deleting another
+/// phase leaves the selection alone [D-phase-actions].
+@MainActor private func deletePhase(_ id: Phase.ID, scheduler: WallpaperScheduler, selection: inout SidebarItem?) {
+  let next = PhaseListSelection.afterDeleting(id, from: scheduler.phasesByTime.map(\.id))
+  scheduler.deletePhase(id: id)
+  if selection == .phase(id) {
+    selection = next.map { .phase($0) } ?? .settings
+  }
+}
+
+/// [D-duplicate-phase] The copy is selected once made.
+@MainActor private func duplicatePhase(_ id: Phase.ID, scheduler: WallpaperScheduler, selection: inout SidebarItem?) {
+  if let copy = scheduler.duplicatePhase(id: id) {
+    selection = .phase(copy.id)
   }
 }
 
