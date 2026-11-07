@@ -487,6 +487,24 @@ took window screenshots with the window in front and behind Finder.
     blue, not adaptive.
   - An explicit `.orange` stays orange (runs 1–2), so it would vanish
     on an orange highlight (*hypothesis*, not run).
+- `[L-row-own-selection]` **Telling the row it's selected works, but the
+  accent highlight also needs the sidebar to have focus.** Run 5
+  (commit b880f57): `PhaseRow` gets `isSelected` from the sidebar's
+  `selection` and reads `appearsActive`; the badge is `.primary` when
+  both are true, `.tint` otherwise. *Verified* (screenshots, log):
+  - Selected, window in front, sidebar focused: blue highlight, badge
+    white and readable. The log showed `isSelected` and `appearsActive`
+    following the clicks and the switch to Finder.
+  - Selected, window in front, focus moved to the editor (clicked the
+    Name field): the highlight turned **grey**, like a background window,
+    but the badge stayed white, since both flags were still true.
+    Readable, but it doesn't match the background-window look (accent
+    badge on grey).
+  - Window behind Finder: grey highlight, accent badge.
+  - So the accent highlight follows "selected, window in front, and the
+    sidebar has focus" (*verified* for these three cases). Adding the
+    window's existing `sidebarFocused` to the condition should match all
+    three (*hypothesis*, not run).
 
 ## Open questions
 
