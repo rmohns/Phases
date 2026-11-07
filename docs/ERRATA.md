@@ -329,6 +329,30 @@ would stop being true if a future macOS fixed the underlying behavior.
   draft 13 bug where − stayed disabled; moving the bar into its own view
   with a binding fixed it (fix verified by the author, 2026-10-28). Shaped
   `[D-sidebar-footer-view]`.
+- `[Q-tint-on-highlight]` **On a selected sidebar row, accent-colored
+  text vanishes into the colored highlight, and SwiftUI doesn't tell the
+  row it's on one (macOS 27.2).** *Verified* 2026-11-06 by Claude, window
+  screenshots and diagnostics log, Highlight Color blue (promoted from
+  LEARNINGS.md `[L-tint-on-highlight]`, `[L-background-prominence-mac-list]`,
+  `[L-row-selection-focus]`):
+  - An explicit `.tint` style keeps the accent color on the highlight,
+    which is the same color, so the text can't be seen. Hierarchical
+    styles (`.primary`, `.secondary`) turn white there on their own.
+  - `backgroundProminence` stays `.standard` on a selected `List` sidebar
+    row, so a style switched on `.increased` never switches.
+  - The highlight is colored only when the row is selected, the window
+    is in front, and the sidebar has focus; otherwise it's grey. Phases
+    owns all three (its `selection`, `appearsActive`, its `sidebarFocused`
+    focus state), so the row works it out itself (`SidebarHighlight`).
+  - How it was found: issue #22 experiment, branch
+    `experiment/active-badge-highlight`, runs 1–6; the run notes that
+    didn't move here are in LEARNINGS.md "Sidebar rows". The author then
+    checked every Highlight Color in dark and light mode on the draft 45
+    build (*verified* 2026-11-06). Not tried: moving focus out of the
+    sidebar with Tab.
+  - Shapes `[D-active-badge]`. Recheck if a macOS update starts reporting
+    `backgroundProminence` for sidebar rows; that would be the simpler
+    route.
 - `[Q-default-focus-loses]` **`.defaultFocus` on the sidebar List doesn't
   stop macOS from focusing the first text field when the window opens
   (macOS 27).** *Verified* 2026-10-28 by the author, across several

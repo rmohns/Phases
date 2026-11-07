@@ -461,20 +461,8 @@ relaunched Phases with a launch switch choosing the variant, selected
 the active phase (Nighttime) by clicking Dusk and pressing Down, and
 took window screenshots with the window in front and behind Finder.
 
-- `[L-tint-on-highlight]` **An explicit `.tint` style doesn't change on
-  the selection highlight, so tint-coloured text on a selected row in
-  the front window disappears.** *Verified* (run 1, main's code): the
-  "Active" badge on the selected active row couldn't be seen on the
-  highlight; with the window behind Finder (grey highlight) it showed
-  in the accent colour. Issue #22's cause, confirmed. The highlight
-  follows System Settings → Appearance → Highlight Color (the author,
-  on the issue), so this happens with every colour.
-- `[L-background-prominence-mac-list]` **`backgroundProminence` stays
-  `.standard` on a selected `List` sidebar row.** *Verified* (all four
-  runs, diagnostics log): the row logged `.standard` at launch and never
-  logged a change when selected in the front window. A style switched on
-  `.increased` therefore never switches: run 2's badge still vanished
-  and its triangle stayed orange. Not usable for #22.
+- `[L-tint-on-highlight]` Promoted to `[Q-tint-on-highlight]` (2026-11-06).
+- `[L-background-prominence-mac-list]` Promoted to `[Q-tint-on-highlight]` (2026-11-06).
 - `[L-row-styles-on-highlight]` **What does adapt on the highlight.**
   *Verified* (screenshots):
   - Hierarchical styles (`.primary`, `.secondary`) and a symbol with no
@@ -505,19 +493,7 @@ took window screenshots with the window in front and behind Finder.
     sidebar has focus" (*verified* for these three cases). Adding the
     window's existing `sidebarFocused` to the condition should match all
     three (*hypothesis*, not run). Confirmed by run 6, below.
-- `[L-row-selection-focus]` **Selected, window in front, and sidebar
-  focused: that rule matches the highlight in every case tried.** Run 6
-  (commit 7693bb0) passes the window's `sidebarFocused` into `PhaseRow`
-  and uses `.primary` only when all three are true. *Verified*
-  2026-11-06 by Claude (screenshots, log), Highlight Color blue:
-  - Sidebar focused: blue highlight, white badge.
-  - Focus moved to the Name field: grey highlight, accent badge.
-  - Clicked back on the row: blue highlight, white badge again.
-  - Window behind Finder: grey highlight, accent badge.
-  - The log followed each step. `sidebarFocused` stays true while the
-    window is in the background; `appearsActive` covers that case.
-  - Not tried: other Highlight Colors, light mode, keyboard focus moves
-    (Tab) out of the sidebar.
+- `[L-row-selection-focus]` Promoted to `[Q-tint-on-highlight]` (2026-11-06). Run 6 (commit 7693bb0): sidebar focused, blue highlight and white badge; focus in the Name field, grey and accent; back on the row, blue and white; window behind Finder, grey and accent.
 
 ## Open questions
 

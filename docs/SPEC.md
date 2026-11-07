@@ -1,4 +1,4 @@
-# Phases — Specification (draft 44)
+# Phases — Specification (draft 45)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -733,10 +733,14 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
   sidebar.** A dawn/dusk phase can't run when there is no usable location:
   access is denied (**Location off**), or it was never granted and no
   location has been saved yet (**No location yet**). Its row is dimmed
-  (name and icon), and the trigger line ends with an orange
-  `exclamationmark.triangle.fill` and **Phase disabled**. VoiceOver reads
-  "Phase disabled". Such a phase is never the active one, so it never
-  shows "Active".
+  (name and icon), and the trigger line ends with **Phase disabled**.
+  VoiceOver reads "Phase disabled". Such a phase is never the active one,
+  so it never shows "Active" `[D-active-badge]`.
+  - *Draft 45 removed the warning symbol:* until then the status followed
+    an orange `exclamationmark.triangle.fill`. Not worth keeping: the
+    dimmed row and the words say it, and an explicit orange would vanish
+    on an orange Highlight Color, the problem issue #22 found with
+    "Active" (author's call, 2026-11-06).
   - `[D-row-status-not-cause]` **The row shows the status; the editor
     shows the cause.** The sidebar row says "Phase disabled" for every
     reason Phases can't run a phase, the one exception being a phase the
@@ -751,12 +755,13 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
     - *Why "Off" is the exception:* turning a phase off is the user's
       choice, not a problem. "Phase disabled" with a warning read as an
       error for it (author, after trying draft 42, 2026-11-06). Draft 42
-      first showed "Phase disabled" for it too.
+      first showed "Phase disabled" for it too. Since draft 45 neither
+      status has a warning symbol; the words alone set them apart.
   - `[D-phase-turn-off]` **A phase can be turned off** without deleting
     it, keeping all its settings and images, and turned back on later.
     Turned off is a reason a phase can't run: the schedule skips it.
     Its row is dimmed like any phase that can't run, and its trigger line
-    ends with **Off**, with no warning symbol `[D-row-status-not-cause]`.
+    ends with **Off** `[D-row-status-not-cause]`.
     VoiceOver reads "Off".
     - **Controls:** a **Use this phase** switch in the editor's first
       section, under Name; and **Turn Off** (or **Turn On**) in both the
@@ -941,6 +946,33 @@ extras don't show them. No global hotkey.
      active phase marked. Phase rows are two lines (name plus trigger), which
      also sets them apart from the one-line Settings row. A phase that can't
      run is dimmed and flagged `[D-phase-cant-run]`.
+     - `[D-active-badge]` **The active phase is marked with the word
+       "Active"** after its name, in small semibold text in the accent
+       color. On the selected row, while that row has the colored
+       highlight, "Active" switches to the row's text color (white on the
+       highlight), like the rest of the row's text. The row has the
+       colored highlight when it's selected, the window is in front, and
+       the sidebar has keyboard focus; otherwise the highlight is grey and
+       "Active" stays in the accent color. macOS fights this; see
+       `[Q-tint-on-highlight]`.
+       - *Why:* in the accent color on the accent-colored highlight,
+         "Active" vanished (GitHub issue #22). The highlight is the user's
+         Highlight Color (System Settings › Appearance), so no fixed color
+         is safe on it. A symbol or a bold name instead was ruled out: the
+         author doesn't want meaning carried by an icon or weight that
+         nothing explains (2026-11-06).
+       - The rule ("does this row have the colored highlight") lives in a
+         small model function, `SidebarHighlight`, so the unit tests can
+         check it (see TESTING.md).
+       - *Verified* 2026-11-06 by Claude on the experiment build (window
+         screenshots, Highlight Color blue): white on the colored
+         highlight; accent on the grey highlight with focus in the editor
+         and with the window in the background (LEARNINGS.md
+         `[L-row-own-selection]`, ERRATA.md `[Q-tint-on-highlight]`).
+       - *Verified* 2026-11-06 by the author on the draft 45 build: every
+         Highlight Color, in dark and light mode. Yellow, Green, and
+         Graphite are a little hard to read in light mode; accepted, since
+         that's the look the user chose (author's call).
   - + / − buttons below the list add and remove phases. − removes the
     selected phase and is dimmed when no phase is selected.
   - `[D-new-phase-now]` **A new phase starts at the current time,** as a

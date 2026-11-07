@@ -35,12 +35,6 @@ enum PhaseAvailability: Equatable {
     }
   }
 
-  /// Whether the row's status carries a warning symbol: not for a phase
-  /// the user turned off, which is a choice, not a problem.
-  var rowShowsWarning: Bool {
-    isDisabled && self != .disabled(.turnedOff)
-  }
-
   /// Sentence for the phase editor naming the cause; nil when the phase runs.
   var editorMessage: String? {
     if case .disabled(let reason) = self { reason.editorMessage } else { nil }

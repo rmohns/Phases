@@ -62,8 +62,11 @@ The pure logic that decides what the app does:
   that a denied dawn phase never becomes active even with a saved
   location `[D-denied-means-off]`; a phase turned off never runs, even
   without a location problem, and older saved phases load as on
-  `[D-phase-turn-off]` (draft 42), and the row reads "Off" with no
-  warning for it, "Phase disabled" with one otherwise (draft 42)
+  `[D-phase-turn-off]` (draft 42), and the row reads "Off" for it,
+  "Phase disabled" otherwise (draft 42; no warning symbol since draft 45)
+- `SidebarHighlight`: a row has the colored highlight only when it's
+  selected, the window is in front, and the sidebar has focus
+  `[D-active-badge]` (draft 45)
 - `AppVersion`: the spec draft constant matches SPEC.md's title
   `[D-version-in-settings]`
 - `FolderScan`: which images the folder scan finds and what it names

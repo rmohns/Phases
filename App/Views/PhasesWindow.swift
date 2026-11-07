@@ -35,6 +35,8 @@ struct PhasesWindow: View {
             PhaseRow(
               phase: phase,
               isActive: phase.id == scheduler.activePhase?.id,
+              isSelected: selection == .phase(phase.id),
+              sidebarFocused: sidebarFocused,
               availability: scheduler.location.availability(of: phase)
             )
               .tag(SidebarItem.phase(phase.id))
@@ -309,7 +311,17 @@ enum SidebarItem: Hashable {
 private struct PhaseRow: View {
   var phase: Phase
   var isActive: Bool
+  var isSelected: Bool
+  var sidebarFocused: Bool
   var availability: PhaseAvailability
+  @Environment(\.appearsActive) private var windowInFront
+
+  /// [D-active-badge] [Q-tint-on-highlight] The row's text color on the
+  /// colored highlight, where the accent color would vanish.
+  private var badgeStyle: AnyShapeStyle {
+    SidebarHighlight.isColored(isSelected: isSelected, windowInFront: windowInFront, sidebarFocused: sidebarFocused)
+      ? AnyShapeStyle(.primary) : AnyShapeStyle(.tint)
+  }
 
   var body: some View {
     Label {
@@ -321,7 +333,7 @@ private struct PhaseRow: View {
           if isActive {
             Text("Active")
               .font(.caption2.weight(.semibold))
-              .foregroundStyle(.tint)
+              .foregroundStyle(badgeStyle)
           }
         }
         HStack(spacing: 4) {
@@ -331,12 +343,7 @@ private struct PhaseRow: View {
               .accessibilityLabel("\(phase.appearance.title) Mode only")
           }
           // [D-row-status-not-cause] The status only; the phase editor names
-          // the cause. [D-phase-turn-off] "Off", with no warning.
-          if availability.rowShowsWarning {
-            Image(systemName: "exclamationmark.triangle.fill")
-              .foregroundStyle(.orange)
-              .accessibilityHidden(true)
-          }
+          // the cause. [D-phase-turn-off] "Off". No warning symbol (draft 45).
           if let status = availability.rowStatus {
             Text(status)
           }
