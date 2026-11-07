@@ -7,6 +7,10 @@ import Foundation
 enum UITestMode {
   static let isOn = UserDefaults.standard.bool(forKey: "PhasesUITestMode")
 
+  /// `-PhasesUITestFirstLaunch YES` makes a test-mode launch a first launch
+  /// [D-first-launch-shows-window]; otherwise test mode never is.
+  static let forcesFirstLaunch = UserDefaults.standard.bool(forKey: "PhasesUITestFirstLaunch")
+
   /// The harness's image folder, from `-PhasesUITestImages <path>`.
   static var imageFolder: URL? {
     UserDefaults.standard.string(forKey: "PhasesUITestImages")
