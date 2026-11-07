@@ -135,7 +135,7 @@ final class WallpaperScheduler {
     defaults.set(true, forKey: FirstLaunch.recordKey)
     // [D-ui-test-mode] Test mode's store starts empty, so it gets the fixtures.
     phases = Self.load([Phase].self, forKey: Keys.phases)
-      ?? (UITestMode.isOn ? UITestMode.fixturePhases : [Phase(name: "All Day", trigger: .always)])
+      ?? (UITestMode.isOn ? UITestMode.fixturePhases : Phase.starterPhases)
     displayMode = defaults.string(forKey: Keys.displayMode).flatMap(DisplayMode.init) ?? .sameOnAll
     isPaused = defaults.bool(forKey: Keys.isPaused)
     pausedForOutsideChangeAt = Self.load(Date.self, forKey: Keys.pausedForOutsideChangeAt)
