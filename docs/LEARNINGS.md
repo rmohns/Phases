@@ -601,6 +601,30 @@ took window screenshots with the window in front and behind Finder.
       (*verified*). The author didn't notice the first change; the
       screenshot is the proof `[D-input-lands]` asks for.
 
+- `[L-new-space-pauses]` **Does a new Space read as an outside change?**
+  (GitHub issue #29, macOS 27.2.) Going full screen in any app pauses
+  Phases with the outside-change notice (*observed* by the author in
+  Fusion and Safari; screen resolution and menu bar hiding made no
+  difference).
+  - Hypothesis (Claude, 2026-11-07, from reading the code, not tested): a
+    new Space gets new store entries, and `OutsideChangeRule.changes`
+    counts any entry missing from the earlier reading as a pick, since
+    only an existing entry's unmoved `LastSet` is skipped. Removed
+    entries are never looked at, because the rule walks only the new
+    reading's keys.
+  - **New desktop from Mission Control (+) pauses Phases** (*observed* by
+    the author, 2026-11-07). So it's any new Space, not full screen as
+    such.
+  - **Leaving full screen doesn't pause Phases** (*observed* by the
+    author, 2026-11-07: started in full screen in Bitrig, resumed Phases,
+    left full screen). Fits the hypothesis: a Space going away removes
+    entries, which the rule never reads. Nothing on the display-change
+    path is involved.
+  - Still open: a snapshot diff of `Index.plist` across a new Space, to
+    confirm new `space/<id>/…` keys and see which image and `LastSet`
+    they carry; and whether a real pick on a never-picked Space also
+    shows up only as a new key, which decides the fix.
+
 - `[L-reopen-event]` **What happens when Phases is launched again while
   it's running, and can the menu bar icon's view open the window?**
   (Issue #13, macOS 27.2.) Answered; experiment on branch
