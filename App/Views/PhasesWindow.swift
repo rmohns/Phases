@@ -306,10 +306,45 @@ enum SidebarItem: Hashable {
   case settings
 }
 
+// EXPERIMENT (issue #22, not for main): launch switches choosing how the row
+// draws the "Active" badge and the warning triangle on the selection
+// highlight. Read once at launch, like PhasesDiagnostics.
+//   PhasesExpBadge:       tint (main's) | adaptive
+//   PhasesExpTriangle:    orange (main's) | adaptive | multicolor | inherit
+//   PhasesExpTriangleAll: YES shows the triangle on every row
+private enum RowExperiment {
+  static let badge = UserDefaults.standard.string(forKey: "PhasesExpBadge") ?? "tint"
+  static let triangle = UserDefaults.standard.string(forKey: "PhasesExpTriangle") ?? "orange"
+  static let triangleAll = UserDefaults.standard.bool(forKey: "PhasesExpTriangleAll")
+}
+
+private let rowDiagLog = Diagnostics.logger("row")
+
 private struct PhaseRow: View {
   var phase: Phase
   var isActive: Bool
   var availability: PhaseAvailability
+  @Environment(\.backgroundProminence) private var backgroundProminence
+
+  private var onHighlight: Bool { backgroundProminence == .increased }
+
+  private var badgeStyle: AnyShapeStyle {
+    RowExperiment.badge == "adaptive" && onHighlight ? AnyShapeStyle(.primary) : AnyShapeStyle(.tint)
+  }
+
+  @ViewBuilder private var triangle: some View {
+    let image = Image(systemName: "exclamationmark.triangle.fill")
+    switch RowExperiment.triangle {
+    case "adaptive":
+      image.foregroundStyle(onHighlight ? AnyShapeStyle(.primary) : AnyShapeStyle(.orange))
+    case "multicolor":
+      image.symbolRenderingMode(.multicolor)
+    case "inherit":
+      image
+    default:
+      image.foregroundStyle(.orange)
+    }
+  }
 
   var body: some View {
     Label {
@@ -321,7 +356,7 @@ private struct PhaseRow: View {
           if isActive {
             Text("Active")
               .font(.caption2.weight(.semibold))
-              .foregroundStyle(.tint)
+              .foregroundStyle(badgeStyle)
           }
         }
         HStack(spacing: 4) {
@@ -332,9 +367,8 @@ private struct PhaseRow: View {
           }
           // [D-row-status-not-cause] The status only; the phase editor names
           // the cause. [D-phase-turn-off] "Off", with no warning.
-          if availability.rowShowsWarning {
-            Image(systemName: "exclamationmark.triangle.fill")
-              .foregroundStyle(.orange)
+          if availability.rowShowsWarning || RowExperiment.triangleAll {
+            triangle
               .accessibilityHidden(true)
           }
           if let status = availability.rowStatus {
@@ -350,5 +384,8 @@ private struct PhaseRow: View {
     }
     .padding(.vertical, 2)
     .accessibilityElement(children: .combine)
+    .onChange(of: backgroundProminence, initial: true) { _, prominence in
+      rowDiagLog.info("\(phase.name, privacy: .public): backgroundProminence \(String(describing: prominence), privacy: .public), badge \(RowExperiment.badge, privacy: .public), triangle \(RowExperiment.triangle, privacy: .public)")
+    }
   }
 }
