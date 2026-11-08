@@ -79,6 +79,13 @@ struct PhasesWindow: View {
     } detail: {
       if holdsDetail {
         detail
+          // [D-window-pause-banner] Above every selection's view; stays put
+          // while the form scrolls.
+          .safeAreaInset(edge: .top, spacing: 0) {
+            if scheduler.isPaused {
+              PauseBanner(scheduler: scheduler)
+            }
+          }
           // [D-window-min-size] The editor never gets narrower than this,
           // whatever the sidebar's width.
           .navigationSplitViewColumnWidth(min: 460, ideal: 720)

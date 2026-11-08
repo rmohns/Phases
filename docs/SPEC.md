@@ -1,4 +1,4 @@
-# Phases — Specification (draft 48)
+# Phases — Specification (draft 49)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -710,7 +710,9 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
     first time it's needed, not at launch. If it's denied, the lasting
     signs below still show.
   - **Lasting:** the menu bar icon's paused look, the menu's status line,
-    and the top of Settings (see "Interface").
+    and the pause banner at the top of the Phases window
+    `[D-window-pause-banner]` (see "Interface"). Draft 48 and earlier
+    showed it only at the top of Settings.
   - *Why both:* the pick itself is what the person was looking at, so a
     notification is the only sign they'll get in the moment; the lasting
     signs answer "why isn't it changing?" later without nagging.
@@ -1178,15 +1180,43 @@ extras don't show them. No global hotkey.
       requirement; see also `[D-single-timer]`).
 - **Phase selected:** editor with name, trigger, offset, appearance condition,
   order, rotation, and the Images section (Display picker and thumbnail grid).
+- `[D-window-pause-banner]` **While paused, for any reason, a pause
+  banner sits at the top of the detail pane,** whatever is selected (a
+  phase, Settings, or nothing). It stays put while the form scrolls.
+  - **Left:** a pause symbol (`pause.fill`, secondary), then "Phases is
+    paused" in a bold headline, with the reason under it in secondary
+    text: "Paused from the menu." or "Paused at 9:06 AM because the
+    wallpaper was changed in System Settings." (the date is added when
+    it wasn't today). The symbol repeats what the words say; it carries
+    no meaning of its own.
+  - **Right:** a **Resume Schedule** button, the menu's wording
+    `[D-menu-pause-verb]`. It resumes exactly as the menu does
+    `[D-outside-change-pauses]`.
+  - VoiceOver reads the symbol and text as one element ("Phases is
+    paused. Paused from the menu."), then the button.
+  - The reason text is worked out in the model, not the view, and
+    unit-tested `[D-tests-unhosted]`.
+  - While it shows, the detail form starts lower, so its first row no
+    longer lines up with the branding panel's top `[D-brand-inset]`.
+    Accepted: pausing is an abnormal state, and the banner is meant to
+    stand out.
+  - *Why:* the window opens on a phase's editor, so a pause shown only
+    in Settings went unseen there, and "why isn't it changing?" had no
+    answer without knowing to click Settings. Status with its fix right
+    beside it, in every view (author, 2026-11-07, GitHub issue #30). A
+    status bar at the bottom of the sidebar was considered and rejected:
+    at 240 pt the System Settings reason wraps to three lines, and it
+    would sit beside the phase list's + / − (Claude, 2026-11-07).
 - `[D-settings-schedule-switch]` **Settings starts with a Schedule
   section:** a **Change wallpaper on schedule** switch, the inverse of
-  the menu's Pause Schedule (one state, two controls). When it's off, a note under it
-  says why: "Paused from the menu" or "Paused at 9:06 AM because the
-  wallpaper was changed in System Settings." Turning it on resumes
-  `[D-outside-change-pauses]`.
+  the menu's Pause Schedule (one state, two controls). Turning it on
+  resumes `[D-outside-change-pauses]`. No note under it: the pause
+  banner above says why `[D-window-pause-banner]`.
   - *Why:* resuming shouldn't depend on finding a menu item; the window is
     where someone goes to ask why Phases stopped. Placed at the top for
     now; a broader Settings cleanup may move it (author, 2026-11-06).
+    Drafts 37–48 put the pause reason in a note under the switch; draft
+    49 moved it to the banner so it shows in every view.
 - **Settings selected:** the Schedule section above, then image folder and Include subfolders; display sharing
   preference (see "Displays sharing the All Displays images"); transition and duration; Launch at Login; location status
   with today's civil dawn and dusk and Update Now; and, at the bottom, a
