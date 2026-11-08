@@ -582,6 +582,27 @@ with `if scheduler.isPaused` inline in the inset's closure.
   - Clicking the notification's body only dismisses it. SPEC.md gives
     the notification a Resume action and says nothing about the body
     (as specified, not a bug).
+- `[L-pause-banner-above-window]` **With logging: the content sits
+  above the window, the scroll positions are normal** (build of
+  77a9cd8, author's repro with a screen recording, 2026-11-07
+  22:44:19, first open, shifted; *verified* from the log, matched to
+  the recording by its menu bar clock):
+  - Both columns' top safe areas settled at 52 pt, with the title area
+    52 pt and the toolbar installed.
+  - The banner's top settled at **−64.5 to −67 pt** in the window, above
+    its top edge, though the detail pane's safe area said 52 pt.
+  - The sidebar's scroll view had the usual 52 pt inset and scroll
+    position (−52), yet the recording shows its branding panel gone
+    above the top. So the scroll positions were fine; the columns
+    themselves were placed too high. That refutes the scroll position
+    hypothesis in `[L-pause-banner-stack-still-shifts]`.
+  - During the first 0.3 s the banner's top passed through 129, 0, 416,
+    537.5, −84.5 pt as the window was set up.
+  - The author found that making the window tall enough brings the
+    banner on screen. *Hypothesis* (Claude): SwiftUI laid out the
+    window's content taller than the window and centered it, so the
+    top runs off the window; the pause makes the content taller.
+    Untested. What sets that height is unknown.
 
 ## Open questions
 
