@@ -119,13 +119,31 @@ struct PhasesWindow: View {
     }
   }
 
+  /// MOCKUP: Change Now and Pause/Resume as toolbar buttons. They do nothing.
+  @ToolbarContentBuilder private var mockToolbar: some ToolbarContent {
+    ToolbarItemGroup(placement: .primaryAction) {
+      Button("Change Now", systemImage: "forward.frame") {}
+        .help("Change to the next image now")
+      Button(
+        scheduler.isPaused ? "Resume Schedule" : "Pause Schedule",
+        systemImage: scheduler.isPaused ? "play" : "pause"
+      ) {}
+        .help(scheduler.isPaused ? "Resume Schedule" : "Pause Schedule")
+    }
+  }
+
   @ViewBuilder private var detail: some View {
     switch selection {
+    // MOCKUP (experiment/ui-mockup): proposed layouts, not wired to the model.
     case .settings:
-      SettingsView(scheduler: scheduler)
-    case .phase(let id) where scheduler.phases.contains(where: { $0.id == id }):
-      PhaseEditor(scheduler: scheduler, phaseID: id)
-        .id(id)
+      MockSettingsView(scheduler: scheduler)
+        .toolbar { mockToolbar }
+    case .phase(let id):
+      if let phase = scheduler.phases.first(where: { $0.id == id }) {
+        MockPhaseEditor(scheduler: scheduler, phase: phase)
+          .id(id)
+          .toolbar { mockToolbar }
+      }
     default:
       ContentUnavailableView(
         "No Phase Selected",
