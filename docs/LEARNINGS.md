@@ -742,6 +742,32 @@ with `if scheduler.isPaused` inline in the inset's closure.
     each path from `lsregister -dump`, then `lsregister -f` the one
     build).
 
+## UI mockup (issues #2, #3, #26, #27)
+
+Interface-only mockup on `experiment/ui-mockup`: mock views with
+throwaway state, nothing wired to the model.
+
+- `[L-toolbar-items-crash]` **SwiftUI toolbar items crashed the window
+  on open.** Two buttons in a `ToolbarItemGroup(placement:
+  .primaryAction)` on the detail view: choosing Open Phases… raised an
+  uncaught `NSRangeException` inside `-[NSWindow layoutIfNeeded]` while
+  the window was ordering front (`_setUpFirstResponderBeforeBecomingVisible`
+  → `updateConstraintsIfNeeded`). The reason text is redacted in the log,
+  and no frame in the stack names the thrower. With the `.toolbar`
+  modifiers removed and nothing else changed, the window opened.
+  *Observed* 2026-11-08 by Claude, one launch each way. Hypothesis, not
+  tested: it collides with `WindowLayoutConfigurator`, which installs
+  its own `NSToolbar` when SwiftUI has none `[Q-no-items-no-toolbar]`
+  and adjusts the split view items after. Toolbar buttons in the real
+  redesign need this solved first.
+- `[L-mock-known-displays]` **The known-displays list grows without
+  bound.** On the author's Mac the strip showed six display tabs after
+  Shared: Built-in, Virtual 16:10, and four not connected (Cinema HD, LG
+  Ultrawide, and two with empty names).
+  Disconnected displays have no frame to measure, so the mockup draws
+  them 16:10, wrong for the LG Ultrawide. *Observed* 2026-11-08 (window
+  screenshot).
+
 ## Open questions
 
 - `[L-store-watch]` **Can Phases hear a wallpaper change made in System

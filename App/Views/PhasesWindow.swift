@@ -137,12 +137,10 @@ struct PhasesWindow: View {
     // MOCKUP (experiment/ui-mockup): proposed layouts, not wired to the model.
     case .settings:
       MockSettingsView(scheduler: scheduler)
-        .toolbar { mockToolbar }
     case .phase(let id):
       if let phase = scheduler.phases.first(where: { $0.id == id }) {
         MockPhaseEditor(scheduler: scheduler, phase: phase)
           .id(id)
-          .toolbar { mockToolbar }
       }
     default:
       ContentUnavailableView(
