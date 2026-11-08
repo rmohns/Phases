@@ -50,8 +50,17 @@ final class PauseNotifier: NSObject, UNUserNotificationCenterDelegate {
   nonisolated func userNotificationCenter(
     _ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse
   ) async {
-    guard response.actionIdentifier == Self.resumeAction else { return }
-    await MainActor.run { onResume?() }
+    let action = response.actionIdentifier
+    await MainActor.run {
+      switch action {
+      // [D-notice-opens-window] Resume resumes and opens nothing.
+      case Self.resumeAction: onResume?()
+      // [D-notice-opens-window] A click on the notification itself opens
+      // the window, launching Phases first if it had quit.
+      case UNNotificationDefaultActionIdentifier: WindowRequest.send(from: .notification)
+      default: break
+      }
+    }
   }
 
   /// Shown even while Phases' window is in front.

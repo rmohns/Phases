@@ -510,8 +510,9 @@ Each with what passes:
 
 - `[D-outside-change-check]` **Pausing for a wallpaper picked elsewhere
   is checked by hand** before it merges, and after any change to
-  `WallpaperStoreWatcher` or `OutsideChangeRule`. It needs the real
-  wallpaper and System Settings, out of reach of the unit tests.
+  `WallpaperStoreWatcher`, `OutsideChangeRule`, `PauseNotifier`, or
+  `WindowRequest`. It needs the real wallpaper and System Settings, out
+  of reach of the unit tests.
   - Build: the newest Bitrig Debug build, crossfades on, diagnostics on
     (log category `store`).
   - 1. Let Phases change once (Change Now): no outside change logged.
@@ -527,6 +528,24 @@ Each with what passes:
   - 5. Pick an Aerial: same as step 2.
   - 6. With restore on, pick a still, then Quit: the pick stays (it's the
     new original).
+  - 7. `[D-notice-opens-window]` Click the notification's body (not
+    Resume), re-pausing with a pick each time: with the window closed,
+    minimized, and open on another Space, the window comes to the front
+    on the current Space with the pause banner showing, and Phases stays
+    paused. The log (category `reopen`) shows one "window requested by
+    notification" per click; a second "by relaunch" line would mean
+    macOS also sent a reopen (harmless, but note it in LEARNINGS.md).
+  - 8. Re-pause with a pick, Quit Phases, then click the notification in
+    Notification Center: Phases launches and its window opens with the
+    banner. (Added draft 50, GitHub issue #31.)
+  - *Verified* 2026-11-08 by the author, steps 7–8 only, one display:
+    every body click opened the window in front with the banner. Step 7
+    (closed, minimized, another Space) on the build of e6336d6; step 8
+    (after a quit) and step 7 again (closed) on the build of d57f146,
+    which fixed step 8's window staying behind. Claude checked the log: one notification
+    request per click, plus macOS's relaunch when Phases was running;
+    no second copy. Run the build Launch Services knows; see
+    `[L-notice-click-launches-copy]` in LEARNINGS.md.
   - *Verified* 2026-11-06 by the author on the draft 37 build: picks in
     System Settings paused Phases with one notification each, Resume
     worked from the notification and Settings, and the new menu header

@@ -1,4 +1,4 @@
-# Phases — Specification (draft 49)
+# Phases — Specification (draft 50)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -709,6 +709,21 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
     until you resume." with a **Resume** action. Permission is asked the
     first time it's needed, not at launch. If it's denied, the lasting
     signs below still show.
+  - `[D-notice-opens-window]` **Clicking the notification opens the
+    Phases window,** exactly as "Open Phases…" does
+    `[D-reopen-shows-window]`. It doesn't resume; the window's pause
+    banner `[D-window-pause-banner]` offers that. Choosing **Resume**
+    resumes and opens nothing.
+    - If Phases isn't running (quit while the notification was still
+      showing), the click launches it and the window opens once the
+      launch finishes, as on the first launch
+      `[D-first-launch-shows-window]`.
+    - *Why:* the notification says what happened; the window is where
+      the reason and the way back live. Until draft 50 a click on the
+      notification only dismissed it (*observed* by the author,
+      2026-11-07, `[L-pause-banner-stack-still-shifts]`; GitHub issue
+      #31). Resume is a "just do it" action, so a window on top of it
+      would be noise (author, 2026-11-08).
   - **Lasting:** the menu bar icon's paused look, the menu's status line,
     and the pause banner at the top of the Phases window
     `[D-window-pause-banner]` (see "Interface"). Draft 48 and earlier
@@ -1321,7 +1336,8 @@ extras don't show them. No global hotkey.
   - *Scope:* only a relaunch while running. A fresh launch shows nothing
     (Launch at Login must stay silent), except the very first launch
     `[D-first-launch-shows-window]`.
-  - *How:* "Open Phases…", Settings…, the relaunch, and the first launch
+  - *How:* "Open Phases…", Settings…, the relaunch, the first launch,
+    and a click on the pause notification `[D-notice-opens-window]`
     share one window-opening routine, so they can't drift apart. macOS
     delivers the relaunch to Phases, but SwiftUI ignores it when the
     window is closed or was never opened; see

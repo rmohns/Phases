@@ -523,6 +523,13 @@ would stop being true if a future macOS fixed the underlying behavior.
     `activate(ignoringOtherApps:)` wasn't tried (author's preference).
     Shapes `[D-first-launch-shows-window]`; see "First launch comes to
     the front" under "Workarounds".
+  - *Verified* 2026-11-08 (draft 50 build, the author's click plus the
+    diagnostics log): **a launch by a click on the pause notification
+    is refused too.** The click launched Phases, the window was built
+    (toolbar installed, banner laid out), and it stayed behind the
+    frontmost app; ⌘Tab showed it there. So a notification click goes
+    through the same `activate(from:)` routine as the first launch
+    `[D-notice-opens-window]`.
   - A relaunch while running is granted activation without help
     `[D-reopen-shows-window]`. During the experiment, one double-click
     looked like a success only because Phases hadn't quit (window
