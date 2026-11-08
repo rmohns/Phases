@@ -9,13 +9,11 @@ struct MockPhaseEditor: View {
   @State private var draft: Phase
   @State private var tab: MockDisplayTab = .shared
   @State private var differentPicks: Bool
-  @State private var includesSubfolders: Bool
 
   init(scheduler: WallpaperScheduler, phase: Phase) {
     self.scheduler = scheduler
     _draft = State(initialValue: phase)
     _differentPicks = State(initialValue: scheduler.displayMode == .differentPerDisplay)
-    _includesSubfolders = State(initialValue: scheduler.library.includesSubfolders)
   }
 
   var body: some View {
@@ -63,32 +61,16 @@ struct MockPhaseEditor: View {
       }
 
       LabeledContent("Images:") {
-        HStack(spacing: 6) {
-          Picker("Order", selection: $draft.order) {
-            Text("In filename order").tag(ImageOrder.inOrder)
-            Text("In random order").tag(ImageOrder.random)
+        // Folds onto two lines when the pane is narrow.
+        ViewThatFits(in: .horizontal) {
+          HStack(spacing: 16) {
+            orderPicker
+            rotationControls
           }
-          .labelsHidden()
-          .fixedSize()
-          Toggle("Change every", isOn: $draft.isRotating)
-            .toggleStyle(.checkbox)
-            .padding(.leading, 10)
-          TextField("Interval", value: $draft.rotation.value, format: .number)
-            .labelsHidden()
-            .frame(width: 44)
-            .multilineTextAlignment(.trailing)
-            .disabled(!draft.isRotating)
-          Stepper("Interval", value: $draft.rotation.value, in: 1...999)
-            .labelsHidden()
-            .disabled(!draft.isRotating)
-          Picker("Unit", selection: $draft.rotation.unit) {
-            ForEach(TimeUnit.allCases) { unit in
-              Text(unit.title.lowercased()).tag(unit)
-            }
+          VStack(alignment: .leading, spacing: 8) {
+            orderPicker
+            rotationControls
           }
-          .labelsHidden()
-          .fixedSize()
-          .disabled(!draft.isRotating)
         }
       }
     }
@@ -98,10 +80,46 @@ struct MockPhaseEditor: View {
     .frame(maxWidth: .infinity, alignment: .leading)
   }
 
+  private var orderPicker: some View {
+    Picker("Order", selection: $draft.order) {
+      Text("In filename order").tag(ImageOrder.inOrder)
+      Text("In random order").tag(ImageOrder.random)
+    }
+    .labelsHidden()
+    .fixedSize()
+  }
+
+  private var rotationControls: some View {
+    HStack(spacing: 6) {
+      Toggle("Change every", isOn: $draft.isRotating)
+        .toggleStyle(.checkbox)
+      TextField("Interval", value: $draft.rotation.value, format: .number)
+        .labelsHidden()
+        .frame(width: 44)
+        .multilineTextAlignment(.trailing)
+        .disabled(!draft.isRotating)
+      Stepper("Interval", value: $draft.rotation.value, in: 1...999)
+        .labelsHidden()
+        .disabled(!draft.isRotating)
+      Picker("Unit", selection: $draft.rotation.unit) {
+        ForEach(TimeUnit.allCases) { unit in
+          Text(unit.title.lowercased()).tag(unit)
+        }
+      }
+      .labelsHidden()
+      .fixedSize()
+      .disabled(!draft.isRotating)
+    }
+  }
+
   // MARK: Image browser
 
+  /// Connected displays, plus disconnected ones only when this phase gives
+  /// them their own images.
   private var displays: [MockDisplayInfo] {
-    MockDisplayInfo.all(for: scheduler)
+    MockDisplayInfo.all(for: scheduler).filter { display in
+      display.isConnected || draft.displayImageNames[display.uuid] != nil
+    }
   }
 
   private var showsDisplayTabs: Bool {
@@ -111,40 +129,37 @@ struct MockPhaseEditor: View {
   private var imageHeader: some View {
     VStack(alignment: .leading, spacing: 10) {
       if showsDisplayTabs {
-        HStack(alignment: .top) {
+        // Scrolls sideways rather than widening the window.
+        ScrollView(.horizontal) {
           MockDisplayTabStrip(
             displays: displays,
             sharedCount: sharedSelection.wrappedValue.count,
             ownCounts: draft.displayImageNames.mapValues(\.count),
             selection: $tab
           )
-          Spacer()
-          folderMenu
         }
+        .scrollIndicators(.automatic)
       }
-      HStack(spacing: 12) {
-        switch currentTab {
-        case .shared:
-          countLabel(sharedSelection.wrappedValue)
-          if displays.filter(\.isConnected).count > 1 {
-            Toggle("Each display shows a different image", isOn: $differentPicks)
-              .toggleStyle(.checkbox)
-          }
-          Spacer()
-          selectButtons(sharedSelection)
-        case .display(let uuid):
-          Toggle("Use its own images", isOn: usesOwnImages(uuid))
+      switch currentTab {
+      case .shared:
+        if displays.filter(\.isConnected).count > 1 {
+          Toggle("Each display shows a different image", isOn: $differentPicks)
             .toggleStyle(.checkbox)
-          if let own = ownSelection(uuid) {
-            countLabel(own.wrappedValue)
-            Spacer()
-            selectButtons(own)
-          } else {
-            Spacer()
-          }
         }
-        if !showsDisplayTabs {
-          folderMenu
+        HStack(spacing: 12) {
+          countLabel(sharedSelection.wrappedValue)
+          Spacer(minLength: 0)
+          selectButtons(sharedSelection)
+        }
+      case .display(let uuid):
+        Toggle("Use its own images", isOn: usesOwnImages(uuid))
+          .toggleStyle(.checkbox)
+        if let own = ownSelection(uuid) {
+          HStack(spacing: 12) {
+            countLabel(own.wrappedValue)
+            Spacer(minLength: 0)
+            selectButtons(own)
+          }
         }
       }
     }
@@ -168,21 +183,6 @@ struct MockPhaseEditor: View {
         }
       }
     }
-  }
-
-  private var folderMenu: some View {
-    Menu {
-      Button("Choose Folder…") {}
-      Toggle("Include Subfolders", isOn: $includesSubfolders)
-      Divider()
-      Button("Show in Finder") {}
-    } label: {
-      Label(scheduler.library.folderURL?.lastPathComponent ?? "Choose Folder", systemImage: "folder")
-    }
-    .menuStyle(.button)
-    .buttonStyle(.accessoryBar)
-    .fixedSize()
-    .help("The image folder all phases choose from")
   }
 
   private func countLabel(_ selection: [String]) -> some View {

@@ -1,9 +1,8 @@
 import SwiftUI
 
 /// MOCKUP: the proposed Settings, classic Mac columns and checkboxes. The
-/// schedule switch moves to the toolbar, the image folder to the phase
-/// editor's image browser, display sharing into each phase, and About into
-/// the About panel. Controls hold throwaway state; nothing is saved.
+/// schedule switch moves to the toolbar, display sharing into each phase,
+/// and About into the About panel. Controls hold throwaway state; nothing is saved.
 struct MockSettingsView: View {
   var scheduler: WallpaperScheduler
   @State private var transition: TransitionStyle
@@ -11,6 +10,7 @@ struct MockSettingsView: View {
   @State private var launchAtLogin: Bool
   @State private var restoresOnQuit: Bool
   @State private var asksBeforeQuitting: Bool
+  @State private var includesSubfolders: Bool
 
   init(scheduler: WallpaperScheduler) {
     self.scheduler = scheduler
@@ -19,11 +19,30 @@ struct MockSettingsView: View {
     _launchAtLogin = State(initialValue: scheduler.launchAtLogin.isEnabled)
     _restoresOnQuit = State(initialValue: scheduler.restoresWallpaperOnQuit)
     _asksBeforeQuitting = State(initialValue: scheduler.asksBeforeQuitting)
+    _includesSubfolders = State(initialValue: scheduler.library.includesSubfolders)
   }
 
   var body: some View {
     ScrollView {
       Form {
+        Section {
+          LabeledContent("Image folder:") {
+            VStack(alignment: .leading, spacing: 8) {
+              HStack {
+                Label(scheduler.library.folderURL?.lastPathComponent ?? "None chosen", systemImage: "folder")
+                  .lineLimit(1)
+                  .truncationMode(.middle)
+                Button("Choose…") {}
+              }
+              Toggle("Include subfolders", isOn: $includesSubfolders)
+                .toggleStyle(.checkbox)
+              Text("\(scheduler.library.imageNames.count) images found")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+          }
+        }
+
         Section {
           LabeledContent("Startup:") {
             Toggle("Open Phases when you log in", isOn: $launchAtLogin)
