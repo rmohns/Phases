@@ -640,7 +640,10 @@ with `if scheduler.isPaused` inline in the inset's closure.
     height. Why a one-line reason doesn't trigger it, and why the
     number is 943, are unexplained. `[L-pause-banner-inset]`'s first
     sighting may fit too, if that pause came from an outside change
-    (not recorded).
+    (not recorded). *Observed* later (Claude, 2026-11-07, from the
+    author's screenshots): every shifted screenshot shows the outside
+    change reason, "…because the wallpaper was changed in System
+    Settings.", the first sighting included.
   - **Dropping the `.fixedSize` fixed it** (build of 54b28b1, the
     author's runs 2026-11-07 23:09–23:21, with a screen recording from
     23:18:47; Claude, from the log and the recording). Five opens while

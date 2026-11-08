@@ -86,10 +86,10 @@ struct PhasesWindow: View {
     } detail: {
       if holdsDetail {
         // [D-window-pause-banner] Above every selection's view; stays put
-        // while the form scrolls. A stack, not `.safeAreaInset`: with the
-        // banner in an inset when the window first opened, everything drew
-        // under the toolbar, and the inset stopped following the pause
-        // [Q-safe-area-inset-refresh].
+        // while the form scrolls. A stack, not `.safeAreaInset`, whose
+        // content may not refresh with the pause [Q-safe-area-inset-refresh].
+        // (The shift up under the toolbar, first blamed on the inset, was
+        // the reason text's `.fixedSize` [Q-fixed-size-text-rigid-split].)
         VStack(spacing: 0) {
           PauseBanner(scheduler: scheduler)
           detail
