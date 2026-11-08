@@ -559,6 +559,29 @@ with `if scheduler.isPaused` inline in the inset's closure.
     chosen in the same session; the harness clears the saved window
     frame and turns off state restoration; test mode uses its own store;
     and the AX frames may not show a purely visual shift.
+- `[L-pause-banner-stack-still-shifts]` **The stack fix didn't fix the
+  shift** (author's hands-on look, build of a257a51, 2026-11-07, about
+  22:05; *observed*, screenshots):
+  - Pause, quit, run from Bitrig, open from the menu: once it opened
+    right; the next two times it opened shifted up again. Once like
+    before (banner under the toolbar, branding panel under the traffic
+    lights); once worse: the sidebar's branding panel gone above the
+    top, the Settings row under the traffic lights, the banner out of
+    sight above the form, and the form's Name row behind the toolbar.
+  - Resume from the menu put the window right; pausing again after that
+    put the banner in the right place.
+  - Paused by an outside change, then opened from the menu: no banner
+    visible. Likely the same shift with the banner pushed out of sight
+    (Claude, *hypothesis*), not the redraw bug. The notification isn't
+    needed to reproduce (author).
+  - So `[L-pause-banner-inset]`'s inset hypothesis is **refuted** for
+    the shift: the sidebar moves too, and the banner isn't in it. The
+    columns' different shift amounts in the worse case look like each
+    scroll view keeping a scroll position that's off by its top
+    margin, not a window frame moving (Claude, *hypothesis*).
+  - Clicking the notification's body only dismisses it. SPEC.md gives
+    the notification a Resume action and says nothing about the body
+    (as specified, not a bug).
 
 ## Open questions
 
