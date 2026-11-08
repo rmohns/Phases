@@ -133,11 +133,29 @@ public final class PhasesApp {
     // [D-initial-focus-sidebar]. Best effort; the click may do it anyway.
     try? await bringToFront()
     try await requireWideMenuBar(item)
-    try await clickOwnElement(item, what: "the menu bar item")
-    let menuItem = try await waitFor("\(title) in the menu", timeout: .seconds(5)) {
-      item.first { $0.role == kAXMenuItemRole && $0.title == title }
+    // The menu's items stay in the AX tree while it's closed, at a
+    // made-up position, so "found" doesn't mean "open". A click on the
+    // menu bar item right after the menu closed sometimes didn't open it
+    // (2026-11-07: Pause Schedule, then Open Phases… at (0, 982)). Wait
+    // until the item's spot is really ours; if not, click the bar again.
+    for attempt in 1...3 {
+      try await clickOwnElement(item, what: "the menu bar item")
+      let open = try? await waitFor("\(title) in the open menu", timeout: .seconds(2)) {
+        item.first { $0.role == kAXMenuItemRole && $0.title == title && isOwnedByUs($0) }
+      }
+      if let open {
+        try await clickOwnElement(open, what: title)
+        return
+      }
+      print("The menu didn't open for \(title) on attempt \(attempt) of 3")
     }
-    try await clickOwnElement(menuItem, what: title)
+    throw UITestFailure("Phases' menu didn't open with \(title) in 3 clicks on the menu bar item")
+  }
+
+  /// Whether the point under `node`'s center belongs to this test instance.
+  private func isOwnedByUs(_ node: AXNode) -> Bool {
+    guard let frame = node.frame else { return false }
+    return ownerPID(at: CGPoint(x: frame.midX, y: frame.midY)) == running.processIdentifier
   }
 
   /// [D-ui-menubar-wide] Narrow displays can run out of menu bar room and

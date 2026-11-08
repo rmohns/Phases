@@ -525,6 +525,31 @@ with `if scheduler.isPaused` inline in the inset's closure.
     reading `isPaused` in its own view, with diagnostics (category
     `window`) and UI tests (`PauseBannerTests`). Run the tests against
     78b17b9 to watch them fail, then against the fix.
+- `[L-pause-banner-runs]` **UI test runs, 2026-11-07 21:48–21:54**
+  (Claude, author's yes, diagnostics on):
+  - Run 1, `PauseBannerTests` against 78b17b9's build: the toggle test
+    **passed** (10 pauses, 10 resumes); the first-open test failed, but
+    its message wasn't saved. Run 2, against 56bf366's build, failed the
+    same test on the harness: after Pause Schedule, the next click on
+    the menu bar item didn't open the menu, and "Open Phases…" read as
+    (0, 982) (*verified*, output). So run 1's failure may have been the
+    harness, not the bug; it proves nothing either way. The driver now
+    clicks the menu bar item again when the menu doesn't open.
+  - Run 3, the fast suite against 56bf366's build with that driver fix:
+    14 of 15 passed, both `PauseBannerTests` included; the retry was
+    needed once (*verified*). `RelaunchTests` failed on a missing Dock
+    icon, the intermittent failure recorded under `[L-reopen-event]`
+    (2026-11-03); this change doesn't touch reopening (*hypothesis* that
+    it's unrelated, not rerun).
+  - **Toolbar room arrives after the first layout** (*verified*, log,
+    every window open in run 3): the detail pane's top safe area went
+    0 → 32 → 52 pt within about 0.12 s, the 52 pt landing just after
+    "toolbar installed". With the fix, the banner opened while paused
+    followed it: top at 0, 32, then 52 pt. That fits the inset
+    hypothesis above but doesn't prove the inset was the cause.
+  - **The toggle bug didn't reproduce under test** on the old build.
+    What stopped the banner in the author's session (perhaps the click
+    on the notification's body) is still open.
 
 ## Open questions
 
