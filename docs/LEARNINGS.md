@@ -550,6 +550,15 @@ with `if scheduler.isPaused` inline in the inset's closure.
   - **The toggle bug didn't reproduce under test** on the old build.
     What stopped the banner in the author's session (perhaps the click
     on the notification's body) is still open.
+  - Run 4, 21:56, `PauseBannerTests` against 78b17b9's build again, with
+    the driver fix (Claude, author's yes): **both passed** (*verified*;
+    the build is the old code: its binary lacks the new `window` log
+    text). So neither test reproduces what the author saw; they aren't
+    guards yet. Differences from the author's repro, any of which could
+    matter (*untested*): his pause was saved from an earlier launch, not
+    chosen in the same session; the harness clears the saved window
+    frame and turns off state restoration; test mode uses its own store;
+    and the AX frames may not show a purely visual shift.
 
 ## Open questions
 
