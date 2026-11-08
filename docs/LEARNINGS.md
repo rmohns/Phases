@@ -603,6 +603,37 @@ with `if scheduler.isPaused` inline in the inset's closure.
     window's content taller than the window and centered it, so the
     top runs off the window; the pause makes the content taller.
     Untested. What sets that height is unknown.
+- `[L-pause-banner-rigid-split]` **The split view goes rigid at 943 pt
+  when the banner's reason wraps** (build of f0bb2bc on
+  `experiment/pause-banner-shift`, the author's screen recording
+  2026-11-07 23:00:08–23:01:53, matched to the log by its menu bar
+  clock; Claude):
+  - **Content taller than the window, centered: confirmed** (*verified*,
+    log). The `NavigationSplitView`'s own frame was **943 pt tall**
+    while the `.frame(minHeight: 480)` around it followed the window
+    (672–848 pt). Its top sat at 52 + (container − 943) / 2, e.g. −83.5
+    in a 672 pt container: SwiftUI centers an oversized child. The
+    window, content view, layout rect, and `contentMinSize`
+    (700 × 532) were all normal; the hosting view's fitting size read
+    0 × 0. So the window doesn't know the content is too tall.
+  - **The 943 never changed** while the author dragged the window from
+    741 to 999 pt wide and through many heights, paused (*verified*,
+    log, about 300 frames). On resume it snapped back to the container
+    (598 pt in a 650 pt window).
+  - **Shifted only with the two-line reason** (*observed*, three opens):
+    23:00:25, paused from the menu, "Paused from the menu." on one
+    line: opened right, split view following the window. 23:00:48 and
+    23:01:18 (a relaunch), paused by an outside change, the reason
+    wrapped to two lines: both opened shifted. The banner's reason text
+    is the only view with `.fixedSize(horizontal: false, vertical:
+    true)`.
+  - *Hypothesis* (Claude, untested): while sizing the column, SwiftUI
+    measures that text at a very narrow width, where it wraps to many
+    lines, and the resulting rigid height becomes the split view's
+    height. Why a one-line reason doesn't trigger it, and why the
+    number is 943, are unexplained. `[L-pause-banner-inset]`'s first
+    sighting may fit too, if that pause came from an outside change
+    (not recorded).
 
 ## Open questions
 
