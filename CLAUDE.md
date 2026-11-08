@@ -65,6 +65,14 @@
   go-ahead for each edit. Findings go to LEARNINGS.md as they happen. A
   fix headed for `main` gets the usual go-ahead (and spec first, if it's
   design) on its own branch.
+- **Cleaning up branches.** After a squash merge, delete the merged
+  branch (`fix/…`, `feature/…`) locally and on every remote, once its
+  files match what landed on `main`. `tools/…` branches stay; they hold
+  tools we come back to. A finished experiment (`experiment/…`,
+  `spike/…`, `investigate/…`) is archived first, then deleted: an
+  annotated tag `archive/<branch name>` with the message "Archive of
+  branch <branch name> (deleted <date>; cited in docs)", pushed to
+  `origin` and `github`. Docs cite the tag, not the branch.
 - **Testing.** Unit tests need no permission. Prefer pulling decision
   logic into pure files the unit tests can reach, as `WallpaperCheck`
   was; unit tests never launch Phases or exercise the UI
