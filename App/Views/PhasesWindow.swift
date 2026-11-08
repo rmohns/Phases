@@ -60,6 +60,9 @@ struct PhasesWindow: View {
       }
       // [D-ui-test-ids]
       .accessibilityIdentifier("sidebar")
+      .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.top } action: { top in
+        windowDiagLog.log("sidebar top safe area \(top, privacy: .public) pt, paused=\(scheduler.isPaused, privacy: .public)")
+      }
       .safeAreaInset(edge: .bottom, spacing: 0) {
         // [D-sidebar-footer-view] [Q-safe-area-inset-refresh] Its own view with
         // a binding, so it refreshes when the selection changes.

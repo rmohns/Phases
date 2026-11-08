@@ -585,10 +585,12 @@ Used by both groups. Reference, not steps.
     category `sidebar`), and covers (category `cover`: each cover made,
     removed and why, redrawn or resized, held pending, and set on
     returning to its Space; `[D-persistent-cover]`), and window layout
-    (category `window`: the detail pane's top safe area, where the pause
-    banner sits and when it goes `[D-window-pause-banner]`; the title
-    area's height when the toolbar is installed is logged under
-    `sidebar`). What to log when chasing a platform bug is in
+    (category `window`: the sidebar's and detail pane's top safe area,
+    where the pause banner sits and when it goes
+    `[D-window-pause-banner]`; under `sidebar`, the title area's height
+    when the toolbar is installed, and each scroll view's top inset and
+    scroll position when the window becomes key or the helper runs,
+    logged only when they change). What to log when chasing a platform bug is in
     ERRATA.md "Diagnostic procedures".
   - *Verified* 2026-10-28: with the switch on, a relaunch logged the
     sidebar's limit passes, restores, and resizes. The off state is
