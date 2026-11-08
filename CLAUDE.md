@@ -103,6 +103,8 @@
   included, ends with the trailer
   `Co-Authored-By: Claude (Bitrig) <noreply@anthropic.com>`. Commits
   without it are Robert's, except those up to `cf969a9`, all Claude's.
+- **Commit messages say what changed.** The subject line describes the
+  change itself; an issue number can follow it, never replace it.
 - **Sign Claude's GitHub writing.** `gh` posts as Robert's account, so
   every issue, comment, PR description, or review Claude writes on
   GitHub says it's from Claude: open with `**Claude (Bitrig):**` (or end
