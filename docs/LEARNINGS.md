@@ -634,6 +634,22 @@ with `if scheduler.isPaused` inline in the inset's closure.
     number is 943, are unexplained. `[L-pause-banner-inset]`'s first
     sighting may fit too, if that pause came from an outside change
     (not recorded).
+  - **Dropping the `.fixedSize` fixed it** (build of 54b28b1, the
+    author's runs 2026-11-07 23:09–23:21, with a screen recording from
+    23:18:47; Claude, from the log and the recording). Five opens while
+    paused by an outside change, window closed beforehand, two of them
+    after a relaunch (23:19:19, 23:19:45, 23:20:07, 23:21:19, plus a
+    reopen at 23:19:59): every one settled with the split view filling
+    the window (583 pt in a 635 pt window) and the banner's top at 52 pt
+    (*verified*, log); the recording shows all three opens it covers
+    drawn right (*observed*). The reason still wraps to two lines at
+    the 460 pt minimum editor width: banner 460 × 67 pt (*verified*,
+    log; *observed*, the author's screenshot), not cut off.
+  - **Why the UI tests missed it:** `PauseBannerTests` pause from the
+    menu, so the reason is one line ("Paused from the menu."), the case
+    that never shifted. A guard needs an outside-change pause at launch.
+  - Still unexplained: the 943 pt figure, and why a one-line reason
+    under the same `.fixedSize` never triggered it.
 
 ## Open questions
 
