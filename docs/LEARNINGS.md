@@ -495,6 +495,37 @@ took window screenshots with the window in front and behind Finder.
     three (*hypothesis*, not run). Confirmed by run 6, below.
 - `[L-row-selection-focus]` Promoted to `[Q-tint-on-highlight]` (2026-11-06). Run 6 (commit 7693bb0): sidebar focused, blue highlight and white badge; focus in the Name field, grey and accent; back on the row, blue and white; window behind Finder, grey and accent.
 
+## Pause banner
+
+Source: the author's hands-on look at draft 49's first build (commit
+78b17b9, branch `feature/window-pause-banner`), 2026-11-07. That build
+put the banner in a `.safeAreaInset(edge: .top)` on the detail pane,
+with `if scheduler.isPaused` inline in the inset's closure.
+
+- `[L-pause-banner-inset]` **A top `.safeAreaInset` banner broke the
+  window two ways.** *Observed* by the author, not measured:
+  - **Everything under the toolbar.** Opening the window while already
+    paused, including on a fresh launch with no clicks or scrolling,
+    drew the banner, sidebar, and form shifted up: the branding panel
+    under the traffic lights, the banner's text cut off under the title.
+    The toolbar's title was still drawn in place, so the toolbar seemed
+    present and the content's room for it missing (Claude, from the
+    screenshots). Pausing and resuming with the window open usually
+    looked right.
+  - **The banner stopped following the pause.** It toggled with the
+    menu's Pause and Resume, then after about a dozen toggles stopped
+    appearing. After a click on the notification's body (not its Resume
+    button) opened the window without the banner, it never came back
+    in that run.
+  - *Hypotheses* (Claude, not tested): the inset's content isn't
+    tracked for redraw `[Q-safe-area-inset-refresh]`; an inset present
+    at the first layout keeps SwiftUI from making room for the toolbar
+    the window helper attaches a moment later `[D-window-helper-order]`.
+  - *Next:* draft 49's banner moves into a plain stack above the pane,
+    reading `isPaused` in its own view, with diagnostics (category
+    `window`) and UI tests (`PauseBannerTests`). Run the tests against
+    78b17b9 to watch them fail, then against the fix.
+
 ## Open questions
 
 - `[L-store-watch]` **Can Phases hear a wallpaper change made in System

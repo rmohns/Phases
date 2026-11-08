@@ -1,5 +1,9 @@
 import SwiftUI
 
+/// [D-diagnostics-switch] Window layout: the detail pane's top safe area
+/// and the pause banner [D-window-pause-banner].
+private let windowDiagLog = Diagnostics.logger("window")
+
 /// The single Phases window [D-one-window]: phases and Settings in the sidebar,
 /// the selected item's editor in the detail area.
 struct PhasesWindow: View {
@@ -78,13 +82,17 @@ struct PhasesWindow: View {
       .toolbar(removing: .sidebarToggle)
     } detail: {
       if holdsDetail {
-        detail
-          // [D-window-pause-banner] Above every selection's view; stays put
-          // while the form scrolls.
-          .safeAreaInset(edge: .top, spacing: 0) {
-            if scheduler.isPaused {
-              PauseBanner(scheduler: scheduler)
-            }
+        // [D-window-pause-banner] Above every selection's view; stays put
+        // while the form scrolls. A stack, not `.safeAreaInset`: with the
+        // banner in an inset when the window first opened, everything drew
+        // under the toolbar, and the inset stopped following the pause
+        // [Q-safe-area-inset-refresh].
+        VStack(spacing: 0) {
+          PauseBanner(scheduler: scheduler)
+          detail
+        }
+          .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.top } action: { top in
+            windowDiagLog.log("detail top safe area \(top, privacy: .public) pt, paused=\(scheduler.isPaused, privacy: .public)")
           }
           // [D-window-min-size] The editor never gets narrower than this,
           // whatever the sidebar's width.

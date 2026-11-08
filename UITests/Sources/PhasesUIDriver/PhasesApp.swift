@@ -18,8 +18,10 @@ public final class PhasesApp {
   // MARK: - Launch and quit
 
   /// Launches a new instance in test mode and waits for its window. A
-  /// Phases the author is already running is left alone.
-  public static func launch() async throws -> PhasesApp {
+  /// Phases the author is already running is left alone. With
+  /// `opensWindow` false, the window stays closed until `reopenWindow()`,
+  /// so a test can set things up from the menu before it first opens.
+  public static func launch(opensWindow: Bool = true) async throws -> PhasesApp {
     guard AXIsProcessTrusted() else {
       throw UITestFailure("The app running these tests needs Accessibility permission (System Settings › Privacy & Security › Accessibility).")
     }
@@ -44,6 +46,7 @@ public final class PhasesApp {
       throw error
     }
     let phases = PhasesApp(running: running, savedLayout: savedLayout)
+    guard opensWindow else { return phases }
     do {
       try await phases.openWindowFromMenuBar()
       _ = try await waitFor("the Phases window", timeout: .seconds(15)) { phases.windowIfOpen }
@@ -116,6 +119,12 @@ public final class PhasesApp {
   /// activating Phases the way a click does, which skipped the focus bug
   /// its test guards (2026-10-29).
   private func openWindowFromMenuBar() async throws {
+    try await chooseMenuItem("Open Phases…")
+  }
+
+  /// Clicks the menu bar item, then the menu item titled `title`, with
+  /// real clicks, as a person does.
+  public func chooseMenuItem(_ title: String) async throws {
     let item = try await waitFor("Phases' menu bar item", timeout: .seconds(10)) {
       app.node("AXExtrasMenuBar")?.children.first
     }
@@ -125,10 +134,10 @@ public final class PhasesApp {
     try? await bringToFront()
     try await requireWideMenuBar(item)
     try await clickOwnElement(item, what: "the menu bar item")
-    let open = try await waitFor("Open Phases… in the menu", timeout: .seconds(5)) {
-      item.first { $0.role == kAXMenuItemRole && $0.title == "Open Phases…" }
+    let menuItem = try await waitFor("\(title) in the menu", timeout: .seconds(5)) {
+      item.first { $0.role == kAXMenuItemRole && $0.title == title }
     }
-    try await clickOwnElement(open, what: "Open Phases…")
+    try await clickOwnElement(menuItem, what: title)
   }
 
   /// [D-ui-menubar-wide] Narrow displays can run out of menu bar room and

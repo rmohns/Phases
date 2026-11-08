@@ -118,6 +118,9 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
       // bar 66 pt, not 52 (fix verified, cause unproven).
       window.toolbar?.displayMode = .iconOnly
       window.toolbarStyle = .unified
+      // [D-window-pause-banner] For telling a lost toolbar from a lost
+      // safe area when content draws under the title bar.
+      diagLog.log("toolbar installed: title area \(window.frame.height - window.contentLayoutRect.height, privacy: .public) pt")
     }
 
     private func applySidebarLimits() {
