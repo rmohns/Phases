@@ -23,7 +23,8 @@ struct PauseBanner: View {
               Text(PauseReason.text(pausedForOutsideChangeAt: scheduler.pausedForOutsideChangeAt))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+                // Experiment (LEARNINGS.md `[L-pause-banner-rigid-split]`):
+                // no `.fixedSize(horizontal: false, vertical: true)` here.
             }
           }
           // One element for VoiceOver, then the button.
@@ -39,8 +40,8 @@ struct PauseBanner: View {
         Divider()
       }
       .background(.bar)
-      .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { top in
-        diagLog.log("pause banner top at \(top, privacy: .public) pt in the window")
+      .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+        diagLog.log("pause banner top at \(frame.minY, privacy: .public) pt in the window, \(frame.width, privacy: .public) × \(frame.height, privacy: .public)")
       }
       .onDisappear { diagLog.log("pause banner gone") }
     }
