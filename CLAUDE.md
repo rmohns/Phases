@@ -104,7 +104,15 @@
   `Co-Authored-By: Claude (Bitrig) <noreply@anthropic.com>`. Commits
   without it are Robert's, except those up to `cf969a9`, all Claude's.
 - **Commit messages say what changed.** The subject line describes the
-  change itself; an issue number can follow it, never replace it.
+  change itself; an issue number can follow it, never replace it. A fix
+  says what it fixes, in the subject, and its body ends `Fixes #N` so
+  GitHub closes the issue when it reaches `github`.
+- **Closing an issue takes a summary comment too.** When a fix for a
+  GitHub issue reaches `github`, post a signed comment on the issue
+  saying what caused the bug, what the fix does, and how it was checked
+  (tests, hands-on checks, who verified them), naming the commit. Close
+  the issue if GitHub didn't. Both happen every time: the commit
+  message and the issue each tell the story on their own.
 - **Sign Claude's GitHub writing.** `gh` posts as Robert's account, so
   every issue, comment, PR description, or review Claude writes on
   GitHub says it's from Claude: open with `**Claude (Bitrig):**` (or end
