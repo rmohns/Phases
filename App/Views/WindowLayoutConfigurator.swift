@@ -22,6 +22,9 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
   var onOpen: () -> Void = {}
   /// Called when the window is about to close.
   var onClose: () -> Void = {}
+  /// Diagnostics only (LEARNINGS.md "Pause banner"): read here so a pause
+  /// or resume calls `updateNSView`, which logs the window's sizes.
+  var isPaused = false
 
   func makeNSView(context: Context) -> ProbeView {
     ProbeView()
@@ -32,6 +35,11 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
     view.sidebarMaxWidth = sidebarMaxWidth
     view.onOpen = onOpen
     view.onClose = onClose
+    if view.isPaused != isPaused {
+      view.isPaused = isPaused
+      view.logWindowSizes(when: "paused=\(isPaused)")
+      DispatchQueue.main.async { view.logWindowSizes(when: "paused=\(isPaused), next pass") }
+    }
     view.apply()
   }
 
@@ -40,6 +48,7 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
     var sidebarMaxWidth: CGFloat = .greatestFiniteMagnitude
     var onOpen: () -> Void = {}
     var onClose: () -> Void = {}
+    var isPaused = false
 
     /// [D-sidebar-limits-watch] [Q-split-item-rewrite] The item being held to the limits, and the
     /// event hooks that put them back. No polling.
@@ -59,6 +68,7 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
     deinit {
       if let closeObserver { NotificationCenter.default.removeObserver(closeObserver) }
       if let keyObserver { NotificationCenter.default.removeObserver(keyObserver) }
+      if let resizeWindowObserver { NotificationCenter.default.removeObserver(resizeWindowObserver) }
     }
 
     override func viewDidMoveToWindow() {
@@ -76,6 +86,7 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
       guard window !== closeWatchedWindow else { return }
       if let closeObserver { NotificationCenter.default.removeObserver(closeObserver) }
       if let keyObserver { NotificationCenter.default.removeObserver(keyObserver) }
+      if let resizeWindowObserver { NotificationCenter.default.removeObserver(resizeWindowObserver) }
       closeWatchedWindow = window
       closeObserver = NotificationCenter.default.addObserver(
         forName: NSWindow.willCloseNotification, object: window, queue: .main
@@ -94,8 +105,39 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
         MainActor.assumeIsolated {
           self?.onOpen()
           self?.logScrollViews(when: "became key")
+          self?.logWindowSizes(when: "became key")
         }
       }
+      resizeWindowObserver = NotificationCenter.default.addObserver(
+        forName: NSWindow.didResizeNotification, object: window, queue: .main
+      ) { [weak self] _ in
+        MainActor.assumeIsolated { self?.logWindowSizes(when: "window resized") }
+      }
+    }
+
+    /// Diagnostics: the window's resize observer, and the last logged sizes.
+    private var resizeWindowObserver: NSObjectProtocol?
+    private var diagLastSizes = ""
+
+    /// [D-window-pause-banner] Diagnostics only (LEARNINGS.md "Pause
+    /// banner"): the window, its content view, what the hosting view says
+    /// it needs, the minimum content size, and where AppKit put the split
+    /// view. For testing whether the content is laid out taller than the
+    /// window. Logged only when something changed.
+    func logWindowSizes(when event: String) {
+      guard Diagnostics.isEnabled, let window, let content = window.contentView else { return }
+      func rect(_ r: NSRect) -> String { "(\(r.minX), \(r.minY), \(r.width) × \(r.height))" }
+      func size(_ s: NSSize) -> String { "\(s.width) × \(s.height)" }
+      var splitFrame = "none"
+      var ancestor = superview
+      while let view = ancestor, !(view is NSSplitView) { ancestor = view.superview }
+      if let split = ancestor {
+        splitFrame = rect(split.convert(split.bounds, to: nil))
+      }
+      let sizes = "window \(rect(window.frame)); content \(String(describing: type(of: content))) \(rect(content.frame)) fitting \(size(content.fittingSize)) intrinsic \(size(content.intrinsicContentSize)); contentMinSize \(size(window.contentMinSize)) minSize \(size(window.minSize)); layout rect \(rect(window.contentLayoutRect)); split view in window \(splitFrame)"
+      guard sizes != diagLastSizes else { return }
+      diagLastSizes = sizes
+      diagLog.log("sizes (\(event, privacy: .public)): \(sizes, privacy: .public)")
     }
 
     /// Diagnostics: last logged scroll state, to log only changes.
@@ -133,9 +175,11 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
       }
       installToolbar(in: window)
       logScrollViews(when: "apply")
+      logWindowSizes(when: "apply")
       DispatchQueue.main.async { [weak self] in
         self?.applySidebarLimits()
         self?.logScrollViews(when: "after limits")
+        self?.logWindowSizes(when: "after limits")
       }
     }
 

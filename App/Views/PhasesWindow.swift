@@ -77,7 +77,8 @@ struct PhasesWindow: View {
         // [Q-split-item-rewrite].
         WindowLayoutConfigurator(
           sidebarMinWidth: 240, sidebarMaxWidth: 320,
-          onOpen: windowOpened, onClose: windowClosed
+          onOpen: windowOpened, onClose: windowClosed,
+          isPaused: scheduler.isPaused
         )
       }
       // [D-sidebar-always-visible] [Q-sidebar-collapse] No toggle button; the configurator above
@@ -102,8 +103,16 @@ struct PhasesWindow: View {
           .navigationSplitViewColumnWidth(min: 460, ideal: 720)
       }
     }
+    // Diagnostics (LEARNINGS.md "Pause banner"): where SwiftUI puts the
+    // split view itself, before the minimum height below.
+    .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+      windowDiagLog.log("split view frame \(String(describing: frame), privacy: .public) (global), paused=\(scheduler.isPaused, privacy: .public)")
+    }
     // [D-window-min-size]
     .frame(minHeight: 480)
+    .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+      windowDiagLog.log("min-height frame \(String(describing: frame), privacy: .public) (global), paused=\(scheduler.isPaused, privacy: .public)")
+    }
     // [D-app-menu] For Settings… in the app menu.
     .focusedSceneValue(\.sidebarSelection, $selection)
     .onAppear {
