@@ -121,6 +121,9 @@ final class WallpaperScheduler {
     static let pausedForOutsideChangeAt = "pausedForOutsideChangeAt"
   }
 
+  /// MOCKUP: this experiment build never touches the wallpaper.
+  static let isMockupBuild = true
+
   init() {
     let defaults = SettingsStore.defaults
     // [D-first-launch-shows-window] Checked before anything below is saved.
@@ -159,6 +162,13 @@ final class WallpaperScheduler {
     restorePoint = UITestMode.isOn ? nil : Self.load(RestorePoint.self, forKey: Keys.restorePoint) ?? RestorePoint.capture()
 
     refreshDisplays()
+    // MOCKUP (experiment/ui-mockup): read-only, so this build can run beside
+    // a real Phases sharing the same settings. Loads phases and displays,
+    // then never schedules, applies, watches, or restores on quit.
+    guard !Self.isMockupBuild else {
+      if needsLocation { location.refresh() }
+      return
+    }
     location.onChange = { [weak self] in self?.evaluate() }
     if needsLocation { location.refresh() }
     observeSystemEvents()
