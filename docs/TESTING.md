@@ -198,8 +198,11 @@ The pure logic that decides what the app does:
 - **Suites:**
   - *Fast* (the default, about a minute): sidebar width limits, the +/−
     buttons, delete selection, initial focus, the grid's Tab stop, the
-    toolbar height, and a relaunch with the window closed
-    `[D-reopen-shows-window]`.
+    toolbar height, a relaunch with the window closed
+    `[D-reopen-shows-window]`, and the pause banner
+    `[D-window-pause-banner]`: the window first opened while paused
+    starts below the toolbar, and the banner follows 20 pause and resume
+    toggles from the menu.
   - *Slow* (`PHASES_UI_SLOW=1 swift test`, about two minutes): the
     sidebar limits again after waiting 30 s, across three launches,
     because SwiftUI's rewrite lands seconds after the window opens
@@ -248,7 +251,7 @@ The pure logic that decides what the app does:
     settings (author, 2026-10-30; LEARNINGS.md `[L-menubar-overflow]`).
 - `[D-ui-test-ids]` **Controls the tests use carry accessibility
   identifiers:** `sidebar`, `addPhase`, `deletePhase`, `phaseName`,
-  `imageGrid`, `imageFolderName`. They're invisible to users, but renaming
+  `imageGrid`, `imageFolderName`, `pauseBannerResume`. They're invisible to users, but renaming
   one breaks the tests.
 
 - **Relaunch:** the harness relaunches its own instance by sending it a
@@ -581,7 +584,13 @@ Used by both groups. Reference, not steps.
   - Currently instrumented: the sidebar limits (`[D-sidebar-limits-watch]`,
     category `sidebar`), and covers (category `cover`: each cover made,
     removed and why, redrawn or resized, held pending, and set on
-    returning to its Space; `[D-persistent-cover]`). What to log when chasing a platform bug is in
+    returning to its Space; `[D-persistent-cover]`), and window layout
+    (category `window`: the sidebar's and detail pane's top safe area,
+    where the pause banner sits and when it goes
+    `[D-window-pause-banner]`; under `sidebar`, the title area's height
+    when the toolbar is installed, and each scroll view's top inset and
+    scroll position when the window becomes key or the helper runs,
+    logged only when they change). What to log when chasing a platform bug is in
     ERRATA.md "Diagnostic procedures".
   - *Verified* 2026-10-28: with the switch on, a relaunch logged the
     sidebar's limit passes, restores, and resizes. The off state is
@@ -627,10 +636,22 @@ neither can leak into normal use.
     a first launch, so a test can check the window opens on its own.
     *Why:* every test-mode launch starts with no settings, so without
     this every test would start with the window already open.
+  - `[D-test-paused-by-outside-change]` start paused as if the
+    wallpaper had just been changed in System Settings, when launched
+    with `-PhasesUITestPausedByOutsideChange YES` as well, with no
+    notification. Ignored outside test mode. *Why:* the pause banner's
+    layout bug showed only with this pause's two-line reason; the menu
+    pause's one line never triggered it, and a real outside change
+    would mean changing the real wallpaper (author's approval,
+    2026-11-07, GitHub issue #30).
   - AppKit's own saved window frame and sidebar layout live in the normal
     settings, outside the separate store. The UI tests record both before
     each launch, clear them so the test starts from the defaults, and put
-    them back after quitting.
+    them back after quitting. A test can ask for a window size instead
+    of the default; the harness then saves that frame in place of the
+    cleared one before launch, and the same restore puts the author's
+    back (added 2026-11-07, author's request, for the pause banner's
+    line wrap).
     - *Why:* on 2026-10-29 a revert-and-check run collapsed the sidebar,
       AppKit saved that, and the author's own Phases window would have
       opened with no sidebar and no way to reopen it. The key was reset by

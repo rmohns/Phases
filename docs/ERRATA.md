@@ -340,6 +340,24 @@ would stop being true if a future macOS fixed the underlying behavior.
   draft 13 bug where − stayed disabled; moving the bar into its own view
   with a binding fixed it (fix verified by the author, 2026-10-28). Shaped
   `[D-sidebar-footer-view]`.
+- `[Q-fixed-size-text-rigid-split]` **Text with `.fixedSize(horizontal:
+  false, vertical: true)` in a `NavigationSplitView` column can make the
+  whole split view a fixed height taller than the window when the text
+  wraps; SwiftUI then centers it, so its top runs up under the toolbar
+  and off the window (macOS 27.2).** *Verified* 2026-11-07 by Claude
+  from the diagnostics log and the author's screen recordings (promoted
+  from LEARNINGS.md `[L-pause-banner-rigid-split]`):
+  - With the pause banner's two-line reason, the split view was 943 pt
+    tall at every window size while paused, in a 583–848 pt space; with
+    a one-line reason, or without the `.fixedSize`, it followed the
+    window. The window's own sizes and `contentMinSize` stayed normal.
+  - It showed when the window opened already paused, not when the
+    banner appeared in an open window.
+  - Why 943 pt, and why a one-line reason never triggered it, are
+    unexplained.
+  - Shapes `[D-window-pause-banner]`: the reason text wraps without
+    `.fixedSize`. Wraps to two lines at the 460 pt minimum editor width,
+    not cut off (*verified*, log and the author's screenshot).
 - `[Q-tint-on-highlight]` **On a selected sidebar row, accent-colored
   text vanishes into the colored highlight, and SwiftUI doesn't tell the
   row it's on one (macOS 27.2).** *Verified* 2026-11-06 by Claude, window
@@ -897,3 +915,4 @@ the fix, or, if none is practical, the reason and the manual procedure
 | 2026-10-28 (draft 22) | Sidebar width limits gone again: drags from very narrow to very wide | Cause logged: SwiftUI rewrites the split view item's limits seconds after the window opens `[Q-split-item-rewrite]`. Fix: watch the item and put the limits back `[D-sidebar-limits-watch]`; verified 2026-10-28 | `SlowSidebarTests` (`PHASES_UI_SLOW=1`) and `SidebarTests/dividerStaysWithin240To320`, both switching the detail pane before dragging; failed without the watch (sidebar collapsed), passed with it, 2026-10-29 |
 | 2026-10-29 (found by the UI tests) | A long image folder name squeezed Settings' Choose… button to a 16 pt sliver: the name's `.layoutPriority(1)` takes its full width first | `.fixedSize()` on Choose… | `AppearanceTests/imageFolderNameScreenshot` (button at least 60 pt); failed on the old build at 16 pt, passed on the fix, 2026-10-29 |
 | 2026-11-07 (draft 48, issue #29) | An app going full screen, or a new desktop in Mission Control, paused Phases as if a wallpaper had been picked `[Q-new-space-copies-entry]` | A new store entry counts only when set later than everything in the earlier reading `[D-outside-change-rule]` | `OutsideChangeRuleTests/newSpaceCopyingTheDisplayDoesNotCount` (unit test); failed on the old rule, passed on the fix, 2026-11-07. The watcher's wiring to the rule isn't tested; hands-on check: full screen and a new desktop don't pause, a pick on a fresh desktop does (*verified* 2026-11-07 by the author, draft 48 build) |
+| 2026-11-07 (draft 49, issue #30) | Opening the window while paused by an outside change drew everything shifted up: the banner above the window, the branding panel under the traffic lights `[Q-fixed-size-text-rigid-split]` | No `.fixedSize` on the banner's reason text | `PauseBannerTests/windowOpenedWhilePausedByOutsideChangeStartsBelowTheToolbar` (700 × 600 pt window, `[D-test-paused-by-outside-change]`); failed on the old build (both checks; one element 93.5 pt above the window's top), passed on the fix, 2026-11-07 |
