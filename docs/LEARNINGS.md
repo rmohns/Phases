@@ -602,7 +602,8 @@ took window screenshots with the window in front and behind Finder.
       screenshot is the proof `[D-input-lands]` asks for.
 
 - `[L-new-space-pauses]` **Does a new Space read as an outside change?**
-  (GitHub issue #29, macOS 27.2.) Going full screen in any app pauses
+  (GitHub issue #29, macOS 27.2.) Promoted to `[Q-new-space-copies-entry]`
+  (2026-11-07); the notes below stay as the record. Going full screen in any app pauses
   Phases with the outside-change notice (*observed* by the author in
   Fusion and Safari; screen resolution and menu bar hiding made no
   difference).

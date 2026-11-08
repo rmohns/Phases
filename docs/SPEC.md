@@ -1,4 +1,4 @@
-# Phases — Specification (draft 47)
+# Phases — Specification (draft 48)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -686,6 +686,13 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
   entry for a display (macOS only sets the showing Space's) gets a new
   "last set" time and its image isn't one Phases set on that display in
   the last 10 seconds. Store details: ERRATA.md `[Q-wallpaper-store]`.
+  - A new Space doesn't count. Making a desktop in Mission Control or
+    taking an app full screen gives the new Space copies of the
+    display's entries, keeping their old "last set" time, so an entry
+    Phases hasn't seen before counts only when it was set later than
+    anything already in the store. A real pick on a new Space still
+    counts. Store details: ERRATA.md `[Q-new-space-copies-entry]`
+    (draft 48, GitHub issue #29).
   - Writes that change only the "last used" time are ignored: opening or
     quitting System Settings and switching Spaces make them (*verified*
     2026-11-06, `[L-store-watch]`).

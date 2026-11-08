@@ -70,6 +70,30 @@ struct OutsideChangeRuleTests {
     #expect(OutsideChangeRule.changes(from: old, to: new, ownSets: [], now: t0 + 61).count == 1)
   }
 
+  /// Issue #29: a new Space (Mission Control's +, or an app going full
+  /// screen) gets entries copied from the display, keeping its old
+  /// "last set" time (`[L-new-space-pauses]`).
+  @Test func newSpaceCopyingTheDisplayDoesNotCount() {
+    let old = [
+      "display/\(display)": image("Neon.jpg", setAt: t0),
+      "space/A/\(display)": image("Neon.jpg", setAt: t0),
+    ]
+    var new = old
+    new["space/B/default"] = image("Neon.jpg", setAt: t0, display: nil)
+    new["space/B/\(display)"] = image("Neon.jpg", setAt: t0)
+    #expect(OutsideChangeRule.changes(from: old, to: new, ownSets: [], now: t0 + 3600).isEmpty)
+  }
+
+  /// A pick on a Space that's new since the last reading stamps the
+  /// current time, which is newer than anything already in the store.
+  @Test func pickOnANewSpaceCounts() {
+    let old = ["space/A/\(display)": image("Neon.jpg", setAt: t0)]
+    var new = old
+    new["space/B/\(display)"] = image("Ergo.jpg", setAt: t0 + 3600)
+    let changes = OutsideChangeRule.changes(from: old, to: new, ownSets: [], now: t0 + 3601)
+    #expect(changes == [OutsideChange(displayUUID: display, fileName: "Ergo.jpg", isImage: true)])
+  }
+
   @Test func unreadableEarlierReadingCountsNothing() {
     let new = ["space/A/\(display)": image("Ergo.jpg", setAt: t0 + 60)]
     #expect(OutsideChangeRule.changes(from: [:], to: new, ownSets: [], now: t0 + 61).isEmpty)

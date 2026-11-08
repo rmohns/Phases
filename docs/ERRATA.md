@@ -180,6 +180,17 @@ would stop being true if a future macOS fixed the underlying behavior.
   - Undocumented: a macOS update could move or reshape it, which would
     silently turn detection off (nothing reads as a change). Shapes
     `[D-outside-change-rule]`; `[D-aerials-untouched]` reads the same file.
+- `[Q-new-space-copies-entry]` **A new Space's store entries are copies of
+  the display's, old "last set" time included, and Space entries are
+  never removed (macOS 27.2).** Making a desktop in Mission Control or
+  taking an app full screen adds a `default` entry and one per display,
+  each with the display's image and its `LastSet` unchanged; only
+  `LastUse` is the time the Space was made. The store held 381 Spaces,
+  many long gone (*verified* 2026-11-07 by Claude, reading the store
+  after the author's tests, `[L-new-space-pauses]`). Read naively, a new
+  Space looks like a pick on every display, which paused Phases (GitHub
+  issue #29). Shapes `[D-outside-change-rule]`: a new entry counts only
+  when it's set later than everything in the earlier reading.
 - `[Q-cover-image-copied]` **Core Animation copies every CGImage set as a
   layer's `contents`, a full-screen copy per cover, and the copy outlives
   the window; an IOSurface it shows as is (macOS 27.2).** *Measured*
@@ -885,3 +896,4 @@ the fix, or, if none is practical, the reason and the manual procedure
 | 2026-10-28 (draft 21) | Hiding the Dock or toggling "Show menu bar background" crossfaded to a new image `[Q-screen-params-notification]` | Screen changes run the normal check instead of re-applying `[D-screen-change-no-reroll]` | `WallpaperCheckTests` (unit test; check pulled out into `WallpaperCheck`). The handler's wiring to that check isn't tested |
 | 2026-10-28 (draft 22) | Sidebar width limits gone again: drags from very narrow to very wide | Cause logged: SwiftUI rewrites the split view item's limits seconds after the window opens `[Q-split-item-rewrite]`. Fix: watch the item and put the limits back `[D-sidebar-limits-watch]`; verified 2026-10-28 | `SlowSidebarTests` (`PHASES_UI_SLOW=1`) and `SidebarTests/dividerStaysWithin240To320`, both switching the detail pane before dragging; failed without the watch (sidebar collapsed), passed with it, 2026-10-29 |
 | 2026-10-29 (found by the UI tests) | A long image folder name squeezed Settings' Choose… button to a 16 pt sliver: the name's `.layoutPriority(1)` takes its full width first | `.fixedSize()` on Choose… | `AppearanceTests/imageFolderNameScreenshot` (button at least 60 pt); failed on the old build at 16 pt, passed on the fix, 2026-10-29 |
+| 2026-11-07 (draft 48, issue #29) | An app going full screen, or a new desktop in Mission Control, paused Phases as if a wallpaper had been picked `[Q-new-space-copies-entry]` | A new store entry counts only when set later than everything in the earlier reading `[D-outside-change-rule]` | `OutsideChangeRuleTests/newSpaceCopyingTheDisplayDoesNotCount` (unit test); failed on the old rule, passed on the fix, 2026-11-07. The watcher's wiring to the rule isn't tested; hands-on check: full screen and a new desktop don't pause, a pick on a fresh desktop does (*verified* 2026-11-07 by the author, draft 48 build) |
