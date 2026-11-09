@@ -1545,4 +1545,6 @@ Moved to ERRATA.md, each with a `[Q-…]` ID.
 ## Testing and diagnostics
 
 Moved to TESTING.md: the unit and UI test layers, test-only launch
-arguments, and diagnostic logging, with their `[D-…]` tags.
+arguments, and diagnostic logging, with their `[D-…]` tags. Since
+2026-11-09 the launch arguments, diagnostic logging, and the input
+driver are in TEST-TOOLS.md; the test layers stay in TESTING.md.
