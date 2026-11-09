@@ -700,30 +700,9 @@ needed.
 
 ### The twitch returns
 
-2026-10-28, draft 22. The twitch came back on macOS 27.2, on one display or
-two. A frame-by-frame analysis of a screen recording (seven changes)
-showed:
-
-- The fade itself is smooth, and the cover matches the final wallpaper
-  exactly (before and after differ only at noise level). So the cover's
-  image and geometry aren't the cause.
-- The twitch is about 0.13 s of the image shifting and settling back. It
-  starts 0.55–0.65 s after the fade ends, in the same frames as the menu
-  bar restyle. (Draft 22 read that as when macOS actually shows the new
-  wallpaper; see the correction under `[Q-wallpaper-motion-delay]`.)
-- The cover was removed 0.5 s after the fade ended `[D-cover-settle]`, just
-  before macOS's own motion, so the motion showed through.
-
-The crossfade code's timing hadn't changed since draft 5. The author
-believes (not certain) the original fix was tested on macOS 27.1, so macOS
-27.2 may have made wallpaper changes slower. That's unconfirmed; the draft
-5 timing may also have been marginal from the start. The fix is a longer
-settle delay (1.5 s), not a new mechanism (see "Crossfade settle timing
-(drafts 5–32)", moved on 2026-11-09 to EXPERIMENTS.md `[X-cover-settle]`).
-
-The same recording showed a second, separate problem: turning System
-Settings' "Show menu bar background" on or off started a crossfade to a new
-image `[Q-screen-params-notification]`. See `[D-screen-change-no-reroll]`.
+Demoted to `[L-twitch-returns]` (2026-11-09): moved to EXPERIMENTS.md
+`[X-cover-settle]`, since the settle delay it explains `[D-cover-settle]`
+left `main` in draft 33.
 
 ### Sidebar collapse: first version
 

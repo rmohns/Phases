@@ -82,6 +82,11 @@ picture `[D-cover-level]`. Measured on macOS 27.2.
   after the set, clearing macOS's motion at 0.55–0.65 s; 0.5 s brought the
   twitch back.** Replaced by `[D-persistent-cover]`. Record:
   `[X-cover-settle]`.
+- `[L-twitch-returns]` **On macOS 27.2 (draft 22) the twitch came back
+  because the 0.5 s settle removed the cover just before macOS's own
+  motion; the fix was the 1.5 s delay.** Measured from a frame-by-frame
+  recording; that 27.2 slowed wallpaper changes is unconfirmed. Record:
+  `[X-cover-settle]` "The twitch returns".
 
 ## Memory
 
