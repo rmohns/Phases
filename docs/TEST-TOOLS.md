@@ -1,5 +1,19 @@
 # Phases — Test tools
 
+The tools Phases is tested with, and what we know about them: the input
+driver, diagnostic logging, test-only launch arguments, the quirks of
+the tools themselves, and ad hoc techniques for driving and measuring
+the Mac. TESTING.md is the test process: what to check, when, and how a
+run goes. Sorting test: is this about how a tool works, or about what we
+do with it? A tool → here. What we do → TESTING.md.
+
+Decisions here carry `[D-…]` tags and follow the same approval rules as
+TESTING.md's. Tool quirks keep the `[Q-…]` tags they had in ERRATA.md,
+and findings keep their `[L-…]` tags, so code comments still find them.
+Until 2026-11-09 this content was split across TESTING.md "Shared
+tools", ERRATA.md "Tools", and LEARNINGS.md "Driving and measuring the
+Mac in tests" (tag `archive/docs-before-refactor`).
+
 ## Shared tools
 
 Used by both groups. Reference, not steps.
@@ -57,7 +71,8 @@ Used by both groups. Reference, not steps.
     when the toolbar is installed, and each scroll view's top inset and
     scroll position when the window becomes key or the helper runs,
     logged only when they change). What to log when chasing a platform bug is in
-    ERRATA.md "Diagnostic procedures".
+    TESTING.md "When a fixed bug comes back" (until 2026-11-09, ERRATA.md
+    "Diagnostic procedures").
   - *Verified* 2026-10-28: with the switch on, a relaunch logged the
     sidebar's limit passes, restores, and resizes. The off state is
     consistent but not proven: nothing was logged between that build's
@@ -205,7 +220,9 @@ neither can leak into normal use.
 ## Driving and measuring the Mac in tests
 
 How the experiment's UI runs were done, for next time. Test-suite
-techniques belong in TESTING.md; these are the ad hoc ones.
+techniques belong in TESTING.md; these are the ad hoc ones. (Moved here
+from LEARNINGS.md on 2026-11-09; the experiments they came from are in
+EXPERIMENTS.md.)
 
 - `[L-nswindow-screen-rect]` **`NSWindow(contentRect:…, screen:)` reads
   the rect relative to that screen, not in global coordinates.** A

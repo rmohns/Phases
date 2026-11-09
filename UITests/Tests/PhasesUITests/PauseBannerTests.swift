@@ -29,7 +29,7 @@ extension PhasesUITests {
     /// Opening the window while paused by a System Settings change, at a
     /// size where the reason wraps to two lines: the split view laid out
     /// taller than the window and was centered, so its top ran above the
-    /// window (LEARNINGS.md `[L-pause-banner-rigid-split]`, 2026-11-07).
+    /// window (EXPERIMENTS.md `[L-pause-banner-rigid-split]`, 2026-11-07).
     /// A menu pause's one-line reason never did it; nor did the default
     /// 960 pt window, where the reason may fit on one line.
     @Test func windowOpenedWhilePausedByOutsideChangeStartsBelowTheToolbar() async throws {

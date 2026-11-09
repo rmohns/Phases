@@ -103,7 +103,7 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
 
     /// [D-window-pause-banner] Diagnostics only: each scroll view's top
     /// inset and scroll position, for telling a shifted layout from a
-    /// scroll position that's off (LEARNINGS.md
+    /// scroll position that's off (EXPERIMENTS.md
     /// `[L-pause-banner-stack-still-shifts]`). Logged on events this view
     /// already gets, and only when the state changed.
     private func logScrollViews(when event: String) {

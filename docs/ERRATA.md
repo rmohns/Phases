@@ -15,6 +15,9 @@ would stop being true if a future macOS fixed the underlying behavior.
 - Only quirks the code on `main` depends on live here. Findings that
   don't shape code go in LEARNINGS.md. Entries move between the two as
   code starts or stops depending on them.
+- Quirks of the test tools, rather than of Phases, are in TEST-TOOLS.md
+  "Tools" (here until 2026-11-09). What to do when a fixed bug comes
+  back is in TESTING.md.
 - The rules for all of this (evidence labels, promotion and demotion,
   references by tag `[D-refs-by-id]`) are in CLAUDE.md.
 
@@ -35,7 +38,8 @@ would stop being true if a future macOS fixed the underlying behavior.
   persistent cover keeps it out of view `[D-persistent-cover]`. History in
   "The twitch returns". If
   the twitch comes back again, measure the timing first, the same way (see
-  "Diagnostic procedures").
+  TESTING.md "When a fixed bug comes back"; until 2026-11-09 this pointed
+  to "Diagnostic procedures", here).
   - *Correction:* draft 22 first said the wallpaper *appears* 0.55–0.65 s
     after being set, judging by when the menu bar restyled. But the menu
     bar's background restyles when the cover is removed
@@ -304,6 +308,7 @@ would stop being true if a future macOS fixed the underlying behavior.
     happen with the window left alone for 30 s, but did once the detail
     pane had switched between Settings and phases (limits gone, sidebar
     collapsible). Which switch triggers it isn't isolated.
+  - If the limits vanish again: TESTING.md "When a fixed bug comes back".
 - `[Q-sidebar-collapse]` **A sidebar's minimum width doesn't stop it
   collapsing, and SwiftUI can't make it non-collapsible.** macOS snaps a
   sidebar shut when its divider is dragged past the minimum; since Phases'
@@ -327,6 +332,8 @@ would stop being true if a future macOS fixed the underlying behavior.
   mode reserves a row for item labels is not confirmed in Apple
   documentation. Affects `[D-tall-toolbar]`. *Confirmed* 2026-10-29 by
   the UI tests: removing `.iconOnly` alone brings back exactly 66 pt.
+  If the toolbar grows tall again: TESTING.md "When a fixed bug comes
+  back".
 - `[Q-list-row-padding]` **The sidebar list adds about 14–16 pt of its own
   padding inside a row's insets (macOS 27).** *Measured* 2026-10-28 from a
   2× screenshot with the tall toolbar: the red traffic light and the row
@@ -466,7 +473,8 @@ would stop being true if a future macOS fixed the underlying behavior.
   SwiftUI re-shows the window, and focus leaves the user's app for
   nothing. An open or minimized window is handled on its own. Shapes
   `[D-reopen-shows-window]`; see "Relaunch opens the window" under
-  "Workarounds". Experiment record: `[L-reopen-event]` in LEARNINGS.md.
+  "Workarounds". Experiment record: `[L-reopen-event]`, now in
+  EXPERIMENTS.md `[X-reopen-window]` (in LEARNINGS.md until 2026-11-09).
 
 ## Workarounds
 
@@ -710,7 +718,8 @@ The crossfade code's timing hadn't changed since draft 5. The author
 believes (not certain) the original fix was tested on macOS 27.1, so macOS
 27.2 may have made wallpaper changes slower. That's unconfirmed; the draft
 5 timing may also have been marginal from the start. The fix is a longer
-settle delay (1.5 s), not a new mechanism (see "Crossfade settle timing (drafts 5–32)").
+settle delay (1.5 s), not a new mechanism (see "Crossfade settle timing
+(drafts 5–32)", moved on 2026-11-09 to EXPERIMENTS.md `[X-cover-settle]`).
 
 The same recording showed a second, separate problem: turning System
 Settings' "Show menu bar background" on or off started a crossfade to a new

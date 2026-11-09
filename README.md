@@ -98,22 +98,30 @@ Three documents carry the design:
   enforces them.
 - **[ERRATA.md](docs/ERRATA.md)** records what macOS, SwiftUI, and AppKit do to
   Phases and how it works around them. Each quirk has a `[Q-…]` tag.
-- **[TESTING.md](docs/TESTING.md)** covers the unit and UI tests, the
-  launch arguments that exist only for tests, and diagnostic logging.
+- **[TESTING.md](docs/TESTING.md)** covers how Phases is tested: the unit
+  and UI tests, the hands-on checks, and what to do when a fixed bug
+  comes back.
+- **[TEST-TOOLS.md](docs/TEST-TOOLS.md)** covers the tools those tests
+  use: the input driver, the launch arguments that exist only for tests,
+  diagnostic logging, and the tools' own quirks.
 
-One more isn't a design document:
+Two more aren't design documents:
 
-- **[LEARNINGS.md](docs/LEARNINGS.md)** records what we've run into that
-  isn't documented elsewhere: experiment results, approaches tried and
-  rejected, measurements, and open questions. Each finding has an `[L-…]`
-  tag. When one starts shaping the code, it moves to ERRATA.md.
+- **[LEARNINGS.md](docs/LEARNINGS.md)** is a short digest of what we've
+  run into that isn't documented elsewhere: experiment results,
+  approaches tried and rejected, measurements, and open questions. Each
+  finding has an `[L-…]` tag. When one starts shaping the code, it moves
+  to ERRATA.md.
+- **[EXPERIMENTS.md](docs/EXPERIMENTS.md)** is the full record behind
+  that digest: each experiment's question, setup, runs, and numbers,
+  under an `[X-…]` tag.
 
 Search for a tag to find the spec, the workaround, the code, and its tests
 together. If you're changing behavior, read the decision first; the spec
 gets updated before the code does.
 
 Diagnostic logging is built in and off by default. See "Diagnostics" in
-docs/TESTING.md for how to turn it on.
+docs/TEST-TOOLS.md for how to turn it on.
 
 ## Copyright
 

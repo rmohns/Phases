@@ -1,17 +1,21 @@
-# Phases — Learnings
+# Phases — Experiments
 
-What we've found out along the way that doesn't (or doesn't yet) shape the
-shipping code. SPEC.md says what Phases does; ERRATA.md holds the platform
-quirks the code works around. This file keeps everything else we learned,
-so it isn't lost when an experiment branch is deleted or a design goes
-another way.
+The full record of every experiment, investigation, and retired design:
+what we asked, how we set it up, each run, the numbers, the wrong
+guesses and their corrections. LEARNINGS.md is the short digest of what
+these found; this file is the evidence behind it. Nothing here is
+trimmed or rewritten once written; corrections are added, not
+substituted.
 
-- **Sorting test:** does it shape code on `main` right now? Yes → SPEC.md
-  or ERRATA.md. No → here.
-- Each entry has a stable `[L-…]` tag, a date and macOS version, and an
-  evidence label: verified, observed, or recalled.
-- Entries cite the `[D-…]` and `[Q-…]` tags they relate to, and where the
-  evidence lives (an experiment doc, a branch).
+- **Not read by default.** Open a section when a LEARNINGS.md entry
+  points to it, or when picking an experiment back up.
+- Each experiment has an `[X-…]` tag, named after its branch where it had
+  one, and a header: the question, when and on what, the branch and its
+  `archive/…` tag, the outcome, and the `[L-…]` findings it produced.
+- Entries keep their original `[L-…]` tags, so a search for a tag finds
+  both the digest line in LEARNINGS.md and the full entry here.
+- Before 2026-11-09 this file was LEARNINGS.md; its old layout is tag
+  `archive/docs-before-refactor`.
 - The rules for all of this (evidence labels, promotion and demotion,
   references by tag `[D-refs-by-id]`) are in CLAUDE.md.
 
@@ -23,6 +27,26 @@ Source for this section unless noted: the persistent-cover experiment,
 `docs/X-PERSISTENT-COVER.md`. A "cover" is a
 borderless, click-through window just above the desktop picture
 `[D-cover-level]`.
+
+### `[X-persistent-cover]` Keeping a cover up between changes
+
+- **Question:** can a cover stay over the desktop all the time, so
+  macOS's wallpaper-change motion never shows, and what does that break?
+- **When, on what:** 2026-10-30 to 2026-10-31, macOS 27.2; one built-in
+  display, then three displays.
+- **Branch:** `spike/persistent-cover`, tag
+  `archive/spike/persistent-cover`. Its own write-up,
+  `docs/X-PERSISTENT-COVER.md`, is in that tag only.
+- **Outcome:** became draft 33's persistent cover `[D-persistent-cover]`
+  (tag `archive/feature/persistent-cover-transitions`). Promoted:
+  `[Q-opaque-cover-freezes-menubar]`, `[Q-space-notify-after-swipe]`.
+- **Findings:** `[L-motion-waits-for-reveal]`, `[L-cover-all-spaces]`,
+  `[L-lockscreen-uses-real-wallpaper]`, `[L-login-dims-wallpaper]`,
+  `[L-desktop-through-cover]`, `[L-outside-change-hidden]`,
+  `[L-cover-memory]`, `[L-menubar-lazy-restyle]`,
+  `[L-cover-three-displays]`, `[L-cover-own-space]`,
+  `[L-space-leave-mid-fade]`; still open: `[L-cover-alpha-later]` (under
+  "Open questions" below).
 
 - `[L-motion-waits-for-reveal]` **macOS seems to hold its wallpaper-change
   motion until the new wallpaper is first visible, not play it on a
@@ -159,6 +183,22 @@ borderless, click-through window just above the desktop picture
   set and leave that Space unchanged until its next change. **Update,
   same day:** draft 33 takes neither; it holds the cover and sets the
   wallpaper on return `[D-change-stays-on-its-space]` (untested).
+
+### `[X-set-target-read]` Which Space a set reaches during a swipe
+
+- **Question:** when the user swipes to another Space mid-change, can
+  Phases tell which Space its wallpaper set will land on?
+- **When, on what:** 2026-11-03, macOS 27.2, Release builds, one display
+  with two Spaces; trials with a 1 s fade and ⌃→ 0.3–0.5 s after the
+  cover appeared.
+- **Branch:** `spike/set-target-read` (`f05ebef`), tag
+  `archive/spike/set-target-read`; later trials on draft 33's build
+  `3c891b6`.
+- **Outcome:** no check at the moment of the set can be trusted; the race
+  is `[Q-set-target-decided-late]`, handled by `[D-reset-on-quick-return]`.
+- **Findings:** `[L-swipe-set-read]`, `[L-misfire-not-seen]`,
+  `[L-swipe-before-cover]`; promoted: `[L-swipe-set-race]`.
+
 - `[L-swipe-set-race]` Promoted to `[Q-set-target-decided-late]` (2026-11-03).
 - `[L-swipe-set-read]` **Reading the wallpaper just before a set doesn't
   predict which Space the set reaches.** Hypothesis: if
@@ -198,6 +238,9 @@ borderless, click-through window just above the desktop picture
   picked, so nothing visible changed. With different images, Space 2
   would fade to the change made on Space 1. Bears on the spec's "a
   change only starts on the Space showing".
+
+### Notes outside any experiment
+
 - `[L-backdrop-private-store]` **Backdrop (Cindori) puts video on the
   lock screen by registering entries in macOS's private wallpaper store,**
   `~/Library/Application Support/com.apple.wallpaper/Store/aerials/manifest/entries.json`,
@@ -219,6 +262,27 @@ control run without it. Tools: `footprint`, `vmmap`, `heap`,
 `malloc_history`, `leaks`. Changes made with Change Now from the menu.
 Why we looked: Phases runs all day in the background, so it has to stay
 lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
+
+### `[X-memory]` Where Phases' memory goes
+
+- **Question:** why did the installed `main` sit at 179 MB with its
+  window closed, and what fixes it?
+- **When, on what:** 2026-10-30 (investigation and fix runs) and
+  2026-11-03 (draft 33 runs), macOS 27.2, two or three displays.
+- **Branches:** `investigate/memory` (tag `archive/investigate/memory`);
+  the fix on `fix/cover-memory` (tag `archive/fix/cover-memory`);
+  draft 33 runs on `feature/persistent-cover-transitions` (tag
+  `archive/feature/persistent-cover-transitions`).
+- **Outcome:** the cover-memory fix landed on `main`, measured flat
+  across ten changes `[D-memory-flat]`; the run procedure became
+  `[D-memory-protocol]`. Promoted: `[Q-cover-image-copied]`,
+  `[Q-iosurface-color-tag]`.
+- **Findings:** `[L-main-memory]`, `[L-mem-timeline]`,
+  `[L-mem-cover-windows-freed]`, `[L-mem-ca-copy]`,
+  `[L-mem-pressure-relief]`, `[L-mem-no-upscale]`, `[L-mem-freed-held]`,
+  `[L-mem-decode]`, `[L-mem-window]`, `[L-mem-thumbnails]`,
+  `[L-mem-reconcile]`, `[L-mem-fix-ideas]`, `[L-mem-fix-runs]`,
+  `[L-mem-draft33-runs]`.
 
 - `[L-main-memory]` **The installed Release build of `main` measured
   179 MB with its window closed.** Answered: mostly crossfade images,
@@ -461,6 +525,20 @@ relaunched Phases with a launch switch choosing the variant, selected
 the active phase (Nighttime) by clicking Dusk and pressing Down, and
 took window screenshots with the window in front and behind Finder.
 
+### `[X-active-badge-highlight]` The Active badge on the selection highlight
+
+- **Question:** how can the sidebar's accent-coloured Active badge stay
+  readable on the accent-coloured selection highlight? (Issue #22.)
+- **When, on what:** 2026-11-06, macOS 27.2, blue Highlight Color, six
+  runs with window screenshots.
+- **Branch:** `experiment/active-badge-highlight` (not yet archived as a
+  tag).
+- **Outcome:** the row is told it's selected and whether the sidebar
+  has focus; promoted to `[Q-tint-on-highlight]`.
+- **Findings:** `[L-row-styles-on-highlight]`, `[L-row-own-selection]`;
+  promoted: `[L-tint-on-highlight]`, `[L-background-prominence-mac-list]`,
+  `[L-row-selection-focus]`.
+
 - `[L-tint-on-highlight]` Promoted to `[Q-tint-on-highlight]` (2026-11-06).
 - `[L-background-prominence-mac-list]` Promoted to `[Q-tint-on-highlight]` (2026-11-06).
 - `[L-row-styles-on-highlight]` **What does adapt on the highlight.**
@@ -501,6 +579,23 @@ Source: the author's hands-on look at draft 49's first build (commit
 78b17b9, branch `feature/window-pause-banner`), 2026-11-07. That build
 put the banner in a `.safeAreaInset(edge: .top)` on the detail pane,
 with `if scheduler.isPaused` inline in the inset's closure.
+
+### `[X-pause-banner-shift]` Window content shifted up while paused
+
+- **Question:** why did the window open with its content shifted up
+  under the toolbar while Phases was paused?
+- **When, on what:** 2026-11-07, macOS 27.2; the author's hands-on
+  looks and screen recordings, Claude's UI test runs and logs.
+- **Branches:** `feature/window-pause-banner` (draft 49);
+  `experiment/pause-banner-shift`, tag
+  `archive/experiment/pause-banner-shift`.
+- **Outcome:** the banner reason's `.fixedSize` made the split view rigid
+  and too tall; dropping it fixed the shift. Promoted to
+  `[Q-fixed-size-text-rigid-split]`, guarded by `PauseBannerTests`.
+- **Findings:** `[L-pause-banner-inset]` (its inset hypothesis refuted),
+  `[L-pause-banner-runs]`, `[L-pause-banner-stack-still-shifts]`,
+  `[L-pause-banner-above-window]`; promoted:
+  `[L-pause-banner-rigid-split]`.
 
 - `[L-pause-banner-inset]` **A top `.safeAreaInset` banner broke the
   window two ways.** *Observed* by the author, not measured:
@@ -663,6 +758,19 @@ with `if scheduler.isPaused` inline in the inset's closure.
 
 ## Notification clicks
 
+### `[X-notice-click]` What a click on the pause notification does
+
+- **Question:** why did a click on the pause notification's body
+  sometimes do nothing, or open the window behind other apps?
+- **When, on what:** 2026-11-08, macOS 27.2, draft 50's hands-on check;
+  the log, `ps`, `lsregister -dump`, and `usernoted`'s log.
+- **Branch:** draft 50's own branch, merged as `92c376a`; no separate
+  experiment branch.
+- **Outcome:** every notification click goes through
+  `FirstLaunchWindow.open` (draft 50). The second copy is a development
+  artifact of stale Launch Services registrations.
+- **Findings:** `[L-notice-click-launches-copy]`.
+
 - `[L-notice-click-launches-copy]` **A click on the pause notification
   can launch a second copy of Phases** (draft 50 hands-on check,
   2026-11-08; *verified* from the log and `ps`):
@@ -748,6 +856,17 @@ An interface-only mockup, archived as tag `archive/experiment/ui-mockup`:
 mock views with throwaway state, nothing wired to the model, and a
 scheduler made read-only so it could run beside a real Phases.
 
+### `[X-ui-mockup]` Interface mockup
+
+- **Question:** do older Mac layout conventions, a split phase editor,
+  and per-display tabs make the window better? (Issues #2, #3, #26, #27.)
+- **When, on what:** 2026-11-08 to 2026-11-09, macOS 27.2.
+- **Branch:** `experiment/ui-mockup`, tag `archive/experiment/ui-mockup`.
+- **Outcome:** the old-style layout was dropped; streamlining continues
+  with modern macOS conventions (author, 2026-11-09).
+- **Findings:** `[L-classic-mac-layout]`, `[L-toolbar-items-crash]`,
+  `[L-mock-known-displays]`.
+
 - `[L-classic-mac-layout]` **Old-style Mac layouts were tried and
   dropped.** The mockup used a columns form (right-aligned labels),
   checkboxes instead of switches, and popups instead of segmented
@@ -780,7 +899,23 @@ scheduler made read-only so it could run beside a real Phases.
   its own images cut the list to the connected ones. *Observed*
   2026-11-08 (window screenshots).
 
-## Open questions
+## Other investigations
+
+Until 2026-11-09 this section was called "Open questions"; most of what
+it held has since been answered. What's still open is under "Still
+open" at its end.
+
+### `[X-wallpaper-store-watch]` Hearing outside wallpaper changes
+
+- **Question:** can Phases hear a wallpaper change made in System
+  Settings by watching macOS's wallpaper store? (Issue #5.)
+- **When, on what:** 2026-11-06, macOS 27.2, one display, Debug build
+  `ebe00f8`.
+- **Branch:** `experiment/wallpaper-store-watch`; no `archive/…` tag
+  exists for it, and the branch is gone (checked 2026-11-09).
+- **Outcome:** yes; promoted to `[Q-wallpaper-store]`. Two displays
+  untested.
+- **Findings:** `[L-store-watch]`.
 
 - `[L-store-watch]` **Can Phases hear a wallpaper change made in System
   Settings by watching macOS's wallpaper store?** (Issue #5, macOS 27.2.)
@@ -886,6 +1021,17 @@ scheduler made read-only so it could run beside a real Phases.
       (*verified*). The author didn't notice the first change; the
       screenshot is the proof `[D-input-lands]` asks for.
 
+### `[X-new-space-pauses]` A new Space read as an outside change
+
+- **Question:** why does going full screen, or adding a desktop, pause
+  Phases with the outside-change notice? (Issue #29.)
+- **When, on what:** 2026-11-07, macOS 27.2; the author's observations
+  and a read-only copy of the wallpaper store.
+- **Branch:** none; read from the store and the code.
+- **Outcome:** a new Space's store entries are copies, which the rule
+  counted as picks; promoted to `[Q-new-space-copies-entry]`.
+- **Findings:** `[L-new-space-pauses]`.
+
 - `[L-new-space-pauses]` **Does a new Space read as an outside change?**
   (GitHub issue #29, macOS 27.2.) Promoted to `[Q-new-space-copies-entry]`
   (2026-11-07); the notes below stay as the record. Going full screen in any app pauses
@@ -929,6 +1075,21 @@ scheduler made read-only so it could run beside a real Phases.
   - Still open: whether a real pick on a never-picked Space stamps the
     current time in `LastSet` (expected, *hypothesis*), which the fix
     relies on.
+
+### `[X-reopen-window]` Launching Phases again while it runs
+
+- **Question:** what happens when Phases is launched again while it's
+  running, and can the menu bar icon's view open the window? (Issue #13.)
+- **When, on what:** 2026-11-03, macOS 27.2; runs from Terminal with
+  `open`, then `RelaunchTests`.
+- **Branches:** `experiment/reopen-window`, tag
+  `archive/experiment/reopen-window`; the feature on
+  `feature/reopen-window`, tag `archive/feature/reopen-window`.
+- **Outcome:** the menu bar icon's view handles the reopen request;
+  promoted to `[Q-reopen-ignores-closed-window]`. Along the way the UI
+  test harness's newest-build pick was found broken and fixed. Two early
+  `RelaunchTests` failures are still unexplained (22 passes since).
+- **Findings:** `[L-reopen-event]`.
 
 - `[L-reopen-event]` **What happens when Phases is launched again while
   it's running, and can the menu bar icon's view open the window?**
@@ -1061,6 +1222,16 @@ scheduler made read-only so it could run beside a real Phases.
     **10 of 10 passed** (*verified*). Tally since the two failures: 22 of
     22.
 
+### `[X-menubar-launcher-setting]` Missing menu bar icon under Bitrig
+
+- **Question:** why did a Phases launched from Bitrig have no menu bar
+  icon?
+- **When, on what:** 2026-11-04, macOS 27.2.
+- **Branch:** none.
+- **Outcome:** Bitrig's own switch in System Settings → Menu Bar was off;
+  a launched Phases follows it. Why is an untested hypothesis.
+- **Findings:** `[L-menubar-launcher-setting]`.
+
 - `[L-menubar-launcher-setting]` **A Phases launched by Bitrig follows
   Bitrig's own switch in System Settings → Menu Bar.**
   - **How it came up, 2026-11-04:** after the UI test runs, the build
@@ -1089,6 +1260,20 @@ scheduler made read-only so it could run beside a real Phases.
     is affected (it shouldn't be, if the hypothesis holds).
   - **If an icon is ever missing:** check the launching app's entry in
     Menu Bar settings, not just Phases'.
+
+### `[X-menubar-overflow]` Menu bar overflow and the test harness
+
+- **Question:** is Phases' menu bar icon hidden when the menu bar runs
+  out of room, and why does the UI test harness sometimes refuse to
+  click it?
+- **When, on what:** 2026-10-30 to 2026-11-04, macOS 27.2, several
+  display setups. Tracked as issue #11.
+- **Branch:** the harness fix on `fix/menubar-hit-retry`, tag
+  `archive/fix/menubar-hit-retry`.
+- **Outcome:** on macOS 27.2 a chevron reveals hidden icons; macOS 26
+  untested. The harness now rechecks ownership for up to 2 s. The test
+  beeps are macOS's type-to-select.
+- **Findings:** `[L-menubar-overflow]`.
 
 - `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
   bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
@@ -1161,6 +1346,17 @@ scheduler made read-only so it could run beside a real Phases.
   - **Harness fix, 2026-11-04** (`fix/menubar-hit-retry`, tag `archive/fix/menubar-hit-retry`, approved by the
     author): the ownership check rechecks for up to 2 s and names the
     owner when it refuses. First run with it: 13 of 13 (*verified*).
+
+### `[X-hdr-wallpaper]` HDR photos as wallpaper
+
+- **Question:** does macOS draw an HDR photo as wallpaper in SDR or with
+  HDR headroom?
+- **When, on what:** 2026-10-30, macOS 27.2, built-in display, the
+  author's iPhone HEIC.
+- **Branch:** none.
+- **Outcome:** SDR, by the author's eye against a known-HDR control; no
+  tool here could measure it. Bears on `[D-cover-iosurface]`.
+- **Findings:** `[L-hdr-wallpaper]`.
 
 - `[L-hdr-wallpaper]` **How does macOS draw an HDR photo (an iPhone
   HEIC with a gain map) as wallpaper: SDR, or with HDR headroom?**
@@ -1237,6 +1433,9 @@ scheduler made read-only so it could run beside a real Phases.
       Finder: *inference* that it does (macOS draws the wallpaper either
       way), not tested. The new cover will show it: an HDR photo should
       look the same before and after the cover comes off.
+
+### Still open
+
 - `[L-cover-alpha-later]` **Could the 99% cover go to 100% once the menu
   bar has restyled, and does it matter?** Untested. Measure before
   acting on any of this (author and Mike, 2026-10-30).
@@ -1255,13 +1454,31 @@ scheduler made read-only so it could run beside a real Phases.
   off, same-on-every-Space versus per Space, and how Pause, Quit, and
   Transition: None treat the cover) are tracked as GitHub issues labeled
   "planning" (author, 2026-10-30), not here.
+
+### `[X-first-launch-activation]` First-launch window staying behind
+
+- **Question:** why does the window open behind the frontmost app on a
+  first launch?
+- **When, on what:** recorded in the tag, not here.
+- **Branch:** `experiment/first-launch-activation`, tag
+  `archive/experiment/first-launch-activation` (the branch named below
+  is now deleted; the run-by-run record is in the tag).
+- **Outcome:** promoted to `[Q-launch-activate-refused]` (2026-11-06).
+- **Findings:** `[L-first-launch-activation]`.
+
 - `[L-first-launch-activation]` First-launch window staying behind:
   promoted to `[Q-launch-activate-refused]` (2026-11-06). The run-by-run
   record is on `experiment/first-launch-activation`.
 
 ## Retired designs
 
-### Crossfade settle timing (drafts 5–32)
+Designs that were on `main` and have since been replaced. Moved here
+from ERRATA.md "Design history" when the code they explain was gone.
+
+### `[X-cover-settle]` Crossfade settle timing (drafts 5–32)
+
+Moved from ERRATA.md on 2026-11-09; the story of why the delay grew is
+still ERRATA.md "The twitch returns". Digest: `[L-cover-settle-delay]`.
 
 `[D-cover-settle]`, replaced in draft 33 by `[D-persistent-cover]`,
 removed the cover 1.5 s after the wallpaper was set.

@@ -1,10 +1,18 @@
 # Phases — Testing
 
-How Phases is checked and how to look inside it: the unit tests, the
-hands-on checks, and the tools they share (diagnostic logging and the
-launch arguments that exist only for tests). SPEC.md says what Phases
-does and why; ERRATA.md says what macOS does to it. Sorting test: would
-someone using Phases ever see or care about this line? No → here.
+How Phases is checked: the unit tests, the hands-on checks, and what to
+do when a fixed bug comes back. This is the test process. The tools
+these use (the input driver, diagnostic logging, the launch arguments
+that exist only for tests, and the tools' own quirks) are in
+TEST-TOOLS.md. SPEC.md says what Phases does and why; ERRATA.md says
+what macOS does to it. Sorting test: would someone using Phases ever see
+or care about this line? No → here or TEST-TOOLS.md: process here, tools
+there.
+
+Until 2026-11-09 this file also held the tools ("Shared tools"); the old
+wording was "How Phases is checked and how to look inside it: the unit
+tests, the hands-on checks, and the tools they share (diagnostic logging
+and the launch arguments that exist only for tests)."
 
 Decisions here carry `[D-…]` tags and follow the same rules as SPEC.md's:
 the author approves changes before code is written, and the code that
@@ -328,7 +336,7 @@ The pure logic that decides what the app does:
 #### Setup
 
 - Ask first, naming the checks `[D-hands-on-checks]`. Techniques:
-  LEARNINGS.md `[L-synthetic-clicks]`, `[L-twitch-measurement]`,
+  TEST-TOOLS.md `[L-synthetic-clicks]`, `[L-twitch-measurement]`,
   `[L-settings-panes]`.
 - Quit the installed Phases (two copies would both set the wallpaper),
   then launch a Release build fresh, with diagnostics on (`cover`
@@ -394,7 +402,9 @@ Each with what passes:
 #### Record
 
 - Results as *Verified* notes, with date, on the decision each check
-  covers in SPEC.md, and anything unexpected in LEARNINGS.md.
+  covers in SPEC.md, and anything unexpected recorded in EXPERIMENTS.md
+  with a digest line in LEARNINGS.md (until 2026-11-09: "anything
+  unexpected in LEARNINGS.md").
 
 #### Why by hand
 
@@ -417,7 +427,7 @@ Each with what passes:
 #### Setup
 
 - Ask first, naming the runs `[D-hands-on-checks]`. Clicks are real
-  mouse events. Techniques: LEARNINGS.md `[L-synthetic-clicks]` and
+  mouse events. Techniques: TEST-TOOLS.md `[L-synthetic-clicks]` and
   `[L-memory-tools]`.
 - **Build:** the installed Release build, measured with `footprint -p
   <pid>`, which matches what Activity Monitor shows. No
@@ -497,8 +507,9 @@ Each with what passes:
 
 #### Record
 
-- Each run's figures in LEARNINGS.md "Memory", with the date, macOS
-  version, build, and displays.
+- Each run's figures in EXPERIMENTS.md "Memory" (in LEARNINGS.md
+  "Memory" until 2026-11-09), with the date, macOS version, build, and
+  displays, and a digest line in LEARNINGS.md "Memory".
 
 #### Why by hand
 
@@ -534,7 +545,8 @@ Each with what passes:
     on the current Space with the pause banner showing, and Phases stays
     paused. The log (category `reopen`) shows one "window requested by
     notification" per click; a second "by relaunch" line would mean
-    macOS also sent a reopen (harmless, but note it in LEARNINGS.md).
+    macOS also sent a reopen (harmless, but note it in EXPERIMENTS.md
+    `[X-notice-click]`; LEARNINGS.md until 2026-11-09).
   - 8. Re-pause with a pick, Quit Phases, then click the notification in
     Notification Center: Phases launches and its window opens with the
     banner. (Added draft 50, GitHub issue #31.)
@@ -545,7 +557,8 @@ Each with what passes:
     which fixed step 8's window staying behind. Claude checked the log: one notification
     request per click, plus macOS's relaunch when Phases was running;
     no second copy. Run the build Launch Services knows; see
-    `[L-notice-click-launches-copy]` in LEARNINGS.md.
+    `[L-notice-click-launches-copy]` in EXPERIMENTS.md `[X-notice-click]`
+    (LEARNINGS.md until 2026-11-09).
   - *Verified* 2026-11-06 by the author on the draft 37 build: picks in
     System Settings paused Phases with one notification each, Resume
     worked from the notification and Settings, and the new menu header
@@ -553,15 +566,22 @@ Each with what passes:
     the log (detection about 2 s after the pick, no false pause on
     Phases' own sets). Two displays untested.
 
-## Diagnostic procedures
+## When a fixed bug comes back
 
-Logging is switched on and read as described under "Diagnostics" in TESTING.md
-`[D-diagnostics-switch]`.
+What to do first when a bug we've already fixed shows up again. Each
+procedure names the quirk it's about; the quirk's entry in ERRATA.md
+points back here. Until 2026-11-09 this was ERRATA.md "Diagnostic
+procedures", and its first line read: Logging is switched on and read as
+described under "Diagnostics" in TESTING.md `[D-diagnostics-switch]`.
+
+Logging is switched on and read as described under "Diagnostics" in
+TEST-TOOLS.md `[D-diagnostics-switch]`.
 
 - **Crossfade twitch returns:** measure before changing the delay. Record
   the screen at 30 fps or more and step through frame by frame: when the
   wallpaper is set, when the cover comes off, and when macOS's motion
-  plays `[Q-wallpaper-motion-delay]`.
+  plays `[Q-wallpaper-motion-delay]`. How to record and step through
+  frames: TEST-TOOLS.md `[L-twitch-measurement]`.
 - **Toolbar grows tall again:** log `frame.height −
   contentLayoutRect.height` and check whether the toolbar is still
   icon-only and whether SwiftUI has replaced it with its own
@@ -572,6 +592,8 @@ Logging is switched on and read as described under "Diagnostics" in TESTING.md
   swapped-in item, and each change in the split view's limits or an
   out-of-range width. Check whether SwiftUI swaps in a new split view
   controller or item, and what resets `minimumThickness` /
-  `maximumThickness` `[Q-split-item-rewrite]`.
+  `maximumThickness` `[Q-split-item-rewrite]`. The categories and how to
+  read them: TEST-TOOLS.md "Diagnostics".
 - **Accessibility labels:** check with the AX API or Accessibility
-  Inspector, not System Events `[Q-system-events-ax]`.
+  Inspector, not System Events `[Q-system-events-ax]`. Why System Events
+  can't be trusted here: that quirk, in TEST-TOOLS.md "Tools".
