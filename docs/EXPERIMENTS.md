@@ -1259,78 +1259,18 @@ scheduler made read-only so it could run beside a real Phases.
   promoted to `[Q-launch-activate-refused]` (2026-11-06). The run-by-run
   record is on `experiment/first-launch-activation`.
 
-## Driving and measuring the Mac in tests
+## Retired designs
 
-How the experiment's UI runs were done, for next time. Test-suite
-techniques belong in TESTING.md; these are the ad hoc ones.
+### Crossfade settle timing (drafts 5–32)
 
-- `[L-nswindow-screen-rect]` **`NSWindow(contentRect:…, screen:)` reads
-  the rect relative to that screen, not in global coordinates.** A
-  harness window meant for the built-in display (global x −1396) landed
-  at −2908, off the display, shifted by the screen's own −1512 origin.
-  *Measured* 2026-10-30. Pass global coordinates without `screen:`.
-- `[L-test-window-height]` **A borderless 240 pt harness window came out
-  241 pt tall on two displays** (240 on the third), leaving a 1 pt strip
-  of window background: the white line seen across the color-test panes.
-  *Measured* 2026-10-30; why macOS added the point is unknown. Fill the
-  whole content view, or skip edge rows when comparing pixels.
-- `[L-memory-tools]` **Measuring memory:** `footprint -p <pid>` (what
-  Activity Monitor shows), `vmmap --summary` (look for "Malloc Large
-  (empty)"), `heap` (live objects by class), `malloc_history <pid>
-  <address>` and `-allBySize` (who allocated it; needs the app launched
-  with `MallocStackLogging=1`, which adds 16–64 MB of its own), `leaks`.
-  All work on the installed build because it carries `get-task-allow`.
-  Changes were made by clicking the menu bar item's Change Now with real
-  mouse events, positions read through System Events.
+`[D-cover-settle]`, replaced in draft 33 by `[D-persistent-cover]`,
+removed the cover 1.5 s after the wallpaper was set.
 
-- `[L-twitch-measurement]` **Measuring a twitch:** record with
-  `screencapture -v -V <seconds> -x out.mov` (60 fps, variable frame rate;
-  no permission prompt, since the shell already had Screen Recording
-  access, 2026-10-29). Per-frame differences with ffmpeg's `tblend`
-  difference plus `signalstats` (average luma) over a region with no
-  windows find motion; `psnr` between two frames tells a real shift
-  (about 26 dB) from noise (about 43 dB). Tiling menu bar crops at 4
-  frames per second shows restyle timing. *Verified* 2026-10-30.
-  The recording only adds frames when the screen changes (a few per
-  second while still, up to 60 during motion), so a twitch can't fall
-  between frames, but frame counts aren't a time base: use the frame
-  timestamps. Recording several displays at once starves the encoder;
-  record one at a time (`-D<n>`, where 1 is the main display, which isn't
-  the same numbering as `NSScreenNumber`).
-- `[L-settings-panes]` **Opening System Settings panes directly:**
-  `open "x-apple.systempreferences:com.apple.ControlCenter-Settings.extension"`
-  (Menu Bar, including "Show menu bar background") and
-  `…com.apple.Desktop-Settings.extension` (Desktop & Dock, including Stage
-  Manager). Toggle positions depend on where the window lands, so read
-  its position with System Events and check a screenshot before
-  clicking. Turning Stage Manager on the first time shows an intro sheet
-  with its own Turn On button. Verify the result
-  (`defaults read com.apple.WindowManager GloballyEnabled` for Stage
-  Manager, or a screenshot) and put every setting back after the test.
-  *Verified* 2026-10-30.
-- `[L-synthetic-clicks]` **Synthetic input that works:** CGEvent clicks
-  on a menu bar extra need about 60 ms between mouse down and up, or the
-  menu opens but the item doesn't fire. ⌃← and ⌃→ to switch Spaces need
-  the Secondary Fn and Numeric Pad flags set along with Control. Read
-  the menu bar item's position from accessibility each time; it moves as
-  other items come and go. Check what's under the pointer
-  (`CGWindowListCopyWindowInfo`) before each click. *Verified*
-  2026-10-30. See also "Open here" in ERRATA.md on System Events clicks.
-- `[L-cover-check-driving]` **What the 2026-11-03 cover checks needed.**
-  - **Change Now's fade starts 0.6–1.15 s after the click** (decode), so
-    "⌃→ 0.3 s into the fade" has to be timed from the cover window
-    appearing (poll `CGWindowListCopyWindowInfo`), not from the click
-    (`[L-swipe-before-cover]`).
-  - **Random picks often repeat a Space's current image,** which makes a
-    trial uninformative; read the wallpaper first and repeat.
-  - **The 30-minute rotation** fired mid-trial at 11:00; pause the
-    schedule for the run (Change Now still works) and put it back.
-  - **Transition is a segmented picker:** AX radio buttons "None" and
-    "Crossfade". Reduce Motion is the `AX_REDUCE_MOTION` checkbox on
-    `x-apple.systempreferences:com.apple.Accessibility-Settings.extension?Motion`
-    (not the Display pane, macOS 27.2).
-  - **The test build asks for location** (its own signature), a prompt
-    left unanswered on screen.
-  - *Verified* 2026-11-03.
-- `[L-no-fullscreen-apps]` Activity Monitor doesn't support full screen
-  (it only zooms); use Calendar to test full screen. Author, 2026-10-30.
+- *Why 1.5 s:* macOS plays its own motion 0.55–0.65 s after the wallpaper
+  is set `[Q-wallpaper-motion-delay]`. Draft 5's 0.5 s delay removed the
+  cover right as that motion played, bringing the twitch back (see "The
+  twitch returns"). 1.5 s leaves about 0.7 s of margin.
+- *Cost:* the menu bar's background lags the fade by about 1.5 s instead of
+  0.5 s `[Q-menubar-bg-follows-window]`. The menu bar's text and icon color
+  lag as before `[Q-menubar-restyle-on-app-switch]`.
+- Code was `CrossfadeController.settleDelay`, removed in draft 33.

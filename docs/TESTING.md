@@ -553,126 +553,25 @@ Each with what passes:
     the log (detection about 2 s after the pick, no false pause on
     Phases' own sets). Two displays untested.
 
-## Shared tools
+## Diagnostic procedures
 
-Used by both groups. Reference, not steps.
+Logging is switched on and read as described under "Diagnostics" in TESTING.md
+`[D-diagnostics-switch]`.
 
-### Input driver
-
-- `[D-input-driver]` **All mouse and keyboard driving goes through
-  `PhasesUIDriver`'s `SyntheticInput`** (author, 2026-11-06): the UI
-  tests, and one-off driving from the shell with `phases-drive`. No
-  new input helpers; if something's missing (a key, a right-click), add
-  it to `SyntheticInput` and `phases-drive`.
-  - From `UITests/`: `swift run phases-drive where`,
-    `… move <x> <y>`, `… click <x> <y>`, `… key tab|down|x [shift]`.
-    Points are global, top-left origin, the same as accessibility
-    positions. It's a hands-on check `[D-hands-on-checks]`; prove each
-    action landed `[D-input-lands]`.
-  - *Why:* on 2026-11-06 Claude wrote a throwaway CGEvent helper to
-    click in System Settings instead of using the driver, then lost time
-    working out whether the helper was why the click failed. A tool with
-    a history is easier to trust and fix. `phases-drive` exists because
-    `SyntheticInput` could only run inside `swift test`, which made a
-    one-off helper look easier.
-  - Its functions are `package` access, so the tests and `phases-drive`
-    can call them and nothing outside `UITests/` can.
-
-### Diagnostics
-
-- `[D-diagnostics-switch]` **Diagnostic logging is built in and off by
-  default.** Every build is the same; logging is switched on at launch,
-  not compiled in or out.
-  - Turn on (then quit and relaunch Phases):
-    `defaults write app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268 PhasesDiagnostics -bool true`
-  - Turn off: the same with `-bool false`, or `defaults delete … PhasesDiagnostics`.
-  - Read: `/usr/bin/log show --last 30m --style compact --predicate 'subsystem == "PhasesDiag"'`
-    (in zsh, plain `log` is a shell builtin; use the full path).
-  - Code: `App/Model/Diagnostics.swift`. Get a logger with
-    `Diagnostics.logger("category")`; guard any extra work done only to
-    build a log line with `Diagnostics.isEnabled`. Add new diagnostic
-    lines this way instead of writing new logging from scratch.
-  - *Why a launch switch, not a build flag:* switching needs a relaunch,
-    not a rebuild, and the logging code is compiled in every build, so
-    it can't silently stop compiling. When off, each call is a disabled
-    `os.Logger` call, which skips building its message (*recalled*,
-    standard `os.Logger` behavior). No extra observers or timers run for
-    logging alone.
-  - *Why:* the 2026-10-28 sidebar investigation needed logging twice,
-    and it was written from scratch both times (author's request).
-  - Currently instrumented: the sidebar limits (`[D-sidebar-limits-watch]`,
-    category `sidebar`), and covers (category `cover`: each cover made,
-    removed and why, redrawn or resized, held pending, and set on
-    returning to its Space; `[D-persistent-cover]`), and window layout
-    (category `window`: the sidebar's and detail pane's top safe area,
-    where the pause banner sits and when it goes
-    `[D-window-pause-banner]`; under `sidebar`, the title area's height
-    when the toolbar is installed, and each scroll view's top inset and
-    scroll position when the window becomes key or the helper runs,
-    logged only when they change). What to log when chasing a platform bug is in
-    ERRATA.md "Diagnostic procedures".
-  - *Verified* 2026-10-28: with the switch on, a relaunch logged the
-    sidebar's limit passes, restores, and resizes. The off state is
-    consistent but not proven: nothing was logged between that build's
-    launch and the switch going on, but the window may not have been
-    opened then.
-
-### Launch arguments
-
-Both last one launch only (launch arguments, not saved settings), so
-neither can leak into normal use.
-
-- `[D-test-no-location-prompt]` **Test launches can skip the location
-  prompt.** Launching with `--args -PhasesNoLocationPrompt YES` makes
-  Phases never ask for location; if permission was never decided, solar
-  phases fall back as they do when it's denied.
-  - *Why:* each rebuild asks for location again, and the prompt sat over
-    the screen during UI test runs, where it could catch clicks (author,
-    2026-10-29).
-- `[D-ui-test-mode]` **Test mode: one launch that touches nothing real.**
-  Used by the Interface tests. Launching with `--args -PhasesUITestMode
-  YES` makes Phases:
-  - never change the wallpaper: no crossfade, no wallpaper calls, and no
-    restore point captured or restored;
-  - keep its settings in a separate store (the bundle ID plus `.uitest`),
-    erased at every test-mode launch and seeded with three clock-time
-    phases (Morning 7:00, Afternoon 12:00, Evening 18:00), so the user's
-    phases are never read or changed and every test starts from the same
-    list. Deleting phases can never run out;
-  - use the image folder given by `-PhasesUITestImages <path>` (the
-    harness makes one with 60 images and a long name);
-  - leave the window closed at launch, as usual. The UI tests open it the
-    way the author does, from the menu bar item's Open Phases…, through
-    AX actions. *Why:* opening it at launch instead skipped the focus and
-    sidebar-watch bugs, so their tests passed with the fixes removed
-    (2026-10-29). If Phases still isn't frontmost
-    `[Q-launch-activate-refused]`, the tests bring it forward through the
-    AX API;
-  - never ask for location `[D-test-no-location-prompt]`;
-  - never count as a first launch `[D-first-launch-shows-window]`, even
-    though its store starts empty, unless launched with
-    `-PhasesUITestFirstLaunch YES` as well. That switch makes the launch
-    a first launch, so a test can check the window opens on its own.
-    *Why:* every test-mode launch starts with no settings, so without
-    this every test would start with the window already open.
-  - `[D-test-paused-by-outside-change]` start paused as if the
-    wallpaper had just been changed in System Settings, when launched
-    with `-PhasesUITestPausedByOutsideChange YES` as well, with no
-    notification. Ignored outside test mode. *Why:* the pause banner's
-    layout bug showed only with this pause's two-line reason; the menu
-    pause's one line never triggered it, and a real outside change
-    would mean changing the real wallpaper (author's approval,
-    2026-11-07, GitHub issue #30).
-  - AppKit's own saved window frame and sidebar layout live in the normal
-    settings, outside the separate store. The UI tests record both before
-    each launch, clear them so the test starts from the defaults, and put
-    them back after quitting. A test can ask for a window size instead
-    of the default; the harness then saves that frame in place of the
-    cleared one before launch, and the same restore puts the author's
-    back (added 2026-11-07, author's request, for the pause banner's
-    line wrap).
-    - *Why:* on 2026-10-29 a revert-and-check run collapsed the sidebar,
-      AppKit saved that, and the author's own Phases window would have
-      opened with no sidebar and no way to reopen it. The key was reset by
-      hand.
-  - *Cost:* while tests run, two Phases icons can show in the menu bar.
+- **Crossfade twitch returns:** measure before changing the delay. Record
+  the screen at 30 fps or more and step through frame by frame: when the
+  wallpaper is set, when the cover comes off, and when macOS's motion
+  plays `[Q-wallpaper-motion-delay]`.
+- **Toolbar grows tall again:** log `frame.height −
+  contentLayoutRect.height` and check whether the toolbar is still
+  icon-only and whether SwiftUI has replaced it with its own
+  `[Q-empty-toolbar-66pt]`.
+- **Sidebar width limits vanish again:** don't retry the ordering fix.
+  Switch diagnostics on; the `sidebar` category logs each limits pass (or a
+  "SKIPPED limits" error), each restore and which hook caught it, a
+  swapped-in item, and each change in the split view's limits or an
+  out-of-range width. Check whether SwiftUI swaps in a new split view
+  controller or item, and what resets `minimumThickness` /
+  `maximumThickness` `[Q-split-item-rewrite]`.
+- **Accessibility labels:** check with the AX API or Accessibility
+  Inspector, not System Events `[Q-system-events-ax]`.
