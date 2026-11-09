@@ -1,4 +1,4 @@
-# Phases — Specification (draft 50)
+# Phases — Specification (draft 51)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -47,11 +47,12 @@ Each phase has:
 |---|---|
 | Name | e.g. "Morning", "Night" |
 | Start trigger | When the phase begins (see "Start triggers") |
-| Images (All Displays) | Images chosen from the library (multi-select). Used by every display that doesn't have its own selection (see "Per-display images") |
-| Images (per display) | Optional: a separate selection for a specific display, used instead of the All Displays images on that display (see "Per-display images") |
+| Images (Shared) | Images chosen from the library (multi-select). Used by every display that doesn't have its own selection (see "Per-display images"). Called "All Displays" through draft 50 |
+| Images (per display) | Optional: a separate selection for a specific display, used instead of the Shared images on that display (see "Per-display images") |
+| Display sharing | Whether displays using the Shared images all show the same image or each show a different one (see "Displays sharing the Shared images") `[D-sharing-per-phase]` |
 | Order | Random or In order |
-| Rotation | Optional: change to the next image every N minutes or hours while the phase is active |
-| Appearance | Only in: **Any** (default), **Light**, or **Dark** mode (see "Light and Dark Mode") |
+| Rotation | Optional: change to the next image every N minutes or hours while the phase is active. Off means the image changes only when the phase starts |
+| Appearance | Use in: **Any** (default), **Light**, or **Dark** mode (see "Light and Dark Mode") |
 | On | Whether the phase is used; on by default. A phase turned off is skipped `[D-phase-turn-off]` |
 
 **Which phase is active:** among phases whose appearance condition matches the
@@ -79,8 +80,11 @@ the "Always" trigger plus a rotation interval.
 (in order) or a random one from the selection it uses: its own, or All
 Displays. Rotation then continues within the phase.
 
-**In order** cycles through each selection in filename order and remembers its
-position across launches. **Random** avoids repeating the current
+**In order** cycles through each selection in the order the grid shows it
+(sources in their Settings order, then by path within each source) and
+remembers its position across launches. Through draft 50, with one folder,
+that was plain filename order. What order a Photos album's images follow is
+left to issue #33. **Random** avoids repeating the current
 image when there's more than one choice.
 
 ## Start triggers
@@ -100,7 +104,8 @@ image when there's more than one choice.
 
 ## Light and Dark Mode
 
-- Each phase has an **Only in** setting: Any, Light, or Dark.
+- Each phase has a **Use in** setting: Any, Light, or Dark (labelled
+  "Only in" through draft 50).
 - The app listens for system appearance changes (including Auto switching) and
   re-evaluates immediately. If the switch makes a different phase active, the
   wallpaper changes right away; otherwise nothing happens.
@@ -111,10 +116,55 @@ image when there's more than one choice.
 
 ## Image library
 
-- **App preference:** a single image folder, chosen with a standard folder picker.
-- **App preference: Include subfolders** (off by default). When on, the folder is
+- `[D-image-sources]` **App preference: a list of image sources.** The
+  library is every image in every source. A source is a folder, chosen
+  with a standard folder picker, or a Photos album.
+  - *Photos albums depend on issue #33,* which has its own spec decisions
+    still open (iCloud-only photos, offline behaviour, access refused,
+    album deleted, what In order means). This draft specs the interface
+    as if #33 is done (author, 2026-11-09). Until it lands, the only
+    source kind offered is a folder.
+  - A source takes its name from its folder or album. Two sources with
+    the same name are allowed; telling them apart is up to the user
+    (author, 2026-11-09). The full path shows in Settings and in tooltips
+    `[D-group-headings]`.
+  - Sources that overlap (a folder and one of its subfolders, both added)
+    list the shared images twice, once under each source, the same as two
+    links to one image `[D-follow-links]`.
+  - *Why:* draft 50 and earlier allowed a single folder; the author wants
+    several folders and Photos albums (issue #33).
+  - **Upgrading from draft 50:** the one folder becomes the first source,
+    keeping its Include subfolders setting, and every saved selection
+    keeps its images.
+- `[D-remove-source-forgets]` **Removing a source in Settings makes every
+  phase forget it.** Images from it are dropped from every selection,
+  Shared and per display.
+  - If any phase has images selected from it, removing asks first: title
+    "Remove “Wallpaper”?", text "3 phases use images from it. Removing it
+    clears those images from their selections.", buttons **Remove**
+    (destructive) and **Cancel** (default, Esc). If no phase uses it, it's
+    removed without asking.
+  - A selection left empty behaves as any empty selection does: a phase
+    with no available images is skipped, and a display with its own empty
+    selection keeps its wallpaper `[D-own-images-no-fallback]`.
+  - *Why:* removing a source is a deliberate "I'm done with these".
+    Keeping invisible selections around would bring images back
+    unexpectedly if the same folder were added again (author, 2026-11-09).
+    Draft 50's rule for a deleted file (shown as missing) still applies to
+    files, not to removed sources.
+- `[D-source-unavailable-keeps]` **A source that's unavailable isn't
+  removed.** An unplugged drive, a moved or deleted folder, or (with #33)
+  Photos being unreachable keeps every selection. Its row in Settings
+  says it can't be reached; its images show as missing in the grid, as a
+  deleted file does. When it comes back, everything works again.
+  - *Why:* only the user's Remove means "forget". An unplugged drive is
+    temporary, and silently clearing selections would lose work (author,
+    2026-11-09).
+- **Include subfolders** is a setting of each folder source (off by
+  default). When on, the folder is
   scanned recursively, skipping hidden folders and packages (app bundles, Photos
-  libraries, etc.).
+  libraries, etc.). Through draft 50 it was one app preference for the one
+  folder.
   - *Verified* 2026-11-04 by the author (`main` at `3ec6dee`, issue #15), with
     a folder two levels deep: turning the setting on shows the subfolder
     images at once, under one heading per folder path; rotation sets the
@@ -155,7 +205,9 @@ image when there's more than one choice.
 - `[D-scan-each-folder-once]` **Each folder is scanned at most once,**
   identified by where it really is, not the path that reached it. This
   includes the chosen folder itself, so a link back to it, or to a folder
-  above it, adds nothing, and the scan always ends.
+  above it, adds nothing, and the scan always ends. The rule applies
+  within each source; separate sources are scanned separately
+  `[D-image-sources]`.
   - When a folder can be reached both directly and through a link, the
     direct path names it (author, 2026-11-04).
   - When only links reach it, the first one in display order names it
@@ -163,14 +215,36 @@ image when there's more than one choice.
   - *Why:* following links makes loops possible (a folder linked to itself,
     or A → B → A). Without this rule the scan would never end, or would
     list one folder's images over and over.
-- `[D-relative-paths]` Images are identified by their path relative to the folder (e.g.
-  `Winter/snow.jpg`), so top-level selections stay valid when subfolders are
+- `[D-relative-paths]` Images are identified by their source plus their
+  path relative to it (e.g. `Winter/snow.jpg` in the "Wallpapers"
+  source), so top-level selections stay valid when subfolders are
   turned on. Turning subfolders off makes subfolder images show as missing
-  rather than silently dropping them.
-- Access to the folder persists across launches (bookmark).
-- The Phases window shows the library as a **thumbnail grid**, grouped under a
-  heading per subfolder when subfolders are on. Click toggles an image in or out
+  rather than silently dropping them. Through draft 50 the path alone
+  identified an image, since there was one folder.
+- Access to each folder persists across launches (one bookmark per source).
+- The Phases window shows the library as a **thumbnail grid**, with a
+  heading for each source and, when subfolders are on, for each subfolder
+  `[D-group-headings]`. Click toggles an image in or out
   of the selection, ⇧-click selects a range, plus Select All / Select None buttons.
+- `[D-group-headings]` **Group headings: source name, then the path inside
+  it, each group collapsible.**
+  - A source's top level is headed by its name ("Wallpapers"); a subfolder
+    by the source name and the path inside it, joined with › ("Wallpapers
+    › Favorites › 2003"). A Photos album is headed by its album name, with
+    its Photos folders before it ("Photos › Wallpaper").
+  - A heading too long for the width is truncated in the middle, so the
+    source name and the last folder stay visible. Its tooltip shows the
+    full path.
+  - Each heading has a disclosure triangle. A collapsed group hides its
+    thumbnails; the arrow keys skip it `[D-grid-one-tab-stop]`. Which
+    groups are collapsed is remembered across launches.
+  - No per-group selection count (author, 2026-11-09). The overall count
+    sits in the pinned header `[D-image-header]`.
+  - *Why:* with several sources, a bare folder path no longer says which
+    source it's in; a full file-system path (`~/Pictures/Wallpapers/…`)
+    gets too long. Source name plus the inside path is the shortest
+    heading that's still unambiguous within one source (author and
+    Claude, 2026-11-09).
 - `[D-grid-one-tab-stop]` **Keyboard: the thumbnail grid is one Tab stop.**
   Tab moves into the grid and the next Tab moves past it, the way Finder's
   icon view and Photos work. Inside the grid:
@@ -210,33 +284,111 @@ image when there's more than one choice.
 ## Displays
 
 ### Per-display images
-- Each phase has one image selection for **All Displays**, plus optional
-  selections for specific displays. Schedule, order, and rotation are shared:
-  every display changes at the same moments.
-- In the phase editor's Images section, a **Display** picker lists All Displays
-  plus each known display. It appears only when more than one display is known,
-  so single-display setups look and behave as before.
-- Choosing a specific display shows a **Use different images on this display**
-  toggle. When on, that display gets its own thumbnail grid and draws only from
-  its own selection (e.g. ultrawide images for an ultrawide monitor, portrait
-  images for a portrait one). When off, it uses the All Displays selection.
+- Each phase has one image selection called **Shared** (All Displays
+  through draft 50), plus optional selections for specific displays.
+  Schedule, order, and rotation are shared: every display changes at the
+  same moments.
+- `[D-display-tabs]` **The phase editor picks a display with a row of
+  display tabs** above the thumbnail grid, in place of draft 50's
+  Display pop-up menu.
+  - **Tabs, left to right:** **Shared**, a thin vertical divider, then each
+    connected display `[D-connected-displays-only]`, in macOS's display
+    order (recalled: the main display first).
+  - **Each tab** is a 32 pt display icon over the display's name, with a
+    caption under it in secondary text:
+    - Shared: two overlapping screens; caption "18 images" (its
+      selection count).
+    - A built-in display: a laptop; an external one: a monitor. No
+      attempt to draw its real shape.
+    - A display using the Shared images: caption "Uses Shared". With its
+      own images: "Own · 1 image".
+  - Tabs have a fixed width. A name too long for it wraps to a second
+    line, then truncates at the end; the tooltip shows the full name.
+    *Why:* yesterday's mockup truncated in the middle ("Built-in…a
+    Display"), which reads badly (Claude, 2026-11-09).
+  - The selected tab gets a rounded, filled background and its icon is
+    drawn in the accent color, the way the mockup showed it.
+  - Shared is selected whenever a phase is opened. If the selected
+    display disconnects while the editor is open, Shared is selected.
+  - **Accessibility:** the tabs are one selection control, one Tab stop,
+    with arrow keys moving between tabs. VoiceOver reads each as its name
+    and caption, plus "selected" on the chosen one. They aren't a row of
+    separate buttons.
+  - *Why:* a pop-up menu hides which displays have their own images until
+    it's opened. The tabs show every display and its state at a glance,
+    and the divider sets Shared apart as a different kind of choice
+    (author's design, 2026-11-09; mockup `[X-ui-mockup]`).
+- `[D-display-tabs-visibility]` **The tab row shows when more than one
+  display is connected,** or when exactly one is connected and it has its
+  own images in this phase (then the row is Shared plus that display).
+  Otherwise it's hidden, and the editor shows the Shared selection as
+  before.
+  - *Why the exception:* with only connected displays shown, a laptop
+    given its own images while docked would hide the row once undocked.
+    The editor would then show the Shared grid while the laptop actually
+    uses its own images, with no way to see or undo that (found in review,
+    Claude, 2026-11-09).
+- **A display's tab** shows a **Use different images on this display**
+  checkbox in the header `[D-image-header]`. When on, that display gets
+  its own thumbnail grid and draws only from its own selection (e.g.
+  ultrawide images for an ultrawide monitor, portrait images for a
+  portrait one). When off, it uses the Shared selection, and in place of
+  the grid the editor says so: "Uses the Shared images" with "This
+  display shows the images chosen under Shared. Turn on “Use different
+  images on this display” to choose different ones for it." centered
+  below, in secondary text.
+  - The wording replaces the mockup's "Use its own images", where "its"
+    was unclear (Claude, 2026-11-09).
+- `[D-own-images-start-from-shared]` **Turning "Use different images on
+  this display" on starts from a copy of the Shared selection,** not an
+  empty one.
+  - *Why:* an empty selection makes the display keep its current wallpaper
+    and stop changing `[D-own-images-no-fallback]`, which looks like a
+    bug. Starting from Shared changes nothing until the user edits it
+    (Claude's call, approved by the author 2026-11-09).
 - `[D-own-images-no-fallback]` If a display has its own selection but none
   of those images are available,
-  that display keeps its current wallpaper; it does not fall back to All Displays.
+  that display keeps its current wallpaper; it does not fall back to Shared.
 - Turning the toggle off discards that display's selection for that phase.
 
 ### Display identity
 - `[D-display-uuid]` Displays are identified by their hardware UUID, so settings survive
   unplugging, reconnecting, and rearranging. Phases remembers each display's
-  name. Disconnected displays stay in the picker, marked "(not connected)", and
-  keep their selections.
+  name.
+- `[D-connected-displays-only]` **Only connected displays are shown.** A
+  display that isn't connected has no tab; it reappears, with its
+  selections, when it's connected again.
+  - *Why:* draft 50 kept every display ever seen in the picker, marked
+    "(not connected)", so one hotel projector became a permanent entry.
+    Showing only what's connected also removes the need for a
+    "disconnected" warning (author, 2026-11-09).
+  - *Replaced:* draft 50's "Disconnected displays stay in the picker,
+    marked "(not connected)"".
+- `[D-keep-display-settings]` **Saved display settings are never pruned.**
+  A display's selections are kept however long it's been away.
+  - *Why:* a saved display is its UUID, its name, and lists of image
+    paths, a few hundred bytes to a few KB (*recalled* estimate, not
+    measured). Pruning would add code and lose the settings of a monitor
+    used once a year. System Settings seems to keep displays the same way
+    (author's observation, 2026-11-09).
+  - Removing a source still clears its images from these saved
+    selections `[D-remove-source-forgets]`.
 
-### Displays sharing the All Displays images
-- Preference, applying only to displays **without** their own images in the
-  active phase: **Same image everywhere** (default) or **Different picks per
-  display** (each draws its own pick from the All Displays images).
+### Displays sharing the Shared images
+- `[D-sharing-per-phase]` **A setting of each phase,** applying only to
+  displays **without** their own images in that phase: same image
+  everywhere (default), or each display shows a different image (each
+  draws its own pick from the Shared images).
+  - Shown on the Shared tab as an **Each display shows a different image**
+    checkbox `[D-image-header]`. It's dimmed when fewer than two connected
+    displays use the Shared images in this phase.
+  - *Why:* it's an image decision, so it belongs beside the image picker,
+    and a phase is where image decisions live (author, 2026-11-09).
+  - *Replaced:* through draft 50 it was one app preference in Settings
+    (**Same image everywhere** / **Different picks per display**).
+    Upgrading copies that preference into every phase.
 - In order: each display's selection (or the shared one) advances in step. With
-  Different picks, sharing displays are offset by one from each other.
+  different images, sharing displays are offset by one from each other.
 
 ### Not included
 - `[D-no-shape-matching]` Automatic matching of images to each display's shape (portrait, ultrawide,
@@ -267,9 +419,15 @@ image when there's more than one choice.
 
 ## Transitions
 
-- **App preference: Transition**: None or **Crossfade** (default).
-- **App preference: Duration**: 0.5 to 3 seconds (default 1 second), shown
-  only when Crossfade is selected.
+- `[D-transition-one-picker]` **App preference: Transition**, one pop-up
+  menu: **None**, **Crossfade 0.5 s**, **Crossfade 1 s** (default),
+  **Crossfade 2 s**, **Crossfade 3 s**.
+  - *Why:* one control instead of a type picker plus a duration that
+    appears and disappears (author, 2026-11-09).
+  - *Replaced:* through draft 50, a None/Crossfade picker plus a Duration
+    slider (0.5 to 3 seconds) shown only for Crossfade. Upgrading rounds
+    a saved duration to the nearest choice, halves rounding up (1.5 s
+    becomes 2 s).
 - macOS has no transition for wallpapers set by apps, so Phases does it itself
   by **fading the new image in over the old one** `[D-fade-in]`
   (see *Why fade in* below), on a cover that then stays up while its
@@ -739,6 +897,8 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
   a dawn/dusk trigger, not at launch.
 - Settings shows the current location, today's civil dawn and dusk, when the
   location was last updated, and an **Update Now** button.
+- A dawn/dusk phase's editor shows when that phase starts today, beside its
+  Starts row `[D-starts-row]`.
 - Uses low-accuracy, infrequent updates. The last known location is saved so
   dawn/dusk still work offline or after a restart.
 - If permission is denied: dawn/dusk phases are disabled and marked with a
@@ -770,7 +930,8 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
     reason Phases can't run a phase, the one exception being a phase the
     user turned off, which reads "Off" `[D-phase-turn-off]`. The phase
     editor's warning names the reason ("Location access is off, so this
-    phase is skipped." or "No location yet, so this phase is skipped.").
+    phase is skipped." or "No location yet, so this phase is skipped."),
+    on a line under the control that fixes it `[D-phase-status-inline]`.
     - *Why:* the row is for scanning the schedule; clicking it shows why.
       One status also covers any later reason a phase can't run without
       changing the row (author's call, 2026-11-05). Replaces the first
@@ -787,11 +948,13 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
     Its row is dimmed like any phase that can't run, and its trigger line
     ends with **Off** `[D-row-status-not-cause]`.
     VoiceOver reads "Off".
-    - **Controls:** a **Use this phase** switch in the editor's first
-      section, under Name; and **Turn Off** (or **Turn On**) in both the
+    - **Controls:** a **Use this phase** switch at the end of the
+      editor's first row `[D-name-row]` (draft 50 and earlier: on its own
+      row under Name); and **Turn Off** (or **Turn On**) in both the
       action menu and the row's context menu `[D-phase-actions]`, after
       Duplicate.
-    - **Editor message:** "This phase is turned off, so it's skipped."
+    - **Editor message:** "This phase is turned off, so it's skipped.",
+      under the first row `[D-phase-status-inline]`.
     - **Turned off wins.** A phase that is both turned off and missing a
       location names only "turned off" in the editor, since turning it
       back on is the first thing the user would do (author, 2026-11-06).
@@ -1067,8 +1230,8 @@ extras don't show them. No global hotkey.
       labels, the AX API reports "Add Phase" and "Delete Phase" (verified
       2026-10-28).
   - `[D-duplicate-phase]` **Duplicate makes a copy of a phase** with every
-    setting: start trigger, appearance, order, rotation, and its All
-    Displays and per-display images. It's named like a Finder copy
+    setting: start trigger, appearance, order, rotation, display sharing
+    `[D-sharing-per-phase]`, and its Shared and per-display images. It's named like a Finder copy
     ("Morning copy"), and selected once made. It keeps the original's
     start time; the user changes it from there.
     - Two phases with the same start time tie, and the one saved first
@@ -1145,6 +1308,10 @@ extras don't show them. No global hotkey.
     in" picker, and two or three thumbnail columns; 480 pt shows the Name
     and Starts sections plus part of the next. Adjust after a look at the
     real window.
+  - Draft 51's compact editor `[D-compact-editor]` changes what those
+    widths hold: 460 pt must fit the first row (Name and Use this phase)
+    `[D-name-row]` with a usable Name field, and the display tabs. Check
+    both on the real window before keeping the numbers.
 - `[D-tall-toolbar]` **Full-height toolbar over the detail pane only.** The
   window keeps macOS's tall unified toolbar, like System Settings and
   Bitrig, even though it has no toolbar buttons. The sidebar stays full
@@ -1193,8 +1360,112 @@ extras don't show them. No global hotkey.
       them once isn't enough; see `[Q-split-item-rewrite]`. No polling,
       because an idle menu bar app shouldn't use CPU (the author's standing
       requirement; see also `[D-single-timer]`).
-- **Phase selected:** editor with name, trigger, offset, appearance condition,
-  order, rotation, and the Images section (Display picker and thumbnail grid).
+- **Phase selected:** the phase editor, below.
+
+#### Phase editor
+
+- `[D-compact-editor]` **The phase editor is three short rows of
+  settings, then the images.** Settings are made once and then left
+  alone, so they take as little height as they can and the thumbnail
+  grid gets the rest. Top to bottom: the first row `[D-name-row]`, the
+  Starts row `[D-starts-row]`, the Use in row, any status line
+  `[D-phase-status-inline]`, the Images heading with order and rotation
+  `[D-rotation-menus]`, the pinned image header `[D-image-header]`, and
+  the grid.
+  - **Use in** is a three-segment control, **Any | Light | Dark**. The
+    segments are words, not sun and moon symbols: the author doesn't
+    want meaning carried by an icon nothing explains (see
+    `[D-active-badge]`).
+  - *Open for the author's review:* Claude proposed two rows, with Use
+    in and a switch labelled just **On** sharing the first row. That
+    contradicts `[D-phase-turn-off]`, which chose "Use this phase"
+    because a bare "On" next to the name could read as a status. This
+    draft keeps that decision, which costs the third row. If the author
+    accepts "On", Use in moves up beside Name and the editor is two rows.
+  - *Why:* draft 50 gave each setting its own row (Name, Use this phase,
+    Starts, offset, Only in, Order, Rotation, Display), so on a laptop
+    the grid started below the fold. The author wants the editor as
+    compact as it can be without losing usability, clarity, or looks
+    (2026-11-09).
+  - The two rows are a grouped form, as before, so the branding panel
+    still lines up with the first row `[D-brand-inset]`.
+- `[D-name-row]` **First row:** **Name** (text field, takes the spare
+  width), then, at the trailing edge, the **Use this phase** switch
+  `[D-phase-turn-off]`, its label to the left of it.
+  - *Why together:* what the phase is called and whether it's used are
+    the two things someone checks first; neither needs a row of its own.
+- `[D-starts-row]` **Starts row:** **Starts** with a pop-up menu of
+  triggers: **Clock time**, **Dawn**, **Dusk**, **Always**. What follows
+  depends on the trigger:
+  - **Clock time:** a time field.
+  - **Dawn or Dusk:** an offset pop-up menu: **On time**, **15 min
+    before**, **30 min before**, **1 hr before**, **2 hr before**, **15 min
+    after**, **30 min after**, **1 hr after**, **2 hr after**, then a
+    separator and **Custom…**.
+    - Custom shows, after the menu, a number field, a **minutes / hours**
+      menu, and a **before / after** menu: "[45] [minutes] [before]".
+      Limits stay −12 h to +12 h (see "Start triggers").
+    - A saved offset that isn't one of the presets shows as Custom with
+      its value. The offset is stored in minutes; it's shown in the
+      largest unit that divides it evenly (90 minutes shows as 90
+      minutes, 120 as 2 hours), so nobody converts by hand.
+    - Trailing secondary text says when the phase starts today: "Today
+      7:42 PM (dusk 8:42 PM)". If the event doesn't happen today (far
+      north or south): "No dusk today".
+  - **Always:** trailing secondary text: "When no timed phase applies".
+  - *Why one menu for the offset:* draft 50's "[before, by] [30] minutes"
+    took three controls and only did minutes, so two hours meant typing
+    120. The presets cover the usual offsets in one control (author and
+    Claude, 2026-11-09).
+  - "On time" is a placeholder label: "At dusk" was considered, but then
+    the row reads "Dusk · At dusk" (open for the author's review).
+- `[D-phase-status-inline]` **Why a phase can't run shows under the row
+  that fixes it,** in secondary text with no banner:
+  - Turned off: "This phase is turned off, so it's skipped." under the
+    first row, which holds the switch.
+  - Location access off: "Location access is off, so this phase is
+    skipped." under the Starts row, with an **Open System Settings…**
+    button that opens Privacy & Security › Location Services.
+  - No location yet: "No location yet, so this phase is skipped." under
+    the Starts row, no button (Phases asks on its own
+    `[D-location-on-demand]`).
+  - Turned off wins, as before `[D-phase-turn-off]`.
+  - The window-wide pause banner is unchanged `[D-window-pause-banner]`.
+  - *Why:* status beside its fix, the rule the pause banner already
+    follows. A phase-level banner would cost a row and say less (Claude's
+    call, approved by the author 2026-11-09).
+- `[D-rotation-menus]` **The Images heading carries order and
+  rotation.** "Images" on the left; on the right, two pop-up menus:
+  - **Order:** **Random** or **In order**.
+  - **Rotation:** **Only when the phase starts**, **Every 5 min**,
+    **Every 15 min**, **Every 30 min**, **Every 1 hr**, **Every 2 hr**,
+    **Every 4 hr**, then a separator and **Custom…**, which shows a number
+    field and a **minutes / hours** menu after it. A saved interval that
+    isn't a preset shows as Custom with its value.
+  - *Why:* order still matters without rotation, since a phase's first
+    image is the first in order or a random one. So the two stay separate
+    choices, not one "rotate in order / randomly / never" menu (found in
+    review, Claude, 2026-11-09). Draft 50's checkbox plus number plus unit
+    took four controls; the rotation menu is one. On the heading line,
+    they cost no extra row, and sit beside the images they apply to
+    (author, 2026-11-09).
+- `[D-image-header]` **The image header pins to the top while the grid
+  scrolls.** It holds the display tabs `[D-display-tabs]` (when shown)
+  and one line under them:
+  - Left: on the Shared tab, **Each display shows a different image**
+    `[D-sharing-per-phase]` (only when the tabs are shown); on a
+    display's tab, **Use different images on this display**.
+  - Right: "1 of 77 selected", then **Select All** and **Select None**.
+    Hidden on a display that uses the Shared images, where there's no
+    grid to select in.
+  - A divider separates the header from the grid.
+  - *Why:* scrolled down a long grid, the user still has to see which
+    display they're choosing for (author, 2026-11-09). One line under the
+    tabs keeps the pinned part about 90 pt tall (estimate, to check on the
+    real window).
+
+#### Pause banner and Settings
+
 - `[D-window-pause-banner]` **While paused, for any reason, a pause
   banner sits at the top of the detail pane,** whatever is selected (a
   phase, Settings, or nothing). It stays put while the form scrolls.
@@ -1232,24 +1503,59 @@ extras don't show them. No global hotkey.
     now; a broader Settings cleanup may move it (author, 2026-11-06).
     Drafts 37–48 put the pause reason in a note under the switch; draft
     49 moved it to the banner so it shows in every view.
-- **Settings selected:** the Schedule section above, then image folder and Include subfolders; display sharing
-  preference (see "Displays sharing the All Displays images"); transition and duration; Launch at Login; location status
-  with today's civil dawn and dusk and Update Now; and, at the bottom, a
-  **Quitting** section with the **Restore original wallpaper when quitting**
-  toggle and a note that says what quitting will do `[D-restore-on-quit]`,
-  and the **Ask before quitting** toggle `[D-quit-confirm]`.
-  No Quit button: Quit lives in the app menu `[D-app-menu]` (draft 24 and
-  earlier had a Quit Phases button here).
-- `[D-version-in-settings]` **About section,** last in Settings, below
-  Quitting, one line each:
-  - **Version:** the app's version and build number, e.g. "0.1 (47)".
-  - **Spec:** the SPEC.md draft the build was made against, e.g. "Draft 47".
-  - **Built:** the date and time this copy of the app was built (taken
-    from the app's executable file).
+- `[D-settings-global-only]` **Settings holds app-wide settings only;**
+  anything that differs per phase lives in the phase editor. Sections, top
+  to bottom:
+  1. **Schedule:** the switch above `[D-settings-schedule-switch]`.
+  2. **Wallpaper Sources** `[D-sources-table]`.
+  3. **Transitions:** the Transition menu `[D-transition-one-picker]`.
+  4. **Startup & Quit:** **Launch at Login** `[D-login-consent]`, **Ask
+     before quitting** `[D-quit-confirm]`, and **Restore original
+     wallpaper when quitting** with its note saying what quitting will do
+     `[D-restore-on-quit]`.
+  5. **Location:** current location, today's civil dawn and dusk, when
+     it was last updated, and **Update Now** (see "Location").
+  - No Quit button: Quit lives in the app menu `[D-app-menu]` (draft 24
+    and earlier had a Quit Phases button here). No About section
+    `[D-version-in-about]`.
+  - *Replaced:* draft 50's order was Schedule, image folder and Include
+    subfolders, display sharing, transition and duration, Launch at
+    Login, location, Quitting, About. Display sharing moved to each phase
+    `[D-sharing-per-phase]` (author, 2026-11-09).
+- `[D-sources-table]` **Wallpaper Sources is a small table** of the
+  sources `[D-image-sources]`, one row each:
+  - A folder or Photos symbol, the source's name, and under it in
+    secondary text its full path (a folder) or its place in Photos (an
+    album), truncated in the middle.
+  - Its image count, right-aligned: "214 images". An unreachable source
+    says "Can't be reached" instead `[D-source-unavailable-keeps]`.
+  - For a folder, an **Include subfolders** checkbox.
+  - Below the table, + and − buttons in the sidebar footer's style
+    `[D-sidebar-footer-style]`. + is a menu: **Folder…** and (with #33)
+    **Photos Album…**. − removes the selected source
+    `[D-remove-source-forgets]` and is dimmed with no selection.
+  - **With no sources,** the table is replaced by an **Add Source…**
+    button with the same menu, and a line of secondary text: "Add a
+    folder or album to choose wallpapers from."
+  - *Why:* draft 50's single "Images found" line can't say which source
+    holds what. A count per source does (author, 2026-11-09). The empty
+    state names a source, not "wallpaper", since the button adds a place
+    images come from, not an image (found in review, Claude,
+    2026-11-09).
+- `[D-version-in-about]` **The About Phases panel names the build:**
+  - **Version:** the app's version and build number, e.g. "0.1 (51)", as
+    the standard panel already shows.
+  - **Spec:** the SPEC.md draft the build was made against, e.g. "Draft
+    51", and **Built:** the date and time this copy of the app was built
+    (taken from the app's executable file), both in the panel's credits.
   - *Why:* during testing, the author needs to tell which build is
-    running. The build number *is* the spec draft, so Finder's Get Info,
-    the standard About panel, and this section all name the same draft;
-    the build time tells apart builds of one draft.
+    running. The build number *is* the spec draft, so Finder's Get Info
+    and the About panel name the same draft; the build time tells apart
+    builds of one draft. Settings is for settings; the About panel is
+    where Mac users look for a version (author, 2026-11-09).
+  - *Replaced:* `[D-version-in-settings]`, an About section at the bottom
+    of Settings (drafts 46–50). Code comments carrying the old tag move
+    to the new one.
   - *Version scheme:* "0.1" until the author calls Phases finished; the
     build number is the SPEC.md draft number.
   - *How:* the draft number is set in one place, the build number
@@ -1264,6 +1570,8 @@ extras don't show them. No global hotkey.
     a separate constant in the code. The constant was missed in the
     draft 46 change, leaving Settings at "Draft 45" (verified 2026-11-06
     by Claude: the unit test failed on `main`).
+  - The *Version scheme*, *How*, and *Replaced* notes above came from
+    `[D-version-in-settings]` and still apply.
 
 ### Dock icon and app menu
 
@@ -1474,10 +1782,20 @@ extras don't show them. No global hotkey.
 
 ## Persistence
 
-All settings (folder bookmark, phases including per-display selections,
-preferences, in-order positions, last applied phase and image per display, known
-displays and their names, last location) are stored in UserDefaults as Codable
-data. Phases saved by earlier versions load unchanged (no per-display images).
+All settings (image sources with a bookmark each, phases including
+per-display selections and display sharing, preferences, in-order
+positions, last applied phase and image per display, known displays and
+their names, collapsed grid groups, last location) are stored in
+UserDefaults as Codable data. Phases saved by earlier versions load
+unchanged (no per-display images).
+
+**Upgrading from draft 50** converts once, keeping everything the user
+chose: the one folder becomes the first source `[D-image-sources]`, each
+saved image path gains that source `[D-relative-paths]`, the display
+sharing preference is copied into every phase `[D-sharing-per-phase]`,
+and the crossfade duration is rounded to a menu choice
+`[D-transition-one-picker]`. The conversion is a pure function,
+unit-tested `[D-tests-unhosted]`.
 
 ## Memory
 
@@ -1513,7 +1831,9 @@ data. Phases saved by earlier versions load unchanged (no per-display images).
 ## Out of scope (v1)
 
 - Different schedules per weekday
-- Multiple folders or online image sources
+- Online image sources other than Photos albums. Multiple folders and
+  Photos albums moved into scope in draft 51 `[D-image-sources]`; Photos
+  albums depend on issue #33.
 - Choosing different images per Space within a phase. Planned as a later
   enhancement (author, 2026-10-31); `[D-cover-per-space]` keeps the way
   open. Needs a way to tell Spaces apart, which the public API doesn't
