@@ -1,18 +1,10 @@
 # Phases — Testing
 
-How Phases is checked: the unit tests, the hands-on checks, and what to
-do when a fixed bug comes back. This is the test process. The tools
-these use (the input driver, diagnostic logging, the launch arguments
-that exist only for tests, and the tools' own quirks) are in
-TEST-TOOLS.md. SPEC.md says what Phases does and why; ERRATA.md says
-what macOS does to it. Sorting test: would someone using Phases ever see
-or care about this line? No → here or TEST-TOOLS.md: process here, tools
-there.
-
-Until 2026-11-09 this file also held the tools ("Shared tools"); the old
-wording was "How Phases is checked and how to look inside it: the unit
-tests, the hands-on checks, and the tools they share (diagnostic logging
-and the launch arguments that exist only for tests)."
+How Phases is checked and how to look inside it: the unit tests, the
+hands-on checks, and the tools they share (diagnostic logging and the
+launch arguments that exist only for tests). SPEC.md says what Phases
+does and why; ERRATA.md says what macOS does to it. Sorting test: would
+someone using Phases ever see or care about this line? No → here.
 
 Decisions here carry `[D-…]` tags and follow the same rules as SPEC.md's:
 the author approves changes before code is written, and the code that
@@ -70,12 +62,9 @@ The pure logic that decides what the app does:
   that a denied dawn phase never becomes active even with a saved
   location `[D-denied-means-off]`; a phase turned off never runs, even
   without a location problem, and older saved phases load as on
-  `[D-phase-turn-off]` (draft 42), and the row reads "Off" for it,
-  "Phase disabled" otherwise (draft 42; no warning symbol since draft 45)
-- `SidebarHighlight`: a row has the colored highlight only when it's
-  selected, the window is in front, and the sidebar has focus
-  `[D-active-badge]` (draft 45)
-- `AppVersion`: the build number in `Project.json` matches SPEC.md's title
+  `[D-phase-turn-off]` (draft 42), and the row reads "Off" with no
+  warning for it, "Phase disabled" with one otherwise (draft 42)
+- `AppVersion`: the spec draft constant matches SPEC.md's title
   `[D-version-in-settings]`
 - `FolderScan`: which images the folder scan finds and what it names
   them, following symlinks and aliases `[D-follow-links]` and ending on
@@ -206,11 +195,8 @@ The pure logic that decides what the app does:
 - **Suites:**
   - *Fast* (the default, about a minute): sidebar width limits, the +/−
     buttons, delete selection, initial focus, the grid's Tab stop, the
-    toolbar height, a relaunch with the window closed
-    `[D-reopen-shows-window]`, and the pause banner
-    `[D-window-pause-banner]`: the window first opened while paused
-    starts below the toolbar, and the banner follows 20 pause and resume
-    toggles from the menu.
+    toolbar height, and a relaunch with the window closed
+    `[D-reopen-shows-window]`.
   - *Slow* (`PHASES_UI_SLOW=1 swift test`, about two minutes): the
     sidebar limits again after waiting 30 s, across three launches,
     because SwiftUI's rewrite lands seconds after the window opens
@@ -259,7 +245,7 @@ The pure logic that decides what the app does:
     settings (author, 2026-10-30; LEARNINGS.md `[L-menubar-overflow]`).
 - `[D-ui-test-ids]` **Controls the tests use carry accessibility
   identifiers:** `sidebar`, `addPhase`, `deletePhase`, `phaseName`,
-  `imageGrid`, `imageFolderName`, `pauseBannerResume`. They're invisible to users, but renaming
+  `imageGrid`, `imageFolderName`. They're invisible to users, but renaming
   one breaks the tests.
 
 - **Relaunch:** the harness relaunches its own instance by sending it a
@@ -336,7 +322,7 @@ The pure logic that decides what the app does:
 #### Setup
 
 - Ask first, naming the checks `[D-hands-on-checks]`. Techniques:
-  TEST-TOOLS.md `[L-synthetic-clicks]`, `[L-twitch-measurement]`,
+  LEARNINGS.md `[L-synthetic-clicks]`, `[L-twitch-measurement]`,
   `[L-settings-panes]`.
 - Quit the installed Phases (two copies would both set the wallpaper),
   then launch a Release build fresh, with diagnostics on (`cover`
@@ -402,9 +388,7 @@ Each with what passes:
 #### Record
 
 - Results as *Verified* notes, with date, on the decision each check
-  covers in SPEC.md, and anything unexpected recorded in EXPERIMENTS.md
-  with a digest line in LEARNINGS.md (until 2026-11-09: "anything
-  unexpected in LEARNINGS.md").
+  covers in SPEC.md, and anything unexpected in LEARNINGS.md.
 
 #### Why by hand
 
@@ -427,7 +411,7 @@ Each with what passes:
 #### Setup
 
 - Ask first, naming the runs `[D-hands-on-checks]`. Clicks are real
-  mouse events. Techniques: TEST-TOOLS.md `[L-synthetic-clicks]` and
+  mouse events. Techniques: LEARNINGS.md `[L-synthetic-clicks]` and
   `[L-memory-tools]`.
 - **Build:** the installed Release build, measured with `footprint -p
   <pid>`, which matches what Activity Monitor shows. No
@@ -507,9 +491,8 @@ Each with what passes:
 
 #### Record
 
-- Each run's figures in EXPERIMENTS.md "Memory" (in LEARNINGS.md
-  "Memory" until 2026-11-09), with the date, macOS version, build, and
-  displays, and a digest line in LEARNINGS.md "Memory".
+- Each run's figures in LEARNINGS.md "Memory", with the date, macOS
+  version, build, and displays.
 
 #### Why by hand
 
@@ -521,9 +504,8 @@ Each with what passes:
 
 - `[D-outside-change-check]` **Pausing for a wallpaper picked elsewhere
   is checked by hand** before it merges, and after any change to
-  `WallpaperStoreWatcher`, `OutsideChangeRule`, `PauseNotifier`, or
-  `WindowRequest`. It needs the real wallpaper and System Settings, out
-  of reach of the unit tests.
+  `WallpaperStoreWatcher` or `OutsideChangeRule`. It needs the real
+  wallpaper and System Settings, out of reach of the unit tests.
   - Build: the newest Bitrig Debug build, crossfades on, diagnostics on
     (log category `store`).
   - 1. Let Phases change once (Change Now): no outside change logged.
@@ -539,26 +521,6 @@ Each with what passes:
   - 5. Pick an Aerial: same as step 2.
   - 6. With restore on, pick a still, then Quit: the pick stays (it's the
     new original).
-  - 7. `[D-notice-opens-window]` Click the notification's body (not
-    Resume), re-pausing with a pick each time: with the window closed,
-    minimized, and open on another Space, the window comes to the front
-    on the current Space with the pause banner showing, and Phases stays
-    paused. The log (category `reopen`) shows one "window requested by
-    notification" per click; a second "by relaunch" line would mean
-    macOS also sent a reopen (harmless, but note it in EXPERIMENTS.md
-    `[X-notice-click]`; LEARNINGS.md until 2026-11-09).
-  - 8. Re-pause with a pick, Quit Phases, then click the notification in
-    Notification Center: Phases launches and its window opens with the
-    banner. (Added draft 50, GitHub issue #31.)
-  - *Verified* 2026-11-08 by the author, steps 7–8 only, one display:
-    every body click opened the window in front with the banner. Step 7
-    (closed, minimized, another Space) on the build of e6336d6; step 8
-    (after a quit) and step 7 again (closed) on the build of d57f146,
-    which fixed step 8's window staying behind. Claude checked the log: one notification
-    request per click, plus macOS's relaunch when Phases was running;
-    no second copy. Run the build Launch Services knows; see
-    `[L-notice-click-launches-copy]` in EXPERIMENTS.md `[X-notice-click]`
-    (LEARNINGS.md until 2026-11-09).
   - *Verified* 2026-11-06 by the author on the draft 37 build: picks in
     System Settings paused Phases with one notification each, Resume
     worked from the notification and Settings, and the new menu header
@@ -566,37 +528,108 @@ Each with what passes:
     the log (detection about 2 s after the pick, no false pause on
     Phases' own sets). Two displays untested.
 
-## When a fixed bug comes back
+## Shared tools
 
-What to do first when a bug we've already fixed shows up again. Each
-procedure names the quirk it's about; the quirk's entry in ERRATA.md
-points back here. Until 2026-11-09 this was ERRATA.md "Diagnostic
-procedures", and its first line read: Logging is switched on and read as
-described under "Diagnostics" in TESTING.md `[D-diagnostics-switch]`.
+Used by both groups. Reference, not steps.
 
-Logging is switched on and read as described under "Diagnostics" in
-TEST-TOOLS.md `[D-diagnostics-switch]`.
+### Input driver
 
-- **Crossfade twitch returns:** measure before changing when the cover
-  comes off `[D-persistent-cover]`. (Until 2026-11-09 this said "before
-  changing the delay", the settle delay draft 33 removed; see
-  EXPERIMENTS.md `[X-cover-settle]`.) Record
-  the screen at 30 fps or more and step through frame by frame: when the
-  wallpaper is set, when the cover comes off, and when macOS's motion
-  plays `[Q-wallpaper-motion-delay]`. How to record and step through
-  frames: TEST-TOOLS.md `[L-twitch-measurement]`.
-- **Toolbar grows tall again:** log `frame.height −
-  contentLayoutRect.height` and check whether the toolbar is still
-  icon-only and whether SwiftUI has replaced it with its own
-  `[Q-empty-toolbar-66pt]`.
-- **Sidebar width limits vanish again:** don't retry the ordering fix.
-  Switch diagnostics on; the `sidebar` category logs each limits pass (or a
-  "SKIPPED limits" error), each restore and which hook caught it, a
-  swapped-in item, and each change in the split view's limits or an
-  out-of-range width. Check whether SwiftUI swaps in a new split view
-  controller or item, and what resets `minimumThickness` /
-  `maximumThickness` `[Q-split-item-rewrite]`. The categories and how to
-  read them: TEST-TOOLS.md "Diagnostics".
-- **Accessibility labels:** check with the AX API or Accessibility
-  Inspector, not System Events `[Q-system-events-ax]`. Why System Events
-  can't be trusted here: that quirk, in TEST-TOOLS.md "Tools".
+- `[D-input-driver]` **All mouse and keyboard driving goes through
+  `PhasesUIDriver`'s `SyntheticInput`** (author, 2026-11-06): the UI
+  tests, and one-off driving from the shell with `phases-drive`. No
+  new input helpers; if something's missing (a key, a right-click), add
+  it to `SyntheticInput` and `phases-drive`.
+  - From `UITests/`: `swift run phases-drive where`,
+    `… move <x> <y>`, `… click <x> <y>`, `… key tab|down|x [shift]`.
+    Points are global, top-left origin, the same as accessibility
+    positions. It's a hands-on check `[D-hands-on-checks]`; prove each
+    action landed `[D-input-lands]`.
+  - *Why:* on 2026-11-06 Claude wrote a throwaway CGEvent helper to
+    click in System Settings instead of using the driver, then lost time
+    working out whether the helper was why the click failed. A tool with
+    a history is easier to trust and fix. `phases-drive` exists because
+    `SyntheticInput` could only run inside `swift test`, which made a
+    one-off helper look easier.
+  - Its functions are `package` access, so the tests and `phases-drive`
+    can call them and nothing outside `UITests/` can.
+
+### Diagnostics
+
+- `[D-diagnostics-switch]` **Diagnostic logging is built in and off by
+  default.** Every build is the same; logging is switched on at launch,
+  not compiled in or out.
+  - Turn on (then quit and relaunch Phases):
+    `defaults write app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268 PhasesDiagnostics -bool true`
+  - Turn off: the same with `-bool false`, or `defaults delete … PhasesDiagnostics`.
+  - Read: `/usr/bin/log show --last 30m --style compact --predicate 'subsystem == "PhasesDiag"'`
+    (in zsh, plain `log` is a shell builtin; use the full path).
+  - Code: `App/Model/Diagnostics.swift`. Get a logger with
+    `Diagnostics.logger("category")`; guard any extra work done only to
+    build a log line with `Diagnostics.isEnabled`. Add new diagnostic
+    lines this way instead of writing new logging from scratch.
+  - *Why a launch switch, not a build flag:* switching needs a relaunch,
+    not a rebuild, and the logging code is compiled in every build, so
+    it can't silently stop compiling. When off, each call is a disabled
+    `os.Logger` call, which skips building its message (*recalled*,
+    standard `os.Logger` behavior). No extra observers or timers run for
+    logging alone.
+  - *Why:* the 2026-10-28 sidebar investigation needed logging twice,
+    and it was written from scratch both times (author's request).
+  - Currently instrumented: the sidebar limits (`[D-sidebar-limits-watch]`,
+    category `sidebar`), and covers (category `cover`: each cover made,
+    removed and why, redrawn or resized, held pending, and set on
+    returning to its Space; `[D-persistent-cover]`). What to log when chasing a platform bug is in
+    ERRATA.md "Diagnostic procedures".
+  - *Verified* 2026-10-28: with the switch on, a relaunch logged the
+    sidebar's limit passes, restores, and resizes. The off state is
+    consistent but not proven: nothing was logged between that build's
+    launch and the switch going on, but the window may not have been
+    opened then.
+
+### Launch arguments
+
+Both last one launch only (launch arguments, not saved settings), so
+neither can leak into normal use.
+
+- `[D-test-no-location-prompt]` **Test launches can skip the location
+  prompt.** Launching with `--args -PhasesNoLocationPrompt YES` makes
+  Phases never ask for location; if permission was never decided, solar
+  phases fall back as they do when it's denied.
+  - *Why:* each rebuild asks for location again, and the prompt sat over
+    the screen during UI test runs, where it could catch clicks (author,
+    2026-10-29).
+- `[D-ui-test-mode]` **Test mode: one launch that touches nothing real.**
+  Used by the Interface tests. Launching with `--args -PhasesUITestMode
+  YES` makes Phases:
+  - never change the wallpaper: no crossfade, no wallpaper calls, and no
+    restore point captured or restored;
+  - keep its settings in a separate store (the bundle ID plus `.uitest`),
+    erased at every test-mode launch and seeded with three clock-time
+    phases (Morning 7:00, Afternoon 12:00, Evening 18:00), so the user's
+    phases are never read or changed and every test starts from the same
+    list. Deleting phases can never run out;
+  - use the image folder given by `-PhasesUITestImages <path>` (the
+    harness makes one with 60 images and a long name);
+  - leave the window closed at launch, as usual. The UI tests open it the
+    way the author does, from the menu bar item's Open Phases…, through
+    AX actions. *Why:* opening it at launch instead skipped the focus and
+    sidebar-watch bugs, so their tests passed with the fixes removed
+    (2026-10-29). If Phases still isn't frontmost
+    `[Q-launch-activate-refused]`, the tests bring it forward through the
+    AX API;
+  - never ask for location `[D-test-no-location-prompt]`;
+  - never count as a first launch `[D-first-launch-shows-window]`, even
+    though its store starts empty, unless launched with
+    `-PhasesUITestFirstLaunch YES` as well. That switch makes the launch
+    a first launch, so a test can check the window opens on its own.
+    *Why:* every test-mode launch starts with no settings, so without
+    this every test would start with the window already open.
+  - AppKit's own saved window frame and sidebar layout live in the normal
+    settings, outside the separate store. The UI tests record both before
+    each launch, clear them so the test starts from the defaults, and put
+    them back after quitting.
+    - *Why:* on 2026-10-29 a revert-and-check run collapsed the sidebar,
+      AppKit saved that, and the author's own Phases window would have
+      opened with no sidebar and no way to reopen it. The key was reset by
+      hand.
+  - *Cost:* while tests run, two Phases icons can show in the menu bar.

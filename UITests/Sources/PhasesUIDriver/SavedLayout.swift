@@ -1,4 +1,4 @@
-import AppKit
+import Foundation
 
 /// AppKit's saved window frame and sidebar layout for the Phases window.
 /// They live in Phases' normal settings, which test mode's separate store
@@ -25,20 +25,6 @@ struct SavedLayout {
     }
     CFPreferencesAppSynchronize(id)
     return SavedLayout(appID: appID, values: values)
-  }
-
-  /// Saves a window size for the next launch to open at, near the top
-  /// left of the main screen. AppKit's format: the window's frame, then
-  /// the screen's visible frame, in points.
-  static func setWindowSize(_ size: CGSize, for appID: String) {
-    guard !appID.isEmpty, let screen = NSScreen.main?.visibleFrame else { return }
-    let x = screen.minX + 100
-    let y = screen.maxY - 50 - size.height
-    let value = [x, y, size.width, size.height, screen.minX, screen.minY, screen.width, screen.height]
-      .map { String(Int($0)) }.joined(separator: " ") + " "
-    let id = appID as CFString
-    CFPreferencesSetAppValue(keys[0] as CFString, value as CFString, id)
-    CFPreferencesAppSynchronize(id)
   }
 
   /// Puts the recorded values back, and removes keys that had none.

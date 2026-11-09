@@ -4,9 +4,7 @@ import SwiftUI
 /// [D-first-launch-shows-window] Opens the window on the first launch and
 /// brings it to the front. macOS refuses `NSApp.activate()` here, even
 /// after the launch has finished, so Phases takes activation from the app
-/// that was frontmost when it launched [Q-launch-activate-refused]. A click
-/// on the pause notification comes here too, since it may have launched
-/// Phases [D-notice-opens-window].
+/// that was frontmost when it launched [Q-launch-activate-refused].
 @MainActor
 enum FirstLaunchWindow {
   /// Set by the app delegate when AppKit finishes launching. The menu bar

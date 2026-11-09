@@ -1,8 +1,7 @@
 import SwiftUI
 
 /// The menu bar icon. Also opens the window on a relaunch while running
-/// [D-reopen-shows-window], a click on the pause notification
-/// [D-notice-opens-window], and the first launch
+/// [D-reopen-shows-window] and on the first launch
 /// [D-first-launch-shows-window]: it's the one view alive while the window
 /// is closed.
 struct MenuBarLabel: View {
@@ -15,22 +14,12 @@ struct MenuBarLabel: View {
       .accessibilityLabel(isPaused ? "Phases, paused" : "Phases")
       // Runs once, when the icon first appears at launch.
       .task {
-        // [D-notice-opens-window] A click on the notification that
-        // launched Phases may arrive before this view did.
-        let requestedEarly = WindowRequest.labelAppeared()
         // [Q-launch-activate-refused] Waits for the launch to finish, then
         // takes activation so the window comes to the front.
-        if isFirstLaunch || requestedEarly { await FirstLaunchWindow.open(openWindow) }
+        if isFirstLaunch { await FirstLaunchWindow.open(openWindow) }
       }
-      .onReceive(NotificationCenter.default.publisher(for: .showPhasesWindowRequested)) { request in
-        if request.object as? WindowRequest.Source == .notification {
-          // [D-notice-opens-window] [Q-launch-activate-refused] The click
-          // may have just launched Phases, which then can't bring itself
-          // to the front; take activation as the first launch does.
-          Task { await FirstLaunchWindow.open(openWindow) }
-        } else {
-          openWindow.showPhasesWindow()
-        }
+      .onReceive(NotificationCenter.default.publisher(for: .phasesRelaunched)) { _ in
+        openWindow.showPhasesWindow()
       }
   }
 

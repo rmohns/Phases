@@ -1,4 +1,4 @@
-# Phases — Specification (draft 50)
+# Phases — Specification (draft 44)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -686,13 +686,6 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
   entry for a display (macOS only sets the showing Space's) gets a new
   "last set" time and its image isn't one Phases set on that display in
   the last 10 seconds. Store details: ERRATA.md `[Q-wallpaper-store]`.
-  - A new Space doesn't count. Making a desktop in Mission Control or
-    taking an app full screen gives the new Space copies of the
-    display's entries, keeping their old "last set" time, so an entry
-    Phases hasn't seen before counts only when it was set later than
-    anything already in the store. A real pick on a new Space still
-    counts. Store details: ERRATA.md `[Q-new-space-copies-entry]`
-    (draft 48, GitHub issue #29).
   - Writes that change only the "last used" time are ignored: opening or
     quitting System Settings and switching Spaces make them (*verified*
     2026-11-06, `[L-store-watch]`).
@@ -709,25 +702,8 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
     until you resume." with a **Resume** action. Permission is asked the
     first time it's needed, not at launch. If it's denied, the lasting
     signs below still show.
-  - `[D-notice-opens-window]` **Clicking the notification opens the
-    Phases window,** exactly as "Open Phases…" does
-    `[D-reopen-shows-window]`. It doesn't resume; the window's pause
-    banner `[D-window-pause-banner]` offers that. Choosing **Resume**
-    resumes and opens nothing.
-    - If Phases isn't running (quit while the notification was still
-      showing), the click launches it and the window opens once the
-      launch finishes, as on the first launch
-      `[D-first-launch-shows-window]`.
-    - *Why:* the notification says what happened; the window is where
-      the reason and the way back live. Until draft 50 a click on the
-      notification only dismissed it (*observed* by the author,
-      2026-11-07, `[L-pause-banner-stack-still-shifts]`; GitHub issue
-      #31). Resume is a "just do it" action, so a window on top of it
-      would be noise (author, 2026-11-08).
   - **Lasting:** the menu bar icon's paused look, the menu's status line,
-    and the pause banner at the top of the Phases window
-    `[D-window-pause-banner]` (see "Interface"). Draft 48 and earlier
-    showed it only at the top of Settings.
+    and the top of Settings (see "Interface").
   - *Why both:* the pick itself is what the person was looking at, so a
     notification is the only sign they'll get in the moment; the lasting
     signs answer "why isn't it changing?" later without nagging.
@@ -757,14 +733,10 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
   sidebar.** A dawn/dusk phase can't run when there is no usable location:
   access is denied (**Location off**), or it was never granted and no
   location has been saved yet (**No location yet**). Its row is dimmed
-  (name and icon), and the trigger line ends with **Phase disabled**.
-  VoiceOver reads "Phase disabled". Such a phase is never the active one,
-  so it never shows "Active" `[D-active-badge]`.
-  - *Draft 45 removed the warning symbol:* until then the status followed
-    an orange `exclamationmark.triangle.fill`. Not worth keeping: the
-    dimmed row and the words say it, and an explicit orange would vanish
-    on an orange Highlight Color, the problem issue #22 found with
-    "Active" (author's call, 2026-11-06).
+  (name and icon), and the trigger line ends with an orange
+  `exclamationmark.triangle.fill` and **Phase disabled**. VoiceOver reads
+  "Phase disabled". Such a phase is never the active one, so it never
+  shows "Active".
   - `[D-row-status-not-cause]` **The row shows the status; the editor
     shows the cause.** The sidebar row says "Phase disabled" for every
     reason Phases can't run a phase, the one exception being a phase the
@@ -779,13 +751,12 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
     - *Why "Off" is the exception:* turning a phase off is the user's
       choice, not a problem. "Phase disabled" with a warning read as an
       error for it (author, after trying draft 42, 2026-11-06). Draft 42
-      first showed "Phase disabled" for it too. Since draft 45 neither
-      status has a warning symbol; the words alone set them apart.
+      first showed "Phase disabled" for it too.
   - `[D-phase-turn-off]` **A phase can be turned off** without deleting
     it, keeping all its settings and images, and turned back on later.
     Turned off is a reason a phase can't run: the schedule skips it.
     Its row is dimmed like any phase that can't run, and its trigger line
-    ends with **Off** `[D-row-status-not-cause]`.
+    ends with **Off**, with no warning symbol `[D-row-status-not-cause]`.
     VoiceOver reads "Off".
     - **Controls:** a **Use this phase** switch in the editor's first
       section, under Name; and **Turn Off** (or **Turn On**) in both the
@@ -962,34 +933,6 @@ extras don't show them. No global hotkey.
      - `[D-brand-scrolls]` It's the first item in the sidebar list, so it
        **scrolls away** when
        there are enough phases to scroll; it's never pinned.
-     - `[D-brand-egg]` **Easter egg: click the panel and it turns into a
-       meme.** Clicking anywhere on the panel replaces it with the "Get in
-       loser, we're going vibe coding" meme (Mean Girls convertible still,
-       632 × 396 px, bundled with the app). The meme fills the panel alone:
-       no icon, name, tagline, or bottom gradient `[D-brand-legibility]`.
-       It crossfades in with the panel's existing smooth animation.
-       - **One-way, until the window closes.** Further clicks do nothing.
-         Closing the Phases window resets it, so the next open shows the
-         normal panel. The window's state outlives a close (see
-         `[D-grid-release-on-close]`), so the reset happens explicitly when
-         the window closes, alongside the thumbnail release; it doesn't
-         rely on the view going away.
-       - **Scrolling doesn't reset it.** The flag belongs to the window,
-         not the panel row, so it survives the panel scrolling offscreen
-         `[D-brand-scrolls]`.
-       - **No hints.** The pointer doesn't change over the panel, and
-         clicking it doesn't change the sidebar selection. It stays a
-         surprise.
-       - **VoiceOver gets it too.** The panel is a button. Before: label
-         "Phases. Wallpaper for every phase of your day", hint "Get in."
-         After: label "Meme: three women in a convertible. Get in loser,
-         we're going vibe coding." with no hint.
-       - The meme is 632 × 396 px, 1.6:1, the panel's own 16:10, so it
-         fills the panel without a visible crop.
-       - *Why:* the author asked for an utterly stupid easter egg
-         (2026-11-06). The meme's own text takes the tagline's place
-         instead of fighting it, and resetting on close keeps the joke
-         from becoming the app's look.
   2. `[D-settings-at-top]` **"App" section:** a **Settings** row (gear icon). It sits at the top so
      it's always visible however many phases there are; the HIG advises
      against putting important items at the bottom of a sidebar, since window
@@ -998,33 +941,6 @@ extras don't show them. No global hotkey.
      active phase marked. Phase rows are two lines (name plus trigger), which
      also sets them apart from the one-line Settings row. A phase that can't
      run is dimmed and flagged `[D-phase-cant-run]`.
-     - `[D-active-badge]` **The active phase is marked with the word
-       "Active"** after its name, in small semibold text in the accent
-       color. On the selected row, while that row has the colored
-       highlight, "Active" switches to the row's text color (white on the
-       highlight), like the rest of the row's text. The row has the
-       colored highlight when it's selected, the window is in front, and
-       the sidebar has keyboard focus; otherwise the highlight is grey and
-       "Active" stays in the accent color. macOS fights this; see
-       `[Q-tint-on-highlight]`.
-       - *Why:* in the accent color on the accent-colored highlight,
-         "Active" vanished (GitHub issue #22). The highlight is the user's
-         Highlight Color (System Settings › Appearance), so no fixed color
-         is safe on it. A symbol or a bold name instead was ruled out: the
-         author doesn't want meaning carried by an icon or weight that
-         nothing explains (2026-11-06).
-       - The rule ("does this row have the colored highlight") lives in a
-         small model function, `SidebarHighlight`, so the unit tests can
-         check it (see TESTING.md).
-       - *Verified* 2026-11-06 by Claude on the experiment build (window
-         screenshots, Highlight Color blue): white on the colored
-         highlight; accent on the grey highlight with focus in the editor
-         and with the window in the background (LEARNINGS.md
-         `[L-row-own-selection]`, ERRATA.md `[Q-tint-on-highlight]`).
-       - *Verified* 2026-11-06 by the author on the draft 45 build: every
-         Highlight Color, in dark and light mode. Yellow, Green, and
-         Graphite are a little hard to read in light mode; accepted, since
-         that's the look the user chose (author's call).
   - + / − buttons below the list add and remove phases. − removes the
     selected phase and is dimmed when no phase is selected.
   - `[D-new-phase-now]` **A new phase starts at the current time,** as a
@@ -1195,43 +1111,15 @@ extras don't show them. No global hotkey.
       requirement; see also `[D-single-timer]`).
 - **Phase selected:** editor with name, trigger, offset, appearance condition,
   order, rotation, and the Images section (Display picker and thumbnail grid).
-- `[D-window-pause-banner]` **While paused, for any reason, a pause
-  banner sits at the top of the detail pane,** whatever is selected (a
-  phase, Settings, or nothing). It stays put while the form scrolls.
-  - **Left:** a pause symbol (`pause.fill`, secondary), then "Phases is
-    paused" in a bold headline, with the reason under it in secondary
-    text: "Paused from the menu." or "Paused at 9:06 AM because the
-    wallpaper was changed in System Settings." (the date is added when
-    it wasn't today). The symbol repeats what the words say; it carries
-    no meaning of its own.
-  - **Right:** a **Resume Schedule** button, the menu's wording
-    `[D-menu-pause-verb]`. It resumes exactly as the menu does
-    `[D-outside-change-pauses]`.
-  - VoiceOver reads the symbol and text as one element ("Phases is
-    paused. Paused from the menu."), then the button.
-  - The reason text is worked out in the model, not the view, and
-    unit-tested `[D-tests-unhosted]`.
-  - While it shows, the detail form starts lower, so its first row no
-    longer lines up with the branding panel's top `[D-brand-inset]`.
-    Accepted: pausing is an abnormal state, and the banner is meant to
-    stand out.
-  - *Why:* the window opens on a phase's editor, so a pause shown only
-    in Settings went unseen there, and "why isn't it changing?" had no
-    answer without knowing to click Settings. Status with its fix right
-    beside it, in every view (author, 2026-11-07, GitHub issue #30). A
-    status bar at the bottom of the sidebar was considered and rejected:
-    at 240 pt the System Settings reason wraps to three lines, and it
-    would sit beside the phase list's + / − (Claude, 2026-11-07).
 - `[D-settings-schedule-switch]` **Settings starts with a Schedule
   section:** a **Change wallpaper on schedule** switch, the inverse of
-  the menu's Pause Schedule (one state, two controls). Turning it on
-  resumes `[D-outside-change-pauses]`. No note under it: the pause
-  banner above says why `[D-window-pause-banner]`.
+  the menu's Pause Schedule (one state, two controls). When it's off, a note under it
+  says why: "Paused from the menu" or "Paused at 9:06 AM because the
+  wallpaper was changed in System Settings." Turning it on resumes
+  `[D-outside-change-pauses]`.
   - *Why:* resuming shouldn't depend on finding a menu item; the window is
     where someone goes to ask why Phases stopped. Placed at the top for
     now; a broader Settings cleanup may move it (author, 2026-11-06).
-    Drafts 37–48 put the pause reason in a note under the switch; draft
-    49 moved it to the banner so it shows in every view.
 - **Settings selected:** the Schedule section above, then image folder and Include subfolders; display sharing
   preference (see "Displays sharing the All Displays images"); transition and duration; Launch at Login; location status
   with today's civil dawn and dusk and Update Now; and, at the bottom, a
@@ -1242,28 +1130,18 @@ extras don't show them. No global hotkey.
   earlier had a Quit Phases button here).
 - `[D-version-in-settings]` **About section,** last in Settings, below
   Quitting, one line each:
-  - **Version:** the app's version and build number, e.g. "0.1 (47)".
-  - **Spec:** the SPEC.md draft the build was made against, e.g. "Draft 47".
+  - **Version:** the app's version and build number, e.g. "1.0 (1)".
+  - **Spec:** the SPEC.md draft the build was made against, e.g. "Draft 23".
   - **Built:** the date and time this copy of the app was built (taken
     from the app's executable file).
   - *Why:* during testing, the author needs to tell which build is
-    running. The build number *is* the spec draft, so Finder's Get Info,
-    the standard About panel, and this section all name the same draft;
-    the build time tells apart builds of one draft.
-  - *Version scheme:* "0.1" until the author calls Phases finished; the
-    build number is the SPEC.md draft number.
-  - *How:* the draft number is set in one place, the build number
-    (`CURRENT_PROJECT_VERSION` in `Project.json`). The Info.plist takes
-    its version and build number from those build settings rather than
-    repeating them, and the Spec line reads the app's build number
+    running. The version and build number never change for a personal
+    app, so the spec draft and build time are what actually tell builds
+    apart.
+  - *How:* the draft number is a constant in the code
     (`App/Model/AppVersion.swift`). A unit test reads SPEC.md's title and
-    fails if `Project.json` doesn't match it, so the number can't drift
+    fails if the constant doesn't match it, so the number can't drift
     from the spec `[D-tests-carry-tags]`. Bump it with each new draft.
-  - *Replaced:* through draft 46 the version was a fixed "1.0 (1)" on the
-    theory that a personal app's version never changes, and the draft was
-    a separate constant in the code. The constant was missed in the
-    draft 46 change, leaving Settings at "Draft 45" (verified 2026-11-06
-    by Claude: the unit test failed on `main`).
 
 ### Dock icon and app menu
 
@@ -1336,8 +1214,7 @@ extras don't show them. No global hotkey.
   - *Scope:* only a relaunch while running. A fresh launch shows nothing
     (Launch at Login must stay silent), except the very first launch
     `[D-first-launch-shows-window]`.
-  - *How:* "Open Phases…", Settings…, the relaunch, the first launch,
-    and a click on the pause notification `[D-notice-opens-window]`
+  - *How:* "Open Phases…", Settings…, the relaunch, and the first launch
     share one window-opening routine, so they can't drift apart. macOS
     delivers the relaunch to Phases, but SwiftUI ignores it when the
     window is closed or was never opened; see
@@ -1545,6 +1422,4 @@ Moved to ERRATA.md, each with a `[Q-…]` ID.
 ## Testing and diagnostics
 
 Moved to TESTING.md: the unit and UI test layers, test-only launch
-arguments, and diagnostic logging, with their `[D-…]` tags. Since
-2026-11-09 the launch arguments, diagnostic logging, and the input
-driver are in TEST-TOOLS.md; the test layers stay in TESTING.md.
+arguments, and diagnostic logging, with their `[D-…]` tags.

@@ -139,12 +139,6 @@ final class WallpaperScheduler {
     displayMode = defaults.string(forKey: Keys.displayMode).flatMap(DisplayMode.init) ?? .sameOnAll
     isPaused = defaults.bool(forKey: Keys.isPaused)
     pausedForOutsideChangeAt = Self.load(Date.self, forKey: Keys.pausedForOutsideChangeAt)
-    // [D-test-paused-by-outside-change] No notification: the pause is
-    // already in place at launch, as after a relaunch.
-    if UITestMode.startsPausedByOutsideChange {
-      isPaused = true
-      pausedForOutsideChangeAt = Date()
-    }
     restoresWallpaperOnQuit = defaults.object(forKey: Keys.restoresWallpaperOnQuit) as? Bool ?? true
     asksBeforeQuitting = defaults.object(forKey: Keys.asksBeforeQuitting) as? Bool ?? true
     transitionStyle = defaults.string(forKey: Keys.transitionStyle).flatMap(TransitionStyle.init) ?? .crossfade

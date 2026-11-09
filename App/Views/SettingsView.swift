@@ -8,9 +8,14 @@ struct SettingsView: View {
   var body: some View {
     Form {
       // [D-settings-schedule-switch] At the top for now; a Settings cleanup
-      // may move it. No note: the pause banner says why [D-window-pause-banner].
+      // may move it.
       Section("Schedule") {
-        Toggle("Change wallpaper on schedule", isOn: changesOnScheduleBinding)
+        Toggle(isOn: changesOnScheduleBinding) {
+          Text("Change wallpaper on schedule")
+          if let note = pauseNote {
+            Text(note)
+          }
+        }
       }
 
       Section("Images") {
@@ -154,6 +159,16 @@ struct SettingsView: View {
     } set: { isOn in
       scheduler.isPaused = !isOn
     }
+  }
+
+  /// Why Phases is paused, or nil while it isn't.
+  private var pauseNote: String? {
+    guard scheduler.isPaused else { return nil }
+    guard let date = scheduler.pausedForOutsideChangeAt else { return "Paused from the menu." }
+    let time = Calendar.current.isDateInToday(date)
+      ? date.formatted(date: .omitted, time: .shortened)
+      : date.formatted(date: .abbreviated, time: .shortened)
+    return "Paused at \(time) because the wallpaper was changed in System Settings."
   }
 
   private var includesSubfoldersBinding: Binding<Bool> {
