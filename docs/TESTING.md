@@ -577,7 +577,10 @@ described under "Diagnostics" in TESTING.md `[D-diagnostics-switch]`.
 Logging is switched on and read as described under "Diagnostics" in
 TEST-TOOLS.md `[D-diagnostics-switch]`.
 
-- **Crossfade twitch returns:** measure before changing the delay. Record
+- **Crossfade twitch returns:** measure before changing when the cover
+  comes off `[D-persistent-cover]`. (Until 2026-11-09 this said "before
+  changing the delay", the settle delay draft 33 removed; see
+  EXPERIMENTS.md `[X-cover-settle]`.) Record
   the screen at 30 fps or more and step through frame by frame: when the
   wallpaper is set, when the cover comes off, and when macOS's motion
   plays `[Q-wallpaper-motion-delay]`. How to record and step through
