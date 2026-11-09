@@ -948,9 +948,9 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
     Its row is dimmed like any phase that can't run, and its trigger line
     ends with **Off** `[D-row-status-not-cause]`.
     VoiceOver reads "Off".
-    - **Controls:** a **Use this phase** switch at the end of the
-      editor's first row `[D-name-row]` (draft 50 and earlier: on its own
-      row under Name); and **Turn Off** (or **Turn On**) in both the
+    - **Controls:** an **On** switch at the end of the editor's first
+      row `[D-name-row]` (draft 50 and earlier: a **Use this phase**
+      switch on its own row under Name); and **Turn Off** (or **Turn On**) in both the
       action menu and the row's context menu `[D-phase-actions]`, after
       Duplicate.
     - **Editor message:** "This phase is turned off, so it's skipped.",
@@ -969,6 +969,10 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
       lose its settings (GitHub issue #21). "Use this phase" says what
       the switch does in the editor's own terms; a bare "On" or
       "Enabled" next to the name could read as a status.
+    - *Changed in draft 51:* the visible label is **On**, to fit the
+      compact first row; "Use this phase" stays as its accessibility
+      label. The author agreed to try it despite the concern above
+      (2026-11-09); see `[D-name-row]`.
   - The rule ("can this phase run, and if not, why") lives in a small model
     function next to `ScheduleEngine`, not in the view, so the unit tests
     can check it (see TESTING.md). The schedule and the sidebar use the
@@ -1309,7 +1313,7 @@ extras don't show them. No global hotkey.
     and Starts sections plus part of the next. Adjust after a look at the
     real window.
   - Draft 51's compact editor `[D-compact-editor]` changes what those
-    widths hold: 460 pt must fit the first row (Name and Use this phase)
+    widths hold: 460 pt must fit the first row (Name, Use in, On)
     `[D-name-row]` with a usable Name field, and the display tabs. Check
     both on the real window before keeping the numbers.
 - `[D-tall-toolbar]` **Full-height toolbar over the detail pane only.** The
@@ -1364,24 +1368,13 @@ extras don't show them. No global hotkey.
 
 #### Phase editor
 
-- `[D-compact-editor]` **The phase editor is three short rows of
-  settings, then the images.** Settings are made once and then left
-  alone, so they take as little height as they can and the thumbnail
-  grid gets the rest. Top to bottom: the first row `[D-name-row]`, the
-  Starts row `[D-starts-row]`, the Use in row, any status line
-  `[D-phase-status-inline]`, the Images heading with order and rotation
-  `[D-rotation-menus]`, the pinned image header `[D-image-header]`, and
-  the grid.
-  - **Use in** is a three-segment control, **Any | Light | Dark**. The
-    segments are words, not sun and moon symbols: the author doesn't
-    want meaning carried by an icon nothing explains (see
-    `[D-active-badge]`).
-  - *Open for the author's review:* Claude proposed two rows, with Use
-    in and a switch labelled just **On** sharing the first row. That
-    contradicts `[D-phase-turn-off]`, which chose "Use this phase"
-    because a bare "On" next to the name could read as a status. This
-    draft keeps that decision, which costs the third row. If the author
-    accepts "On", Use in moves up beside Name and the editor is two rows.
+- `[D-compact-editor]` **The phase editor is two rows of settings, then
+  the images.** Settings are made once and then left alone, so they take
+  as little height as they can and the thumbnail grid gets the rest.
+  Top to bottom: the first row `[D-name-row]`, the Starts row
+  `[D-starts-row]`, any status line `[D-phase-status-inline]`, the
+  Images heading with order and rotation `[D-rotation-menus]`, the
+  pinned image header `[D-image-header]`, and the grid.
   - *Why:* draft 50 gave each setting its own row (Name, Use this phase,
     Starts, offset, Only in, Order, Rotation, Display), so on a laptop
     the grid started below the fold. The author wants the editor as
@@ -1390,15 +1383,24 @@ extras don't show them. No global hotkey.
   - The two rows are a grouped form, as before, so the branding panel
     still lines up with the first row `[D-brand-inset]`.
 - `[D-name-row]` **First row:** **Name** (text field, takes the spare
-  width), then, at the trailing edge, the **Use this phase** switch
-  `[D-phase-turn-off]`, its label to the left of it.
-  - *Why together:* what the phase is called and whether it's used are
-    the two things someone checks first; neither needs a row of its own.
+  width), then **Use in** with a three-segment control **Any | Light |
+  Dark**, then a switch labelled **On** at the trailing edge
+  `[D-phase-turn-off]`.
+  - The segments are words, not sun and moon symbols: the author doesn't
+    want meaning carried by an icon nothing explains (see
+    `[D-active-badge]`).
+  - The switch's accessibility label is "Use this phase", so VoiceOver
+    still says what it does.
+  - *Why "On" here:* `[D-phase-turn-off]` chose "Use this phase" because
+    a bare "On" next to the name could read as a status. The author
+    agreed to try "On" in the compact row, where the longer label would
+    push Use in onto a third row (2026-11-09). If it reads as a status in
+    practice, go back to "Use this phase" and give Use in its own row.
 - `[D-starts-row]` **Starts row:** **Starts** with a pop-up menu of
   triggers: **Clock time**, **Dawn**, **Dusk**, **Always**. What follows
   depends on the trigger:
   - **Clock time:** a time field.
-  - **Dawn or Dusk:** an offset pop-up menu: **On time**, **15 min
+  - **Dawn or Dusk:** an offset pop-up menu: **Exactly**, **15 min
     before**, **30 min before**, **1 hr before**, **2 hr before**, **15 min
     after**, **30 min after**, **1 hr after**, **2 hr after**, then a
     separator and **Custom…**.
@@ -1417,8 +1419,9 @@ extras don't show them. No global hotkey.
     took three controls and only did minutes, so two hours meant typing
     120. The presets cover the usual offsets in one control (author and
     Claude, 2026-11-09).
-  - "On time" is a placeholder label: "At dusk" was considered, but then
-    the row reads "Dusk · At dusk" (open for the author's review).
+  - The zero offset is **Exactly**, so the row reads "Dusk · Exactly".
+    "At dusk" was considered and read as "Dusk · At dusk" (author,
+    2026-11-09).
 - `[D-phase-status-inline]` **Why a phase can't run shows under the row
   that fixes it,** in secondary text with no banner:
   - Turned off: "This phase is turned off, so it's skipped." under the
