@@ -422,7 +422,15 @@ Draft 53, issue #33 merge #2. Evidence for this section is LEARNINGS.md
     interval, if that's shorter), fetches it, and shows that pick when
     the change comes. A Random pick is made then, not at the change.
   - If anything that affects the pick changes in between (the phase,
-    its images, the displays, Light/Dark), the pick is made again.
+    its images, the displays, Light/Dark), the pick is made again. That
+    includes the picked photo being removed from its album or deleted
+    in Photos `[D-photos-changes]`.
+  - **A photo removed from its album, or deleted,** is missing, not
+    late: Phases never picks it or waits for it. Its cached copy isn't
+    shown either, since a photo that's gone from the album shouldn't go
+    on showing. This holds whether it was removed while Phases ran (the
+    change is reported at once) or while it was quit (the album is read
+    again at launch).
   - **Changes that can't be foreseen** (Change Now, editing the active
     phase, waking, resuming): the photo is fetched then, and the change
     starts when it arrives. *Verified* cost: 0.5–1.4 s per iCloud-only
