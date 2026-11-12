@@ -102,7 +102,67 @@ extension PhasesUITests {
       }
     }
 
+    /// [D-sidebar-footer-style] The − button answered only a click on its
+    /// glyph (found by the author, 2026-11-12). Its label is now a 24 × 23 pt
+    /// cell, all of it clickable: click 3 pt in from its top-left corner,
+    /// well off the glyph. The second source is used by no phase, so removing
+    /// it asks nothing.
+    @Test func removeButtonWholeCellIsClickable() async throws {
+      try await withPhases(imageFolders: Self.folders) { app in
+        try await app.click(try #require(try app.row(named: "Settings")))
+        try await waitUntil("the image source rows") { Self.names(app).count == 2 }
+
+        // Select the second source by clicking its name.
+        try await app.click(Self.names(app)[1])
+        let remove = try await waitFor("the Remove Folder button to be enabled") {
+          (try? app.element("removeImageSource")).flatMap { $0.isEnabled ? $0 : nil }
+        }
+
+        // The point must be off the glyph, so the cell's frame has to be the
+        // whole cell and not just the symbol.
+        let frame = try #require(remove.frame, "No frame for \(remove.summary)")
+        try #require(frame.width >= 22 && frame.height >= 21, "The − button's frame isn't its whole cell: \(remove.summary)")
+
+        try await app.click(remove, insetFromTopLeft: CGPoint(x: 3, y: 3))
+        try await waitUntil("the second source to be removed") { Self.names(app).count == 1 }
+        #expect(Self.names(app).first?.allText.contains(TestImages.folderName) == true,
+          "The wrong source was removed; left: \(Self.names(app).map(\.allText))")
+      }
+    }
+
+    /// [D-image-sources] Tab went into the source list and never came out:
+    /// every row's Include subfolders switch was a Tab stop (found by the
+    /// author, 2026-11-12). The list is one stop now: from a click in it,
+    /// two Tabs (one would do; the second allows a stop on the list's own
+    /// edge) must leave it.
+    @Test func tabLeavesTheSourceList() async throws {
+      try await withPhases(imageFolders: Self.folders) { app in
+        try await app.click(try #require(try app.row(named: "Settings")))
+        try await waitUntil("the image source rows") { Self.names(app).count == 2 }
+        let list = try app.element("imageSources")
+
+        // Click the first source so the list has keyboard focus.
+        try await app.click(Self.names(app)[0])
+        try await waitUntil("the source list to have focus") { app.focusedElement()?.isInside(list) == true }
+
+        var focused: AXNode?
+        for _ in 0..<2 {
+          try await app.press(.tab)
+          focused = app.focusedElement()
+          if let focused, !focused.isInside(list) { break }
+        }
+        let after = try #require(focused, "Nothing has keyboard focus after Tab")
+        #expect(!after.isInside(list), "Two Tabs left focus inside the source list: \(after.summary)")
+      }
+    }
+
     // MARK: - Helpers
+
+    /// Settings' source names, top to bottom: one per source row.
+    private static func names(_ app: PhasesApp) -> [AXNode] {
+      let all = (try? app.window().descendants().filter { $0.identifier == "imageFolderName" }) ?? []
+      return all.sorted { ($0.frame?.minY ?? 0) < ($1.frame?.minY ?? 0) }
+    }
 
     /// Tabs until the image grid has focus [D-grid-one-tab-stop]; the
     /// cursor then starts on the first image.

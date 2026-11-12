@@ -368,6 +368,22 @@ public final class PhasesApp {
     try await SyntheticInput.click(at: try center(of: node))
   }
 
+  /// Clicks `inset` points in from the node's top-left corner instead of its
+  /// center, for checking that a control's whole frame responds. Refuses a
+  /// point outside the node or outside the window.
+  public func click(_ node: AXNode, insetFromTopLeft inset: CGPoint) async throws {
+    try await ensureFrontmost()
+    guard let frame = node.frame else { throw UITestFailure("No frame for \(node.summary)") }
+    let point = CGPoint(x: frame.minX + inset.x, y: frame.minY + inset.y)
+    guard frame.contains(point) else {
+      throw UITestFailure("\(inset) in from the top-left is outside \(node.summary); sent no click")
+    }
+    guard try window().frame?.contains(point) == true else {
+      throw UITestFailure("\(node.summary) is outside the window; sent no click")
+    }
+    try await SyntheticInput.click(at: point)
+  }
+
   /// Drags the sidebar divider so it ends `x` points from the window's left
   /// edge (the window may stop it short).
   public func dragDivider(toWindowX x: CGFloat) async throws {
