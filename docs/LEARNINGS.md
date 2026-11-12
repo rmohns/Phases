@@ -1081,8 +1081,8 @@ with the author's yes.
   wallpaper** (not sandboxed). `setDesktopImageURL` raised no error, and
   `desktopImageURL` read back the cached file after 3 s. The original
   (`~/Pictures/Desktop Pictures/Peter Lik - Bamboo Forest Path.jpg`) was
-  put back with no error. *Verified* by the API; whether it showed on
-  screen is the author's to confirm.
+  put back with no error. *Verified* by the API, and on screen by the
+  author: the concert photo showed, then the Bamboo Forest came back.
   - **The store reading was inconclusive.** The latest desktop entry the
     probe found named `~/Pictures/Desktop Pictures/IMG_0761.JPG`, neither
     the cached file nor the original, so the probe's walk probably picked
@@ -1095,11 +1095,11 @@ with the author's yes.
   cloud IDs) in `~/Library/Caches/PhasesProbe/x6-ids.txt`. Comparing
   across builds and the sandbox is round B.
 - `[L-photos-album-order]` **The default fetch follows the album's own
-  order, it seems.** "Gift Ideas" (4 photos, put in a hand-made order by
-  the author on 2026-11-12) came back with no sort as 6045, 2737, 6046,
-  2736, and sorted by date as 2736, 2737, 6045, 6046. *Observed*;
-  whether the first list matches the album in Photos is the author's to
-  confirm.
+  order.** "Gift Ideas" (4 photos, put in a hand-made order by the
+  author on 2026-11-12) came back with no sort as 6045, 2737, 6046,
+  2736, and sorted by date as 2736, 2737, 6045, 6046. *Verified*: the
+  author confirmed the first list matches the album in Photos. So "In
+  order" for an album can mean the album's own order.
 
 ### Round B: sandboxed (2026-11-12, macOS 27.2)
 
@@ -1169,6 +1169,7 @@ cdhash `586935f0`). Run by Claude with the author's yes.
   Bamboo Forest Path.jpg`) set a JPEG under
   `~/Library/Containers/<bundle ID>/Data/Library/Caches/` with no error,
   `desktopImageURL` read it back, and putting back the `~/Pictures`
-  original raised no error. *Verified* by the API; what showed on
-  screen is the author's to confirm. The store couldn't be read
+  original raised no error. *Verified* by the API, and on screen by the
+  author: the concert photo showed, then the Bamboo Forest came back.
+  The store couldn't be read
   afterward, as in `[L-sandbox-x0-paths]`.
