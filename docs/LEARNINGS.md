@@ -1068,9 +1068,13 @@ with the author's yes.
   - Online: 0.51–1.43 s per photo, 927–1493 KB each, the original JPEG at
     full size, 2–4 progress callbacks. Written to Caches and read back at
     full size.
-  - Downloading didn't make the photo local: a later run asked first
-    without the network and was still told "in cloud". So Phases has to
-    keep its own copy (the cache).
+  - Open: whether a download leaves the photo local in Photos. The online
+    run's "in cloud" check came *before* each download, so it says
+    nothing about after. (Corrected 2026-11-12 by Claude: the first
+    version of this entry claimed a later run showed the photo still in
+    the cloud, but no such run took place.) Either way, Phases should keep
+    its own copy, since Photos can drop local originals at any time
+    (*recalled*).
   - Not covered: edited photos, Live Photos, HEIC, large files, a slow
     connection. None of the 10 had an edit or a Live Photo.
 - `[L-photos-x4-cache-wallpaper]` **A file in `~/Library/Caches` works as a
