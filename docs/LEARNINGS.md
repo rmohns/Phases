@@ -1094,3 +1094,48 @@ with the author's yes.
 - `[L-photos-x6-ids]` **First record of IDs saved** (10 local IDs plus
   cloud IDs) in `~/Library/Caches/PhasesProbe/x6-ids.txt`. Comparing
   across builds and the sandbox is round B.
+- `[L-photos-album-order]` **The default fetch follows the album's own
+  order, it seems.** "Gift Ideas" (4 photos, put in a hand-made order by
+  the author on 2026-11-12) came back with no sort as 6045, 2737, 6046,
+  2736, and sorted by date as 2736, 2737, 6045, 6046. *Observed*;
+  whether the first list matches the album in Photos is the author's to
+  confirm.
+
+### Round B: sandboxed (2026-11-12, macOS 27.2)
+
+Same probe, built with `com.apple.security.app-sandbox` only (build
+cdhash `586935f0`). Run by Claude with the author's yes.
+
+- `[L-sandbox-team-needed]` **Bitrig won't build the Photos or the
+  wallpaper-store entitlement without a development team.** With either
+  `com.apple.security.personal-information.photos-library` or the
+  `temporary-exception.files.home-relative-path.read-only` exception,
+  the build failed: "This Mac app uses capabilities that require
+  development signing. No development team is available." The sandbox
+  entitlement alone builds. *Verified* (three builds, one entitlement
+  set each).
+- `[L-sandbox-x0-paths]` **In the sandbox, `homeDirectoryForCurrentUser`
+  and `NSHomeDirectory()` both point into the container**
+  (`~/Library/Containers/<bundle ID>/Data`); `getpwuid` still gives
+  `/Users/rmohns`. Caches is in the container. The wallpaper store
+  can't be read either way: "no such file" through the container home,
+  "you don't have permission" through the real home. *Verified.* So
+  `WallpaperStoreWatcher` and `SystemWallpaperInspector` would silently
+  see nothing in a sandboxed build without the exception.
+- `[L-sandbox-prefs-move]` **The first sandboxed launch moved Phases'
+  preferences into the container.** `~/Library/Preferences/<bundle
+  ID>.plist` was gone afterward, and identical copies of it (and of the
+  `.uitest` store) were in the container's `Library/Preferences`.
+  *Verified* (compared against a backup taken just before).
+  - Once the container exists, `defaults import` from Terminal wrote
+    into the container, not `~/Library/Preferences`. *Verified* by the
+    file's time. The TESTING.md `defaults write … PhasesDiagnostics`
+    command would do the same (*inferred*, not tried).
+  - Claude put the backup back at `~/Library/Preferences` by copying
+    the file. Whether the unsandboxed installed Phases reads it
+    correctly is untested until the author relaunches it.
+- `[L-sandbox-x1-no-entitlement]` **Without the Photos entitlement,
+  `requestAuthorization` never returned.** The probe sat for over 5
+  minutes and was stopped by Claude. The TCC log over that time showed
+  no Photos request from Phases (only system daemons). Whether a prompt
+  appeared is the author's to say. *Observed.*

@@ -28,6 +28,12 @@
           "NSPhotoLibraryUsageDescription": "Phases uses photos from the albums you choose as wallpapers."
         }
       },
+      "entitlements": {
+        "path": "App/Phases.entitlements",
+        "properties": {
+          "com.apple.security.app-sandbox": true
+        }
+      },
       "platform": "macOS",
       "settings": {
         "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
