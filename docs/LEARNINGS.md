@@ -1150,3 +1150,25 @@ cdhash `586935f0`). Run by Claude with the author's yes.
   build with a different signature. *Verified* (TCC log), for one rebuild
   that also added the sandbox. Whether a plain rebuild with no
   entitlement change does the same is untested.
+- `[L-sandbox-photos-works]` **The sandbox-only build reads Photos.**
+  With no Photos entitlement, a rerun of X1 (build `586935f0`, author at
+  the Mac) found access already "authorized" before asking, and showed
+  no prompt (author). X6 then read the album and its IDs. *Verified*
+  for this ad-hoc-signed Debug build. How the 11:43 prompt came to be
+  allowed is not known: the TCC log shows it prompting, and the author
+  was away. Whether a Release or notarized build behaves the same is
+  untested.
+- `[L-photos-ids-stable]` **Photo IDs held across builds and the
+  sandbox.** All 10 local IDs and cloud IDs from round A (unsandboxed,
+  `9808ae12`) matched the sandboxed build's (`586935f0`). *Verified.*
+- `[L-sandbox-x4-container-wallpaper]` **A sandboxed Phases can set a file
+  in its container as the wallpaper, and put back one outside it.**
+  Build `615f31ef` (probe store check skipped by
+  `-PhasesProbeSkipStoreCheck`, after Claude confirmed from Terminal
+  that the main display showed `~/Pictures/Desktop Pictures/Peter Lik -
+  Bamboo Forest Path.jpg`) set a JPEG under
+  `~/Library/Containers/<bundle ID>/Data/Library/Caches/` with no error,
+  `desktopImageURL` read it back, and putting back the `~/Pictures`
+  original raised no error. *Verified* by the API; what showed on
+  screen is the author's to confirm. The store couldn't be read
+  afterward, as in `[L-sandbox-x0-paths]`.
