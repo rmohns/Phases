@@ -79,6 +79,10 @@ final class FakePhotosProvider: PhotosProvider {
 
   // MARK: Images
 
+  func fileName(ofPhoto photoID: String) -> String? {
+    fileURL(forPhoto: photoID)?.lastPathComponent
+  }
+
   func photoInfo(_ photoID: String) -> PhotoInfo? {
     guard let url = fileURL(forPhoto: photoID),
       let modified = try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate

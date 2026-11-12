@@ -18,6 +18,9 @@ protocol PhotosProvider: AnyObject {
   func thumbnail(photoID: String, size: CGSize, scale: CGFloat) async -> NSImage?
   /// The photo's details, or nil if it's gone from the library.
   func photoInfo(_ photoID: String) -> PhotoInfo?
+  /// The photo's original file name (`IMG_0761.JPG`), for its caption and
+  /// VoiceOver [D-grid-one-tab-stop].
+  func fileName(ofPhoto photoID: String) -> String?
   /// Writes the photo, as it looks in Photos (with edits, still image) at
   /// full size, into `folder`, downloading it from iCloud if needed
   /// [D-photos-version]. The file's name comes from `PhotoCacheRules`.

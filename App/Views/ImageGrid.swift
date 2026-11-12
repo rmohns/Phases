@@ -34,7 +34,7 @@ struct ImageGrid: View {
     }
 
     if library.sources.isEmpty {
-      Text("Add an image folder in Settings.")
+      Text("Add an image folder or Photos album in Settings.")
         .foregroundStyle(.secondary)
     } else if library.names.isEmpty {
       Text(emptyMessage)
@@ -111,7 +111,7 @@ struct ImageGrid: View {
     let sourceHasSubfolders = groups.filter { $0.sourceID == group.sourceID }.count > 1
     VStack(alignment: .leading, spacing: 6) {
       if startsSource, let source = library.source(withID: group.sourceID) {
-        Label(library.displayName(of: source), systemImage: "folder")
+        Label(library.displayName(of: source), systemImage: source.kind.symbolName)
           .font(.title3.weight(.semibold))
           .help(source.location)
           .padding(.top, index == 0 ? 0 : 12)
@@ -142,7 +142,7 @@ struct ImageGrid: View {
       toggle(name, extendingRange: NSEvent.modifierFlags.contains(.shift))
     }
     .accessibilityElement(children: .ignore)
-    .accessibilityLabel(ImageLibrary.path(of: name))
+    .accessibilityLabel(library.isPhoto(name) ? library.fileName(of: name) : ImageLibrary.path(of: name))
     .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     .accessibilityAction { toggle(name, extendingRange: false) }
   }
@@ -150,7 +150,10 @@ struct ImageGrid: View {
   private var emptyMessage: String {
     let many = library.sources.count > 1
     if library.unreachableSources.count == library.sources.count {
-      return many ? "The image folders can't be opened. Check Settings." : "The image folder can't be opened. Check Settings."
+      return many ? "The image sources can't be opened. Check Settings." : "The image source can't be opened. Check Settings."
+    }
+    if library.sources.allSatisfy(\.isPhotos) {
+      return many ? "No photos in these albums." : "No photos in this album."
     }
     return many ? "No JPEG, PNG, HEIC, or TIFF images in these folders." : "No JPEG, PNG, HEIC, or TIFF images in this folder."
   }
@@ -229,7 +232,7 @@ private struct ThumbnailCell: View {
           }
         }
 
-      Text(ImageLibrary.fileName(of: name))
+      Text(library.fileName(of: name))
         .font(.caption)
         .lineLimit(1)
         .truncationMode(.middle)

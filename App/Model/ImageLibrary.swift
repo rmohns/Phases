@@ -18,6 +18,8 @@ final class ImageLibrary {
   private(set) var imageCounts: [String: Int] = [:]
   /// Sources whose folder couldn't be opened at the last reload.
   private(set) var unreachableSources: Set<String> = []
+  /// Photos sources that are shared albums, at the last reload.
+  private(set) var sharedAlbumSources: Set<String> = []
 
   /// Where each source's folder was found at the last reload.
   @ObservationIgnored private var folderURLs: [String: URL] = [:]
@@ -33,6 +35,7 @@ final class ImageLibrary {
   /// [D-photos-changes]; the scheduler re-evaluates.
   @ObservationIgnored var onPhotosChange: (() -> Void)?
   @ObservationIgnored private var photosChangeTask: Task<Void, Never>?
+  @ObservationIgnored private var photoFileNames: [String: String] = [:]
   /// Mirrors the provider's access, so views update when it's answered.
   private(set) var photosAccess = PhotosAccess.notDetermined
 
@@ -157,11 +160,22 @@ final class ImageLibrary {
     (path(of: name) as NSString).lastPathComponent
   }
 
+  /// The image's file name for its caption: a folder image's own, or a
+  /// photo's original file name from Photos, remembered once looked up.
+  func fileName(of name: String) -> String {
+    guard let photoID = photoID(of: name) else { return Self.fileName(of: name) }
+    if let known = photoFileNames[photoID] { return known }
+    let fileName = photos?.fileName(ofPhoto: photoID) ?? "Photo"
+    photoFileNames[photoID] = fileName
+    return fileName
+  }
+
   func reload() {
     var scans: [(sourceID: String, entries: [LibraryListing.Entry])] = []
     var counts: [String: Int] = [:]
     var unreachable: Set<String> = []
     var renamed = false
+    var shared: Set<String> = []
     for source in sources {
       if source.isPhotos {
         // [D-photos-sources] Nil when access is off or the album is gone.
@@ -178,6 +192,7 @@ final class ImageLibrary {
           sources[index].location = contents.location
           renamed = true
         }
+        if contents.isShared { shared.insert(source.id) }
         let entries = contents.entries
         scans.append((source.id, entries))
         counts[source.id] = entries.count
@@ -199,7 +214,13 @@ final class ImageLibrary {
     listing = LibraryListing(sources: scans)
     imageCounts = counts
     unreachableSources = unreachable
+    sharedAlbumSources = shared
     photosAccess = photos?.access ?? .notDetermined
+  }
+
+  /// Whether the source is a shared album, for its Settings row.
+  func isSharedAlbum(_ source: ImageSource) -> Bool {
+    sharedAlbumSources.contains(source.id)
   }
 
   func thumbnail(for name: String, size: CGSize, scale: CGFloat) async -> NSImage? {

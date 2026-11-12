@@ -146,6 +146,10 @@ final class PhotoKitProvider: NSObject, PhotosProvider {
     PHAsset.fetchAssets(withLocalIdentifiers: [id], options: nil).firstObject
   }
 
+  func fileName(ofPhoto photoID: String) -> String? {
+    Self.asset(photoID).flatMap { PHAssetResource.assetResources(for: $0).first?.originalFilename }
+  }
+
   func photoInfo(_ photoID: String) -> PhotoInfo? {
     Self.asset(photoID).map { PhotoInfo(modified: $0.modificationDate) }
   }
