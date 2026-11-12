@@ -19,10 +19,13 @@ Written 2026-11-12 by Claude with the author.
 - [x] Phase 1a: spec for merge #1 written as **draft 52** (`031fda7`, then
   the amendments below). The author answered its four open calls and
   approved draft 52 on 2026-11-12.
-- [ ] Phase 2a: code for merge #1, tests, merged. Steps 1–6 coded
-  2026-11-12; builds, unit tests pass. **Next:** the author approves the
-  UI test runs (list in "Test plan for merge #1"), then the hands-on
-  checks, then the merge.
+- [x] Phase 2a: code for merge #1, tests, merged. Squash-merged into
+  `main` 2026-11-12 with the author's yes, after the UI suite (19 of 20,
+  then the undo test alone, passing) and the author's hands-on checks.
+  Added on the way, at the author's request: drag folders in, drag to
+  reorder, a context menu, two-line rows, one Tab stop, the shared 24 pt
+  +/− bar, and undo for removing a source `[D-undo-remove-source]`.
+  **Next:** Phase 1b, on a new branch from `main`.
   - For the sandbox change: `[D-scoped-bookmarks]` access is open while
     scanning, making thumbnails, and applying a wallpaper. A crossfade
     cover remade later (back on a Space) reads its file without it
