@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// Settings' Image Sources list [D-image-sources]: a row per source in the
-/// library's order, + to add a folder, − to remove the selected one.
+/// library's order, a + / − bar joined to its bottom, folders dragged in
+/// from Finder, rows dragged to reorder, and a context menu per row.
 struct ImageSourcesSection: View {
   var scheduler: WallpaperScheduler
   @State private var selectedID: String?
@@ -21,34 +22,16 @@ struct ImageSourcesSection: View {
 
   var body: some View {
     Section("Image Sources") {
-      List(selection: $selectedID) {
-        ForEach(library.sources) { source in
-          ImageSourceRow(scheduler: scheduler, source: source) {
-            pick(for: .locate(source.id))
-          }
-          .tag(source.id)
-        }
+      // One form row holding the list and its bar, so the bar is 24 pt
+      // and joined to the list, as under the phase list
+      // [D-sidebar-footer-style].
+      VStack(spacing: 0) {
+        list
+        Divider()
+        footer
       }
-      .listStyle(.bordered)
-      .alternatingRowBackgrounds(.disabled)
-      .frame(height: listHeight)
-      .overlay {
-        if library.sources.isEmpty {
-          Text("No image folders. Add one with +.")
-            .foregroundStyle(.secondary)
-        }
-      }
-      .accessibilityIdentifier("imageSources")
-
-      HStack(spacing: 4) {
-        Button("Add Folder…", systemImage: "plus") { pick(for: .add) }
-          .accessibilityIdentifier("addImageSource")
-        Button("Remove Folder", systemImage: "minus") { removeSelected() }
-          .disabled(selectedID == nil)
-          .accessibilityIdentifier("removeImageSource")
-      }
-      .labelStyle(.iconOnly)
-      .buttonStyle(.borderless)
+      .clipShape(.rect(cornerRadius: 6))
+      .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(.separator))
     }
     .fileImporter(isPresented: $isPicking, allowedContentTypes: [.folder]) { result in
       guard case .success(let url) = result else { return }
@@ -69,18 +52,87 @@ struct ImageSourcesSection: View {
     }
   }
 
+  private var list: some View {
+    List(selection: $selectedID) {
+      ForEach(library.sources) { source in
+        ImageSourceRow(scheduler: scheduler, source: source) {
+          pick(for: .locate(source.id))
+        }
+        .tag(source.id)
+      }
+      // Dragging rows reorders the sources.
+      .onMove { offsets, destination in
+        library.moveSources(fromOffsets: offsets, toOffset: destination)
+        scheduler.evaluate(reloadingLibrary: false)
+      }
+    }
+    .listStyle(.plain)
+    .alternatingRowBackgrounds(.disabled)
+    .scrollContentBackground(.hidden)
+    .frame(height: listHeight)
+    .overlay {
+      if library.sources.isEmpty {
+        Text("No image folders. Add one with +, or drag folders here.")
+          .foregroundStyle(.secondary)
+      }
+    }
+    // Control-click and right-click, on any row, selected or not.
+    .contextMenu(forSelectionType: String.self) { ids in
+      if let id = ids.first, let source = library.source(withID: id) {
+        Button("Show in Finder") {
+          if let url = library.folder(of: id) { NSWorkspace.shared.activateFileViewerSelecting([url]) }
+        }
+        .disabled(library.folder(of: id) == nil)
+        Button("Locate…") { pick(for: .locate(id)) }
+        Divider()
+        Button("Remove") { requestRemoval(of: source) }
+      }
+    }
+    // ⌫ removes the selected source, asking first as − does.
+    .onDeleteCommand { removeSelected() }
+    // Folders dragged in from Finder; anything else is ignored.
+    .dropDestination(for: URL.self) { urls, _ in
+      let folders = urls.filter { url in
+        (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
+      }
+      for folder in folders { chose(folder, for: .add) }
+      return !folders.isEmpty
+    }
+    .accessibilityIdentifier("imageSources")
+  }
+
+  /// [D-sidebar-footer-style] [D-footer-ax-labels]
+  private var footer: some View {
+    HStack(spacing: 0) {
+      Button { pick(for: .add) } label: {
+        ListFooter.cell("Add Folder", systemImage: "plus")
+      }
+      .accessibilityLabel("Add Folder")
+      .accessibilityIdentifier("addImageSource")
+      ListFooter.divider
+      Button { removeSelected() } label: {
+        ListFooter.cell("Remove Folder", systemImage: "minus")
+      }
+      .accessibilityLabel("Remove Folder")
+      .accessibilityIdentifier("removeImageSource")
+      .disabled(selectedID == nil)
+      Spacer()
+    }
+    .buttonStyle(.borderless)
+  }
+
   /// Room for every row, up to five before the list scrolls.
   private var listHeight: CGFloat {
-    CGFloat(min(max(library.sources.count, 1), 5)) * 64 + 8
+    CGFloat(min(max(library.sources.count, 1), 5)) * 48 + 4
+  }
+
+  private var isConfirmingRemoval: Binding<Bool> {
+    Binding { pendingRemoval != nil } set: { if !$0 { pendingRemoval = nil } }
   }
 
   private func pick(for purpose: FolderPickerPurpose) {
     pickerPurpose = purpose
     isPicking = true
-  }
-
-  private var isConfirmingRemoval: Binding<Bool> {
-    Binding { pendingRemoval != nil } set: { if !$0 { pendingRemoval = nil } }
   }
 
   private func chose(_ url: URL, for purpose: FolderPickerPurpose) {
@@ -102,71 +154,89 @@ struct ImageSourcesSection: View {
     scheduler.phases.filter { $0.uses(source: id) }.count
   }
 
-  /// Asks first when any phase uses the source's images.
   private func removeSelected() {
     guard let id = selectedID, let source = library.source(withID: id) else { return }
-    if phasesUsing(id) > 0 {
+    requestRemoval(of: source)
+  }
+
+  /// Asks first when any phase uses the source's images.
+  private func requestRemoval(of source: ImageSource) {
+    if phasesUsing(source.id) > 0 {
       pendingRemoval = source
     } else {
-      remove(id)
+      remove(source.id)
     }
   }
 
   private func remove(_ id: String) {
     library.removeSource(id)
-    selectedID = nil
+    if selectedID == id { selectedID = nil }
     scheduler.evaluate(reloadingLibrary: false)
   }
 }
 
+/// Two lines: the folder's name with its Include subfolders switch, then
+/// `~/Pictures/Desktop Pictures • 77 images` [D-image-sources].
 private struct ImageSourceRow: View {
   var scheduler: WallpaperScheduler
   var source: ImageSource
   var locate: () -> Void
 
   private var library: ImageLibrary { scheduler.library }
+  private var isUnreachable: Bool { library.unreachableSources.contains(source.id) }
 
   var body: some View {
-    HStack(alignment: .top, spacing: 8) {
+    HStack(alignment: .firstTextBaseline, spacing: 8) {
       Image(systemName: "folder")
         .foregroundStyle(.secondary)
         .accessibilityHidden(true)
       VStack(alignment: .leading, spacing: 2) {
-        HStack {
+        HStack(alignment: .firstTextBaseline) {
           Text(library.displayName(of: source))
             .lineLimit(1)
             .truncationMode(.middle)
             .layoutPriority(1)
-            .help(source.location)
             // [D-ui-test-ids]
             .accessibilityIdentifier("imageFolderName")
           Spacer(minLength: 8)
-          if library.unreachableSources.contains(source.id) {
+          Toggle("Include subfolders", isOn: includesSubfolders)
+            .controlSize(.small)
+            .fixedSize()
+            // The list is one Tab stop [D-image-sources]; the switch is
+            // reached by clicking or the row's accessibility action.
+            .focusable(false)
+        }
+        HStack(spacing: 4) {
+          Text(source.location)
+            .lineLimit(1)
+            .truncationMode(.middle)
+            .help(source.location)
+          Text("•")
+            .accessibilityHidden(true)
+          if isUnreachable {
             Label("Can't open", systemImage: "exclamationmark.triangle")
               .foregroundStyle(.orange)
               .fixedSize()
             Button("Locate…", action: locate)
+              .controlSize(.small)
               .fixedSize()
           } else {
             Text(imageCount)
-              .foregroundStyle(.secondary)
               .monospacedDigit()
-              // A long folder name would otherwise squeeze this to a sliver
+              // A long location would otherwise squeeze this to a sliver
               // (as it did Choose…, found 2026-10-29).
               .fixedSize()
               .accessibilityIdentifier("imageSourceCount")
           }
         }
-        Text(source.location)
-          .font(.caption)
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
-          .truncationMode(.middle)
-        Toggle("Include subfolders", isOn: includesSubfolders)
-          .controlSize(.small)
+        .font(.caption)
+        .foregroundStyle(.secondary)
       }
     }
-    .padding(.vertical, 4)
+    .padding(.vertical, 3)
+    .accessibilityAction(named: source.includesSubfolders ? "Exclude Subfolders" : "Include Subfolders") {
+      includesSubfolders.wrappedValue.toggle()
+    }
   }
 
   private var imageCount: String {

@@ -185,19 +185,10 @@ private struct SidebarFooter: View {
     }
   }
 
-  /// The 1 pt divider between cells.
-  private var divider: some View {
-    Rectangle()
-      .fill(.separator)
-      .frame(width: 1, height: 16)
-  }
+  private var divider: some View { ListFooter.divider }
 
-  /// An icon in a fully clickable 24 × 23 pt cell.
   private func cell(_ title: LocalizedStringKey, systemImage: String) -> some View {
-    Label(title, systemImage: systemImage)
-      .labelStyle(.iconOnly)
-      .frame(width: 24, height: 23)
-      .contentShape(Rectangle())
+    ListFooter.cell(title, systemImage: systemImage)
   }
 
   private var selectedPhaseID: Phase.ID? {

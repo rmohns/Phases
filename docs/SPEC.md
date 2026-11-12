@@ -136,9 +136,8 @@ image when there's more than one choice.
       the whole cell is clickable, with a divider between them.
     - **Dragging folders** from Finder onto the list adds them, the
       standard Mac way to fill a list (author, 2026-11-12). Each folder
-      is added as + would add it. Files and anything that isn't a
-      folder are refused, and the list doesn't show a drop target for
-      them.
+      is added as + would add it. Files and anything else that isn't a
+      folder are ignored.
     - **A context menu** on each row: **Show in Finder**, **Locate…**,
       then **Remove**. Remove asks first, as − does. Control-click and
       right-click work on any row, selected or not, as they do in the

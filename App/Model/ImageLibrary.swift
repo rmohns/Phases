@@ -154,6 +154,19 @@ final class ImageLibrary {
     return .added(source.id)
   }
 
+  /// Reorders sources, as `List`'s move does [D-image-sources]. Changes
+  /// the library's order and nothing else.
+  func moveSources(fromOffsets offsets: IndexSet, toOffset destination: Int) {
+    sources.move(fromOffsets: offsets, toOffset: destination)
+    save()
+    reload()
+  }
+
+  /// Where the source's folder was found at the last reload.
+  func folder(of id: String) -> URL? {
+    folderURLs[id]
+  }
+
   /// Removes the source. Selections of its images then show as missing;
   /// adding the folder again makes a new source.
   func removeSource(_ id: String) {
