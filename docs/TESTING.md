@@ -205,7 +205,10 @@ The pure logic that decides what the app does:
   - *Fast* (the default, about a minute): sidebar width limits, the +/−
     buttons, delete selection, initial focus, the grid's Tab stop, the
     toolbar height, and a relaunch with the window closed
-    `[D-reopen-shows-window]`.
+    `[D-reopen-shows-window]`. Photos albums as image sources, against
+    the fake library `[D-fake-photos]`: adding an album or a folder of
+    albums, adding one twice, an empty album, shared albums, and denied
+    access (draft 53).
   - *Slow* (`PHASES_UI_SLOW=1 swift test`, about two minutes): the
     sidebar limits again after waiting 30 s, across three launches,
     because SwiftUI's rewrite lands seconds after the window opens
@@ -256,7 +259,8 @@ The pure logic that decides what the app does:
   identifiers:** `sidebar`, `addPhase`, `deletePhase`, `phaseName`,
   `imageGrid`, `imageFolderName` (now one per Image Sources row), and from
   draft 52 `imageSources`, `imageSourceCount`, `addImageSource`,
-  `removeImageSource`. They're invisible to users, but renaming one
+  `removeImageSource`, and from draft 53 `imageSourceLocation` and
+  `photosAlbumList`. They're invisible to users, but renaming one
   breaks the tests.
 
 - **Relaunch:** the harness relaunches its own instance by sending it a

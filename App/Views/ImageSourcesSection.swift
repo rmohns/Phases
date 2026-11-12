@@ -290,6 +290,8 @@ private struct ImageSourceRow: View {
             .lineLimit(1)
             .truncationMode(.middle)
             .help(locationText)
+            // [D-ui-test-ids]
+            .accessibilityIdentifier("imageSourceLocation")
           Text("•")
             .accessibilityHidden(true)
           if isUnreachable {

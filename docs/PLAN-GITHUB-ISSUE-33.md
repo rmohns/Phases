@@ -73,24 +73,24 @@ Written 2026-11-12 by Claude with the author.
      `LibraryListing.Entry` (url nil for photos); `PhotoCacheRules`;
      `FetchAhead`; `PhotosProvider` protocol and types;
      `PhotoKitProvider` and `PhotoFileWriter`. Unit tests by Sonnet (29).
-  2. [ ] `FakePhotosProvider` `[D-fake-photos]` and `UITestMode`
+  2. [x] (`eacff95`) `FakePhotosProvider` `[D-fake-photos]` and `UITestMode`
      switches; `PhotoCache` (files, index of file → photo and last shown,
      in-flight fetches shared, cleanup using
      `WallpaperStoreWatcher`'s file names and the restore record);
      `ImageLibrary` reads Photos sources (reload, thumbnails, add, change
      observer, `name(for:)` for cache files). `NSPhotoLibraryUsageDescription`
      in `Project.json`.
-  3. [ ] Scheduler: resolve photo picks through the cache; fetch-ahead
+  3. [x] (`cc0c61b`, with `AppVersion` 53) Scheduler: resolve photo picks through the cache; fetch-ahead
      timer event `[D-single-timer]`; 30 s wait, retry, fallback via
      `FetchAhead.replacement`; record what actually shows in
      `AppliedState`; cleanup after each change.
-  4. [ ] Views: + menu (Add Folder…, Add Photos Album…), the album sheet
+  4. [x] (`2a145e2`; captions use Photos' original file name) Views: + menu (Add Folder…, Add Photos Album…), the album sheet
      (`OutlineGroup`, shared albums in their own section, empty albums
      disabled, denied message with Open Privacy & Security Settings…),
      Photos rows (no switch, `Photos › Trips • 120 photos`, Can't open
      without Locate…, context menu Remove only), grid headings, removal
      alert wording for albums.
-  5. [ ] `AppVersion` to 53; TESTING.md "What they cover"; UI tests with
+  5. [ ] TESTING.md "What they cover"; UI tests with
      the fake library (harness builds the folder); ask before running.
   6. [ ] Review (fresh eyes), then the author's Photos checks, then merge
      with the author's yes.

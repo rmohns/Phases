@@ -21,7 +21,13 @@ public final class PhasesApp {
   /// Phases the author is already running is left alone. `imageFolders`
   /// become the image sources, in order [D-ui-test-mode]: one path goes as
   /// is, several as the plist array form of `-PhasesUITestImages`.
-  public static func launch(imageFolders: [URL] = [TestImages.folder]) async throws -> PhasesApp {
+  /// `photosLibrary` is the fake Photos library's folder
+  /// (`-PhasesUITestPhotos`) and `photosDenied` makes it refuse access
+  /// (`-PhasesUITestPhotosDenied YES`) [D-fake-photos]; both are off unless
+  /// a test asks, so other tests launch as before.
+  public static func launch(
+    imageFolders: [URL] = [TestImages.folder], photosLibrary: URL? = nil, photosDenied: Bool = false
+  ) async throws -> PhasesApp {
     guard AXIsProcessTrusted() else {
       throw UITestFailure("The app running these tests needs Accessibility permission (System Settings › Privacy & Security › Accessibility).")
     }
@@ -33,6 +39,10 @@ public final class PhasesApp {
       "-PhasesUITestImages", Self.imagesArgument(for: imageFolders),
       "-ApplePersistenceIgnoreState", "YES",
     ]
+    if let photosLibrary {
+      configuration.arguments += ["-PhasesUITestPhotos", photosLibrary.path(percentEncoded: false)]
+      if photosDenied { configuration.arguments += ["-PhasesUITestPhotosDenied", "YES"] }
+    }
     let url = try appURL()
     // [D-ui-test-mode] AppKit keeps the window frame and sidebar layout in
     // the normal settings, outside test mode's store. Clear them so every
@@ -384,6 +394,29 @@ public final class PhasesApp {
     try await clickOwnElement(title, what: "the \(menu) menu")
     let item = try await waitFor("“\(prefix)…” in the \(menu) menu", timeout: .seconds(5)) {
       title.first { $0.role == kAXMenuItemRole && ($0.title ?? "").hasPrefix(prefix) && $0.isEnabled }
+    }
+    let shown = item.title ?? prefix
+    try await clickOwnElement(item, what: "“\(shown)”")
+    return shown
+  }
+
+  /// Opens the menu of the button with this accessibility identifier and
+  /// chooses the item whose title starts with `prefix`, with real clicks
+  /// (a menu opened through AX keeps stale items, as in
+  /// `chooseMenuItem` [Q-undo-menu-ax]). The item's click lands only on this
+  /// instance's own element. Returns the item's title as shown.
+  @discardableResult
+  public func chooseMenuButtonItem(_ identifier: String, startingWith prefix: String) async throws -> String {
+    let button = try element(identifier)
+    try await click(button)
+    // Let the menu open before reading its items' frames.
+    try await Task.sleep(for: .milliseconds(500))
+    let item = try await waitFor("“\(prefix)…” in the \(identifier) menu", timeout: .seconds(5)) {
+      let matches: (AXNode) -> Bool = {
+        $0.role == kAXMenuItemRole && ($0.title ?? "").hasPrefix(prefix) && $0.isEnabled
+          && ($0.frame.map { $0.width > 0 && $0.height > 0 } ?? false)
+      }
+      return button.first(where: matches) ?? app.first(where: matches)
     }
     let shown = item.title ?? prefix
     try await clickOwnElement(item, what: "“\(shown)”")
