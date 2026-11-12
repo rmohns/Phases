@@ -24,6 +24,18 @@ final class ImageLibrary {
   /// Set when the saved list didn't decode, so it isn't overwritten.
   @ObservationIgnored private var isSavingBlocked = false
 
+  /// The Photos library [D-photos-sources]: PhotoKit, or in UI test mode
+  /// the fake one [D-fake-photos], or none (test mode without it).
+  @ObservationIgnored let photos: PhotosProvider?
+  /// [D-photos-cache]
+  @ObservationIgnored let photoCache = PhotoCache()
+  /// Called after Photos reports a change and the library has reloaded
+  /// [D-photos-changes]; the scheduler re-evaluates.
+  @ObservationIgnored var onPhotosChange: (() -> Void)?
+  @ObservationIgnored private var photosChangeTask: Task<Void, Never>?
+  /// Mirrors the provider's access, so views update when it's answered.
+  private(set) var photosAccess = PhotosAccess.notDetermined
+
   private enum Keys {
     static let sources = "imageSources"
     static let order = "imageSourceOrder"
@@ -33,10 +45,36 @@ final class ImageLibrary {
     if UITestMode.isOn {
       // [D-ui-test-mode] The harness's folders, never the user's.
       sources = UITestMode.imageSources
+      photos = UITestMode.photosFolder.map { FakePhotosProvider(root: $0, refuses: UITestMode.photosRefused) }
     } else {
+      photos = PhotoKitProvider()
       load()
     }
+    photosAccess = photos?.access ?? .notDetermined
+    photos?.onChange = { [weak self] in self?.photosChanged() }
     reload()
+  }
+
+  /// [D-photos-changes] Photos reports changes in bursts (five in three
+  /// minutes for one add and one remove, LEARNINGS.md
+  /// `[L-photos-x5-observer]`), so reloads wait for a quiet second.
+  private func photosChanged() {
+    photosChangeTask?.cancel()
+    photosChangeTask = Task { @MainActor [weak self] in
+      try? await Task.sleep(for: .seconds(1))
+      guard !Task.isCancelled, let self else { return }
+      self.reload()
+      self.onPhotosChange?()
+    }
+  }
+
+  /// [D-photos-permission] Asked only from Add Photos Album….
+  func requestPhotosAccess() async -> PhotosAccess {
+    guard let photos else { return .denied }
+    let access = await photos.requestAccess()
+    photosAccess = access
+    reload()
+    return access
   }
 
   // MARK: - Reading
@@ -53,8 +91,38 @@ final class ImageLibrary {
   }
 
   /// The library image at `url`, following links, or nil if it isn't one.
+  /// A photo cache file maps back to its photo [D-photos-cache].
   func name(for url: URL) -> String? {
-    listing.name(for: url)
+    listing.name(for: url) ?? photoCache.photoID(forFile: url).flatMap(listing.name(forPhoto:))
+  }
+
+  /// Whether `name` is a photo from a Photos source, which has no file
+  /// until it's fetched [D-photos-fetch-ahead].
+  func isPhoto(_ name: String) -> Bool {
+    StoredImageName.source(of: name).flatMap(source(withID:))?.isPhotos ?? false
+  }
+
+  /// The photo's ID, if `name` is a photo.
+  func photoID(of name: String) -> String? {
+    isPhoto(name) ? PhotoImageName.photo(ofStoredName: name) : nil
+  }
+
+  /// The photo's cached file as it is now, without fetching.
+  func cachedFile(for name: String) -> URL? {
+    guard let photos, let photoID = photoID(of: name), let info = photos.photoInfo(photoID) else { return nil }
+    return photoCache.file(for: photoID, info: info)
+  }
+
+  /// The photo's file, fetching it if needed; nil if it isn't a photo.
+  func fetchPhoto(_ name: String) -> Task<URL?, Never>? {
+    guard let photos, let photoID = photoID(of: name) else { return nil }
+    return photoCache.fetch(photoID, from: photos)
+  }
+
+  /// A file for each image that's on hand now: a folder's file, or a
+  /// photo already in the cache [D-photos-fetch-ahead].
+  func fileOnHand(for name: String) -> URL? {
+    url(for: name) ?? cachedFile(for: name)
   }
 
   /// The selected images that still exist, in library order.
@@ -66,8 +134,9 @@ final class ImageLibrary {
     sources.first { $0.id == id }
   }
 
-  /// The folder's name, for headings and Settings rows.
+  /// The folder's or album's name, for headings and Settings rows.
   func displayName(of source: ImageSource) -> String {
+    if source.isPhotos { return source.title ?? "" }
     let name = (source.location as NSString).lastPathComponent
     return name.isEmpty ? source.location : name
   }
@@ -82,10 +151,31 @@ final class ImageLibrary {
   }
 
   func reload() {
-    var scans: [(sourceID: String, items: [FolderScan.Item])] = []
+    var scans: [(sourceID: String, entries: [LibraryListing.Entry])] = []
     var counts: [String: Int] = [:]
     var unreachable: Set<String> = []
+    var renamed = false
     for source in sources {
+      if source.isPhotos {
+        // [D-photos-sources] Nil when access is off or the album is gone.
+        guard let photosID = source.photosID, let contents = photos?.contents(of: source.kind, id: photosID) else {
+          unreachable.insert(source.id)
+          counts[source.id] = 0
+          continue
+        }
+        // [D-photos-names] Renamed or moved in Photos: rows and headings follow.
+        if let index = sources.firstIndex(where: { $0.id == source.id }),
+          sources[index].title != contents.title || sources[index].location != contents.location
+        {
+          sources[index].title = contents.title
+          sources[index].location = contents.location
+          renamed = true
+        }
+        let entries = contents.entries
+        scans.append((source.id, entries))
+        counts[source.id] = entries.count
+        continue
+      }
       guard let folder = folderURL(for: source) else {
         unreachable.insert(source.id)
         counts[source.id] = 0
@@ -95,15 +185,20 @@ final class ImageLibrary {
       let items = withAccess(to: folder) {
         FolderScan.items(in: folder, includesSubfolders: source.includesSubfolders)
       }
-      scans.append((source.id, items))
+      scans.append((source.id, items.map(LibraryListing.Entry.init)))
       counts[source.id] = items.count
     }
-    listing = LibraryListing(scans)
+    if renamed { save() }
+    listing = LibraryListing(sources: scans)
     imageCounts = counts
     unreachableSources = unreachable
+    photosAccess = photos?.access ?? .notDetermined
   }
 
   func thumbnail(for name: String, size: CGSize, scale: CGFloat) async -> NSImage? {
+    if let photos, let photoID = photoID(of: name) {
+      return await photos.thumbnail(photoID: photoID, size: size, scale: scale)
+    }
     guard let url = url(for: name) else { return nil }
     let folder = StoredImageName.source(of: name).flatMap { folderURLs[$0] }
     let started = folder?.startAccessingSecurityScopedResource() ?? false
@@ -149,6 +244,26 @@ final class ImageLibrary {
     )
     sources.append(source)
     folderURLs[source.id] = url
+    save()
+    reload()
+    return .added(source.id)
+  }
+
+  /// Adds a Photos album or folder of albums as a new source at the end, or
+  /// finds the source it already is [D-photos-sources].
+  @discardableResult
+  func addPhotos(_ collection: PhotosCollection) -> AddResult {
+    if let existing = sources.first(where: { $0.isPhotos && $0.photosID == collection.id }) {
+      return .existing(existing.id)
+    }
+    let source = ImageSource(
+      id: ImageSource.makeID(avoiding: Set(sources.map(\.id))),
+      kind: collection.sourceKind,
+      location: collection.location,
+      photosID: collection.id,
+      title: collection.title
+    )
+    sources.append(source)
     save()
     reload()
     return .added(source.id)

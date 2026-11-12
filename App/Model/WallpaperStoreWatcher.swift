@@ -60,6 +60,15 @@ final class WallpaperStoreWatcher {
     onOutsideChange?(changes)
   }
 
+  /// Every file name the store names, on every Space and display, or nil if
+  /// the store can't be read. The photo cache never deletes these
+  /// [D-photos-cache].
+  func fileNamesInStore() -> Set<String>? {
+    let entries = read()
+    guard !entries.isEmpty else { return nil }
+    return Set(entries.values.compactMap(\.fileName))
+  }
+
   private func read() -> [String: WallpaperStoreEntry] {
     guard let data = try? Data(contentsOf: folderURL.appending(path: "Index.plist")) else { return [:] }
     return WallpaperStoreReader.entries(fromPlist: data)

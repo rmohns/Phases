@@ -60,7 +60,40 @@ Written 2026-11-12 by Claude with the author.
      wallpaper location, Photos check 8].
   6. **Fetch-ahead lead** [2 minutes, or half the rotation interval].
   7. **Edited version, not the original** [edited].
-- [ ] Phase 2b: code for merge #2, tests, merged
+  **Approved** by the author 2026-11-12, after adding the retry and
+  30-second wait and the "removed is missing, not late" rule. A photo
+  that keeps failing to download is left alone until it's seen (author:
+  "let iCloud handle its own consistency").
+- [ ] Phase 2b: code for merge #2, tests, merged. On
+  `feature/33-photos-albums`. Steps (build with
+  `bitrig build -destination generic/platform=macOS` and `swift test` in
+  `UnitTests/` after each):
+  1. [x] Pure logic and the PhotoKit provider, not wired in (`fbd4b57`):
+     `ImageSource.Kind`, `photosID`, `title`; `PhotoImageName`;
+     `LibraryListing.Entry` (url nil for photos); `PhotoCacheRules`;
+     `FetchAhead`; `PhotosProvider` protocol and types;
+     `PhotoKitProvider` and `PhotoFileWriter`. Unit tests by Sonnet (29).
+  2. [ ] `FakePhotosProvider` `[D-fake-photos]` and `UITestMode`
+     switches; `PhotoCache` (files, index of file → photo and last shown,
+     in-flight fetches shared, cleanup using
+     `WallpaperStoreWatcher`'s file names and the restore record);
+     `ImageLibrary` reads Photos sources (reload, thumbnails, add, change
+     observer, `name(for:)` for cache files). `NSPhotoLibraryUsageDescription`
+     in `Project.json`.
+  3. [ ] Scheduler: resolve photo picks through the cache; fetch-ahead
+     timer event `[D-single-timer]`; 30 s wait, retry, fallback via
+     `FetchAhead.replacement`; record what actually shows in
+     `AppliedState`; cleanup after each change.
+  4. [ ] Views: + menu (Add Folder…, Add Photos Album…), the album sheet
+     (`OutlineGroup`, shared albums in their own section, empty albums
+     disabled, denied message with Open Privacy & Security Settings…),
+     Photos rows (no switch, `Photos › Trips • 120 photos`, Can't open
+     without Locate…, context menu Remove only), grid headings, removal
+     alert wording for albums.
+  5. [ ] `AppVersion` to 53; TESTING.md "What they cover"; UI tests with
+     the fake library (harness builds the folder); ask before running.
+  6. [ ] Review (fresh eyes), then the author's Photos checks, then merge
+     with the author's yes.
 
 ## Picking this up in a new conversation
 
