@@ -37,7 +37,25 @@ Written 2026-11-12 by Claude with the author.
     missing selections weren't marked with no reachable source, and a
     lone subfolder lost its heading. The draft 44 conversion it also
     flagged was dropped instead (author: no conversion needed).
-- [ ] Phase 1b: spec for merge #2 (Photos albums), approved
+- [ ] Phase 1b: spec for merge #2 (Photos albums), approved. Written
+  as **draft 53** on branch `feature/33-photos-albums` (from `main` at
+  `a5d06e9`), 2026-11-12: SPEC.md "Photos albums" (`[D-photos-sources]`,
+  `[D-photos-order]`, `[D-photos-names]`, `[D-photos-version]`,
+  `[D-photos-fetch-ahead]`, `[D-photos-cache]`, `[D-photos-permission]`,
+  `[D-photos-changes]`), TESTING.md `[D-fake-photos]` and "Photos
+  checks". Waiting on the author's approval and these open calls
+  (Claude's defaults in brackets):
+  1. **Whole-album selection:** should a phase be able to use "every
+     photo in this album", so photos added later join the rotation by
+     themselves? [Not in this draft: selections stay per image, as for
+     folders. It would apply to folders too, so it's its own issue.]
+  2. **Folders of albums as one source** [yes, with album headings].
+  3. **Smart albums** [no, this draft].
+  4. **Cache limit** [1 GB, least recently shown deleted first].
+  5. **Cache in Application Support, not Caches** [yes; untested as a
+     wallpaper location, Photos check 8].
+  6. **Fetch-ahead lead** [2 minutes, or half the rotation interval].
+  7. **Edited version, not the original** [edited].
 - [ ] Phase 2b: code for merge #2, tests, merged
 
 ## Picking this up in a new conversation

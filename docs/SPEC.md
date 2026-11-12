@@ -1,4 +1,4 @@
-# Phases — Specification (draft 52)
+# Phases — Specification (draft 53)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -81,8 +81,9 @@ Displays. Rotation then continues within the phase.
 
 **In order** cycles through each selection in library order and remembers its
 position across launches. Library order is the order of the image sources
-in Settings, then each source's own order: top-level images first, then
-each subfolder, sorted the way Finder sorts `[D-image-sources]`. **Random** avoids repeating the current
+in Settings, then each source's own order: for a folder, top-level images first, then
+each subfolder, sorted the way Finder sorts `[D-image-sources]`; for a
+Photos album, the album's own order `[D-photos-order]`. **Random** avoids repeating the current
 image when there's more than one choice.
 
 ## Start triggers
@@ -113,10 +114,11 @@ image when there's more than one choice.
 
 ## Image library
 
-- `[D-image-sources]` **The library is a list of image sources.** For now
-  every source is a folder, chosen with a standard folder picker. Photos
-  albums are planned as a second kind of source (issue #33, plan in
-  `docs/PLAN-GITHUB-ISSUE-33.md`).
+- `[D-image-sources]` **The library is a list of image sources.** A
+  source is a folder, chosen with a standard folder picker, or (from
+  draft 53) a Photos album or folder of albums `[D-photos-sources]`. The
+  rules in this section are written for folders; "Photos albums" below
+  says where albums differ.
   - Settings shows the sources in an **Image Sources** list. Each row has
     two lines:
     - The folder's name, with its own **Include subfolders** switch at
@@ -144,9 +146,8 @@ image when there's more than one choice.
       2026-11-12). Locate… appears only for a source that can't be
       opened; one that's found has nothing to locate (author,
       2026-11-12). Show in Finder is only for sources in the file
-      system (folders). A source that isn't, such as a Photos album, gets
-      its own equivalent or none; merge #2's spec decides which (author,
-      2026-11-12). Remove asks first, as − does. Control-click and
+      system (folders). A Photos source gets Remove only
+      `[D-photos-sources]`. Remove asks first, as − does. Control-click and
       right-click work on any row, selected or not, as they do in the
       phase list `[D-phase-actions]` (author, 2026-11-12).
   - **The list is one Tab stop,** like the image grid
@@ -338,6 +339,164 @@ image when there's more than one choice.
   or can't be opened, it's skipped and the phase editor marks it as
   missing. A phase with no available images is skipped (the wallpaper
   stays as it is).
+
+### Photos albums
+
+Draft 53, issue #33 merge #2. Evidence for this section is LEARNINGS.md
+"Photos library (issue #33)", unless noted.
+
+- `[D-photos-sources]` **A Photos album, or a folder of albums, can be an
+  image source,** alongside folders, in any mix and any order
+  `[D-image-sources]`.
+  - **Adding:** + becomes a menu with **Add Folder…** and **Add Photos
+    Album…**. Add Photos Album… opens a sheet listing the library the way
+    Photos' sidebar does: folders of albums, nested, in sidebar order,
+    each album with its photo count. Shared albums are listed in their
+    own group after them. Smart albums (Favorites, Recents, and the
+    user's own) aren't offered in this draft.
+  - The sheet lists albums with no photos (videos only, or empty) but
+    they can't be chosen.
+  - Choosing a **folder of albums** adds the folder as one source. Its
+    albums, nested ones too, are listed under it the way a folder
+    source's subfolders are, each under a heading with its path
+    (`Trips / Iceland`). There's no Include subfolders switch for it: a
+    Photos folder holds only albums, so turning it off would leave
+    nothing (*recalled*, Photos' folder rules).
+  - Adding an album or folder that's already a source selects its row,
+    as for folders.
+  - **Only still images.** Videos are left out, and a Live Photo counts
+    as its still image. Counts in Settings and the sheet are of photos,
+    not items (an album of 61 photos showed 63 items to PhotoKit,
+    *verified*).
+  - **The Settings row:** line one is the album's (or folder's) name,
+    with no switch. Line two reads `Photos › Trips • 120 photos`: where
+    it sits in Photos' sidebar, then the count. A shared album reads
+    `Shared Album • 40 photos`.
+  - **Context menu:** **Remove** only. Show in Finder doesn't apply, and
+    macOS has no public way to open Photos at a given album (*recalled*),
+    so there's no Show in Photos. Locate… doesn't apply either (see
+    "A Photos source Phases can't open", below).
+  - Removing and undoing a removal work as they do for folders
+    `[D-undo-remove-source]`.
+  - *Why albums and folders but not smart albums:* the issue asks for
+    albums, and the author keeps wallpapers in albums (two named
+    "Walllpapers & Desktop Pictures"). Smart albums change by
+    themselves, which makes In order hard to follow. Easy to add later.
+- `[D-photos-order]` **In order follows the album's own order,** the
+  order Photos shows it in. For a folder of albums: its albums in
+  sidebar order, each in its own order. *Verified:* the default fetch
+  returns an album's own order, including one sorted by hand
+  `[L-photos-album-order]`.
+- `[D-photos-names]` **A saved photo is named by its source, its album,
+  and the photo's ID in the Photos library** `[D-source-names]`.
+  - Photos' own IDs, not names: two albums can share a name (the
+    author's library has two pairs), and photo IDs held across builds
+    and the sandbox `[L-photos-ids-stable]`. Album IDs are assumed
+    stable the same way (*recalled*, not checked).
+  - The album is part of the name, so a photo in two albums of a folder
+    source is listed twice, once per album, as two links to one image
+    are `[D-follow-links]`.
+  - Renaming or moving an album in Photos changes nothing saved; its row
+    and headings follow the new name.
+  - *How* (stored form): `<source ID>:<album ID>:<photo ID>`, using
+    PhotoKit's local identifiers (shape `AF0F5151-…/L0/001`, no colon;
+    *verified* on 10 IDs from Phase 0). The name splits at its first two
+    colons.
+- `[D-photos-version]` **The wallpaper is the photo as it looks in
+  Photos:** with the user's edits, at full size, as a still image.
+  - Phases writes it to a file in its photo cache `[D-photos-cache]` and
+    sets that file as the wallpaper. *Verified* that macOS shows a
+    wallpaper from a file Phases wrote, sandboxed or not
+    `[L-photos-x4-cache-wallpaper]` `[L-sandbox-x4-container-wallpaper]`.
+  - A photo whose file isn't one of the supported formats (a RAW
+    original, for example) is written as HEIC.
+  - Editing a photo in Photos makes Phases fetch it again the next time
+    it's used.
+  - *Why edits:* the photo should look the way the user made it look.
+    Untested: edited photos, Live Photos, HEIC, RAW, very large files
+    (Phase 0's test album had none).
+- `[D-photos-fetch-ahead]` **Phases fetches photos before they're needed,
+  so scheduled changes still happen on time.**
+  - **Scheduled changes** (a phase start or a rotation): Phases picks the
+    next image for each display 2 minutes ahead (or half the rotation
+    interval, if that's shorter), fetches it, and shows that pick when
+    the change comes. A Random pick is made then, not at the change.
+  - If anything that affects the pick changes in between (the phase,
+    its images, the displays, Light/Dark), the pick is made again.
+  - **Changes that can't be foreseen** (Change Now, editing the active
+    phase, waking, resuming): the photo is fetched then, and the change
+    starts when it arrives. *Verified* cost: 0.5–1.4 s per iCloud-only
+    photo, online `[L-photos-x3-download]`.
+  - **A photo that can't be fetched** (offline and only in iCloud, or
+    deleted): that display gets another image from the same selection
+    that's on hand (in the cache, or from a folder), chosen as Random or
+    In order would. In order then carries on from where it would have
+    been, so the order comes back once the photo can be fetched. If
+    nothing is on hand, the display keeps its wallpaper. Offline,
+    fetching fails in under 0.1 s, so this costs no wait (*verified*).
+  - Phases fetches only what it's about to show, not whole albums, so a
+    large iCloud album doesn't fill the disk.
+  - This adds a second kind of event to the one timer: it aims at
+    whichever comes first, the next fetch or the next change
+    `[D-single-timer]`.
+- `[D-photos-cache]` **The photo cache** holds the files Phases sets as
+  wallpapers.
+  - **Where:** `~/Library/Application Support/Phases/Photos/` (in the
+    container, once sandboxed). Not Caches: macOS may empty Caches when
+    the disk is low (*recalled*), and a Space that isn't showing keeps
+    its wallpaper as a file path, so it would lose its wallpaper.
+    *Untested:* a wallpaper from Application Support (X4 tested Caches;
+    expected to be the same, since both are ordinary files).
+  - **Limit:** 1 GB. When over it, the least recently shown files are
+    deleted first.
+  - **Never deleted,** whatever the limit:
+    - a file showing on any display;
+    - a file any entry in macOS's wallpaper store names, which covers
+      Spaces that aren't showing `[Q-wallpaper-store]`;
+    - a file in the restore record `[D-restore-on-quit]`, which happens
+      when Restore original wallpaper is off and Phases' photo becomes
+      the next launch's original;
+    - a file fetched ahead and waiting for its change.
+  - If the wallpaper store can't be read (as in a sandboxed build
+    without its exception, `[L-sandbox-x0-paths]`), files shown in the
+    last 30 days are kept too.
+  - A cached file maps back to its photo, so Phases knows its own photo
+    when it's showing: Random still avoids repeating it, and a change
+    to it isn't taken for a pick made outside Phases
+    `[D-outside-change-rule]`.
+  - Removing a source doesn't empty its files at once; they go by the
+    rules above.
+- `[D-photos-permission]` **Phases asks for Photos access the first time
+  it's needed:** when the user chooses Add Photos Album…, never at launch.
+  - The usage text: "Phases shows photos from the albums you choose as
+    your wallpaper."
+  - **Refused, or turned off later in System Settings:** the sheet says
+    "Phases doesn't have access to Photos" with an **Open Privacy &
+    Security Settings…** button. Every Photos source shows "Can't open"
+    the same way, and its photos count as missing. Folder sources carry
+    on.
+  - macOS has no limited-library mode for Photos access, only all or
+    nothing (*recalled*; iOS has one).
+  - A new build of Phases asks again `[L-photos-new-build-asks]`. That
+    matters for testing, not for users of one build.
+- **A Photos source Phases can't open** (access refused, or the album or
+  folder deleted in Photos) shows "Can't open" in its row, with no
+  Locate… (an album isn't somewhere to look for). Its photos count as
+  missing, as a folder's do. A deleted photo, or one taken out of the
+  album, shows as missing in the phase editor, as a deleted file does.
+- `[D-photos-changes]` **Album changes show up while Phases runs.** Adding
+  photos to an album, removing them, reordering it, or renaming it
+  updates the grid, the counts, and the headings, with no reload.
+  *Verified:* PhotoKit reports album changes while Phases is in the
+  background `[L-photos-x5-observer]`.
+  - New photos aren't added to any phase's selection by themselves, as
+    with a folder's new files.
+- **The grid** shows a Photos source like a folder: a heading with the
+  album's name, and for a folder of albums a heading per album.
+  Thumbnails come from Photos. `[D-grid-one-tab-stop]` and
+  `[D-grid-release-on-close]` apply.
+  - Thumbnails of iCloud-only photos should still show offline, since
+    Photos keeps small versions locally (*recalled*, not tested).
 
 ## Displays
 
@@ -1477,13 +1636,13 @@ extras don't show them. No global hotkey.
   to set or restore a Space that isn't showing.
 - With "Displays have separate Spaces" on (the macOS default), each display has
   its own current Space, and the app sets each one.
-- `[D-single-timer]` Scheduling uses a single timer aimed at the next event, recalculated after
+- `[D-single-timer]` Scheduling uses a single timer aimed at the next event (a change, or from draft 53 a photo fetch ahead of one `[D-photos-fetch-ahead]`), recalculated after
   every change, wake, or settings edit, with an hourly re-check as a safety net
   against clock drift. No polling loop.
 
 ## Persistence
 
-All settings (image sources with their bookmarks and locations, phases including per-display selections,
+All settings (image sources with their bookmarks and locations, or Photos album and folder IDs, phases including per-display selections,
 preferences, in-order positions, last applied phase and image per display, known
 displays and their names, last location) are stored in UserDefaults as Codable
 data. Phases saved by earlier versions load unchanged (no per-display images).
@@ -1524,7 +1683,8 @@ The image folder setting from draft 44 and earlier isn't carried over
 ## Out of scope (v1)
 
 - Different schedules per weekday
-- Online image sources. Photos albums are planned (issue #33)
+- Online image sources other than Photos albums (draft 53)
+- Smart albums as sources `[D-photos-sources]`
 - Choosing different images per Space within a phase. Planned as a later
   enhancement (author, 2026-10-31); `[D-cover-per-space]` keeps the way
   open. Needs a way to tell Spaces apart, which the public API doesn't

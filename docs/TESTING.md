@@ -117,8 +117,8 @@ The pure logic that decides what the app does:
 
 - `[D-hands-on-checks]` **Every check that drives the mouse and keyboard
   or touches the real wallpaper is a hands-on check, and any one of them
-  can run on its own** (draft 33). There are three: Interface tests, Cover
-  checks, and Memory checks. The Interface tests are automated but still
+  can run on its own** (draft 33). There are four: Interface tests, Cover
+  checks, Memory checks, and from draft 53 Photos checks. The Interface tests are automated but still
   belong here, because they move the mouse; the line is touching the Mac,
   not automated versus by hand.
   - **Any check alone.** Each starts from a fresh launch, does its own
@@ -539,6 +539,38 @@ Each with what passes:
     the log (detection about 2 s after the pick, no false pause on
     Phases' own sets). Two displays untested.
 
+### Photos checks (draft 53)
+
+- `[D-photos-checks]` **Real Photos behavior is checked by hand before
+  merge #2 merges,** and after any change to the Photos source or the
+  photo cache. The fake library `[D-fake-photos]` can't show what
+  PhotoKit, iCloud, and the wallpaper do. Ask first, naming the checks;
+  some change the real wallpaper and need the author at the Mac.
+- **The checks**, on the author's library:
+  1. **Permission:** a fresh build, Add Photos Album… shows the prompt;
+     Don't Allow shows the sheet's message and every Photos row "Can't
+     open"; allowing it in System Settings brings them back.
+  2. **Adding:** an album, a folder of albums (headings per album), a
+     shared album; an album already added selects its row.
+  3. **In order:** an album sorted by hand rotates in its Photos order.
+  4. **iCloud-only photo:** shows on time at a scheduled change (fetched
+     ahead), and with Change Now (late by the download).
+  5. **Offline:** Wi-Fi off, a scheduled change falls back to a photo on
+     hand, or keeps the wallpaper if none is.
+  6. **Edited photo, Live Photo, HEIC, RAW:** each shows as it looks in
+     Photos. Phase 0 tested none of these.
+  7. **Album changes:** adding, removing, and reordering photos in Photos
+     updates the grid while Phases runs; deleting the album shows "Can't
+     open"; a deleted photo shows as missing.
+  8. **Cache:** the file path of a showing photo is under Application
+     Support; it survives a change on another Space and a relaunch;
+     Restore original wallpaper on quit puts back the original.
+  9. **Outside change:** picking a wallpaper in System Settings while a
+     photo shows still pauses Phases, and Phases' own photo changes
+     don't `[D-outside-change-rule]`.
+- Record results with date and build in this section, as the other
+  checks do.
+
 ## Shared tools
 
 Used by both groups. Reference, not steps.
@@ -625,6 +657,20 @@ neither can leak into normal use.
     `-PhasesUITestImages '("<path 1>", "<path 2>")'`, as its sources in
     that order `[D-image-sources]` (draft 52). The harness makes a second,
     small folder for the tests that need two sources;
+  - `[D-fake-photos]` never touch the Photos library (draft 53). With
+    `-PhasesUITestPhotos <path>`, Phases uses a **fake Photos library**
+    made from a folder the harness builds: each subfolder is an album, a
+    subfolder of subfolders is a folder of albums, and a folder named
+    `Shared` holds shared albums. Photo IDs are made from the file names.
+    Everything above PhotoKit (the Add Photos Album… sheet, rows,
+    headings, counts, saved names, In order, the cache and fetching
+    ahead) runs as it would for real; only the PhotoKit calls are
+    replaced. `-PhasesUITestPhotosDenied YES` makes the fake library
+    refuse access. Without `-PhasesUITestPhotos`, test mode has no
+    Photos library at all and never asks for access.
+    - *Why:* every new build asks for Photos access again
+      `[L-photos-new-build-asks]`, and the real library is the author's.
+      Real PhotoKit is checked by hand ("Photos checks").
   - leave the window closed at launch, as usual. The UI tests open it the
     way the author does, from the menu bar item's Open Phases…, through
     AX actions. *Why:* opening it at launch instead skipped the focus and
