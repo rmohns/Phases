@@ -1134,8 +1134,19 @@ cdhash `586935f0`). Run by Claude with the author's yes.
   - Claude put the backup back at `~/Library/Preferences` by copying
     the file. Whether the unsandboxed installed Phases reads it
     correctly is untested until the author relaunches it.
-- `[L-sandbox-x1-no-entitlement]` **Without the Photos entitlement,
-  `requestAuthorization` never returned.** The probe sat for over 5
-  minutes and was stopped by Claude. The TCC log over that time showed
-  no Photos request from Phases (only system daemons). Whether a prompt
-  appeared is the author's to say. *Observed.*
+- `[L-sandbox-x1-no-entitlement]` **Without the Photos entitlement, the
+  sandboxed build still got a Photos prompt.** The TCC log at 11:43:55
+  says "showing the prompt" for Phases. Nobody answered it (the author
+  was away), so `requestAuthorization` waited over 5 minutes until
+  Claude stopped the probe. *Verified* (TCC log). Whether access works
+  without the entitlement once allowed is still open.
+  - (Corrected 2026-11-12 by Claude: the first version said the TCC log
+    showed no Photos request from Phases. That search filtered on
+    "Photos" in the message and missed the lines naming Phases.)
+- `[L-photos-new-build-asks]` **A new build asks for Photos again.** The
+  same TCC request logged "Failed to match existing code requirement …
+  kTCCServicePhotos" with the round A build's cdhash (`9808ae12…`) and
+  this build's (`586935f0…`). So the round A grant didn't carry over to a
+  build with a different signature. *Verified* (TCC log), for one rebuild
+  that also added the sandbox. Whether a plain rebuild with no
+  entitlement change does the same is untested.
