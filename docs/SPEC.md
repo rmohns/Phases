@@ -176,6 +176,20 @@ image when there's more than one choice.
     how many phases. Their selections of its images then show as missing
     (see the last bullet of this section). Adding the folder again later
     makes a new source, so they stay missing.
+  - `[D-undo-remove-source]` **Removing a source can be undone** with
+    Edit › Undo Remove “<name>” (⌘Z), however it was removed: −, ⌫, or
+    the context menu, by mouse or keyboard. Undo puts back the same
+    source (same ID, bookmark, location, Include subfolders) at its old
+    place in the list, so every phase's selections of its images come
+    back. Redo removes it again.
+    - Scope: the window's undo, one step per removal, no history beyond
+      what Edit › Undo already keeps. Undo follows keyboard focus, so
+      after a removal, typing in a text field puts that typing first in
+      line for ⌘Z (standard Mac behavior, *recalled*; author accepts it,
+      2026-11-12).
+    - *Why:* the removal warning only appears when a phase uses the
+      source, so undo is the safety net for the rest (author,
+      2026-11-12). The warning stays.
   - *Why:* the author wants several sources at once, such as two Photos
     albums and three folders (2026-11-12, issue #33). Folders come first,
     in their own change, because they need no new permissions and the

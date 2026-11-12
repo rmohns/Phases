@@ -12,6 +12,7 @@ struct ImageSourcesSection: View {
   /// `fileImporter(isPresented:…)`; Fable review, 2026-11-12).
   @State private var pickerPurpose = FolderPickerPurpose.add
   @State private var pendingRemoval: ImageSource?
+  @Environment(\.undoManager) private var undoManager
 
   private enum FolderPickerPurpose: Equatable {
     case add
@@ -174,10 +175,39 @@ struct ImageSourcesSection: View {
     }
   }
 
+  /// Every way of removing (−, ⌫, the context menu, the confirmation)
+  /// ends here, so each can be undone [D-undo-remove-source]. The window's
+  /// undo manager, so Edit › Undo reaches it whatever has focus, unless a
+  /// text field has its own undo.
   private func remove(_ id: String) {
-    library.removeSource(id)
+    guard let removed = library.removeSource(id) else { return }
     if selectedID == id { selectedID = nil }
     scheduler.evaluate(reloadingLibrary: false)
+    registerUndo(restoring: removed.source, at: removed.index)
+  }
+
+  private func registerUndo(restoring source: ImageSource, at index: Int) {
+    guard let undoManager else { return }
+    Self.registerRestore(source, at: index, library: library, scheduler: scheduler, undoManager: undoManager)
+  }
+
+  /// Undo puts the source back and registers its redo, which removes it
+  /// and registers the undo again, so undo and redo alternate freely.
+  private static func registerRestore(
+    _ source: ImageSource, at index: Int, library: ImageLibrary, scheduler: WallpaperScheduler, undoManager: UndoManager
+  ) {
+    let name = "Remove “\(library.displayName(of: source))”"
+    undoManager.registerUndo(withTarget: library) { library in
+      library.restoreSource(source, at: index)
+      scheduler.evaluate(reloadingLibrary: false)
+      undoManager.registerUndo(withTarget: library) { library in
+        guard let removed = library.removeSource(source.id) else { return }
+        scheduler.evaluate(reloadingLibrary: false)
+        registerRestore(removed.source, at: removed.index, library: library, scheduler: scheduler, undoManager: undoManager)
+      }
+      undoManager.setActionName(name)
+    }
+    undoManager.setActionName(name)
   }
 }
 

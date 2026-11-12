@@ -1,3 +1,4 @@
+import ApplicationServices
 import Foundation
 import PhasesUIDriver
 import Testing
@@ -128,6 +129,46 @@ extension PhasesUITests {
         #expect(Self.names(app).first?.allText.contains(TestImages.folderName) == true,
           "The wrong source was removed; left: \(Self.names(app).map(\.allText))")
       }
+    }
+
+    /// [D-undo-remove-source] A source removed with a click on − comes back
+    /// with Edit › Undo, in its old place, and Redo removes it again. No
+    /// keys: the author asked that undo work without keyboard input
+    /// (2026-11-12). ⌘Z is that menu item's key equivalent, so the menu is
+    /// the route it takes too.
+    @Test func undoPutsBackASourceRemovedWithTheMouse() async throws {
+      try await withPhases(imageFolders: Self.folders) { app in
+        try await app.click(try #require(try app.row(named: "Settings")))
+        try await waitUntil("the image source rows") { Self.names(app).count == 2 }
+        // Remove the first source, so putting it back in place is visible.
+        try await app.click(Self.names(app)[0])
+        let remove = try await waitFor("the Remove Folder button to be enabled") {
+          (try? app.element("removeImageSource")).flatMap { $0.isEnabled ? $0 : nil }
+        }
+        try await app.click(remove)
+        try await waitUntil("the first source to be removed") { Self.names(app).count == 1 }
+
+        try Self.chooseEditMenuItem(app, startingWith: "Undo Remove")
+        try await waitUntil("the source to come back") { Self.names(app).count == 2 }
+        #expect(Self.names(app).first?.allText.contains(TestImages.folderName) == true,
+          "The source didn't come back in first place: \(Self.names(app).map(\.allText))")
+
+        try Self.chooseEditMenuItem(app, startingWith: "Redo Remove")
+        try await waitUntil("redo to remove it again") { Self.names(app).count == 1 }
+      }
+    }
+
+    /// Presses an Edit menu item through AX, without opening the menu or
+    /// pressing keys.
+    private static func chooseEditMenuItem(_ app: PhasesApp, startingWith prefix: String) throws {
+      let bar = try #require(app.app.node("AXMenuBar"), "No menu bar")
+      let edit = try #require(bar.children.first { $0.title == "Edit" }, "No Edit menu")
+      let item = try #require(
+        edit.first { $0.role == "AXMenuItem" && ($0.title ?? "").hasPrefix(prefix) },
+        "No Edit menu item starting “\(prefix)”; items: \(edit.descendants().compactMap(\.title))"
+      )
+      #expect(item.isEnabled, "“\(item.title ?? prefix)” is disabled")
+      #expect(item.perform(kAXPressAction) == .success, "Pressing “\(item.title ?? prefix)” failed")
     }
 
     /// [D-image-sources] Tab went into the source list and never came out:

@@ -169,9 +169,22 @@ final class ImageLibrary {
 
   /// Removes the source. Selections of its images then show as missing;
   /// adding the folder again makes a new source.
-  func removeSource(_ id: String) {
-    sources.removeAll { $0.id == id }
+  /// Returns what undo needs to put it back [D-undo-remove-source].
+  @discardableResult
+  func removeSource(_ id: String) -> (source: ImageSource, index: Int)? {
+    guard let index = sources.firstIndex(where: { $0.id == id }) else { return nil }
+    let source = sources.remove(at: index)
     folderURLs[id] = nil
+    save()
+    reload()
+    return (source, index)
+  }
+
+  /// [D-undo-remove-source] Puts a removed source back at its old place,
+  /// with its ID, so phases' selections of its images come back.
+  func restoreSource(_ source: ImageSource, at index: Int) {
+    guard !sources.contains(where: { $0.id == source.id }) else { return }
+    sources.insert(source, at: min(index, sources.count))
     save()
     reload()
   }
