@@ -148,24 +148,30 @@ extension PhasesUITests {
         try await app.click(remove)
         try await waitUntil("the first source to be removed") { Self.names(app).count == 1 }
 
-        try Self.chooseEditMenuItem(app, startingWith: "Undo Remove")
+        try await Self.chooseEditMenuItem(app, startingWith: "Undo Remove")
         try await waitUntil("the source to come back") { Self.names(app).count == 2 }
         #expect(Self.names(app).first?.allText.contains(TestImages.folderName) == true,
           "The source didn't come back in first place: \(Self.names(app).map(\.allText))")
 
-        try Self.chooseEditMenuItem(app, startingWith: "Redo Remove")
+        try await Self.chooseEditMenuItem(app, startingWith: "Redo Remove")
         try await waitUntil("redo to remove it again") { Self.names(app).count == 1 }
       }
     }
 
-    /// Presses an Edit menu item through AX, without opening the menu or
-    /// pressing keys.
-    private static func chooseEditMenuItem(_ app: PhasesApp, startingWith prefix: String) throws {
+    /// Opens the Edit menu and presses an item, all through AX, no keys.
+    /// Opening first matters: a closed menu's items keep the title and
+    /// enabled state from when it last opened, so Redo read as disabled
+    /// right after an undo (LEARNINGS.md `[L-closed-menu-stale]`).
+    private static func chooseEditMenuItem(_ app: PhasesApp, startingWith prefix: String) async throws {
       let bar = try #require(app.app.node("AXMenuBar"), "No menu bar")
       let edit = try #require(bar.children.first { $0.title == "Edit" }, "No Edit menu")
+      #expect(edit.perform(kAXPressAction) == .success, "Opening the Edit menu failed")
+      try await Task.sleep(for: .milliseconds(500))
+      let items = edit.descendants().filter { $0.role == "AXMenuItem" }
+      print("Edit menu: \(items.map { "\($0.title ?? "?")\($0.isEnabled ? "" : " (disabled)")" })")
       let item = try #require(
-        edit.first { $0.role == "AXMenuItem" && ($0.title ?? "").hasPrefix(prefix) },
-        "No Edit menu item starting “\(prefix)”; items: \(edit.descendants().compactMap(\.title))"
+        items.first { ($0.title ?? "").hasPrefix(prefix) },
+        "No Edit menu item starting “\(prefix)”"
       )
       #expect(item.isEnabled, "“\(item.title ?? prefix)” is disabled")
       #expect(item.perform(kAXPressAction) == .success, "Pressing “\(item.title ?? prefix)” failed")

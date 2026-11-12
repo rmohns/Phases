@@ -1186,3 +1186,14 @@ cdhash `586935f0`). Run by Claude with the author's yes.
   items by file ID as well as path, and a network volume over SMB doesn't
   give a stable file ID, so only the old path is left. Matches
   `[D-source-location]`'s fallback design; no code change.
+- `[L-closed-menu-stale]` **A closed menu's items, read through AX, keep
+  the title and enabled state from when the menu last opened.** After
+  removing a source, the closed Edit menu read "Undo" (not "Undo Remove
+  “…”"), and after pressing it through AX, Redo still read disabled, so
+  pressing Redo did nothing. Pressing Undo did work: the source came
+  back. *Verified* by `undoPutsBackASourceRemovedWithTheMouse`, 2026-11-12
+  (two runs). The author, opening the menu by hand, saw "Undo Remove
+  “Jocelyn age 15-months-to-5-years”", and Undo and Redo both worked
+  (*verified* by the author, on screen). Why (*recalled*): AppKit
+  validates and retitles menu items when the menu is about to open. The
+  test now opens the Edit menu through AX before reading it.
