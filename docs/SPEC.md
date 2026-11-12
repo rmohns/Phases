@@ -1,4 +1,4 @@
-# Phases — Specification (draft 45)
+# Phases — Specification (draft 52)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -122,8 +122,14 @@ image when there's more than one choice.
     `[D-source-location]`), how many images it has, and its own **Include
     subfolders** switch. **+** adds a folder; **−** removes the selected
     one.
-  - Sources stay in the order they were added. That order is the
-    library's order, for the grid and for In order.
+  - **The sources' order is the library's order,** for the grid and for
+    In order. In this draft a new source goes at the end and the order
+    can't be changed yet.
+    - The order belongs to the user: dragging rows in the list to
+      reorder them is planned (author, 2026-11-12). Nothing may assume
+      a source's place is fixed: the order is stored as its own list,
+      source IDs say nothing about position, and saved selections and
+      In order positions don't depend on where a source sits.
   - Adding a folder that's already a source (the same folder on disk,
     however it was reached) selects the existing row instead of adding a
     second.
@@ -1463,8 +1469,8 @@ Settings from draft 44 and earlier are converted once to image sources
 
 - Different schedules per weekday
 - Online image sources. Photos albums are planned (issue #33)
-- Reordering image sources; they stay in the order added
-  `[D-image-sources]`
+- Reordering image sources by dragging. Planned; draft 52 keeps the way
+  open `[D-image-sources]`
 - Choosing different images per Space within a phase. Planned as a later
   enhancement (author, 2026-10-31); `[D-cover-per-space]` keeps the way
   open. Needs a way to tell Spaces apart, which the public API doesn't

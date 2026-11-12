@@ -11,13 +11,60 @@ Written 2026-11-12 by Claude with the author.
 - [x] Plan written (this file)
 - [x] Phase 0: experiments X0–X6, rounds A and B (2026-11-12; see
   "Phase 0 results")
-- [ ] Decide: sandbox before merge #1? (see "Sandboxing"). Waiting on
-  the author's developer account, which the wallpaper-store exception
-  needs.
-- [ ] Phase 1a: spec for merge #1 (multiple sources, folders only), approved
+- [x] Decide: sandbox before merge #1? **No:** sandboxing is its own
+  later change (author, 2026-11-12). The author's developer account is
+  active again and Bitrig is signed in, but the sandboxed round B runs
+  that need it (Photos and wallpaper-store entitlements) wait for that
+  change. Draft 52 uses security-scoped bookmarks so it doesn't block it.
+- [ ] Phase 1a: spec for merge #1 written as **draft 52** (`031fda7`, then
+  the amendments below). The author answered its four open calls on
+  2026-11-12 (number 52, order changeable later, remove/re-add makes a
+  new source, a source heading even with one source). **Next step:** ask
+  the author to approve draft 52 as it now stands before any code.
 - [ ] Phase 2a: code for merge #1, tests, merged
 - [ ] Phase 1b: spec for merge #2 (Photos albums), approved
 - [ ] Phase 2b: code for merge #2, tests, merged
+
+## Picking this up in a new conversation
+
+Everything needed is in the repo; the conversation that wrote this isn't
+needed.
+
+1. Work on branch `bitrig/implement-github-issue-33`. Read CLAUDE.md, then
+   this file, then SPEC.md's opening and "Design decisions", then the
+   draft 52 tags: `[D-image-sources]`, `[D-source-names]`,
+   `[D-source-location]`, `[D-scoped-bookmarks]`, and the ones they cite
+   (`[D-follow-links]`, `[D-scan-each-folder-once]`,
+   `[D-grid-one-tab-stop]`, `[D-grid-release-on-close]`,
+   `[D-ui-test-mode]`). TESTING.md: "Unit tests", "Interface tests",
+   "Launch arguments". LEARNINGS.md: "Photos library (issue #33)".
+2. Ask the author to approve draft 52 (open it in Marked). No code before
+   that yes.
+3. Then Phase 2a below, on this same branch: code, tests, ERRATA notes
+   if any quirk turns up. Merging into `main` needs the author's yes.
+4. Draft numbering: draft 51 lives on branch `feature/compact-editor`, so
+   this is 52 (author, 2026-11-12). A numbering convention for parallel
+   branches is a later conversation; don't invent one.
+
+Leftovers from Phase 0, none blocking:
+
+- Branch `experiment/33-photokit` holds the probe
+  (`App/Experiments/PhotoKitProbe.swift`, run with
+  `open -n -W <app> --args -PhasesPhotoKitProbe x0…x6`, options
+  `-PhasesProbeAlbum "<name>"`, `-PhasesProbeLimit`,
+  `-PhasesProbeSeconds`, `-PhasesProbeSkipStoreCheck YES`). Its
+  `Project.json` carries the app-sandbox entitlement. Never merge it; reuse
+  it for the sandbox change and Photos work.
+- A sandbox container from round B still exists at
+  `~/Library/Containers/app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268`.
+  Deleting it was blocked by the permission system on 2026-11-12; the
+  author may delete it. While it exists, `defaults` commands for the
+  bundle ID go into it, not `~/Library/Preferences`
+  (`[L-sandbox-prefs-move]`). So the TESTING.md diagnostics switch
+  won't reach the real app until it's gone.
+- The author's preferences backup from before round B:
+  `~/Library/Caches/PhasesProbe/prefs-backup/`. The author confirmed
+  Phases kept its settings, so it's only a spare.
 
 ## Base
 
@@ -168,19 +215,91 @@ Spec first (opened in Marked, approved before code):
 - Image grid: a heading per source, its subfolders under it.
   `[D-grid-one-tab-stop]` and `[D-grid-release-on-close]` still apply.
 
+Written as draft 52 (see "Status"). Amended after the author's answers:
+the source order is the user's, dragging to reorder is planned, and
+nothing may assume a source's place is fixed.
+
 Code (Sonnet for edits the approved spec pins down; Claude keeps review
-and tagged decisions):
+and tagged decisions). Steps, each building with
+`bitrig build -destination generic/platform=macOS` and passing
+`swift test` in `UnitTests/` before the next:
 
-1. A source layer behind `ImageLibrary`, folders only, no visible change.
-   The seam is wider than the scheduler's calls: the views use
-   `folderURL`, `imageNames`, `groups`, `includesSubfolders`, and
-   `setFolder` too (*verified*, `ImageGrid.swift`, `SettingsView.swift`,
-   `PhasesWindow.swift`, 2026-11-12).
-2. Multiple sources, the conversion of saved names, the Settings list,
-   grid headings.
+1. **Pure logic first, in new files the unit tests reach** (symlink each
+   into `UnitTests/Sources/PhasesLogic`, as the existing ones are):
+   - `ImageSource` (a folder source: ID, bookmark data, location,
+     includes subfolders) and the stored-name format
+     `<source ID>:<relative path>` with split and join `[D-source-names]`.
+   - `SourceLocation`: the `~/…` form from a URL and back, using the real
+     home folder (`getpwuid`), not `homeDirectoryForCurrentUser`
+     `[D-source-location]`.
+   - `SourceMigration`: draft 44 settings (one bookmark, bare relative
+     names in `Phase.imageNames`, `Phase.displayImageNames`, and
+     `AppliedState.imagesByDisplay`) to one source plus prefixed names.
+     Leaves the old bookmark key in place.
+2. **`ImageLibrary` holds a list of sources,** in a stored order of its
+   own `[D-image-sources]`. The five calls the scheduler uses keep their
+   meaning (`availableImages`, `url(for:)`, `name(for:)`, `thumbnail`,
+   `reload`; `WallpaperScheduler.swift` lines 339, 380, 413, 441,
+   *verified* 2026-11-12). `name(for:)` must map a file back to its
+   source. Security-scoped bookmarks, with access opened only while
+   reading `[D-scoped-bookmarks]`.
+3. **Views:** the views use `folderURL`, `imageNames`, `groups`,
+   `includesSubfolders`, and `setFolder` (*verified*, `ImageGrid.swift`,
+   `SettingsView.swift`, `PhasesWindow.swift`, 2026-11-12). Settings
+   gets the Image Sources list (+, −, per-row Include subfolders, image
+   count, "Can't open" plus Locate…, a confirmation on removing a source
+   in use). The grid gets a heading per source with subfolder headings
+   under it.
+4. **Test mode:** `-PhasesUITestImages` takes one path or a list
+   (TESTING.md "Launch arguments", draft 52). `UITestMode.imageFolder`
+   becomes a list. The harness (`UITests/Sources/PhasesUIDriver/TestImages.swift`,
+   `PhasesApp.swift`) makes a second small folder.
+5. **Draft number in code:** `App/Model/AppVersion.swift` holds the
+   draft number, and `AppVersionTests` fails unless it matches SPEC.md's
+   title. Set it to 52 `[D-version-in-settings]`.
+6. Update code comments that cite `[D-relative-paths]`
+   (`ImageLibrary.swift`, `FolderScan.swift`) to `[D-source-names]`.
 
-Tests: unit tests for the conversion and naming. UI tests need a setup
-with two or more folders (`UITestMode.imageFolder` takes one today).
+### Test plan for merge #1
+
+Unit tests (no permission needed; add to TESTING.md "What they cover"):
+
+- Stored names: join and split, a file name with a colon, a name with
+  no source part (draft 44 data) is recognised as old.
+- `SourceLocation`: inside home gives `~/…`; outside home (`/Volumes/…`)
+  keeps the full path; round trip; a sandboxed-looking home isn't used.
+- `SourceMigration`: All Displays and per-display selections, the last
+  applied image per display, empty settings (first launch: no source),
+  running it twice changes nothing.
+- Library order: sources in stored order, then each source's own order;
+  reordering the stored list reorders the library without changing any
+  saved name.
+- Adding a folder that's already a source (same folder, reached by a
+  symlink) is detected.
+- `FolderScanTests` keep passing unchanged.
+
+Interface tests (AX-driven, `UITests/`; a hands-on check, so list the
+runs and ask the author first, per CLAUDE.md "Testing"):
+
+- The existing suite passes with one source (the grid now has a source
+  heading; adjust any test that counts headings).
+- Two sources: both headings show, in order; arrow keys cross from the
+  last image of the first source to the second `[D-grid-one-tab-stop]`;
+  Select All selects both.
+- Settings shows the two sources with their counts; turning Include
+  subfolders on for one changes only that one.
+
+Hands-on checks by the author (after the UI tests):
+
+- Upgrading from draft 44: the installed Phases' real settings convert,
+  every phase keeps its images, and the wallpaper doesn't jump. Back up
+  `~/Library/Preferences/app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268.plist`
+  first.
+- A second real folder; a folder on an external drive, unplugged and
+  plugged back (Can't open, then back); Locate… after moving a folder.
+- `[D-scoped-bookmarks]` in a build that isn't sandboxed: sources reopen
+  after a relaunch. Record the result as *verified* in SPEC.md (it's
+  *recalled* there now).
 
 ## Phase 1b and 2b: merge #2, Photos albums
 
