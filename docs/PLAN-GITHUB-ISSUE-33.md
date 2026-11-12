@@ -90,7 +90,22 @@ Written 2026-11-12 by Claude with the author.
      Photos rows (no switch, `Photos › Trips • 120 photos`, Can't open
      without Locate…, context menu Remove only), grid headings, removal
      alert wording for albums.
-  5. [ ] TESTING.md "What they cover"; UI tests with
+  - Opus review (2026-11-12) of steps 1–4, 14 findings. Fixed: a
+    change waiting on photos going ahead after Pause or an outside pick;
+    picks made ahead taken by Change Now or lost after any other apply,
+    and never re-fetched; a held display re-applying at every check;
+    cache cleanup not protecting cover files; thumbnails able to prompt
+    before access; user smart albums offered; a late fetch timer skipping
+    its change; removal wording for Photos folders; double-click adding
+    the wrong album; dead code. **Left open:** a PhotoKit request that
+    never calls back blocks that photo (no cap yet); `AppliedState`
+    names photos during the 30 s wait (a crash then leaves the old
+    wallpaper until the next change); `PHAsset.modificationDate` may
+    change on favorite or title edits, missing the cache (needs a probe);
+    the offline fallback checks the pool one photo at a time (slow for
+    thousands of photos).
+  5. [x] (`c91d14c`) UI tests with the fake library, written by Sonnet,
+     compiled, **not run**. Still to do: TESTING.md "What they cover"; UI tests with
      the fake library (harness builds the folder); ask before running.
   6. [ ] Review (fresh eyes), then the author's Photos checks, then merge
      with the author's yes.

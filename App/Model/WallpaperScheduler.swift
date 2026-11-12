@@ -293,6 +293,13 @@ final class WallpaperScheduler {
     let now = Date()
     if reloadingLibrary { library.reload() }
     launchAtLogin.refresh()
+    // [D-photos-fetch-ahead] Anything that affects the picks made ahead
+    // (the phase, its images, the displays) changed: pick and fetch again
+    // now, not at the change.
+    if let ahead = fetchedAhead {
+      let phase = phases.first { $0.id == ahead.target.phaseID }
+      if phase.map(pickInputs(for:)) != ahead.inputs { forgetFetchedAhead() }
+    }
 
     guard let active = engine.activePhase(at: now) else {
       activePhase = nil
@@ -385,7 +392,9 @@ final class WallpaperScheduler {
     let timer = Timer(fire: fireDate, interval: 0, repeats: false) { [weak self] _ in
       MainActor.assumeIsolated {
         guard let self else { return }
-        if isFetch {
+        // A fetch timer that fired late, at or after its change, runs the
+        // change instead, so it isn't skipped.
+        if isFetch, Date() < next.date {
           self.fetchAhead(forChangeAt: next.date)
           self.scheduleNextChange(from: Date())
         } else {
@@ -408,14 +417,20 @@ final class WallpaperScheduler {
     let target = FetchedAhead.Target(phaseID: phase.id, start: start, step: slot + manualSteps)
     // [D-photos-fetch-ahead] The picks made ahead, unless anything that
     // affects them has changed since, including a photo leaving its album.
+    // Only at the change they were made for: Change Now just before it
+    // reaches the same step, but mustn't take them.
     var picks: [String: String]
-    if let ahead = fetchedAhead, ahead.target == target, ahead.inputs == pickInputs(for: phase) {
+    if let ahead = fetchedAhead, Date() >= ahead.changeDate, ahead.target == target,
+      ahead.inputs == pickInputs(for: phase)
+    {
       picks = ahead.picks
+      fetchedAhead = nil
     } else {
       picks = pickImages(for: phase, step: slot + manualSteps)
+      // Anything applied in between may change what the next change
+      // shows, so fetch for it again.
+      forgetFetchedAhead()
     }
-    fetchedAhead = nil
-    let previous = appliedState?.imagesByDisplay ?? [:]
     appliedState = AppliedState(
       phaseID: phase.id, phaseStart: start, rotationSlot: slot, manualSteps: manualSteps, imagesByDisplay: picks
     )
@@ -432,15 +447,28 @@ final class WallpaperScheduler {
     let fetches = missing.compactMap { library.fetchPhoto($0) }
     Task { @MainActor [weak self] in
       await Self.wait(for: fetches, atMost: FetchAhead.waitLimit)
-      guard let self, generation == self.changeGeneration else { return }
-      self.showFallingBack(picks, phase: phase, previous: previous)
+      // Stand down if a newer change started, or if Phases paused (Pause,
+      // or a wallpaper picked outside Phases [D-outside-change-pauses]) or
+      // the phase stopped running while it waited.
+      guard let self, generation == self.changeGeneration, !self.isPaused,
+        self.appliedState?.phaseID == phase.id,
+        self.engine.activePhase(at: Date())?.phase.id == phase.id
+      else { return }
+      self.showFallingBack(picks, phase: phase)
     }
+  }
+
+  /// [D-photos-fetch-ahead] Picks made ahead are no good: fetch again for
+  /// the next change, from now if its lead has begun.
+  private func forgetFetchedAhead() {
+    fetchedAhead = nil
+    fetchedAheadFor = nil
   }
 
   /// [D-photos-fetch-ahead] Shows the picks, giving a display whose photo
   /// couldn't be had another image from its selection that's on hand, or
   /// leaving it as it is.
-  private func showFallingBack(_ picks: [String: String], phase: Phase, previous: [String: String]) {
+  private func showFallingBack(_ picks: [String: String], phase: Phase) {
     let showing = imagesShowing()
     var shown: [String: String?] = picks
     // Displays sharing All Displays in Same on All get one replacement.
@@ -461,10 +489,13 @@ final class WallpaperScheduler {
       diagLog.log("photo not on hand for \(uuid, privacy: .public); \(replacement == nil ? "keeping the wallpaper" : "showing another image", privacy: .public)")
     }
     // In order carries on from the planned position; only what shows
-    // differs. A display keeping its wallpaper keeps its old record.
+    // differs. A display keeping its wallpaper keeps the planned pick in
+    // its record, so later checks don't apply again before the next change
+    // [D-screen-change-no-reroll]; the photo shows from then on only if a
+    // later change picks it.
     if var state = appliedState {
       for (uuid, name) in shown {
-        state.imagesByDisplay[uuid] = name ?? previous[uuid]
+        if let name { state.imagesByDisplay[uuid] = name }
       }
       appliedState = state
     }
@@ -497,6 +528,9 @@ final class WallpaperScheduler {
   private func cleanUpPhotoCache() {
     guard library.sources.contains(where: \.isPhotos) || !library.photoCacheIsEmpty else { return }
     var protected = Set(NSScreen.screens.compactMap { NSWorkspace.shared.desktopImageURL(for: $0)?.lastPathComponent })
+    // Covers: the incoming file of a fade, and a change pending on a Space
+    // that isn't showing [D-change-stays-on-its-space].
+    protected.formUnion(crossfade.coverFileNames)
     protected.formUnion(restorePoint?.displays.compactMap { $0.imageURL?.lastPathComponent } ?? [])
     protected.formUnion(fetchedAhead?.picks.values.compactMap { library.cachedFile(for: $0)?.lastPathComponent } ?? [])
     library.photoCache.cleanUp(protected: protected, storeFileNames: WallpaperStoreWatcher.shared.fileNamesInStore())

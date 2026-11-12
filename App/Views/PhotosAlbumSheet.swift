@@ -69,8 +69,11 @@ struct PhotosAlbumSheet: View {
       }
       .contextMenu(forSelectionType: String.self) { _ in
       } primaryAction: { ids in
-        // Double-click adds.
-        if ids.first.flatMap(find) != nil { add() }
+        // Double-click adds the row clicked, not whatever was selected.
+        if let id = ids.first, find(id) != nil {
+          selectedID = id
+          add()
+        }
       }
       .accessibilityIdentifier("photosAlbumList")
     }

@@ -67,7 +67,9 @@ final class PhotoKitProvider: NSObject, PhotosProvider {
           id: list.localIdentifier, title: title, kind: .folder, photoCount: nil, location: location,
           children: Self.nodes(in: PHCollection.fetchCollections(in: list, options: nil), location: inner)
         ))
-      } else if let album = collection as? PHAssetCollection {
+      } else if let album = collection as? PHAssetCollection, album.assetCollectionType == .album {
+        // The user's own smart albums can sit here too; not in this draft
+        // [D-photos-sources].
         nodes.append(PhotosCollection(
           id: album.localIdentifier, title: title, kind: .album, photoCount: Self.images(in: album).count,
           location: location
@@ -142,8 +144,11 @@ final class PhotoKitProvider: NSObject, PhotosProvider {
 
   // MARK: Images
 
+  /// Nil until access is allowed, so showing a saved photo's thumbnail
+  /// never brings up the prompt [D-photos-permission].
   private static func asset(_ id: String) -> PHAsset? {
-    PHAsset.fetchAssets(withLocalIdentifiers: [id], options: nil).firstObject
+    guard access(PHPhotoLibrary.authorizationStatus(for: .readWrite)) == .allowed else { return nil }
+    return PHAsset.fetchAssets(withLocalIdentifiers: [id], options: nil).firstObject
   }
 
   func fileName(ofPhoto photoID: String) -> String? {

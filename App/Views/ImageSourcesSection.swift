@@ -58,7 +58,11 @@ struct ImageSourcesSection: View {
       Button("Cancel", role: .cancel) {}
     } message: { source in
       let count = phasesUsing(source.id)
-      let kind = source.isPhotos ? "album" : "folder"
+      let kind = switch source.kind {
+      case .folder: "folder"
+      case .photosAlbum: "album"
+      case .photosFolder: "Photos folder"
+      }
       Text(
         "\(count == 1 ? "1 phase uses" : "\(count) phases use") images from this \(kind). They'll show as missing. Adding the \(kind) again later won't bring them back."
       )

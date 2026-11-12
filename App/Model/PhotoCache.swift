@@ -69,10 +69,6 @@ final class PhotoCache {
     return task
   }
 
-  func isFetching(_ photoID: String) -> Bool {
-    inFlight[photoID] != nil
-  }
-
   /// The photo a cache file holds, so Phases knows its own photo when it's
   /// showing [D-photos-cache].
   func photoID(forFile url: URL) -> String? {
