@@ -26,7 +26,7 @@ enum UITestMode {
   /// `TESTSRC3`, …) and no bookmarks. Never saved.
   static var imageSources: [ImageSource] {
     imageFolders.prefix(8).enumerated().map { index, url in
-      ImageSource(id: "TESTSRC\(index + 2)", bookmark: nil, location: url.path(percentEncoded: false))
+      ImageSource(id: "TESTSRC\(index + 2)", bookmark: nil, location: SourceLocation.string(for: url))
     }
   }
 
