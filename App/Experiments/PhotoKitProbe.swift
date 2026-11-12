@@ -258,13 +258,16 @@ enum PhotoKitProbe {
       r.line("No exported image in \(exportFolder.path). Run x3 first in this build.")
       return
     }
-    guard let before = latestChoice(displayUUID: uuid) else {
+    if UserDefaults.standard.bool(forKey: "PhasesProbeSkipStoreCheck") {
+      r.line("Store check skipped (-PhasesProbeSkipStoreCheck): the caller checked the main display shows a plain image.")
+    } else if let before = latestChoice(displayUUID: uuid) {
+      r.line("store before: provider \(before.provider)")
+      guard before.provider == "com.apple.wallpaper.choice.image" else {
+        r.line("Main display shows a system wallpaper (\(before.provider)); setting a file would lose it. Stopping without changing anything.")
+        return
+      }
+    } else {
       r.line("Can't read the wallpaper store, so can't tell whether the main display shows an Aerial or other system wallpaper. Stopping without changing anything.")
-      return
-    }
-    r.line("store before: provider \(before.provider)")
-    guard before.provider == "com.apple.wallpaper.choice.image" else {
-      r.line("Main display shows a system wallpaper (\(before.provider)); setting a file would lose it. Stopping without changing anything.")
       return
     }
     let workspace = NSWorkspace.shared
