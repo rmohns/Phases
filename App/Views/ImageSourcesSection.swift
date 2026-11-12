@@ -79,10 +79,13 @@ struct ImageSourcesSection: View {
     // Control-click and right-click, on any row, selected or not.
     .contextMenu(forSelectionType: String.self) { ids in
       if let id = ids.first, let source = library.source(withID: id) {
-        Button("Show in Finder") {
-          if let url = library.folder(of: id) { NSWorkspace.shared.activateFileViewerSelecting([url]) }
+        // Folders only; a Photos album gets its own item or none (merge #2).
+        if source.isInFileSystem {
+          Button("Show in Finder") {
+            if let url = library.folder(of: id) { NSWorkspace.shared.activateFileViewerSelecting([url]) }
+          }
+          .disabled(library.folder(of: id) == nil)
         }
-        .disabled(library.folder(of: id) == nil)
         Button("Locate…") { pick(for: .locate(id)) }
         Divider()
         Button("Remove") { requestRemoval(of: source) }

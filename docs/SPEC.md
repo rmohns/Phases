@@ -139,7 +139,10 @@ image when there's more than one choice.
       is added as + would add it. Files and anything else that isn't a
       folder are ignored.
     - **A context menu** on each row: **Show in Finder**, **Locate…**,
-      then **Remove**. Remove asks first, as − does. Control-click and
+      then **Remove**. Show in Finder is only for sources in the file
+      system (folders). A source that isn't, such as a Photos album, gets
+      its own equivalent or none; merge #2's spec decides which (author,
+      2026-11-12). Remove asks first, as − does. Control-click and
       right-click work on any row, selected or not, as they do in the
       phase list `[D-phase-actions]` (author, 2026-11-12).
   - **The list is one Tab stop,** like the image grid

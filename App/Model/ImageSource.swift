@@ -15,6 +15,11 @@ struct ImageSource: Codable, Equatable, Identifiable {
   var location: String
   var includesSubfolders = false
 
+  /// Whether the source lives in the file system, so Show in Finder applies
+  /// [D-image-sources]. Every source is a folder for now; Photos albums
+  /// (merge #2) won't be.
+  var isInFileSystem: Bool { true }
+
   /// Characters an ID is made of. No colon, so a stored name splits at its
   /// first one [D-source-names]; no look-alikes (0/O, 1/I).
   static let idAlphabet = Array("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
