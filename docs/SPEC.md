@@ -427,8 +427,14 @@ Draft 53, issue #33 merge #2. Evidence for this section is LEARNINGS.md
     phase, waking, resuming): the photo is fetched then, and the change
     starts when it arrives. *Verified* cost: 0.5–1.4 s per iCloud-only
     photo, online `[L-photos-x3-download]`.
-  - **A photo that can't be fetched** (offline and only in iCloud, or
-    deleted): that display gets another image from the same selection
+  - **A fetch that fails ahead of time** (offline, say) is tried once
+    more at the change, in case the network came back.
+  - **A fetch still running at the change:** the change waits for it, up
+    to 30 seconds. If it arrives, the change happens then, a little
+    late. If not, the display is treated as below, and the download is
+    left to finish and kept in the cache for next time.
+  - **A photo that can't be fetched** (offline and only in iCloud,
+    deleted, or not there in 30 seconds): that display gets another image from the same selection
     that's on hand (in the cache, or from a folder), chosen as Random or
     In order would. In order then carries on from where it would have
     been, so the order comes back once the photo can be fetched. If

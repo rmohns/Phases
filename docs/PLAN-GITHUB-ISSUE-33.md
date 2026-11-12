@@ -43,8 +43,12 @@ Written 2026-11-12 by Claude with the author.
   `[D-photos-order]`, `[D-photos-names]`, `[D-photos-version]`,
   `[D-photos-fetch-ahead]`, `[D-photos-cache]`, `[D-photos-permission]`,
   `[D-photos-changes]`), TESTING.md `[D-fake-photos]` and "Photos
-  checks". Waiting on the author's approval and these open calls
-  (Claude's defaults in brackets):
+  checks". The author answered the open calls 2026-11-12: 1 no, 2 yes,
+  3 no, 4 yes (cache management revisited in its own issue), 5 yes,
+  6 yes, 7 edited, always. On 6 the author asked what happens when a
+  photo arrives late or not at all; Claude added the retry and 30-second
+  wait to `[D-photos-fetch-ahead]`, pending approval. The calls, with
+  Claude's defaults in brackets:
   1. **Whole-album selection:** should a phase be able to use "every
      photo in this album", so photos added later join the rotation by
      themselves? [Not in this draft: selections stay per image, as for
