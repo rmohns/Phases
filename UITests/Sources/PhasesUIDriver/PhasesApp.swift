@@ -18,8 +18,10 @@ public final class PhasesApp {
   // MARK: - Launch and quit
 
   /// Launches a new instance in test mode and waits for its window. A
-  /// Phases the author is already running is left alone.
-  public static func launch() async throws -> PhasesApp {
+  /// Phases the author is already running is left alone. `imageFolders`
+  /// become the image sources, in order [D-ui-test-mode]: one path goes as
+  /// is, several as the plist array form of `-PhasesUITestImages`.
+  public static func launch(imageFolders: [URL] = [TestImages.folder]) async throws -> PhasesApp {
     guard AXIsProcessTrusted() else {
       throw UITestFailure("The app running these tests needs Accessibility permission (System Settings › Privacy & Security › Accessibility).")
     }
@@ -28,7 +30,7 @@ public final class PhasesApp {
     configuration.activates = true
     configuration.arguments = [
       "-PhasesUITestMode", "YES",
-      "-PhasesUITestImages", TestImages.folder.path(percentEncoded: false),
+      "-PhasesUITestImages", Self.imagesArgument(for: imageFolders),
       "-ApplePersistenceIgnoreState", "YES",
     ]
     let url = try appURL()
@@ -56,6 +58,17 @@ public final class PhasesApp {
       throw error
     }
     return phases
+  }
+
+  /// The value for `-PhasesUITestImages`: the bare path for one folder, an
+  /// old-style plist array `("<path 1>", "<path 2>")` for several.
+  private static func imagesArgument(for folders: [URL]) -> String {
+    let paths = folders.map { $0.path(percentEncoded: false) }
+    guard paths.count != 1 else { return paths[0] }
+    let quoted = paths.map {
+      "\"" + $0.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\""
+    }
+    return "(" + quoted.joined(separator: ", ") + ")"
   }
 
   /// Force-quits (nothing to save in test mode), waits for the process to
@@ -353,6 +366,44 @@ public final class PhasesApp {
   public func click(_ node: AXNode) async throws {
     try await ensureFrontmost()
     try await SyntheticInput.click(at: try center(of: node))
+  }
+
+  /// Chooses a main menu item with real clicks, the way a person does: a
+  /// click on the menu's title in the menu bar, then on the item whose
+  /// title starts with `prefix`. Real clicks because a closed menu's items
+  /// keep their last title and enabled state, even when opened through AX
+  /// (ERRATA.md `[Q-undo-menu-ax]`). Returns the item's title as
+  /// shown. Each click lands only on this instance's own element.
+  @discardableResult
+  public func chooseMenuItem(menu: String, startingWith prefix: String) async throws -> String {
+    try await ensureFrontmost()
+    let bar = try await waitFor("the menu bar", timeout: .seconds(5)) { app.node("AXMenuBar") }
+    let title = try await waitFor("the \(menu) menu", timeout: .seconds(5)) {
+      bar.children.first { $0.title == menu }
+    }
+    try await clickOwnElement(title, what: "the \(menu) menu")
+    let item = try await waitFor("“\(prefix)…” in the \(menu) menu", timeout: .seconds(5)) {
+      title.first { $0.role == kAXMenuItemRole && ($0.title ?? "").hasPrefix(prefix) && $0.isEnabled }
+    }
+    let shown = item.title ?? prefix
+    try await clickOwnElement(item, what: "“\(shown)”")
+    return shown
+  }
+
+  /// Clicks `inset` points in from the node's top-left corner instead of its
+  /// center, for checking that a control's whole frame responds. Refuses a
+  /// point outside the node or outside the window.
+  public func click(_ node: AXNode, insetFromTopLeft inset: CGPoint) async throws {
+    try await ensureFrontmost()
+    guard let frame = node.frame else { throw UITestFailure("No frame for \(node.summary)") }
+    let point = CGPoint(x: frame.minX + inset.x, y: frame.minY + inset.y)
+    guard frame.contains(point) else {
+      throw UITestFailure("\(inset) in from the top-left is outside \(node.summary); sent no click")
+    }
+    guard try window().frame?.contains(point) == true else {
+      throw UITestFailure("\(node.summary) is outside the window; sent no click")
+    }
+    try await SyntheticInput.click(at: point)
   }
 
   /// Drags the sidebar divider so it ends `x` points from the window's left

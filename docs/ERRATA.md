@@ -426,6 +426,22 @@ would stop being true if a future macOS fixed the underlying behavior.
   System Events. Whether an icon-only `Label` wrapped in
   `.frame`/`.contentShape` loses its title on its own is *unverified*;
   `[D-footer-ax-labels]` sets the label explicitly either way.
+- `[Q-undo-menu-ax]` **Edit › Undo and Redo, read through the AX API,
+  don't match what the menu shows, and a menu that wasn't opened by a
+  click keeps stale enabled states (macOS 27.2).** On screen, after
+  removing an image source, the item reads Undo Remove “<folder>”, and
+  a long folder name is truncated in the middle, which can cut "Remove"
+  itself; how much depends on the screen (*verified* 2026-11-12 by the
+  author, on screen). Through AX the items read plain "Undo" and
+  "Redo", open or closed. Redo read disabled right after an undo until
+  the Edit menu was opened with a real click; opening it with an AX
+  press didn't refresh it (*verified* 2026-11-12, four runs of
+  `undoPutsBackASourceRemovedWithTheMouse`, LEARNINGS.md
+  `[L-closed-menu-stale]`).
+  - *Workaround:* the undo test chooses menu items with real clicks,
+    through `PhasesApp.chooseMenuItem` `[D-input-driver]`, and matches
+    only "Undo" or "Redo" plus enabled, never the action name. Phases
+    leaves macOS's truncation alone (author, 2026-11-12).
 - `[Q-bitrig-test-targets]` **`bitrig test` doesn't see test targets in
   Project.json projects** ("has no test targets", *verified* 2026-10-28),
   and there's no generated Xcode project to hand to `xcodebuild`. That's
@@ -860,4 +876,4 @@ the fix, or, if none is practical, the reason and the manual procedure
 | 2026-10-28 (draft 21, macOS 27.2) | The crossfade twitch returned: the cover was removed while macOS was still showing the new wallpaper `[Q-wallpaper-motion-delay]` | Settle delay raised from 0.5 s to 1.5 s `[D-cover-settle]`; see "The twitch returns" | Not suited to XCUITest (frame timing); checked with frame-by-frame recordings |
 | 2026-10-28 (draft 21) | Hiding the Dock or toggling "Show menu bar background" crossfaded to a new image `[Q-screen-params-notification]` | Screen changes run the normal check instead of re-applying `[D-screen-change-no-reroll]` | `WallpaperCheckTests` (unit test; check pulled out into `WallpaperCheck`). The handler's wiring to that check isn't tested |
 | 2026-10-28 (draft 22) | Sidebar width limits gone again: drags from very narrow to very wide | Cause logged: SwiftUI rewrites the split view item's limits seconds after the window opens `[Q-split-item-rewrite]`. Fix: watch the item and put the limits back `[D-sidebar-limits-watch]`; verified 2026-10-28 | `SlowSidebarTests` (`PHASES_UI_SLOW=1`) and `SidebarTests/dividerStaysWithin240To320`, both switching the detail pane before dragging; failed without the watch (sidebar collapsed), passed with it, 2026-10-29 |
-| 2026-10-29 (found by the UI tests) | A long image folder name squeezed Settings' Choose… button to a 16 pt sliver: the name's `.layoutPriority(1)` takes its full width first | `.fixedSize()` on Choose… | `AppearanceTests/imageFolderNameScreenshot` (button at least 60 pt); failed on the old build at 16 pt, passed on the fix, 2026-10-29 |
+| 2026-10-29 (found by the UI tests) | A long image folder name squeezed Settings' Choose… button to a 16 pt sliver: the name's `.layoutPriority(1)` takes its full width first | `.fixedSize()` on Choose… | `AppearanceTests/imageFolderNameScreenshot` (button at least 60 pt); failed on the old build at 16 pt, passed on the fix, 2026-10-29. Draft 52 removed Choose…: the same test now checks the Image Sources row's image count (`imageSourceCount`, at least 40 pt), which sits beside the name with the same `.fixedSize()` |

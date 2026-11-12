@@ -19,47 +19,45 @@ struct ImageGrid: View {
   private let columns = [GridItem(.adaptive(minimum: minimumCellWidth), spacing: spacing)]
 
   var body: some View {
-    if library.folderURL == nil {
-      Text("Choose an image folder in Settings.")
+    // The spec marks missing selections whatever else the grid shows, even
+    // with no sources or none that can be opened.
+    if !missing.isEmpty {
+      HStack {
+        Label(
+          missing.count == 1 ? "1 selected image is missing" : "\(missing.count) selected images are missing",
+          systemImage: "exclamationmark.triangle"
+        )
+        .foregroundStyle(.orange)
+        Spacer()
+        Button("Remove Missing") { selection.removeAll { missing.contains($0) } }
+      }
+    }
+
+    if library.sources.isEmpty {
+      Text("Add an image folder in Settings.")
         .foregroundStyle(.secondary)
-    } else if library.imageNames.isEmpty {
-      Text("No JPEG, PNG, HEIC, or TIFF images in this folder.")
+    } else if library.names.isEmpty {
+      Text(emptyMessage)
         .foregroundStyle(.secondary)
     } else {
       HStack {
-        Text("\(selectedCount) of \(library.imageNames.count) selected")
+        Text("\(selectedCount) of \(library.names.count) selected")
           .foregroundStyle(.secondary)
         Spacer()
-        Button("Select All") { selection = library.imageNames }
+        Button("Select All") { selection = library.names }
         Button("Select None") { selection = [] }
-      }
-
-      if !missing.isEmpty {
-        HStack {
-          Label(
-            missing.count == 1 ? "1 selected image is missing" : "\(missing.count) selected images are missing",
-            systemImage: "exclamationmark.triangle"
-          )
-          .foregroundStyle(.orange)
-          Spacer()
-          Button("Remove Missing") { selection.removeAll { missing.contains($0) } }
-        }
       }
 
       let groups = library.groups
       LazyVGrid(columns: columns, alignment: .leading, spacing: Self.spacing) {
-        ForEach(groups, id: \.folder) { group in
+        ForEach(groups.indices, id: \.self) { index in
+          let group = groups[index]
           Section {
             ForEach(group.names, id: \.self) { name in
               cell(for: name)
             }
           } header: {
-            if groups.count > 1 {
-              Label(group.folder.isEmpty ? "Top Level" : group.folder, systemImage: "folder")
-                .font(.headline)
-                .padding(.top, 8)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
+            header(for: index, in: groups)
           }
         }
       }
@@ -76,12 +74,16 @@ struct ImageGrid: View {
       .focusEffectDisabled()
       .onChange(of: isFocused) {
         if isFocused, cursor.map(library.contains) != true {
-          cursor = library.imageNames.first
+          cursor = library.names.first
         }
       }
       .onMoveCommand { direction in
         guard let cursor else { return }
-        let navigation = ImageGridNavigation(groups: groups, columns: columnCount)
+        // Each source and subfolder starts its own rows.
+        let navigation = ImageGridNavigation(
+          groups: groups.map { (folder: $0.sourceID + ":" + $0.folder, names: $0.names) },
+          columns: columnCount
+        )
         self.cursor = navigation.destination(from: cursor, direction)
       }
       .onKeyPress(keys: [.space]) { press in
@@ -100,6 +102,31 @@ struct ImageGrid: View {
     }
   }
 
+  /// [D-image-sources] The source's heading over its first group, even with
+  /// one source; subfolder headings under it when the source has subfolders.
+  @ViewBuilder
+  private func header(for index: Int, in groups: [LibraryListing.Group]) -> some View {
+    let group = groups[index]
+    let startsSource = index == 0 || groups[index - 1].sourceID != group.sourceID
+    let sourceHasSubfolders = groups.filter { $0.sourceID == group.sourceID }.count > 1
+    VStack(alignment: .leading, spacing: 6) {
+      if startsSource, let source = library.source(withID: group.sourceID) {
+        Label(library.displayName(of: source), systemImage: "folder")
+          .font(.title3.weight(.semibold))
+          .help(source.location)
+          .padding(.top, index == 0 ? 0 : 12)
+      }
+      // Also when all of a source's images sit in one subfolder.
+      if sourceHasSubfolders || !group.folder.isEmpty {
+        Text(group.folder.isEmpty ? "Top Level" : group.folder)
+          .font(.headline)
+          .foregroundStyle(.secondary)
+          .padding(.top, startsSource ? 0 : 8)
+      }
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+  }
+
   private func cell(for name: String) -> some View {
     let isSelected = selection.contains(name)
     return ThumbnailCell(
@@ -115,9 +142,17 @@ struct ImageGrid: View {
       toggle(name, extendingRange: NSEvent.modifierFlags.contains(.shift))
     }
     .accessibilityElement(children: .ignore)
-    .accessibilityLabel(name)
+    .accessibilityLabel(ImageLibrary.path(of: name))
     .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     .accessibilityAction { toggle(name, extendingRange: false) }
+  }
+
+  private var emptyMessage: String {
+    let many = library.sources.count > 1
+    if library.unreachableSources.count == library.sources.count {
+      return many ? "The image folders can't be opened. Check Settings." : "The image folder can't be opened. Check Settings."
+    }
+    return many ? "No JPEG, PNG, HEIC, or TIFF images in these folders." : "No JPEG, PNG, HEIC, or TIFF images in this folder."
   }
 
   private var selectedCount: Int {
@@ -129,7 +164,7 @@ struct ImageGrid: View {
   }
 
   private func toggle(_ name: String, extendingRange: Bool) {
-    let names = library.imageNames
+    let names = library.names
     if extendingRange, let anchor,
       let from = names.firstIndex(of: anchor), let to = names.firstIndex(of: name)
     {

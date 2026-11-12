@@ -9,6 +9,8 @@ public enum SyntheticInput {
   public enum Key: CGKeyCode {
     case tab = 48
     case downArrow = 125
+    case rightArrow = 124
+    case space = 49
     case x = 7
   }
 

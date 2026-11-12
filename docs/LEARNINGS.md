@@ -1029,3 +1029,181 @@ techniques belong in TESTING.md; these are the ad hoc ones.
   - *Verified* 2026-11-03.
 - `[L-no-fullscreen-apps]` Activity Monitor doesn't support full screen
   (it only zooms); use Calendar to test full screen. Author, 2026-10-30.
+
+## Photos library (issue #33)
+
+Source for this section unless noted: Phase 0 of the issue #33 plan
+(`docs/PLAN-GITHUB-ISSUE-33.md`), round A (not sandboxed), 2026-11-12,
+macOS 27.2, the author's library with "Optimize Mac Storage" on, album
+"NIN 2013" (61 images, 63 items). Probe: `App/Experiments/PhotoKitProbe.swift`
+on branch `experiment/33-photokit`, build cdhash `9808ae12`. Run by Claude
+with the author's yes.
+
+- `[L-photos-x0-paths]` **Not sandboxed, every way of finding home agrees,**
+  and the wallpaper store is readable through `homeDirectoryForCurrentUser`
+  (`/Users/rmohns` from that, `NSHomeDirectory()`, and `getpwuid`). Caches
+  is `~/Library/Caches`. *Verified.* The sandboxed comparison is round B.
+- `[L-photos-x1-permission]` **The Photos prompt worked from the probe
+  launch** (`open -n`, menu bar app, not sandboxed): "not determined" →
+  prompt → "authorized" in 10 s, the author choosing full access.
+  *Verified.* Whether a new build asks again is untested (round B
+  rebuilds).
+- `[L-photos-x2-albums]` **PhotoKit lists the author's albums and folders of
+  albums in sidebar order, nested,** plus 16 shared albums (subtype 101)
+  and the smart albums. Item counts include videos; filtering to images
+  works. Two albums have the same name ("Hydra" twice; "Walllpapers &
+  Desktop Pictures" twice, in different folders), so an album has to be
+  saved by ID, not name. *Verified.*
+  - **Album order is still open.** "NIN 2013" came back in the same order
+    with no sort and with a date sort, so this album can't tell whether
+    the default order is the album's own order. Needs an album sorted by
+    hand in Photos.
+- `[L-photos-x3-download]` **iCloud-only photos fail fast offline and
+  download quickly online.** All 10 test photos (2013 JPEGs, 3264 × 2448)
+  were iCloud-only. *Verified.*
+  - Network off: no data at once, `PHImageResultIsInCloudKey` true, and
+    `PHPhotosErrorDomain` 3164 (with network access not allowed), or "The
+    Internet connection appears to be offline" (with it allowed), both
+    in under 0.1 s. No hang.
+  - Online: 0.51–1.43 s per photo, 927–1493 KB each, the original JPEG at
+    full size, 2–4 progress callbacks. Written to Caches and read back at
+    full size.
+  - Open: whether a download leaves the photo local in Photos. The online
+    run's "in cloud" check came *before* each download, so it says
+    nothing about after. (Corrected 2026-11-12 by Claude: the first
+    version of this entry claimed a later run showed the photo still in
+    the cloud, but no such run took place.) Either way, Phases should keep
+    its own copy, since Photos can drop local originals at any time
+    (*recalled*).
+  - Not covered: edited photos, Live Photos, HEIC, large files, a slow
+    connection. None of the 10 had an edit or a Live Photo.
+- `[L-photos-x4-cache-wallpaper]` **A file in `~/Library/Caches` works as a
+  wallpaper** (not sandboxed). `setDesktopImageURL` raised no error, and
+  `desktopImageURL` read back the cached file after 3 s. The original
+  (`~/Pictures/Desktop Pictures/Peter Lik - Bamboo Forest Path.jpg`) was
+  put back with no error. *Verified* by the API, and on screen by the
+  author: the concert photo showed, then the Bamboo Forest came back.
+  - **The store reading was inconclusive.** The latest desktop entry the
+    probe found named `~/Pictures/Desktop Pictures/IMG_0761.JPG`, neither
+    the cached file nor the original, so the probe's walk probably picked
+    another Space's or display's entry. Not a finding about the store.
+- `[L-photos-x5-observer]` **The change observer fires while Phases is in
+  the background.** Adding a photo to the album, then removing it, gave
+  five notifications in 3 minutes: one "inserted 1" (62 images), one
+  "removed 1" (61), and three that didn't touch the album. *Verified.*
+- `[L-photos-x6-ids]` **First record of IDs saved** (10 local IDs plus
+  cloud IDs) in `~/Library/Caches/PhasesProbe/x6-ids.txt`. Comparing
+  across builds and the sandbox is round B.
+- `[L-photos-album-order]` **The default fetch follows the album's own
+  order.** "Gift Ideas" (4 photos, put in a hand-made order by the
+  author on 2026-11-12) came back with no sort as 6045, 2737, 6046,
+  2736, and sorted by date as 2736, 2737, 6045, 6046. *Verified*: the
+  author confirmed the first list matches the album in Photos. So "In
+  order" for an album can mean the album's own order.
+
+### Round B: sandboxed (2026-11-12, macOS 27.2)
+
+Same probe, built with `com.apple.security.app-sandbox` only (build
+cdhash `586935f0`). Run by Claude with the author's yes.
+
+- `[L-sandbox-team-needed]` **Bitrig won't build the Photos or the
+  wallpaper-store entitlement without a development team.** With either
+  `com.apple.security.personal-information.photos-library` or the
+  `temporary-exception.files.home-relative-path.read-only` exception,
+  the build failed: "This Mac app uses capabilities that require
+  development signing. No development team is available." The sandbox
+  entitlement alone builds. *Verified* (three builds, one entitlement
+  set each).
+- `[L-sandbox-x0-paths]` **In the sandbox, `homeDirectoryForCurrentUser`
+  and `NSHomeDirectory()` both point into the container**
+  (`~/Library/Containers/<bundle ID>/Data`); `getpwuid` still gives
+  `/Users/rmohns`. Caches is in the container. The wallpaper store
+  can't be read either way: "no such file" through the container home,
+  "you don't have permission" through the real home. *Verified.* So
+  `WallpaperStoreWatcher` and `SystemWallpaperInspector` would silently
+  see nothing in a sandboxed build without the exception.
+- `[L-sandbox-prefs-move]` **The first sandboxed launch moved Phases'
+  preferences into the container.** `~/Library/Preferences/<bundle
+  ID>.plist` was gone afterward, and identical copies of it (and of the
+  `.uitest` store) were in the container's `Library/Preferences`.
+  *Verified* (compared against a backup taken just before).
+  - Once the container exists, `defaults import` from Terminal wrote
+    into the container, not `~/Library/Preferences`. *Verified* by the
+    file's time. The TESTING.md `defaults write … PhasesDiagnostics`
+    command would do the same (*inferred*, not tried).
+  - Claude put the backup back at `~/Library/Preferences` by copying
+    the file. Whether the unsandboxed installed Phases reads it
+    correctly is untested until the author relaunches it.
+- `[L-sandbox-x1-no-entitlement]` **Without the Photos entitlement, the
+  sandboxed build still got a Photos prompt.** The TCC log at 11:43:55
+  says "showing the prompt" for Phases. Nobody answered it (the author
+  was away), so `requestAuthorization` waited over 5 minutes until
+  Claude stopped the probe. *Verified* (TCC log). Whether access works
+  without the entitlement once allowed is still open.
+  - (Corrected 2026-11-12 by Claude: the first version said the TCC log
+    showed no Photos request from Phases. That search filtered on
+    "Photos" in the message and missed the lines naming Phases.)
+- `[L-photos-new-build-asks]` **A new build asks for Photos again.** The
+  same TCC request logged "Failed to match existing code requirement …
+  kTCCServicePhotos" with the round A build's cdhash (`9808ae12…`) and
+  this build's (`586935f0…`). So the round A grant didn't carry over to a
+  build with a different signature. *Verified* (TCC log), for one rebuild
+  that also added the sandbox. Whether a plain rebuild with no
+  entitlement change does the same is untested.
+- `[L-sandbox-photos-works]` **The sandbox-only build reads Photos.**
+  With no Photos entitlement, a rerun of X1 (build `586935f0`, author at
+  the Mac) found access already "authorized" before asking, and showed
+  no prompt (author). X6 then read the album and its IDs. *Verified*
+  for this ad-hoc-signed Debug build. How the 11:43 prompt came to be
+  allowed is not known: the TCC log shows it prompting, and the author
+  was away. Whether a Release or notarized build behaves the same is
+  untested.
+- `[L-photos-ids-stable]` **Photo IDs held across builds and the
+  sandbox.** All 10 local IDs and cloud IDs from round A (unsandboxed,
+  `9808ae12`) matched the sandboxed build's (`586935f0`). *Verified.*
+- `[L-sandbox-x4-container-wallpaper]` **A sandboxed Phases can set a file
+  in its container as the wallpaper, and put back one outside it.**
+  Build `615f31ef` (probe store check skipped by
+  `-PhasesProbeSkipStoreCheck`, after Claude confirmed from Terminal
+  that the main display showed `~/Pictures/Desktop Pictures/Peter Lik -
+  Bamboo Forest Path.jpg`) set a JPEG under
+  `~/Library/Containers/<bundle ID>/Data/Library/Caches/` with no error,
+  `desktopImageURL` read it back, and putting back the `~/Pictures`
+  original raised no error. *Verified* by the API, and on screen by the
+  author: the concert photo showed, then the Bamboo Forest came back.
+  The store couldn't be read
+  afterward, as in `[L-sandbox-x0-paths]`.
+
+## Image sources (issue #33, merge 1)
+
+- `[L-nas-bookmark-rename]` **A security-scoped bookmark to a folder on
+  a file server doesn't follow a rename; one to a local folder does.**
+  Draft 52 build, not sandboxed, 2026-11-12, macOS 27.2. Renaming a local
+  source folder while Phases ran: the row followed the new name. Renaming
+  a source folder on the author's NAS: the row showed "Can't open", and
+  Locate… brought the phase's selections back. *Verified* by the author,
+  on screen. Why (*recalled*, not tested here): bookmarks find local
+  items by file ID as well as path, and a network volume over SMB doesn't
+  give a stable file ID, so only the old path is left. Matches
+  `[D-source-location]`'s fallback design; no code change.
+- `[L-closed-menu-stale]` **A closed menu's items, read through AX, keep
+  the title and enabled state from when the menu last opened.** After
+  removing a source, the closed Edit menu read "Undo" (not "Undo Remove
+  “…”"), and after pressing it through AX, Redo still read disabled, so
+  pressing Redo did nothing. Pressing Undo did work: the source came
+  back. *Verified* by `undoPutsBackASourceRemovedWithTheMouse`, 2026-11-12
+  (two runs). The author, opening the menu by hand, saw "Undo Remove
+  “Jocelyn age 15-months-to-5-years”", and Undo and Redo both worked
+  (*verified* by the author, on screen). Why (*recalled*): AppKit
+  validates and retitles menu items when the menu is about to open. The
+  test now opens the Edit menu through AX before reading it.
+  - *Correction, same day:* opening the menu with an AX press didn't
+    help; the items still read "Undo" and "Redo (disabled)". A real
+    click on Edit, then on the item, worked, but only once the test
+    matched plain "Undo"/"Redo": through AX the items never carry the
+    action name, even with the menu open, and on screen a long folder
+    name truncates the title in the middle (the author, watching the
+    run). Passed with real clicks, 2026-11-12 (*verified*). So the
+    "retitles on open" explanation holds for the screen but not for AX.
+    Promoted to `[Q-undo-menu-ax]` (2026-11-12), since the test code
+    depends on it.

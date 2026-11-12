@@ -70,6 +70,15 @@ The pure logic that decides what the app does:
   them, following symlinks and aliases `[D-follow-links]` and ending on
   loops `[D-scan-each-folder-once]` (draft 35). These tests build folders
   in the temporary directory, never the user's.
+- `ImageSource`, `StoredImageName`, `SourceLocation`, `LibraryListing`
+  (draft 52): stored names join and split, including a file name with a
+  colon, and draft 44 names are recognised as having no source part
+  `[D-source-names]`; `~/…` inside the home folder, the full path
+  outside it, and a round trip `[D-source-location]`; a saved source
+  round-trips, and one missing newer fields still loads; the library's
+  order across sources, and reordering sources without changing any
+  saved name `[D-image-sources]`; the same folder reached by a symlink
+  counts as one; which phases use a source.
 - `WallpaperCheck`: what the scheduler's normal check does with what's
   already applied, including a screen change that leaves every image
   fitting `[D-screen-change-no-reroll]` (draft 31)
@@ -245,8 +254,10 @@ The pure logic that decides what the app does:
     settings (author, 2026-10-30; LEARNINGS.md `[L-menubar-overflow]`).
 - `[D-ui-test-ids]` **Controls the tests use carry accessibility
   identifiers:** `sidebar`, `addPhase`, `deletePhase`, `phaseName`,
-  `imageGrid`, `imageFolderName`. They're invisible to users, but renaming
-  one breaks the tests.
+  `imageGrid`, `imageFolderName` (now one per Image Sources row), and from
+  draft 52 `imageSources`, `imageSourceCount`, `addImageSource`,
+  `removeImageSource`. They're invisible to users, but renaming one
+  breaks the tests.
 
 - **Relaunch:** the harness relaunches its own instance by sending it a
   reopen Apple event, as Finder does, rather than `open`, which could
@@ -609,7 +620,11 @@ neither can leak into normal use.
     phases are never read or changed and every test starts from the same
     list. Deleting phases can never run out;
   - use the image folder given by `-PhasesUITestImages <path>` (the
-    harness makes one with 60 images and a long name);
+    harness makes one with 60 images and a long name) as its one image
+    source, or several folders given as a list,
+    `-PhasesUITestImages '("<path 1>", "<path 2>")'`, as its sources in
+    that order `[D-image-sources]` (draft 52). The harness makes a second,
+    small folder for the tests that need two sources;
   - leave the window closed at launch, as usual. The UI tests open it the
     way the author does, from the menu bar item's Open Phases…, through
     AX actions. *Why:* opening it at launch instead skipped the focus and

@@ -1,4 +1,4 @@
-# Phases — Specification (draft 44)
+# Phases — Specification (draft 52)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -79,8 +79,10 @@ the "Always" trigger plus a rotation interval.
 (in order) or a random one from the selection it uses: its own, or All
 Displays. Rotation then continues within the phase.
 
-**In order** cycles through each selection in filename order and remembers its
-position across launches. **Random** avoids repeating the current
+**In order** cycles through each selection in library order and remembers its
+position across launches. Library order is the order of the image sources
+in Settings, then each source's own order: top-level images first, then
+each subfolder, sorted the way Finder sorts `[D-image-sources]`. **Random** avoids repeating the current
 image when there's more than one choice.
 
 ## Start triggers
@@ -111,8 +113,88 @@ image when there's more than one choice.
 
 ## Image library
 
-- **App preference:** a single image folder, chosen with a standard folder picker.
-- **App preference: Include subfolders** (off by default). When on, the folder is
+- `[D-image-sources]` **The library is a list of image sources.** For now
+  every source is a folder, chosen with a standard folder picker. Photos
+  albums are planned as a second kind of source (issue #33, plan in
+  `docs/PLAN-GITHUB-ISSUE-33.md`).
+  - Settings shows the sources in an **Image Sources** list. Each row has
+    two lines:
+    - The folder's name, with its own **Include subfolders** switch at
+      the end of the line.
+    - Its location, a bullet, and how many images it has, in secondary
+      text: `~/Pictures/Desktop Pictures • 77 images`
+      (`[D-source-location]`). A long location truncates in the middle;
+      the count never does. The full location is in a tooltip.
+    - *Why:* two lines instead of three keeps the list compact (author,
+      2026-11-12). The cost is that a long location shows less of
+      itself, hence the truncation rule and the tooltip.
+    - A source that can't be opened shows "Can't open" and **Locate…**
+      in place of the count (see "A source that can't be opened" below).
+  - **Adding, removing, and the context menu.**
+    - **+** adds a folder and **−** removes the selected one. They follow
+      `[D-sidebar-footer-style]`: each button is a 24 × 23 pt cell and
+      the whole cell is clickable, with a divider between them.
+    - **Dragging folders** from Finder onto the list adds them, the
+      standard Mac way to fill a list (author, 2026-11-12). Each folder
+      is added as + would add it. Files and anything else that isn't a
+      folder are ignored.
+    - **A context menu** on each row: **Show in Finder**, **Locate…**,
+      then **Remove**, with a separator above Remove to keep the
+      destructive item a little further from the pointer (author,
+      2026-11-12). Locate… appears only for a source that can't be
+      opened; one that's found has nothing to locate (author,
+      2026-11-12). Show in Finder is only for sources in the file
+      system (folders). A source that isn't, such as a Photos album, gets
+      its own equivalent or none; merge #2's spec decides which (author,
+      2026-11-12). Remove asks first, as − does. Control-click and
+      right-click work on any row, selected or not, as they do in the
+      phase list `[D-phase-actions]` (author, 2026-11-12).
+  - **The list is one Tab stop,** like the image grid
+    `[D-grid-one-tab-stop]`: Tab moves into it and the next Tab moves
+    past it. Up and down arrows move the selection, and ⌫ removes the
+    selected source (asking first, as − does). The Include subfolders
+    switches are reached by clicking, or through the selected row's
+    accessibility actions, not by Tab.
+    - *Why:* in testing, Tab moved into the list and never left it
+      (author, 2026-11-12).
+  - **The sources' order is the library's order,** for the grid and for
+    In order. A new source goes at the end. **Dragging rows** up and
+    down reorders them, the standard Mac way (author, 2026-11-12).
+    - The order belongs to the user. Nothing may assume a source's place
+      is fixed: the order is stored as its own list, source IDs say
+      nothing about position, and saved selections don't depend on where
+      a source sits. Reordering changes which image comes next In order,
+      because In order follows library order.
+  - Adding a folder that's already a source (the same folder on disk,
+    however it was reached) selects the existing row instead of adding a
+    second.
+  - A folder inside another source is allowed. If that other source
+    includes subfolders, its images are listed twice, once per source.
+    That's accepted, as two links to one image already are
+    `[D-follow-links]`.
+  - Removing a source asks first when any phase uses its images, naming
+    how many phases. Their selections of its images then show as missing
+    (see the last bullet of this section). Adding the folder again later
+    makes a new source, so they stay missing.
+  - `[D-undo-remove-source]` **Removing a source can be undone** with
+    Edit › Undo Remove “<name>” (⌘Z), however it was removed: −, ⌫, or
+    the context menu, by mouse or keyboard. Undo puts back the same
+    source (same ID, bookmark, location, Include subfolders) at its old
+    place in the list, so every phase's selections of its images come
+    back. Redo removes it again.
+    - Scope: the window's undo, one step per removal, no history beyond
+      what Edit › Undo already keeps. Undo follows keyboard focus, so
+      after a removal, typing in a text field puts that typing first in
+      line for ⌘Z (standard Mac behavior, *recalled*; author accepts it,
+      2026-11-12).
+    - *Why:* the removal warning only appears when a phase uses the
+      source, so undo is the safety net for the rest (author,
+      2026-11-12). The warning stays.
+  - *Why:* the author wants several sources at once, such as two Photos
+    albums and three folders (2026-11-12, issue #33). Folders come first,
+    in their own change, because they need no new permissions and the
+    existing UI tests can cover them.
+- **Include subfolders** (per source, off by default). When on, the folder is
   scanned recursively, skipping hidden folders and packages (app bundles, Photos
   libraries, etc.).
   - *Verified* 2026-11-04 by the author (`main` at `3ec6dee`, issue #15), with
@@ -130,7 +212,7 @@ image when there's more than one choice.
   - A link or alias to a folder counts as a subfolder, even though the file
     system says it's something else (author, 2026-11-04). Phases follows it
     only when Include subfolders is on, and lists its images under the
-    link's name, e.g. `Linked/snow.jpg` `[D-relative-paths]`.
+    link's name, e.g. `Linked/snow.jpg` `[D-source-names]`.
   - The other subfolder rules apply to what a link points to: hidden
     links, and links to hidden folders or packages, are skipped.
   - Broken links and aliases, and ones pointing at anything other than a
@@ -163,20 +245,69 @@ image when there's more than one choice.
   - *Why:* following links makes loops possible (a folder linked to itself,
     or A → B → A). Without this rule the scan would never end, or would
     list one folder's images over and over.
-- `[D-relative-paths]` Images are identified by their path relative to the folder (e.g.
-  `Winter/snow.jpg`), so top-level selections stay valid when subfolders are
-  turned on. Turning subfolders off makes subfolder images show as missing
-  rather than silently dropping them.
-- Access to the folder persists across launches (bookmark).
+- `[D-source-names]` **A saved image is named by its source and its path
+  within that source,** e.g. source `K3F9`, image `Winter/snow.jpg`.
+  - The source part is an ID Phases makes when the source is added. It's
+    not a path, so moving or renaming the folder, or a different home
+    folder, doesn't change it.
+  - The image part is the path relative to the source's folder, so
+    top-level selections stay valid when subfolders are turned on.
+    Turning subfolders off makes subfolder images show as missing rather
+    than silently dropping them.
+  - Saved names hold no path above the source folder (author,
+    2026-11-12).
+  - Replaces `[D-relative-paths]` (drafts up to 44), which named images
+    by their path relative to the one library folder. The image part
+    keeps that rule.
+  - Settings from draft 44 and earlier aren't converted: the folder has
+    to be added again, and phases' old selections show as missing
+    (Remove Missing clears them). *Why:* Phases has one user, who can
+    reconfigure it easily (author, 2026-11-12). Draft 52 first planned a
+    one-time conversion; dropped the same day, before any code shipped.
+  - *How* (stored form, not shown to users): `<source ID>:<relative
+    path>`. The ID never contains a colon, so the name splits at the
+    first one, even when a file name has a colon in it.
+- `[D-source-location]` **Each source remembers where its folder is in two
+  ways:** a bookmark, which is how Phases finds it, and its location
+  relative to the home folder (`~/Pictures/Wallpapers`), shown in Settings
+  and used to find it again if the bookmark stops working. A folder
+  outside the home folder (another drive) keeps its full path, e.g.
+  `/Volumes/Art/Wallpapers`.
+  - "Home" is the user's real home folder. A sandboxed app's
+    `homeDirectoryForCurrentUser` points into its container instead
+    (LEARNINGS.md `[L-sandbox-x0-paths]`).
+  - *Why:* nothing saved should depend on the path above the home
+    folder (author, 2026-11-12).
+- `[D-scoped-bookmarks]` **Source bookmarks are security-scoped,** and
+  Phases opens access to a source only while reading from it.
+  - *Why:* the author plans to sandbox Phases, where only these bookmarks
+    keep access to a folder across launches (*recalled*). They also work
+    in an app that isn't sandboxed (*recalled*, to be checked with this
+    draft's build). Using them now means the sandbox change doesn't
+    rewrite this code. Draft 44 and earlier saved a plain bookmark.
+- **A source that can't be opened** (a drive that isn't connected, a
+  folder that was deleted or moved somewhere its bookmark and location
+  can't find) shows "Can't open" in its Settings row, with a **Locate…**
+  button that picks the folder again and keeps the source's ID, so its
+  selections come back. Until then its images count as missing.
+  - Renaming a folder Phases can still reach updates its row: verified
+    2026-11-12 by the author, for a local folder while Phases ran. On a
+    file server, a renamed folder showed "Can't open" instead, and
+    Locate… brought its phase's selections back (verified, same day).
+    The bookmark doesn't follow a rename there (LEARNINGS.md
+    `[L-nas-bookmark-rename]`).
 - The Phases window shows the library as a **thumbnail grid**, grouped under a
-  heading per subfolder when subfolders are on. Click toggles an image in or out
+  heading per source (its folder's name), and under that a heading per
+  subfolder when that source includes subfolders. With one source, the
+  source heading still shows, so the grid looks the same however many
+  sources there are. Click toggles an image in or out
   of the selection, ⇧-click selects a range, plus Select All / Select None buttons.
 - `[D-grid-one-tab-stop]` **Keyboard: the thumbnail grid is one Tab stop.**
   Tab moves into the grid and the next Tab moves past it, the way Finder's
   icon view and Photos work. Inside the grid:
   - **Arrow keys** move a highlighted image (the cursor). Left and right
     step through images in order, wrapping across rows. Up and down move by
-    one row in the same column, crossing subfolder headings; on a shorter
+    one row in the same column, crossing source and subfolder headings; on a shorter
     row the cursor lands on its last image.
   - **Space** toggles the highlighted image; **⇧-Space** selects a range
     from the last toggled image, the same as ⇧-click.
@@ -203,9 +334,10 @@ image when there's more than one choice.
   - *Cost:* thumbnails reload when the window reopens. Expected to be
     quick, since QuickLook keeps its own thumbnail cache (*recalled*, not
     measured).
-- If a selected image is later deleted or renamed, it's skipped and the phase
-  editor marks it as missing. A phase with no available images is skipped
-  (the wallpaper stays as it is).
+- If a selected image is later deleted or renamed, or its source is removed
+  or can't be opened, it's skipped and the phase editor marks it as
+  missing. A phase with no available images is skipped (the wallpaper
+  stays as it is).
 
 ## Displays
 
@@ -1120,7 +1252,7 @@ extras don't show them. No global hotkey.
   - *Why:* resuming shouldn't depend on finding a menu item; the window is
     where someone goes to ask why Phases stopped. Placed at the top for
     now; a broader Settings cleanup may move it (author, 2026-11-06).
-- **Settings selected:** the Schedule section above, then image folder and Include subfolders; display sharing
+- **Settings selected:** the Schedule section above, then the Image Sources list `[D-image-sources]`; display sharing
   preference (see "Displays sharing the All Displays images"); transition and duration; Launch at Login; location status
   with today's civil dawn and dusk and Update Now; and, at the bottom, a
   **Quitting** section with the **Restore original wallpaper when quitting**
@@ -1351,10 +1483,12 @@ extras don't show them. No global hotkey.
 
 ## Persistence
 
-All settings (folder bookmark, phases including per-display selections,
+All settings (image sources with their bookmarks and locations, phases including per-display selections,
 preferences, in-order positions, last applied phase and image per display, known
 displays and their names, last location) are stored in UserDefaults as Codable
 data. Phases saved by earlier versions load unchanged (no per-display images).
+The image folder setting from draft 44 and earlier isn't carried over
+`[D-source-names]`.
 
 ## Memory
 
@@ -1390,7 +1524,7 @@ data. Phases saved by earlier versions load unchanged (no per-display images).
 ## Out of scope (v1)
 
 - Different schedules per weekday
-- Multiple folders or online image sources
+- Online image sources. Photos albums are planned (issue #33)
 - Choosing different images per Space within a phase. Planned as a later
   enhancement (author, 2026-10-31); `[D-cover-per-space]` keeps the way
   open. Needs a way to tell Spaces apart, which the public API doesn't

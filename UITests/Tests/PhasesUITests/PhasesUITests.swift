@@ -12,10 +12,12 @@ struct PhasesUITests {
 }
 
 /// Launches a test-mode Phases [D-ui-test-mode], runs `body`, and always
-/// quits it.
+/// quits it. `imageFolders` are its image sources, in order.
 @MainActor
-func withPhases(_ body: @MainActor (PhasesApp) async throws -> Void) async throws {
-  let app = try await PhasesApp.launch()
+func withPhases(
+  imageFolders: [URL] = [TestImages.folder], _ body: @MainActor (PhasesApp) async throws -> Void
+) async throws {
+  let app = try await PhasesApp.launch(imageFolders: imageFolders)
   defer { app.quit() }
   try await body(app)
 }

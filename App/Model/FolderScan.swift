@@ -6,7 +6,7 @@ import UniformTypeIdentifiers
 /// [D-scan-each-folder-once]. File system only, no AppKit, so the unit tests
 /// can reach it.
 enum FolderScan {
-  /// One image: its relative path [D-relative-paths] and where to read it.
+  /// One image: its path within the source folder [D-source-names] and where to read it.
   /// The URL differs from folder + name when an alias is on the way, since
   /// the file system follows symlinks in a path but not aliases.
   struct Item: Equatable {
@@ -45,6 +45,13 @@ enum FolderScan {
   /// The subfolder part of a relative path, or "" for a top-level file.
   static func folder(of name: String) -> String {
     (name as NSString).deletingLastPathComponent
+  }
+
+  /// Whether two URLs are the same folder on disk, however each was reached
+  /// (a symlink, a different spelling) [D-image-sources].
+  static func isSameFolder(_ lhs: URL, _ rhs: URL) -> Bool {
+    guard let l = FolderID(lhs), let r = FolderID(rhs) else { return false }
+    return l == r
   }
 }
 

@@ -382,7 +382,12 @@ final class WallpaperScheduler {
     }
     // [D-ui-test-mode] Test mode records what it would show but never shows it.
     if !assignments.isEmpty, !UITestMode.isOn {
-      crossfade.apply(assignments, duration: transitionStyle == .crossfade ? crossfadeDuration : nil)
+      // [D-scoped-bookmarks] Open while the images are read. A cover
+      // remade later (a Space switch) reads without it; the sandbox change
+      // has to revisit that.
+      library.withAccessToAllSources {
+        crossfade.apply(assignments, duration: transitionStyle == .crossfade ? crossfadeDuration : nil)
+      }
     }
     appliedState = AppliedState(
       phaseID: phase.id, phaseStart: start, rotationSlot: slot, manualSteps: manualSteps, imagesByDisplay: picks
