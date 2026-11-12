@@ -69,7 +69,7 @@ struct ImageSourceTests {
     #expect(!SourceLocation.realHome.path(percentEncoded: false).contains("/Library/Containers/"))
   }
 
-  // MARK: Migration from draft 44
+  // MARK: Saved sources and phases
 
   /// A valid ID: the alphabet leaves out I and O.
   private let id = "MGRATED2"
@@ -80,39 +80,13 @@ struct ImageSourceTests {
     #expect(ImageSource.isValidID("QTHERXYZ"))
   }
 
-  @Test func convertsEverySavedSelection() {
-    var phase = Phase(name: "Morning", trigger: .clockTime(minutes: 420))
-    phase.imageNames = ["a.png", "Winter/snow.jpg"]
-    phase.displayImageNames = [display: ["b.png"], "EMPTY": []]
-    let converted = SourceMigration.convert([phase], to: id)
-    #expect(converted[0].imageNames == ["MGRATED2:a.png", "MGRATED2:Winter/snow.jpg"])
-    #expect(converted[0].displayImageNames == [display: ["MGRATED2:b.png"], "EMPTY": []])
-    #expect(converted[0].id == phase.id)
-  }
-
-  @Test func convertsLastAppliedImages() {
-    let state = AppliedState(
-      phaseID: UUID(), phaseStart: Date(), rotationSlot: 2, manualSteps: 1, imagesByDisplay: [display: "a.png"]
-    )
-    let converted = SourceMigration.convert(state, to: id)
-    #expect(converted?.imagesByDisplay == [display: "MGRATED2:a.png"])
-    #expect(converted?.rotationSlot == 2)
-    #expect(SourceMigration.convert(nil, to: id) == nil)
-  }
-
-  @Test func emptySettingsStayEmpty() {
-    #expect(SourceMigration.convert([], to: id).isEmpty)
-    let phase = Phase(name: "Evening", trigger: .clockTime(minutes: 1080))
-    #expect(SourceMigration.convert([phase], to: id) == [phase])
-  }
-
-  @Test func runningTwiceChangesNothing() {
-    var phase = Phase(name: "Morning", trigger: .clockTime(minutes: 420))
-    phase.imageNames = ["a.png"]
-    phase.displayImageNames = [display: ["b.png"]]
-    let once = SourceMigration.convert([phase], to: id)
-    #expect(SourceMigration.convert(once, to: id) == once)
-    #expect(SourceMigration.convert(once, to: "QTHERXYZ") == once)
+  @Test func sourceRoundTripsAndOlderListsLoad() throws {
+    let source = ImageSource(id: id, bookmark: Data([1, 2]), location: "~/Pictures", includesSubfolders: true)
+    let data = try JSONEncoder().encode([source])
+    #expect(try JSONDecoder().decode([ImageSource].self, from: data) == [source])
+    // Only an ID: every other field falls back to its default.
+    let sparse = try JSONDecoder().decode([ImageSource].self, from: Data(#"[{"id":"MGRATED2"}]"#.utf8))
+    #expect(sparse == [ImageSource(id: id, bookmark: nil, location: "")])
   }
 
   @Test func phaseUsesASourceThroughAnySelection() {

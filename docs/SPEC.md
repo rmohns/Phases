@@ -209,11 +209,12 @@ image when there's more than one choice.
     2026-11-12).
   - Replaces `[D-relative-paths]` (drafts up to 44), which named images
     by their path relative to the one library folder. The image part
-    keeps that rule. Existing settings are converted once: the old
-    folder becomes the first source, and every saved name in phases
-    (All Displays and per-display), and the last applied image per
-    display, gets its ID. The old folder setting is left in place, so
-    an older build still finds its folder.
+    keeps that rule.
+  - Settings from draft 44 and earlier aren't converted: the folder has
+    to be added again, and phases' old selections show as missing
+    (Remove Missing clears them). *Why:* Phases has one user, who can
+    reconfigure it easily (author, 2026-11-12). Draft 52 first planned a
+    one-time conversion; dropped the same day, before any code shipped.
   - *How* (stored form, not shown to users): `<source ID>:<relative
     path>`. The ID never contains a colon, so the name splits at the
     first one, even when a file name has a colon in it.
@@ -1431,7 +1432,7 @@ All settings (image sources with their bookmarks and locations, phases including
 preferences, in-order positions, last applied phase and image per display, known
 displays and their names, last location) are stored in UserDefaults as Codable
 data. Phases saved by earlier versions load unchanged (no per-display images).
-Settings from draft 44 and earlier are converted once to image sources
+The image folder setting from draft 44 and earlier isn't carried over
 `[D-source-names]`.
 
 ## Memory

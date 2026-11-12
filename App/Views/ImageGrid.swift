@@ -19,16 +19,26 @@ struct ImageGrid: View {
   private let columns = [GridItem(.adaptive(minimum: minimumCellWidth), spacing: spacing)]
 
   var body: some View {
+    // The spec marks missing selections whatever else the grid shows, even
+    // with no sources or none that can be opened.
+    if !missing.isEmpty {
+      HStack {
+        Label(
+          missing.count == 1 ? "1 selected image is missing" : "\(missing.count) selected images are missing",
+          systemImage: "exclamationmark.triangle"
+        )
+        .foregroundStyle(.orange)
+        Spacer()
+        Button("Remove Missing") { selection.removeAll { missing.contains($0) } }
+      }
+    }
+
     if library.sources.isEmpty {
       Text("Add an image folder in Settings.")
         .foregroundStyle(.secondary)
     } else if library.names.isEmpty {
-      Text(
-        library.sources.count == 1
-          ? "No JPEG, PNG, HEIC, or TIFF images in this folder."
-          : "No JPEG, PNG, HEIC, or TIFF images in these folders."
-      )
-      .foregroundStyle(.secondary)
+      Text(emptyMessage)
+        .foregroundStyle(.secondary)
     } else {
       HStack {
         Text("\(selectedCount) of \(library.names.count) selected")
@@ -36,18 +46,6 @@ struct ImageGrid: View {
         Spacer()
         Button("Select All") { selection = library.names }
         Button("Select None") { selection = [] }
-      }
-
-      if !missing.isEmpty {
-        HStack {
-          Label(
-            missing.count == 1 ? "1 selected image is missing" : "\(missing.count) selected images are missing",
-            systemImage: "exclamationmark.triangle"
-          )
-          .foregroundStyle(.orange)
-          Spacer()
-          Button("Remove Missing") { selection.removeAll { missing.contains($0) } }
-        }
       }
 
       let groups = library.groups
@@ -118,7 +116,8 @@ struct ImageGrid: View {
           .help(source.location)
           .padding(.top, index == 0 ? 0 : 12)
       }
-      if sourceHasSubfolders {
+      // Also when all of a source's images sit in one subfolder.
+      if sourceHasSubfolders || !group.folder.isEmpty {
         Text(group.folder.isEmpty ? "Top Level" : group.folder)
           .font(.headline)
           .foregroundStyle(.secondary)
@@ -146,6 +145,14 @@ struct ImageGrid: View {
     .accessibilityLabel(ImageLibrary.path(of: name))
     .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     .accessibilityAction { toggle(name, extendingRange: false) }
+  }
+
+  private var emptyMessage: String {
+    let many = library.sources.count > 1
+    if library.unreachableSources.count == library.sources.count {
+      return many ? "The image folders can't be opened. Check Settings." : "The image folder can't be opened. Check Settings."
+    }
+    return many ? "No JPEG, PNG, HEIC, or TIFF images in these folders." : "No JPEG, PNG, HEIC, or TIFF images in this folder."
   }
 
   private var selectedCount: Int {

@@ -70,16 +70,15 @@ The pure logic that decides what the app does:
   them, following symlinks and aliases `[D-follow-links]` and ending on
   loops `[D-scan-each-folder-once]` (draft 35). These tests build folders
   in the temporary directory, never the user's.
-- `ImageSource`, `StoredImageName`, `SourceLocation`, `SourceMigration`,
-  `LibraryListing` (draft 52): stored names join and split, including a
-  file name with a colon, and draft 44 names are recognised as having no
-  source part `[D-source-names]`; `~/…` inside the home folder, the full
-  path outside it, and a round trip `[D-source-location]`; converting
-  draft 44 selections (All Displays, per display, last applied image),
-  empty settings, and running it twice; the library's order across
-  sources, and reordering sources without changing any saved name
-  `[D-image-sources]`; the same folder reached by a symlink counts as
-  one; which phases use a source.
+- `ImageSource`, `StoredImageName`, `SourceLocation`, `LibraryListing`
+  (draft 52): stored names join and split, including a file name with a
+  colon, and draft 44 names are recognised as having no source part
+  `[D-source-names]`; `~/…` inside the home folder, the full path
+  outside it, and a round trip `[D-source-location]`; a saved source
+  round-trips, and one missing newer fields still loads; the library's
+  order across sources, and reordering sources without changing any
+  saved name `[D-image-sources]`; the same folder reached by a symlink
+  counts as one; which phases use a source.
 - `WallpaperCheck`: what the scheduler's normal check does with what's
   already applied, including a screen change that leaves every image
   fitting `[D-screen-change-no-reroll]` (draft 31)

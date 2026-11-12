@@ -39,6 +39,18 @@ struct ImageSource: Codable, Equatable, Identifiable {
   }
 }
 
+extension ImageSource {
+  /// Lenient, like `Phase`, so a list saved before a field was added (a
+  /// source kind, for Photos albums) still loads.
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    id = try container.decode(String.self, forKey: .id)
+    bookmark = try container.decodeIfPresent(Data.self, forKey: .bookmark)
+    location = try container.decodeIfPresent(String.self, forKey: .location) ?? ""
+    includesSubfolders = try container.decodeIfPresent(Bool.self, forKey: .includesSubfolders) ?? false
+  }
+}
+
 extension Phase {
   /// Whether any of the phase's selections (All Displays or per display)
   /// has an image from the source; removing it asks first [D-image-sources].

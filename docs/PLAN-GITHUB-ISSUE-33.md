@@ -28,6 +28,12 @@ Written 2026-11-12 by Claude with the author.
     cover remade later (back on a Space) reads its file without it
     (`WallpaperScheduler.apply`, comment there). Harmless unsandboxed;
     the sandbox change has to revisit it.
+  - Fable reviewed steps 1–6 (2026-11-12). Fixed: the folder picker lost
+    its purpose (Add Folder… and Locate… did nothing), an undecodable
+    source list was overwritten, a moved folder's location went stale,
+    missing selections weren't marked with no reachable source, and a
+    lone subfolder lost its heading. The draft 44 conversion it also
+    flagged was dropped instead (author: no conversion needed).
 - [ ] Phase 1b: spec for merge #2 (Photos albums), approved
 - [ ] Phase 2b: code for merge #2, tests, merged
 
@@ -214,8 +220,8 @@ Spec first (opened in Marked, approved before code):
   Include subfolders per folder. Remove "Multiple folders or online
   image sources" from "Out of scope (v1)".
 - Saved names: source ID plus name within the source (see "Decisions so
-  far"), replacing `[D-relative-paths]`. Existing phases are converted
-  once and keep their images.
+  far"), replacing `[D-relative-paths]`. Existing phases aren't
+  converted (author, 2026-11-12); the folder is added again.
 - What "In order" means across sources. What happens to selections when
   a source is removed (shown as missing, as today).
 - Image grid: a heading per source, its subfolders under it.
@@ -241,7 +247,8 @@ and tagged decisions). Steps, each building with
    - `SourceMigration`: draft 44 settings (one bookmark, bare relative
      names in `Phase.imageNames`, `Phase.displayImageNames`, and
      `AppliedState.imagesByDisplay`) to one source plus prefixed names.
-     Leaves the old bookmark key in place.
+     Leaves the old bookmark key in place. *Dropped 2026-11-12: no
+     conversion (author); written, then removed with its tests.*
 2. **`ImageLibrary` holds a list of sources,** in a stored order of its
    own `[D-image-sources]`. The five calls the scheduler uses keep their
    meaning (`availableImages`, `url(for:)`, `name(for:)`, `thumbnail`,
@@ -276,7 +283,7 @@ Unit tests (no permission needed; add to TESTING.md "What they cover"):
   keeps the full path; round trip; a sandboxed-looking home isn't used.
 - `SourceMigration`: All Displays and per-display selections, the last
   applied image per display, empty settings (first launch: no source),
-  running it twice changes nothing.
+  running it twice changes nothing. *Dropped with the conversion.*
 - Library order: sources in stored order, then each source's own order;
   reordering the stored list reorders the library without changing any
   saved name.
@@ -297,14 +304,15 @@ runs and ask the author first, per CLAUDE.md "Testing"):
 
 Hands-on checks by the author (after the UI tests):
 
-- Upgrading from draft 44: the installed Phases' real settings convert,
-  every phase keeps its images, and the wallpaper doesn't jump. Back up
-  `~/Library/Preferences/app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268.plist`
-  first.
+- First launch over draft 44 settings: no sources, old selections show
+  as missing; add the folder again (no conversion, author 2026-11-12).
 - A second real folder; a folder on an external drive, unplugged and
-  plugged back (Can't open, then back); Locate… after moving a folder.
+  plugged back (Can't open, then back); Locate… after moving a folder;
+  renaming a folder while Phases runs updates its row.
 - `[D-scoped-bookmarks]` in a build that isn't sandboxed: sources reopen
-  after a relaunch. Record the result as *verified* in SPEC.md (it's
+  after a relaunch. Rename the folder while Phases is quit, so only the
+  bookmark can find it, and check the diagnostics log
+  (category `sources`) says "found by its bookmark". Record the result as *verified* in SPEC.md (it's
   *recalled* there now).
 
 ## Phase 1b and 2b: merge #2, Photos albums

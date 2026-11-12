@@ -5,7 +5,11 @@ import SwiftUI
 struct ImageSourcesSection: View {
   var scheduler: WallpaperScheduler
   @State private var selectedID: String?
-  @State private var picker: FolderPickerPurpose?
+  @State private var isPicking = false
+  /// Kept apart from `isPicking`: SwiftUI sets that to false before the
+  /// picker's completion runs, so it can't carry the purpose (SDK docs for
+  /// `fileImporter(isPresented:…)`; Fable review, 2026-11-12).
+  @State private var pickerPurpose = FolderPickerPurpose.add
   @State private var pendingRemoval: ImageSource?
 
   private enum FolderPickerPurpose: Equatable {
@@ -20,7 +24,7 @@ struct ImageSourcesSection: View {
       List(selection: $selectedID) {
         ForEach(library.sources) { source in
           ImageSourceRow(scheduler: scheduler, source: source) {
-            picker = .locate(source.id)
+            pick(for: .locate(source.id))
           }
           .tag(source.id)
         }
@@ -37,7 +41,7 @@ struct ImageSourcesSection: View {
       .accessibilityIdentifier("imageSources")
 
       HStack(spacing: 4) {
-        Button("Add Folder…", systemImage: "plus") { picker = .add }
+        Button("Add Folder…", systemImage: "plus") { pick(for: .add) }
           .accessibilityIdentifier("addImageSource")
         Button("Remove Folder", systemImage: "minus") { removeSelected() }
           .disabled(selectedID == nil)
@@ -46,9 +50,9 @@ struct ImageSourcesSection: View {
       .labelStyle(.iconOnly)
       .buttonStyle(.borderless)
     }
-    .fileImporter(isPresented: isPicking, allowedContentTypes: [.folder]) { result in
-      guard case .success(let url) = result, let purpose = picker else { return }
-      chose(url, for: purpose)
+    .fileImporter(isPresented: $isPicking, allowedContentTypes: [.folder]) { result in
+      guard case .success(let url) = result else { return }
+      chose(url, for: pickerPurpose)
     }
     .alert(
       "Remove “\(pendingRemoval.map(library.displayName) ?? "")”?",
@@ -70,8 +74,9 @@ struct ImageSourcesSection: View {
     CGFloat(min(max(library.sources.count, 1), 5)) * 64 + 8
   }
 
-  private var isPicking: Binding<Bool> {
-    Binding { picker != nil } set: { if !$0 { picker = nil } }
+  private func pick(for purpose: FolderPickerPurpose) {
+    pickerPurpose = purpose
+    isPicking = true
   }
 
   private var isConfirmingRemoval: Binding<Bool> {

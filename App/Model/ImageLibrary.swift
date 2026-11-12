@@ -2,6 +2,8 @@ import AppKit
 import Observation
 import QuickLookThumbnailing
 
+private let diagLog = Diagnostics.logger("sources")
+
 /// The user's image sources and the images in them [D-image-sources].
 /// Images are named by source ID and path within the source
 /// [D-source-names].
@@ -19,20 +21,12 @@ final class ImageLibrary {
 
   /// Where each source's folder was found at the last reload.
   @ObservationIgnored private var folderURLs: [String: URL] = [:]
-  /// Set when draft 44 settings were converted at this launch: saved names
-  /// still need the source's ID. The scheduler finishes the job.
-  @ObservationIgnored private(set) var pendingNameConversion: String?
+  /// Set when the saved list didn't decode, so it isn't overwritten.
+  @ObservationIgnored private var isSavingBlocked = false
 
   private enum Keys {
     static let sources = "imageSources"
     static let order = "imageSourceOrder"
-    /// The source ID saved names still need, until the scheduler has
-    /// converted them; survives a quit between the two steps.
-    static let pendingNameConversion = "imageSourcesPendingNameConversion"
-    /// Draft 44's settings, read once and left in place so an older build
-    /// still finds its folder.
-    static let legacyBookmark = "imageFolderBookmark"
-    static let legacySubfolders = "includesSubfolders"
   }
 
   init() {
@@ -186,12 +180,6 @@ final class ImageLibrary {
     reload()
   }
 
-  /// Called by the scheduler once saved names have the converted source's ID.
-  func finishNameConversion() {
-    pendingNameConversion = nil
-    SettingsStore.defaults.removeObject(forKey: Keys.pendingNameConversion)
-  }
-
   // MARK: - Finding folders
 
   /// The source's folder, from its bookmark, else its saved location
@@ -201,28 +189,41 @@ final class ImageLibrary {
     folderURLs[source.id] = nil
     if let data = source.bookmark {
       var isStale = false
-      if let url = try? URL(resolvingBookmarkData: data, options: [.withSecurityScope, .withoutUI], bookmarkDataIsStale: &isStale),
-        withAccess(to: url, { Self.isFolder(url) })
-      {
+      // Without mounting: an unreachable source is retried at every reload.
+      if let url = try? URL(
+        resolvingBookmarkData: data, options: [.withSecurityScope, .withoutUI, .withoutMounting],
+        bookmarkDataIsStale: &isStale
+      ), withAccess(to: url, { Self.isFolder(url) }) {
+        diagLog.log("source \(source.id, privacy: .public) found by its bookmark\(isStale ? " (stale)" : "", privacy: .public)")
         folderURLs[source.id] = url
-        if isStale { refreshBookmark(of: source.id, at: url) }
+        // The folder may have moved or been renamed: keep the location
+        // shown in Settings, and the fallback below, up to date.
+        if isStale || SourceLocation.string(for: url) != source.location {
+          update(source.id, at: url)
+        }
         return url
       }
     }
     let url = SourceLocation.url(for: source.location)
-    guard Self.isFolder(url) else { return nil }
+    guard !source.location.isEmpty, Self.isFolder(url) else {
+      diagLog.log("source \(source.id, privacy: .public) can't be opened")
+      return nil
+    }
+    diagLog.log("source \(source.id, privacy: .public) found by its location, not its bookmark")
     folderURLs[source.id] = url
     // Outside test mode, a bookmark that stopped working is remade from
     // the location that still does.
-    if !UITestMode.isOn { refreshBookmark(of: source.id, at: url) }
+    if !UITestMode.isOn { update(source.id, at: url) }
     return url
   }
 
-  private func refreshBookmark(of id: String, at url: URL) {
-    guard let index = sources.firstIndex(where: { $0.id == id }),
-      let data = withAccess(to: url, { Self.scopedBookmark(for: url) })
-    else { return }
-    sources[index].bookmark = data
+  /// A fresh bookmark and location for a source found at `url`.
+  private func update(_ id: String, at url: URL) {
+    guard let index = sources.firstIndex(where: { $0.id == id }) else { return }
+    if let data = withAccess(to: url, { Self.scopedBookmark(for: url) }) {
+      sources[index].bookmark = data
+    }
+    sources[index].location = SourceLocation.string(for: url)
     save()
   }
 
@@ -246,48 +247,24 @@ final class ImageLibrary {
 
   // MARK: - Persistence
 
+  /// Draft 44's one-folder settings aren't read: the author re-adds the
+  /// folder (2026-11-12, `[D-source-names]`).
   private func load() {
     let defaults = SettingsStore.defaults
-    if let data = defaults.data(forKey: Keys.sources),
-      let saved = try? JSONDecoder().decode([ImageSource].self, from: data)
-    {
-      let order = defaults.stringArray(forKey: Keys.order) ?? []
-      sources = order.compactMap { id in saved.first { $0.id == id } }
-        + saved.filter { !order.contains($0.id) }
-      pendingNameConversion = defaults.string(forKey: Keys.pendingNameConversion)
-    } else {
-      convertDraft44Settings()
-    }
-  }
-
-  /// [D-source-names] The one folder from draft 44 and earlier becomes the
-  /// first source. Its old settings are left in place.
-  private func convertDraft44Settings() {
-    let defaults = SettingsStore.defaults
-    guard let data = defaults.data(forKey: Keys.legacyBookmark) else {
-      save()  // First launch: no sources.
+    guard let data = defaults.data(forKey: Keys.sources) else { return }
+    guard let saved = try? JSONDecoder().decode([ImageSource].self, from: data) else {
+      // Keep the data rather than overwrite it at the next save.
+      diagLog.error("image sources: saved list didn't decode; not saving over it")
+      isSavingBlocked = true
       return
     }
-    var isStale = false
-    guard let url = try? URL(resolvingBookmarkData: data, options: [.withoutUI], bookmarkDataIsStale: &isStale) else {
-      // Unresolvable, as it would have been in draft 44: start empty, and
-      // try again at the next launch in case a drive comes back.
-      return
-    }
-    let source = ImageSource(
-      id: ImageSource.makeID(avoiding: []),
-      bookmark: Self.scopedBookmark(for: url),
-      location: SourceLocation.string(for: url),
-      includesSubfolders: defaults.bool(forKey: Keys.legacySubfolders)
-    )
-    sources = [source]
-    folderURLs[source.id] = url
-    pendingNameConversion = source.id
-    defaults.set(source.id, forKey: Keys.pendingNameConversion)
-    save()
+    let order = defaults.stringArray(forKey: Keys.order) ?? []
+    sources = order.compactMap { id in saved.first { $0.id == id } }
+      + saved.filter { !order.contains($0.id) }
   }
 
   private func save() {
+    guard !isSavingBlocked else { return }
     guard !UITestMode.isOn else { return }
     let defaults = SettingsStore.defaults
     if let data = try? JSONEncoder().encode(sources) {
