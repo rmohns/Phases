@@ -119,6 +119,13 @@ final class ImageLibrary {
     return photoCache.fetch(photoID, from: photos)
   }
 
+  /// Whether the photo cache has any files, so cleanup still runs after
+  /// the last Photos source is removed [D-photos-cache].
+  var photoCacheIsEmpty: Bool {
+    ((try? FileManager.default.contentsOfDirectory(atPath: photoCache.folder.path(percentEncoded: false))) ?? [])
+      .allSatisfy { $0 == "index.json" || $0.hasPrefix(".") }
+  }
+
   /// A file for each image that's on hand now: a folder's file, or a
   /// photo already in the cache [D-photos-fetch-ahead].
   func fileOnHand(for name: String) -> URL? {
