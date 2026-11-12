@@ -24,7 +24,8 @@
           "LSApplicationCategoryType": "public.app-category.utilities",
           "LSUIElement": true,
           "NSLocationUsageDescription": "Phases uses your location to calculate local dawn and dusk times.",
-          "NSLocationWhenInUseUsageDescription": "Phases uses your location to calculate local dawn and dusk times."
+          "NSLocationWhenInUseUsageDescription": "Phases uses your location to calculate local dawn and dusk times.",
+          "NSPhotoLibraryUsageDescription": "Phases uses photos from the albums you choose as wallpapers."
         }
       },
       "platform": "macOS",

@@ -1,6 +1,6 @@
 import SwiftUI
 
-@main
+// Experiment branch: the entry point is Launcher in PhotoKitProbe.swift.
 struct AppDefinition: App {
   @State private var scheduler = WallpaperScheduler()
   // [D-reopen-shows-window] Launching Phases while it runs opens the window.
