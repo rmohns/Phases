@@ -9,8 +9,11 @@ Written 2026-11-12 by Claude with the author.
 ## Status
 
 - [x] Plan written (this file)
-- [ ] Phase 0: experiments X0–X6
-- [ ] Decide: sandbox before merge #1? (see "Sandboxing")
+- [x] Phase 0: experiments X0–X6, rounds A and B (2026-11-12; see
+  "Phase 0 results")
+- [ ] Decide: sandbox before merge #1? (see "Sandboxing"). Waiting on
+  the author's developer account, which the wallpaper-store exception
+  needs.
 - [ ] Phase 1a: spec for merge #1 (multiple sources, folders only), approved
 - [ ] Phase 2a: code for merge #1, tests, merged
 - [ ] Phase 1b: spec for merge #2 (Photos albums), approved
@@ -115,6 +118,40 @@ it into a container (*recalled* risk, not tested).
 | X4 | Set the wallpaper to a file in Phases' cache folder: does it show, and what does the store record? Then put the original back | Whether cached photos can be wallpapers, sandboxed or not; outside-change detection | **Yes: real wallpaper** |
 | X5 | Does the change observer fire while Phases runs in the background, when a photo is added to or removed from an album? | Album changes | Yes: author edits an album in Photos |
 | X6 | Do photo IDs stay the same across launches and builds? | What saved names store | Reads only |
+
+### Phase 0 results
+
+Full entries, with evidence labels, are in LEARNINGS.md "Photos library
+(issue #33)". In short, all *verified* 2026-11-12 on macOS 27.2:
+
+- **iCloud downloads are not the risk feared.** iCloud-only photos took
+  0.5–1.4 s each online and failed in under 0.1 s offline, with no hang
+  `[L-photos-x3-download]`. Fetching ahead is still worth it, but a short
+  lead is enough. Untested: edited photos, Live Photos, HEIC, big files,
+  slow connections.
+- **A cached file works as a wallpaper,** sandboxed or not
+  `[L-photos-x4-cache-wallpaper]` `[L-sandbox-x4-container-wallpaper]`.
+- **Albums:** listed nested, in sidebar order; names repeat, so save by
+  ID `[L-photos-x2-albums]`. An album's default order is its own order
+  `[L-photos-album-order]`. Photo IDs held across builds and the sandbox
+  `[L-photos-ids-stable]`.
+- **The change observer fires in the background** `[L-photos-x5-observer]`.
+- **Permission:** a new build asks again `[L-photos-new-build-asks]`, as
+  location does. A sandboxed build read Photos without the Photos
+  entitlement `[L-sandbox-photos-works]`.
+- **Sandboxing's real blocker is the wallpaper store:** unreadable in the
+  sandbox `[L-sandbox-x0-paths]`, and the exception that fixes it needs a
+  development team `[L-sandbox-team-needed]`. Without it, detecting
+  outside changes and Aerials (`[D-aerials-untouched]`) would silently
+  stop.
+- **The first sandboxed launch moves the settings** into the container
+  `[L-sandbox-prefs-move]`. Sandboxing has to plan for that (it's
+  harmless one way, but going back to unsandboxed needs the file put
+  back).
+
+Cleanup still to do: delete the sandbox container
+(`~/Library/Containers/app.bitrig.new.ecd0db30-…`) once the author has
+confirmed the installed Phases kept its settings.
 
 ## Phase 1a and 2a: merge #1, multiple sources (folders only)
 
