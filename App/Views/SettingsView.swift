@@ -2,7 +2,6 @@ import SwiftUI
 
 struct SettingsView: View {
   @Bindable var scheduler: WallpaperScheduler
-  @State private var isChoosingFolder = false
   @State private var isConfirmingLaunchAtLogin = false
 
   var body: some View {
@@ -18,34 +17,7 @@ struct SettingsView: View {
         }
       }
 
-      Section("Images") {
-        LabeledContent("Folder") {
-          HStack {
-            if let url = scheduler.library.folderURL {
-              Image(systemName: "folder")
-                .foregroundStyle(.secondary)
-              Text(url.lastPathComponent)
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .layoutPriority(1)
-                .help(url.path(percentEncoded: false))
-                // [D-ui-test-ids]
-                .accessibilityIdentifier("imageFolderName")
-            } else {
-              Text("None chosen")
-                .foregroundStyle(.secondary)
-            }
-            Button("Choose…") { isChoosingFolder = true }
-              // The name's layout priority would otherwise squeeze this to
-              // a sliver with a long folder name (found 2026-10-29).
-              .fixedSize()
-          }
-        }
-        Toggle("Include subfolders", isOn: includesSubfoldersBinding)
-        if scheduler.library.folderURL != nil {
-          LabeledContent("Images found", value: scheduler.library.imageNames.count, format: .number)
-        }
-      }
+      ImageSourcesSection(scheduler: scheduler)
 
       Section("Displays") {
         Picker("Displays", selection: $scheduler.displayMode) {
@@ -136,12 +108,6 @@ struct SettingsView: View {
     }
     .formStyle(.grouped)
     .navigationTitle("Settings")
-    .fileImporter(isPresented: $isChoosingFolder, allowedContentTypes: [.folder]) { result in
-      if case .success(let url) = result {
-        scheduler.library.setFolder(url)
-        scheduler.evaluate()
-      }
-    }
     .alert("Launch Phases at login?", isPresented: $isConfirmingLaunchAtLogin) {
       Button("Add Login Item") { scheduler.launchAtLogin.enable() }
       Button("Cancel", role: .cancel) {}
@@ -169,15 +135,6 @@ struct SettingsView: View {
       ? date.formatted(date: .omitted, time: .shortened)
       : date.formatted(date: .abbreviated, time: .shortened)
     return "Paused at \(time) because the wallpaper was changed in System Settings."
-  }
-
-  private var includesSubfoldersBinding: Binding<Bool> {
-    Binding {
-      scheduler.library.includesSubfolders
-    } set: { isOn in
-      scheduler.library.includesSubfolders = isOn
-      scheduler.evaluate(reloadingLibrary: false)
-    }
   }
 
   /// Turning on asks first; turning off takes effect right away.

@@ -146,6 +146,16 @@ final class WallpaperScheduler {
     crossfadeDuration = min(max(duration, TransitionStyle.durationRange.lowerBound), TransitionStyle.durationRange.upperBound)
     appliedState = Self.load(AppliedState.self, forKey: Keys.appliedState)
     knownDisplays = Self.load([KnownDisplay].self, forKey: Keys.knownDisplays) ?? []
+    // [D-source-names] Draft 44 settings: the library made the old folder
+    // its first source; saved names get its ID, once. Saved explicitly,
+    // since property observers don't run in init.
+    if let sourceID = library.pendingNameConversion {
+      phases = SourceMigration.convert(phases, to: sourceID)
+      appliedState = SourceMigration.convert(appliedState, to: sourceID)
+      Self.save(phases, forKey: Keys.phases)
+      Self.save(appliedState, forKey: Keys.appliedState)
+      library.finishNameConversion()
+    }
     // Keep an existing restore point: one left over from a crash still holds
     // the true original, while capturing now would record Phases' own image.
     // [D-ui-test-mode] Nothing to restore in test mode, which never changes
@@ -382,7 +392,12 @@ final class WallpaperScheduler {
     }
     // [D-ui-test-mode] Test mode records what it would show but never shows it.
     if !assignments.isEmpty, !UITestMode.isOn {
-      crossfade.apply(assignments, duration: transitionStyle == .crossfade ? crossfadeDuration : nil)
+      // [D-scoped-bookmarks] Open while the images are read. A cover
+      // remade later (a Space switch) reads without it; the sandbox change
+      // has to revisit that.
+      library.withAccessToAllSources {
+        crossfade.apply(assignments, duration: transitionStyle == .crossfade ? crossfadeDuration : nil)
+      }
     }
     appliedState = AppliedState(
       phaseID: phase.id, phaseStart: start, rotationSlot: slot, manualSteps: manualSteps, imagesByDisplay: picks

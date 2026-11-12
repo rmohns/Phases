@@ -115,6 +115,17 @@ struct ImageSourceTests {
     #expect(SourceMigration.convert(once, to: "QTHERXYZ") == once)
   }
 
+  @Test func phaseUsesASourceThroughAnySelection() {
+    var phase = Phase(name: "Morning", trigger: .clockTime(minutes: 420))
+    #expect(!phase.uses(source: id))
+    phase.displayImageNames = [display: ["MGRATED2:b.png"]]
+    #expect(phase.uses(source: id))
+    #expect(!phase.uses(source: "QTHERXYZ"))
+    phase.displayImageNames = [:]
+    phase.imageNames = ["QTHERXYZ:a.png"]
+    #expect(phase.uses(source: "QTHERXYZ"))
+  }
+
   // MARK: Library order
 
   private func items(_ names: [String]) -> [FolderScan.Item] {

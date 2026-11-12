@@ -39,6 +39,14 @@ struct ImageSource: Codable, Equatable, Identifiable {
   }
 }
 
+extension Phase {
+  /// Whether any of the phase's selections (All Displays or per display)
+  /// has an image from the source; removing it asks first [D-image-sources].
+  func uses(source id: String) -> Bool {
+    (imageNames + displayImageNames.values.joined()).contains { StoredImageName.source(of: $0) == id }
+  }
+}
+
 /// [D-source-names] A saved image name: `<source ID>:<path within the
 /// source>`. Stored form only; never shown to users.
 enum StoredImageName {

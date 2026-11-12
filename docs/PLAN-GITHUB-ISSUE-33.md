@@ -16,12 +16,18 @@ Written 2026-11-12 by Claude with the author.
   active again and Bitrig is signed in, but the sandboxed round B runs
   that need it (Photos and wallpaper-store entitlements) wait for that
   change. Draft 52 uses security-scoped bookmarks so it doesn't block it.
-- [ ] Phase 1a: spec for merge #1 written as **draft 52** (`031fda7`, then
-  the amendments below). The author answered its four open calls on
-  2026-11-12 (number 52, order changeable later, remove/re-add makes a
-  new source, a source heading even with one source). **Next step:** ask
-  the author to approve draft 52 as it now stands before any code.
-- [ ] Phase 2a: code for merge #1, tests, merged
+- [x] Phase 1a: spec for merge #1 written as **draft 52** (`031fda7`, then
+  the amendments below). The author answered its four open calls and
+  approved draft 52 on 2026-11-12.
+- [ ] Phase 2a: code for merge #1, tests, merged. Steps 1–6 coded
+  2026-11-12; builds, unit tests pass. **Next:** the author approves the
+  UI test runs (list in "Test plan for merge #1"), then the hands-on
+  checks, then the merge.
+  - For the sandbox change: `[D-scoped-bookmarks]` access is open while
+    scanning, making thumbnails, and applying a wallpaper. A crossfade
+    cover remade later (back on a Space) reads its file without it
+    (`WallpaperScheduler.apply`, comment there). Harmless unsandboxed;
+    the sandbox change has to revisit it.
 - [ ] Phase 1b: spec for merge #2 (Photos albums), approved
 - [ ] Phase 2b: code for merge #2, tests, merged
 

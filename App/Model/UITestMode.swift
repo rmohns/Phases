@@ -11,10 +11,23 @@ enum UITestMode {
   /// [D-first-launch-shows-window]; otherwise test mode never is.
   static let forcesFirstLaunch = UserDefaults.standard.bool(forKey: "PhasesUITestFirstLaunch")
 
-  /// The harness's image folder, from `-PhasesUITestImages <path>`.
-  static var imageFolder: URL? {
-    UserDefaults.standard.string(forKey: "PhasesUITestImages")
-      .map { URL(filePath: $0, directoryHint: .isDirectory) }
+  /// The harness's image folders, from `-PhasesUITestImages <path>` or a
+  /// list, `-PhasesUITestImages '("<path 1>", "<path 2>")'`, in that order
+  /// [D-image-sources].
+  static var imageFolders: [URL] {
+    let defaults = UserDefaults.standard
+    let paths = defaults.stringArray(forKey: "PhasesUITestImages")
+      ?? defaults.string(forKey: "PhasesUITestImages").map { [$0] }
+      ?? []
+    return paths.map { URL(filePath: $0, directoryHint: .isDirectory) }
+  }
+
+  /// The harness's folders as sources, with fixed IDs (`TESTSRC2`,
+  /// `TESTSRC3`, …) and no bookmarks. Never saved.
+  static var imageSources: [ImageSource] {
+    imageFolders.prefix(8).enumerated().map { index, url in
+      ImageSource(id: "TESTSRC\(index + 2)", bookmark: nil, location: url.path(percentEncoded: false))
+    }
   }
 
   /// Three clock-time phases, in order through the day, so tests can
