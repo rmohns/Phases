@@ -1029,3 +1029,64 @@ techniques belong in TESTING.md; these are the ad hoc ones.
   - *Verified* 2026-11-03.
 - `[L-no-fullscreen-apps]` Activity Monitor doesn't support full screen
   (it only zooms); use Calendar to test full screen. Author, 2026-10-30.
+
+## Photos library (issue #33)
+
+Source for this section unless noted: Phase 0 of the issue #33 plan
+(`docs/PLAN-GITHUB-ISSUE-33.md`), round A (not sandboxed), 2026-11-12,
+macOS 27.2, the author's library with "Optimize Mac Storage" on, album
+"NIN 2013" (61 images, 63 items). Probe: `App/Experiments/PhotoKitProbe.swift`
+on branch `experiment/33-photokit`, build cdhash `9808ae12`. Run by Claude
+with the author's yes.
+
+- `[L-photos-x0-paths]` **Not sandboxed, every way of finding home agrees,**
+  and the wallpaper store is readable through `homeDirectoryForCurrentUser`
+  (`/Users/rmohns` from that, `NSHomeDirectory()`, and `getpwuid`). Caches
+  is `~/Library/Caches`. *Verified.* The sandboxed comparison is round B.
+- `[L-photos-x1-permission]` **The Photos prompt worked from the probe
+  launch** (`open -n`, menu bar app, not sandboxed): "not determined" →
+  prompt → "authorized" in 10 s, the author choosing full access.
+  *Verified.* Whether a new build asks again is untested (round B
+  rebuilds).
+- `[L-photos-x2-albums]` **PhotoKit lists the author's albums and folders of
+  albums in sidebar order, nested,** plus 16 shared albums (subtype 101)
+  and the smart albums. Item counts include videos; filtering to images
+  works. Two albums have the same name ("Hydra" twice; "Walllpapers &
+  Desktop Pictures" twice, in different folders), so an album has to be
+  saved by ID, not name. *Verified.*
+  - **Album order is still open.** "NIN 2013" came back in the same order
+    with no sort and with a date sort, so this album can't tell whether
+    the default order is the album's own order. Needs an album sorted by
+    hand in Photos.
+- `[L-photos-x3-download]` **iCloud-only photos fail fast offline and
+  download quickly online.** All 10 test photos (2013 JPEGs, 3264 × 2448)
+  were iCloud-only. *Verified.*
+  - Network off: no data at once, `PHImageResultIsInCloudKey` true, and
+    `PHPhotosErrorDomain` 3164 (with network access not allowed), or "The
+    Internet connection appears to be offline" (with it allowed), both
+    in under 0.1 s. No hang.
+  - Online: 0.51–1.43 s per photo, 927–1493 KB each, the original JPEG at
+    full size, 2–4 progress callbacks. Written to Caches and read back at
+    full size.
+  - Downloading didn't make the photo local: a later run asked first
+    without the network and was still told "in cloud". So Phases has to
+    keep its own copy (the cache).
+  - Not covered: edited photos, Live Photos, HEIC, large files, a slow
+    connection. None of the 10 had an edit or a Live Photo.
+- `[L-photos-x4-cache-wallpaper]` **A file in `~/Library/Caches` works as a
+  wallpaper** (not sandboxed). `setDesktopImageURL` raised no error, and
+  `desktopImageURL` read back the cached file after 3 s. The original
+  (`~/Pictures/Desktop Pictures/Peter Lik - Bamboo Forest Path.jpg`) was
+  put back with no error. *Verified* by the API; whether it showed on
+  screen is the author's to confirm.
+  - **The store reading was inconclusive.** The latest desktop entry the
+    probe found named `~/Pictures/Desktop Pictures/IMG_0761.JPG`, neither
+    the cached file nor the original, so the probe's walk probably picked
+    another Space's or display's entry. Not a finding about the store.
+- `[L-photos-x5-observer]` **The change observer fires while Phases is in
+  the background.** Adding a photo to the album, then removing it, gave
+  five notifications in 3 minutes: one "inserted 1" (62 images), one
+  "removed 1" (61), and three that didn't touch the album. *Verified.*
+- `[L-photos-x6-ids]` **First record of IDs saved** (10 local IDs plus
+  cloud IDs) in `~/Library/Caches/PhasesProbe/x6-ids.txt`. Comparing
+  across builds and the sandbox is round B.
