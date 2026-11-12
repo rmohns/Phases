@@ -1173,3 +1173,16 @@ cdhash `586935f0`). Run by Claude with the author's yes.
   author: the concert photo showed, then the Bamboo Forest came back.
   The store couldn't be read
   afterward, as in `[L-sandbox-x0-paths]`.
+
+## Image sources (issue #33, merge 1)
+
+- `[L-nas-bookmark-rename]` **A security-scoped bookmark to a folder on
+  a file server doesn't follow a rename; one to a local folder does.**
+  Draft 52 build, not sandboxed, 2026-11-12, macOS 27.2. Renaming a local
+  source folder while Phases ran: the row followed the new name. Renaming
+  a source folder on the author's NAS: the row showed "Can't open", and
+  Locate… brought the phase's selections back. *Verified* by the author,
+  on screen. Why (*recalled*, not tested here): bookmarks find local
+  items by file ID as well as path, and a network volume over SMB doesn't
+  give a stable file ID, so only the old path is left. Matches
+  `[D-source-location]`'s fallback design; no code change.

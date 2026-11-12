@@ -118,18 +118,47 @@ image when there's more than one choice.
   albums are planned as a second kind of source (issue #33, plan in
   `docs/PLAN-GITHUB-ISSUE-33.md`).
   - Settings shows the sources in an **Image Sources** list. Each row has
-    the folder's name, its location (`~/Pictures/Wallpapers`, see
-    `[D-source-location]`), how many images it has, and its own **Include
-    subfolders** switch. **+** adds a folder; **−** removes the selected
-    one.
+    two lines:
+    - The folder's name, with its own **Include subfolders** switch at
+      the end of the line.
+    - Its location, a bullet, and how many images it has, in secondary
+      text: `~/Pictures/Desktop Pictures • 77 images`
+      (`[D-source-location]`). A long location truncates in the middle;
+      the count never does. The full location is in a tooltip.
+    - *Why:* two lines instead of three keeps the list compact (author,
+      2026-11-12). The cost is that a long location shows less of
+      itself, hence the truncation rule and the tooltip.
+    - A source that can't be opened shows "Can't open" and **Locate…**
+      in place of the count (see "A source that can't be opened" below).
+  - **Adding, removing, and the context menu.**
+    - **+** adds a folder and **−** removes the selected one. They follow
+      `[D-sidebar-footer-style]`: each button is a 24 × 23 pt cell and
+      the whole cell is clickable, with a divider between them.
+    - **Dragging folders** from Finder onto the list adds them, the
+      standard Mac way to fill a list (author, 2026-11-12). Each folder
+      is added as + would add it. Files and anything that isn't a
+      folder are refused, and the list doesn't show a drop target for
+      them.
+    - **A context menu** on each row: **Show in Finder**, **Locate…**,
+      then **Remove**. Remove asks first, as − does. Control-click and
+      right-click work on any row, selected or not, as they do in the
+      phase list `[D-phase-actions]` (author, 2026-11-12).
+  - **The list is one Tab stop,** like the image grid
+    `[D-grid-one-tab-stop]`: Tab moves into it and the next Tab moves
+    past it. Up and down arrows move the selection, and ⌫ removes the
+    selected source (asking first, as − does). The Include subfolders
+    switches are reached by clicking, or through the selected row's
+    accessibility actions, not by Tab.
+    - *Why:* in testing, Tab moved into the list and never left it
+      (author, 2026-11-12).
   - **The sources' order is the library's order,** for the grid and for
-    In order. In this draft a new source goes at the end and the order
-    can't be changed yet.
-    - The order belongs to the user: dragging rows in the list to
-      reorder them is planned (author, 2026-11-12). Nothing may assume
-      a source's place is fixed: the order is stored as its own list,
-      source IDs say nothing about position, and saved selections and
-      In order positions don't depend on where a source sits.
+    In order. A new source goes at the end. **Dragging rows** up and
+    down reorders them, the standard Mac way (author, 2026-11-12).
+    - The order belongs to the user. Nothing may assume a source's place
+      is fixed: the order is stored as its own list, source IDs say
+      nothing about position, and saved selections don't depend on where
+      a source sits. Reordering changes which image comes next In order,
+      because In order follows library order.
   - Adding a folder that's already a source (the same folder on disk,
     however it was reached) selects the existing row instead of adding a
     second.
@@ -241,6 +270,12 @@ image when there's more than one choice.
   can't find) shows "Can't open" in its Settings row, with a **Locate…**
   button that picks the folder again and keeps the source's ID, so its
   selections come back. Until then its images count as missing.
+  - Renaming a folder Phases can still reach updates its row: verified
+    2026-11-12 by the author, for a local folder while Phases ran. On a
+    file server, a renamed folder showed "Can't open" instead, and
+    Locate… brought its phase's selections back (verified, same day).
+    The bookmark doesn't follow a rename there (LEARNINGS.md
+    `[L-nas-bookmark-rename]`).
 - The Phases window shows the library as a **thumbnail grid**, grouped under a
   heading per source (its folder's name), and under that a heading per
   subfolder when that source includes subfolders. With one source, the
@@ -1470,8 +1505,6 @@ The image folder setting from draft 44 and earlier isn't carried over
 
 - Different schedules per weekday
 - Online image sources. Photos albums are planned (issue #33)
-- Reordering image sources by dragging. Planned; draft 52 keeps the way
-  open `[D-image-sources]`
 - Choosing different images per Space within a phase. Planned as a later
   enhancement (author, 2026-10-31); `[D-cover-per-space]` keeps the way
   open. Needs a way to tell Spaces apart, which the public API doesn't
