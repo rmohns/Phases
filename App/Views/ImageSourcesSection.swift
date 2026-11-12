@@ -86,7 +86,10 @@ struct ImageSourcesSection: View {
           }
           .disabled(library.folder(of: id) == nil)
         }
-        Button("Locate…") { pick(for: .locate(id)) }
+        // Only for a lost source; a found one has nothing to locate.
+        if library.unreachableSources.contains(id) {
+          Button("Locate…") { pick(for: .locate(id)) }
+        }
         Divider()
         Button("Remove") { requestRemoval(of: source) }
       }

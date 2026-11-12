@@ -139,7 +139,11 @@ image when there's more than one choice.
       is added as + would add it. Files and anything else that isn't a
       folder are ignored.
     - **A context menu** on each row: **Show in Finder**, **Locate…**,
-      then **Remove**. Show in Finder is only for sources in the file
+      then **Remove**, with a separator above Remove to keep the
+      destructive item a little further from the pointer (author,
+      2026-11-12). Locate… appears only for a source that can't be
+      opened; one that's found has nothing to locate (author,
+      2026-11-12). Show in Finder is only for sources in the file
       system (folders). A source that isn't, such as a Photos album, gets
       its own equivalent or none; merge #2's spec decides which (author,
       2026-11-12). Remove asks first, as − does. Control-click and
