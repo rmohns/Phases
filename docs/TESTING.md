@@ -609,7 +609,11 @@ neither can leak into normal use.
     phases are never read or changed and every test starts from the same
     list. Deleting phases can never run out;
   - use the image folder given by `-PhasesUITestImages <path>` (the
-    harness makes one with 60 images and a long name);
+    harness makes one with 60 images and a long name) as its one image
+    source, or several folders given as a list,
+    `-PhasesUITestImages '("<path 1>", "<path 2>")'`, as its sources in
+    that order `[D-image-sources]` (draft 45). The harness makes a second,
+    small folder for the tests that need two sources;
   - leave the window closed at launch, as usual. The UI tests open it the
     way the author does, from the menu bar item's Open Phases…, through
     AX actions. *Why:* opening it at launch instead skipped the focus and
