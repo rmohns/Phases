@@ -18,8 +18,10 @@ public final class PhasesApp {
   // MARK: - Launch and quit
 
   /// Launches a new instance in test mode and waits for its window. A
-  /// Phases the author is already running is left alone.
-  public static func launch() async throws -> PhasesApp {
+  /// Phases the author is already running is left alone. `imageFolders`
+  /// become the image sources, in order [D-ui-test-mode]: one path goes as
+  /// is, several as the plist array form of `-PhasesUITestImages`.
+  public static func launch(imageFolders: [URL] = [TestImages.folder]) async throws -> PhasesApp {
     guard AXIsProcessTrusted() else {
       throw UITestFailure("The app running these tests needs Accessibility permission (System Settings › Privacy & Security › Accessibility).")
     }
@@ -28,7 +30,7 @@ public final class PhasesApp {
     configuration.activates = true
     configuration.arguments = [
       "-PhasesUITestMode", "YES",
-      "-PhasesUITestImages", TestImages.folder.path(percentEncoded: false),
+      "-PhasesUITestImages", Self.imagesArgument(for: imageFolders),
       "-ApplePersistenceIgnoreState", "YES",
     ]
     let url = try appURL()
@@ -56,6 +58,17 @@ public final class PhasesApp {
       throw error
     }
     return phases
+  }
+
+  /// The value for `-PhasesUITestImages`: the bare path for one folder, an
+  /// old-style plist array `("<path 1>", "<path 2>")` for several.
+  private static func imagesArgument(for folders: [URL]) -> String {
+    let paths = folders.map { $0.path(percentEncoded: false) }
+    guard paths.count != 1 else { return paths[0] }
+    let quoted = paths.map {
+      "\"" + $0.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\""
+    }
+    return "(" + quoted.joined(separator: ", ") + ")"
   }
 
   /// Force-quits (nothing to save in test mode), waits for the process to

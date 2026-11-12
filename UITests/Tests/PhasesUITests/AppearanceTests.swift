@@ -36,8 +36,9 @@ extension PhasesUITests {
 
     /// Long folder names were truncated badly; they should truncate in the
     /// middle. AX reports the full name; the look needs the screenshot. A
-    /// long name also pushed Choose… out of the row (found 2026-10-29); the
-    /// button must keep its full width (about 75 pt).
+    /// long name also pushed the control beside it out of the row (found
+    /// 2026-10-29, then Choose…, now the image count); the count must keep
+    /// its width, at least 40 pt.
     @Test func imageFolderNameScreenshot() async throws {
       try await withPhases { app in
         let settings = try #require(try app.row(named: "Settings"))
@@ -46,13 +47,9 @@ extension PhasesUITests {
         #expect(folder.allText.contains(TestImages.folderName), "Folder name in AX: \(folder.allText)")
         let url = try app.screenshot("image folder name")
         print("Review: \(url.path(percentEncoded: false))")
-        let window = try app.window()
-        let choose = try #require(
-          window.first { $0.role == "AXButton" && $0.allText.contains("Choose") },
-          "No Choose… button; buttons: \(window.descendants().filter { $0.role == "AXButton" }.map(\.summary))"
-        )
-        let width = try #require(choose.frame?.width)
-        #expect(width >= 60, "Choose… is squeezed to \(width) pt")
+        let count = try app.element("imageSourceCount")
+        let width = try #require(count.frame?.width)
+        #expect(width >= 40, "The image count is squeezed to \(width) pt: \(count.summary)")
       }
     }
   }
