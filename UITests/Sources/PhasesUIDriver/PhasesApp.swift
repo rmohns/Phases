@@ -368,6 +368,28 @@ public final class PhasesApp {
     try await SyntheticInput.click(at: try center(of: node))
   }
 
+  /// Chooses a main menu item with real clicks, the way a person does: a
+  /// click on the menu's title in the menu bar, then on the item whose
+  /// title starts with `prefix`. Real clicks because a closed menu's items
+  /// keep their last title and enabled state, even when opened through AX
+  /// (ERRATA.md `[Q-undo-menu-ax]`). Returns the item's title as
+  /// shown. Each click lands only on this instance's own element.
+  @discardableResult
+  public func chooseMenuItem(menu: String, startingWith prefix: String) async throws -> String {
+    try await ensureFrontmost()
+    let bar = try await waitFor("the menu bar", timeout: .seconds(5)) { app.node("AXMenuBar") }
+    let title = try await waitFor("the \(menu) menu", timeout: .seconds(5)) {
+      bar.children.first { $0.title == menu }
+    }
+    try await clickOwnElement(title, what: "the \(menu) menu")
+    let item = try await waitFor("“\(prefix)…” in the \(menu) menu", timeout: .seconds(5)) {
+      title.first { $0.role == kAXMenuItemRole && ($0.title ?? "").hasPrefix(prefix) && $0.isEnabled }
+    }
+    let shown = item.title ?? prefix
+    try await clickOwnElement(item, what: "“\(shown)”")
+    return shown
+  }
+
   /// Clicks `inset` points in from the node's top-left corner instead of its
   /// center, for checking that a control's whole frame responds. Refuses a
   /// point outside the node or outside the window.

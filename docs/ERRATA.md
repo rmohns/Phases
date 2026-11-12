@@ -426,6 +426,22 @@ would stop being true if a future macOS fixed the underlying behavior.
   System Events. Whether an icon-only `Label` wrapped in
   `.frame`/`.contentShape` loses its title on its own is *unverified*;
   `[D-footer-ax-labels]` sets the label explicitly either way.
+- `[Q-undo-menu-ax]` **Edit › Undo and Redo, read through the AX API,
+  don't match what the menu shows, and a menu that wasn't opened by a
+  click keeps stale enabled states (macOS 27.2).** On screen, after
+  removing an image source, the item reads Undo Remove “<folder>”, and
+  a long folder name is truncated in the middle, which can cut "Remove"
+  itself; how much depends on the screen (*verified* 2026-11-12 by the
+  author, on screen). Through AX the items read plain "Undo" and
+  "Redo", open or closed. Redo read disabled right after an undo until
+  the Edit menu was opened with a real click; opening it with an AX
+  press didn't refresh it (*verified* 2026-11-12, four runs of
+  `undoPutsBackASourceRemovedWithTheMouse`, LEARNINGS.md
+  `[L-closed-menu-stale]`).
+  - *Workaround:* the undo test chooses menu items with real clicks,
+    through `PhasesApp.chooseMenuItem` `[D-input-driver]`, and matches
+    only "Undo" or "Redo" plus enabled, never the action name. Phases
+    leaves macOS's truncation alone (author, 2026-11-12).
 - `[Q-bitrig-test-targets]` **`bitrig test` doesn't see test targets in
   Project.json projects** ("has no test targets", *verified* 2026-10-28),
   and there's no generated Xcode project to hand to `xcodebuild`. That's

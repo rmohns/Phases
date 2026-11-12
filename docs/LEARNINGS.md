@@ -1197,3 +1197,13 @@ cdhash `586935f0`). Run by Claude with the author's yes.
   (*verified* by the author, on screen). Why (*recalled*): AppKit
   validates and retitles menu items when the menu is about to open. The
   test now opens the Edit menu through AX before reading it.
+  - *Correction, same day:* opening the menu with an AX press didn't
+    help; the items still read "Undo" and "Redo (disabled)". A real
+    click on Edit, then on the item, worked, but only once the test
+    matched plain "Undo"/"Redo": through AX the items never carry the
+    action name, even with the menu open, and on screen a long folder
+    name truncates the title in the middle (the author, watching the
+    run). Passed with real clicks, 2026-11-12 (*verified*). So the
+    "retitles on open" explanation holds for the screen but not for AX.
+    Promoted to `[Q-undo-menu-ax]` (2026-11-12), since the test code
+    depends on it.

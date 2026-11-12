@@ -1,4 +1,3 @@
-import ApplicationServices
 import Foundation
 import PhasesUIDriver
 import Testing
@@ -148,33 +147,20 @@ extension PhasesUITests {
         try await app.click(remove)
         try await waitUntil("the first source to be removed") { Self.names(app).count == 1 }
 
-        try await Self.chooseEditMenuItem(app, startingWith: "Undo Remove")
+        // Real clicks on the menu, as a person makes [Q-undo-menu-ax].
+        // Only "Undo"/"Redo": macOS truncates a long title in the middle,
+        // which can cut "Remove", and how much depends on the screen
+        // (the author, watching the run, 2026-11-12).
+        let undo = try await app.chooseMenuItem(menu: "Edit", startingWith: "Undo")
+        print("Chose: \(undo)")
         try await waitUntil("the source to come back") { Self.names(app).count == 2 }
         #expect(Self.names(app).first?.allText.contains(TestImages.folderName) == true,
           "The source didn't come back in first place: \(Self.names(app).map(\.allText))")
 
-        try await Self.chooseEditMenuItem(app, startingWith: "Redo Remove")
+        let redo = try await app.chooseMenuItem(menu: "Edit", startingWith: "Redo")
+        print("Chose: \(redo)")
         try await waitUntil("redo to remove it again") { Self.names(app).count == 1 }
       }
-    }
-
-    /// Opens the Edit menu and presses an item, all through AX, no keys.
-    /// Opening first matters: a closed menu's items keep the title and
-    /// enabled state from when it last opened, so Redo read as disabled
-    /// right after an undo (LEARNINGS.md `[L-closed-menu-stale]`).
-    private static func chooseEditMenuItem(_ app: PhasesApp, startingWith prefix: String) async throws {
-      let bar = try #require(app.app.node("AXMenuBar"), "No menu bar")
-      let edit = try #require(bar.children.first { $0.title == "Edit" }, "No Edit menu")
-      #expect(edit.perform(kAXPressAction) == .success, "Opening the Edit menu failed")
-      try await Task.sleep(for: .milliseconds(500))
-      let items = edit.descendants().filter { $0.role == "AXMenuItem" }
-      print("Edit menu: \(items.map { "\($0.title ?? "?")\($0.isEnabled ? "" : " (disabled)")" })")
-      let item = try #require(
-        items.first { ($0.title ?? "").hasPrefix(prefix) },
-        "No Edit menu item starting “\(prefix)”"
-      )
-      #expect(item.isEnabled, "“\(item.title ?? prefix)” is disabled")
-      #expect(item.perform(kAXPressAction) == .success, "Pressing “\(item.title ?? prefix)” failed")
     }
 
     /// [D-image-sources] Tab went into the source list and never came out:
