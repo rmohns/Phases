@@ -105,7 +105,11 @@ Written 2026-11-12 by Claude with the author.
     the offline fallback checks the pool one photo at a time (slow for
     thousands of photos).
   5. [x] (`c91d14c`) UI tests with the fake library, written by Sonnet,
-     compiled, **not run**. Still to do: TESTING.md "What they cover"; UI tests with
+     compiled. *Verified* 2026-11-12 (Claude, author's yes, build of
+     21:44:32 UTC): the fast suite passed 25 of 26; the miss was a test
+     helper Tabbing out of a grid it had already focused (fixed,
+     `9b0e40a`); the six Photos tests then passed 6 of 6 (70 s). Still
+     to do: TESTING.md "What they cover"; UI tests with
      the fake library (harness builds the folder); ask before running.
   6. [ ] Review (fresh eyes), then the author's Photos checks, then merge
      with the author's yes.
