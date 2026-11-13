@@ -101,6 +101,15 @@ when there's more than one choice.
     deleted, or its source removed): the next image is the first one
     that comes after where it sat in library order; if its source is
     gone, the first image in the selection.
+    - **Photos (draft 54):** a photo that's deselected but still in its
+      album carries on after where it sits in the album. A photo removed
+      from its album, or deleted, can't be placed, since Photos doesn't
+      say where it was: that album starts over from its first image in
+      the selection, and if the album is gone too, the selection carries
+      on from the first image of that source onward. *Why:* photo IDs
+      are random strings, so placing a missing photo by its name (as a
+      file is placed by its path) lands anywhere (Claude, reading the
+      code, 2026-11-13; approach approved by the author the same day).
   - **No remembered image** (a new or duplicated phase, a selection
     never shown, settings from draft 52 or earlier): the first image in
     the selection.

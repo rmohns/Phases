@@ -92,7 +92,27 @@ The pure logic that decides what the app does:
   sat in library order, a gone source starts at the first; never the
   image already showing unless it's the only one; consecutive images for
   several displays; a repair keeps the remembered image
-  `[D-in-order-remembers]`
+  `[D-in-order-remembers]`. From draft 54: a deselected image is placed
+  by the library's order; a photo removed from its album starts the
+  album over, or its source if the album is gone
+- `ImageSource` (draft 52): stored names (`<source>:<path>`, splitting at
+  the first colon, draft 44 names with no source part), source IDs,
+  locations under the home folder, saved sources and phases, and library
+  order: sources in their stored order, then each source's own
+  `[D-image-sources]` `[D-source-names]`. From draft 54, Photos names
+  (`<source>:<album>:<photo>`) and sources, photo entries with no file,
+  and a photo in two albums `[D-photos-names]` `[D-photos-sources]`
+- `FetchAhead` (draft 54): the lead before a scheduled change (2
+  minutes, or half a shorter rotation), never before now; and what a
+  display shows when its photo can't be had: In order, the next one on
+  hand, never what's showing unless it's all there is; Random, any on
+  hand, avoiding what's showing; nothing on hand keeps the wallpaper
+  `[D-photos-fetch-ahead]`
+- `PhotoCacheRules` (draft 54): which cached photos a cleanup deletes
+  (least recently shown first, only until under the limit, never a
+  protected file, and with an unreadable wallpaper store, nothing shown
+  in the last 30 days), and cache file names that change with a photo's
+  edit date `[D-photos-cache]` `[D-photos-version]`
 - `OutsideChangeRule`: which store changes count as a wallpaper picked
   outside Phases (System Settings picks and Aerials yes; Phases' own sets,
   "last used"-only writes, and an unreadable store no), and reading

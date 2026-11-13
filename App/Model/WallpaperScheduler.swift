@@ -753,7 +753,8 @@ final class WallpaperScheduler {
     switch phase.order {
     case .inOrder:
       return InOrderPicker.picks(
-        count: count, from: pool, remembered: remembered, sourceOrder: library.sources.map(\.id),
+        count: count, from: pool, remembered: remembered, library: library.names,
+        sourceOrder: library.sources.map(\.id), photoSources: Set(library.sources.filter(\.isPhotos).map(\.id)),
         showing: showing.first ?? [], mode: mode
       )
     case .random:
