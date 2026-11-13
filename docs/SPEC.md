@@ -479,7 +479,11 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
   - **A fetch still running at the change:** the change waits for it, up
     to 30 seconds. If it arrives, the change happens then, a little
     late. If not, the display is treated as below, and the download is
-    left to finish and kept in the cache for next time.
+    left to finish and kept in the cache for next time. A fetch with no
+    answer after 5 minutes is given up on, and the photo is fetched
+    afresh the next time it's needed, so a request Photos never answers
+    can't block that photo for good (draft 54, from the 2026-11-12
+    review; a request like that hasn't been seen).
   - **A photo that can't be fetched** (offline and only in iCloud,
     deleted, or not there in 30 seconds): that display gets another image from the same selection
     that's on hand (in the cache, or from a folder), chosen as Random or

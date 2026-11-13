@@ -507,9 +507,8 @@ final class WallpaperScheduler {
         continue
       }
       let pool = hasOwn ? imagePool(for: uuid, in: phase) : library.availableImages(phase.imageNames)
-      let onHand = Set(pool.filter { library.fileOnHand(for: $0) != nil })
       let replacement = FetchAhead.replacement(
-        for: name, in: pool, onHand: onHand, order: phase.order, showing: showing[uuid] ?? []
+        for: name, in: pool, isOnHand: { self.library.fileOnHand(for: $0) != nil }, order: phase.order, showing: showing[uuid] ?? []
       )
       shown[uuid] = replacement
       if !hasOwn { sharedReplacement[name] = replacement }

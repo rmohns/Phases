@@ -38,7 +38,7 @@ Written 2026-11-12 by Claude with the author.
     lone subfolder lost its heading. The draft 44 conversion it also
     flagged was dropped instead (author: no conversion needed).
 - [ ] Phase 1b: spec for merge #2 (Photos albums), approved. Written
-  as **draft 53** on branch `feature/33-photos-albums` (from `main` at
+  as **draft 53** (renumbered **54** on 2026-11-13, when In order's redesign took 53) on branch `feature/33-photos-albums` (from `main` at
   `a5d06e9`), 2026-11-12: SPEC.md "Photos albums" (`[D-photos-sources]`,
   `[D-photos-order]`, `[D-photos-names]`, `[D-photos-version]`,
   `[D-photos-fetch-ahead]`, `[D-photos-cache]`, `[D-photos-permission]`,
@@ -104,6 +104,14 @@ Written 2026-11-12 by Claude with the author.
     change on favorite or title edits, missing the cache (needs a probe);
     the offline fallback checks the pool one photo at a time (slow for
     thousands of photos).
+    - 2026-11-13, after the merge with `main`: fixed the stuck request
+      (given up after 5 minutes, then fetched afresh) and the slow
+      fallback (asks about photos only until it finds one on hand).
+      Still open, by choice: the record during the wait (a crash in
+      those 30 s only delays the photo to the next change; changing
+      the record touches every check) and `modificationDate` (worst
+      case a favorite or title edit downloads the photo once more;
+      needs a hands-on probe of the author's library).
   5. [x] (`c91d14c`) UI tests with the fake library, written by Sonnet,
      compiled. *Verified* 2026-11-12 (Claude, author's yes, build of
      21:44:32 UTC): the fast suite passed 25 of 26; the miss was a test

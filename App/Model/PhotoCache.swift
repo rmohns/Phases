@@ -11,7 +11,14 @@ final class PhotoCache {
   let folder: URL
   private var index = Index()
   /// Fetches in progress, by photo ID, shared by everyone waiting on one.
-  private var inFlight: [String: Task<URL?, Never>] = [:]
+  private var inFlight: [String: InFlight] = [:]
+
+  private struct InFlight {
+    var task: Task<URL?, Never>
+    var started: Date
+    /// Tells this fetch from a later one for the same photo.
+    var token: UUID
+  }
 
   private struct Index: Codable {
     struct Record: Codable {
@@ -50,22 +57,27 @@ final class PhotoCache {
 
   /// The photo's file: from the cache, or fetched from Photos. One fetch per
   /// photo at a time; a caller that stops waiting leaves it to finish, and
-  /// the file is kept [D-photos-fetch-ahead].
+  /// the file is kept [D-photos-fetch-ahead]. A fetch that hasn't answered
+  /// in `FetchAhead.giveUpAfter` is given up on and asked again, so a
+  /// PhotoKit request that never calls back can't block the photo for good.
   func fetch(_ photoID: String, from provider: PhotosProvider) -> Task<URL?, Never> {
     if let info = provider.photoInfo(photoID), let url = file(for: photoID, info: info) {
       return Task { url }
     }
-    if let task = inFlight[photoID] { return task }
+    if let fetch = inFlight[photoID], Date().timeIntervalSince(fetch.started) < FetchAhead.giveUpAfter {
+      return fetch.task
+    }
     let folder = folder
+    let token = UUID()
     let task = Task { @MainActor [weak self] () -> URL? in
       let url = await provider.writePhoto(photoID, into: folder)
       if let self {
-        self.inFlight[photoID] = nil
+        if self.inFlight[photoID]?.token == token { self.inFlight[photoID] = nil }
         if let url { self.record(url, photoID: photoID) }
       }
       return url
     }
-    inFlight[photoID] = task
+    inFlight[photoID] = InFlight(task: task, started: Date(), token: token)
     return task
   }
 

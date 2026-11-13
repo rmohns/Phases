@@ -87,3 +87,18 @@ struct FetchAheadTests {
     }
   }
 }
+
+/// The fallback asks about photos only until it has its answer: each ask
+/// is a PhotoKit lookup, and an album can hold thousands
+/// `[D-photos-fetch-ahead]`.
+struct FetchAheadLazyTests {
+  @Test func inOrderStopsAtTheFirstOnHandImage() {
+    let pool = (0..<5000).map { "P\($0)" }
+    var asked = 0
+    let next = FetchAhead.replacement(
+      for: "P10", in: pool, isOnHand: { asked += 1; return $0 == "P12" }, order: .inOrder, showing: []
+    )
+    #expect(next == "P12")
+    #expect(asked == 2)
+  }
+}
