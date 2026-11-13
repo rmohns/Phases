@@ -112,7 +112,31 @@ Written 2026-11-12 by Claude with the author.
      to do: TESTING.md "What they cover"; UI tests with
      the fake library (harness builds the folder); ask before running.
   6. [ ] Review (fresh eyes), then the author's Photos checks, then merge
-     with the author's yes.
+     with the author's yes. Photos checks so far (2026-11-12): 1
+     permission passes (a grant reached Phases only after a relaunch,
+     `[L-photos-grant-needs-relaunch]`); 2 adding passes; 3 In order
+     follows the album's order; 4 on time ahead, about 1 s late on
+     Change Now; 5 offline falls back but kept landing on the same photo
+     (`[L-photos-offline-check]`). 6–9 still to do.
+
+**Before merge #2** (author, 2026-11-12), in this order:
+
+1. **Restore drafts 45–50.** Bitrig's restore (`713ca49`, 2026-11-09)
+   undid them by accident (author: "confused by Bitrig's UI"). They're
+   commits `08eaa77`..`4b61ea5` (draft 45 Active badge #22, 46 brand
+   egg #23, 47 version 0.1, 48 new Spaces aren't picks #29, 49–50 pause
+   banner and notification opens the window, plus CLAUDE.md and doc
+   changes). Own branch from `main`, one draft per commit, tests, the
+   author's yes to merge. Found when the author saw the Active badge
+   missing on the selected row.
+2. **In order remembers its place.** The author expected In order to
+   remember the last image and advance from it, not to work out the
+   image from time since the phase began, which reset the position on
+   every selection edit. Its own spec draft and branch from `main`. It
+   also settles the offline fallback rule (`[L-photos-offline-check]`:
+   skip what's showing), which waits for it.
+3. Then bring `feature/33-photos-albums` up to date with `main`, finish
+   Photos checks, and merge #2.
 
 ## Picking this up in a new conversation
 
