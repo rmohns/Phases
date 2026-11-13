@@ -447,7 +447,7 @@ final class WallpaperScheduler {
     // here), and wait up to 30 s before showing what there is.
     let missing = Set(picks.values).filter { library.isPhoto($0) && library.cachedFile(for: $0) == nil }
     guard !missing.isEmpty else {
-      show(picks)
+      showFallingBack(picks, phase: phase)
       return
     }
     let fetches = missing.compactMap { library.fetchPhoto($0) }
@@ -477,6 +477,10 @@ final class WallpaperScheduler {
   /// couldn't be had another image from its selection that's on hand, or
   /// leaving it as it is.
   private func showFallingBack(_ picks: [String: String], phase: Phase) {
+    // A photo removed from its album just before the change (Photos
+    // reports it a moment later, or the pick was made ahead) is missing,
+    // not shown: read the Photos sources again first.
+    if picks.values.contains(where: library.isPhoto) { library.reload() }
     let showing = imagesShowing()
     var shown: [String: String?] = picks
     // Displays sharing All Displays in Same on All get one replacement.

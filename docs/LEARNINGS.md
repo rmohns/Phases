@@ -1215,6 +1215,19 @@ sandboxed, the author's real settings and library.
   converted it); the log can't tell which. Fetches took 0.52–1.91 s.
   The edited photo's file carries a modification time minutes old,
   consistent with an edit giving a new cache file `[D-photos-version]`.
+- `[L-photos-deleted-album-race]` **A photo from an album the author was
+  deleting was set as the wallpaper at 22:18:02,** the change after
+  Photos reported a library change (22:17:41, which made Phases pick
+  again). The phase's selection was only that album, so afterward every
+  pick found nothing and Change Now did nothing, as the spec says for a
+  phase with no available images. *Verified* (diagnostics log), the set
+  *observed* by the author. When the album was deleted isn't known
+  (author), so whether this was a race (PhotoKit still listing the album
+  for a moment after the delete) or a set just before the delete is a
+  *hypothesis*. Treated as a race, the author's call: since the same day
+  Phases rereads its Photos sources just before showing, and a photo no
+  longer in the library counts as missing even if it's cached. If
+  PhotoKit itself lags, that reread can't help.
 
 ## Image sources (issue #33, merge 1)
 

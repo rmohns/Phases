@@ -132,7 +132,10 @@ final class ImageLibrary {
   /// A file for each image that's on hand now: a folder's file, or a
   /// photo already in the cache [D-photos-fetch-ahead].
   func fileOnHand(for name: String) -> URL? {
-    url(for: name) ?? cachedFile(for: name)
+    // A photo gone from its album is missing, even with a cached copy
+    // [D-photos-fetch-ahead].
+    guard contains(name) else { return nil }
+    return url(for: name) ?? cachedFile(for: name)
   }
 
   /// The selected images that still exist, in library order.
