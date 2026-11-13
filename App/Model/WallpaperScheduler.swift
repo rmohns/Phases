@@ -90,6 +90,8 @@ final class WallpaperScheduler {
   private(set) var connectedDisplayUUIDs: Set<String> = []
 
   private(set) var activePhase: Phase?
+  /// What was showing when a change began waiting on photos; nil otherwise.
+  private var imagesBeforeWait: [String: String]?
   private(set) var nextChange: NextChange?
   /// When the next phase starts, ending the active one (nil if none is scheduled).
   private(set) var activePhaseEnds: Date?
@@ -181,7 +183,9 @@ final class WallpaperScheduler {
 
   /// The image on the main display, or any display if that's unknown.
   var currentImageName: String? {
-    guard let images = appliedState?.imagesByDisplay else { return nil }
+    // [D-photos-fetch-ahead] While a change waits on a photo, the record
+    // already names the planned picks; show what's on screen until it lands.
+    guard let images = imagesBeforeWait ?? appliedState?.imagesByDisplay else { return nil }
     return NSScreen.main?.displayUUID.flatMap { images[$0] } ?? images.values.first
   }
 
@@ -431,6 +435,8 @@ final class WallpaperScheduler {
       // shows, so fetch for it again.
       forgetFetchedAhead()
     }
+    let showingBefore = imagesBeforeWait ?? appliedState?.imagesByDisplay ?? [:]
+    imagesBeforeWait = nil
     appliedState = AppliedState(
       phaseID: phase.id, phaseStart: start, rotationSlot: slot, manualSteps: manualSteps, imagesByDisplay: picks
     )
@@ -445,13 +451,15 @@ final class WallpaperScheduler {
       return
     }
     let fetches = missing.compactMap { library.fetchPhoto($0) }
+    imagesBeforeWait = showingBefore
     Task { @MainActor [weak self] in
       await Self.wait(for: fetches, atMost: FetchAhead.waitLimit)
-      // Stand down if a newer change started, or if Phases paused (Pause,
-      // or a wallpaper picked outside Phases [D-outside-change-pauses]) or
-      // the phase stopped running while it waited.
-      guard let self, generation == self.changeGeneration, !self.isPaused,
-        self.appliedState?.phaseID == phase.id,
+      guard let self, generation == self.changeGeneration else { return }
+      self.imagesBeforeWait = nil
+      // Stand down if Phases paused (Pause, or a wallpaper picked outside
+      // Phases [D-outside-change-pauses]) or the phase stopped running
+      // while it waited.
+      guard !self.isPaused, self.appliedState?.phaseID == phase.id,
         self.engine.activePhase(at: Date())?.phase.id == phase.id
       else { return }
       self.showFallingBack(picks, phase: phase)

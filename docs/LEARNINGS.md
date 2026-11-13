@@ -1191,6 +1191,22 @@ sandboxed, the author's real settings and library.
   entry was wrong. Why (*hypothesis*): PhotoKit keeps a process's
   authorization once it has been decided, so only a relaunch rereads it.
   Not checked: whether a running Phases picks it up after a longer wait.
+- `[L-photos-offline-check]` **Offline, the fallback worked, but kept
+  landing on the same photo.** Phase: Gift Ideas (4, cached) then 3
+  Buddhism photos (not cached), In order, 1 minute. Wi-Fi off about
+  21:55–22:02. Each Buddhism photo failed ahead in under 0.1 s ("The
+  Internet connection appears to be offline"), failed again at its
+  change, and fell back. All three fell back to IMG_6045, the first
+  Gift Ideas photo: In order's "next on hand after the missing one"
+  wraps to the start for every photo at the end of the list. Only the
+  first fallback logged a set; the next two were the image already
+  showing, so nothing changed on screen. Back online, each Buddhism
+  photo was fetched 30 s ahead in 0.62–0.93 s and set on time.
+  *Verified* (diagnostics log), and *observed* by the author on screen.
+  - The brand panel briefly showed the missing photo's thumbnail at each
+    failed change, because the applied record names the planned pick
+    before the fetch settles (author's screen recording). Fixed the same
+    day: the panel keeps what's showing while a change waits.
 
 ## Image sources (issue #33, merge 1)
 
