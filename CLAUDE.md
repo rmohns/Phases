@@ -84,16 +84,19 @@
   each finding gets its LEARNINGS.md digest entry as soon as it settles.
   A fix headed for `main` gets the usual go-ahead (and spec first, if
   it's design) on its own branch.
-- **Cleaning up branches.** After a squash merge, delete the merged
-  branch (`fix/…`, `feature/…`, `doc/…`) locally and on every remote,
-  once its files match what landed on `main`. `tools/…` branches stay;
-  they hold tools we come back to. A finished experiment (`experiment/…`,
-  `spike/…`, `investigate/…`) is archived first, then deleted: an
-  annotated tag `archive/<branch name>` with the message "Archive of
-  branch <branch name> (deleted <date>; cited in docs)", pushed to
-  `origin` and `github`. Docs cite the tag, not the branch: the
-  experiment's `[X-…]` header names the tag and gets its outcome filled
-  in.
+- **Cleaning up branches.** Every finished branch is archived first,
+  then deleted locally and on every remote: an annotated tag
+  `archive/<branch name>` with the message "Archive of branch <branch
+  name> (deleted <date>; cited in docs)", pushed to `origin` and
+  `github`. That covers merged branches (`fix/…`, `feature/…`, `doc/…`,
+  after the squash merge, once their files match what landed on `main`)
+  and finished experiments (`experiment/…`, `spike/…`,
+  `investigate/…`). *Why:* the tag list is where the author looks for
+  old work, rather than digging through git history (author,
+  2026-11-13; until then merged branches were deleted without a tag).
+  `tools/…` branches stay; they hold tools we come back to. Docs cite
+  the tag, not the branch: an experiment's `[X-…]` header names the tag
+  and gets its outcome filled in.
 - **Testing.** Unit tests need no permission. Prefer pulling decision
   logic into pure files the unit tests can reach, as `WallpaperCheck`
   was; unit tests never launch Phases or exercise the UI
