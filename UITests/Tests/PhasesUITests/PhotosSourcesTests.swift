@@ -220,6 +220,9 @@ extension PhasesUITests {
 
     private static func focusGrid(_ app: PhasesApp) async throws {
       let grid = try app.element("imageGrid")
+      // Already there from an earlier scroll: one more Tab would leave it,
+      // since the grid is one Tab stop [D-grid-one-tab-stop].
+      if app.focusedElement()?.isInside(grid) == true { return }
       for _ in 0..<25 {
         try await app.press(.tab)
         if app.focusedElement()?.isInside(grid) == true { return }
