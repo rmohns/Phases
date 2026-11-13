@@ -1174,6 +1174,24 @@ cdhash `586935f0`). Run by Claude with the author's yes.
   The store couldn't be read
   afterward, as in `[L-sandbox-x0-paths]`.
 
+### Merge #2 Photos checks (2026-11-12, macOS 27.2)
+
+Draft 53 build of 16:44 local (`feature/33-photos-albums`), not
+sandboxed, the author's real settings and library.
+
+- `[L-photos-grant-needs-relaunch]` **Turning Phases on under Privacy &
+  Security › Photos didn't reach a running Phases.** After the author
+  refused the prompt, then allowed Phases in System Settings, Add Photos
+  Album… still showed "no access". A Phases launched at 21:38 logged
+  "access asked: 2" (denied); whether that was before or after the
+  change in System Settings isn't known. After Claude quit and relaunched
+  Phases (21:4x), the albums showed. *Observed* by the author, once;
+  diagnostics log for the status. System Settings listed one Phases
+  entry (author), so Claude's guess of a grant going to another build's
+  entry was wrong. Why (*hypothesis*): PhotoKit keeps a process's
+  authorization once it has been decided, so only a relaunch rereads it.
+  Not checked: whether a running Phases picks it up after a longer wait.
+
 ## Image sources (issue #33, merge 1)
 
 - `[L-nas-bookmark-rename]` **A security-scoped bookmark to a folder on
