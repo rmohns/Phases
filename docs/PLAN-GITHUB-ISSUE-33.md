@@ -120,8 +120,10 @@ Written 2026-11-12 by Claude with the author.
      (`[L-photos-offline-check]`); 6 edited, Live, ProRAW, DSLR RAW pass
      (`[L-photos-formats-check]`); 7 album changes pass, plus a fix for a
      photo from a just-deleted album being shown
-     (`[L-photos-deleted-album-race]`). **8 (cache: Spaces, relaunch,
-     restore on quit) and 9 (outside change) still to do.**
+     (`[L-photos-deleted-album-race]`); 8 cache across Spaces, a
+     relaunch, and restore on quit passes (author, 22:26 build; each new
+     build first needed the Photos grant again,
+     `[L-photos-grant-per-build]`). **9 (outside change) still to do.**
      - Resuming the checks: diagnostics are on in
        `~/Library/Preferences/<bundle ID>.plist` (written by path,
        because the sandbox container still redirects `defaults` by
@@ -129,7 +131,8 @@ Written 2026-11-12 by Claude with the author.
        id "<bundle ID>" to quit'`) and `open -n` the newest build, picked
        by its executable's modification time (`ls -t` on the build
        folders picks the wrong one). A new build may ask for Photos
-       again, and a grant only reaches Phases after a relaunch.
+       again (`[L-photos-grant-per-build]`); allow it at Add Photos
+       Album….
      - The author's test phase: "New Phase", In order, 1 minute; its
        selection is now only photos from a deleted album, so pick new
        ones before check 8.
