@@ -1207,6 +1207,14 @@ sandboxed, the author's real settings and library.
     failed change, because the applied record names the planned pick
     before the fetch settles (author's screen recording). Fixed the same
     day: the panel keeps what's showing while a change waits.
+- `[L-photos-formats-check]` **An edited (cropped) photo, a Live Photo,
+  an iPhone ProRAW+HEIC, and a Canon DSLR RAW all showed the way Photos
+  shows them.** *Observed* by the author, 22:13–22:15, build of 22:05.
+  Every cache file was a HEIC or JPEG of 0.3–3.6 MB, none a RAW, so
+  Photos handed over a rendered version for `.current` (or Phases
+  converted it); the log can't tell which. Fetches took 0.52–1.91 s.
+  The edited photo's file carries a modification time minutes old,
+  consistent with an edit giving a new cache file `[D-photos-version]`.
 
 ## Image sources (issue #33, merge 1)
 
