@@ -30,16 +30,13 @@ struct PhaseAvailabilityTests {
     #expect(PhaseAvailability.runnablePhases([clock, off], savedLocation: nil, isLocationDenied: false) == [clock])
   }
 
-  /// [D-row-status-not-cause] [D-phase-turn-off] "Off" with no warning for a
-  /// turned-off phase; "Phase disabled" with one for anything else.
+  /// [D-row-status-not-cause] [D-phase-turn-off] "Off" for a turned-off
+  /// phase; "Phase disabled" for anything else.
   @Test func rowStatusSetsTurnedOffApart() {
     #expect(PhaseAvailability.runs.rowStatus == nil)
-    #expect(!PhaseAvailability.runs.rowShowsWarning)
     #expect(PhaseAvailability.disabled(.turnedOff).rowStatus == "Off")
-    #expect(!PhaseAvailability.disabled(.turnedOff).rowShowsWarning)
     #expect(PhaseAvailability.disabled(.locationOff).rowStatus == "Phase disabled")
-    #expect(PhaseAvailability.disabled(.locationOff).rowShowsWarning)
-    #expect(PhaseAvailability.disabled(.noLocationYet).rowShowsWarning)
+    #expect(PhaseAvailability.disabled(.noLocationYet).rowStatus == "Phase disabled")
   }
 
   /// [D-phase-turn-off] Phases saved before the switch existed load as on.

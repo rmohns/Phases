@@ -91,8 +91,37 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
       keyObserver = NotificationCenter.default.addObserver(
         forName: NSWindow.didBecomeKeyNotification, object: window, queue: .main
       ) { [weak self] _ in
-        MainActor.assumeIsolated { self?.onOpen() }
+        MainActor.assumeIsolated {
+          self?.onOpen()
+          self?.logScrollViews(when: "became key")
+        }
       }
+    }
+
+    /// Diagnostics: last logged scroll state, to log only changes.
+    private var diagLastScroll = ""
+
+    /// [D-window-pause-banner] Diagnostics only: each scroll view's top
+    /// inset and scroll position, for telling a shifted layout from a
+    /// scroll position that's off (EXPERIMENTS.md
+    /// `[L-pause-banner-stack-still-shifts]`). Logged on events this view
+    /// already gets, and only when the state changed.
+    private func logScrollViews(when event: String) {
+      guard Diagnostics.isEnabled, let window, let content = window.contentView else { return }
+      var scrollViews: [NSScrollView] = []
+      func collect(_ view: NSView) {
+        if let scroll = view as? NSScrollView { scrollViews.append(scroll) }
+        view.subviews.forEach(collect)
+      }
+      collect(content)
+      let state = scrollViews.map { scroll -> String in
+        let frame = scroll.convert(scroll.bounds, to: nil)
+        return "x=\(Int(frame.minX)) w=\(Int(frame.width)) inset=\(scroll.contentInsets.top) auto=\(scroll.automaticallyAdjustsContentInsets) y=\(scroll.contentView.bounds.origin.y)"
+      }.joined(separator: " | ")
+      let full = "title area \(window.frame.height - window.contentLayoutRect.height) pt; scroll views: \(state)"
+      guard full != diagLastScroll else { return }
+      diagLastScroll = full
+      diagLog.log("scroll (\(event, privacy: .public)): \(full, privacy: .public)")
     }
 
     /// [D-window-helper-order] Toolbar first; sidebar limits one run-loop
@@ -103,8 +132,10 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
         return
       }
       installToolbar(in: window)
+      logScrollViews(when: "apply")
       DispatchQueue.main.async { [weak self] in
         self?.applySidebarLimits()
+        self?.logScrollViews(when: "after limits")
       }
     }
 
@@ -118,6 +149,9 @@ struct WindowLayoutConfigurator: NSViewRepresentable {
       // bar 66 pt, not 52 (fix verified, cause unproven).
       window.toolbar?.displayMode = .iconOnly
       window.toolbarStyle = .unified
+      // [D-window-pause-banner] For telling a lost toolbar from a lost
+      // safe area when content draws under the title bar.
+      diagLog.log("toolbar installed: title area \(window.frame.height - window.contentLayoutRect.height, privacy: .public) pt")
     }
 
     private func applySidebarLimits() {

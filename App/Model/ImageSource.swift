@@ -79,7 +79,7 @@ struct ImageSource: Codable, Equatable, Identifiable {
 
 extension ImageSource {
   /// Lenient, like `Phase`, so a list saved before a field was added (the
-  /// source kind, from draft 53) still loads, as folders.
+  /// source kind, from draft 54) still loads, as folders.
   init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     id = try container.decode(String.self, forKey: .id)

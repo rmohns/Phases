@@ -1,0 +1,1829 @@
+# Phases — Experiments
+
+The full record of every experiment, investigation, and retired design:
+what we asked, how we set it up, each run, the numbers, the wrong
+guesses and their corrections. LEARNINGS.md is the short digest of what
+these found; this file is the evidence behind it. Nothing here is
+trimmed or rewritten once written; corrections are added, not
+substituted.
+
+- **Not read by default.** Open a section when a LEARNINGS.md entry
+  points to it, or when picking an experiment back up.
+- Each experiment has an `[X-…]` tag, named after its branch where it had
+  one, and a header: the question, when and on what, the branch and its
+  `archive/…` tag, the outcome, and the `[L-…]` findings it produced.
+- Entries keep their original `[L-…]` tags, so a search for a tag finds
+  both the digest line in LEARNINGS.md and the full entry here.
+- Before 2026-11-09 this file was LEARNINGS.md; its old layout is tag
+  `archive/docs-before-refactor`.
+- The rules for all of this (evidence labels, promotion and demotion,
+  references by tag `[D-refs-by-id]`) are in CLAUDE.md.
+
+## Wallpaper, covers, and the menu bar
+
+Source for this section unless noted: the persistent-cover experiment,
+2026-10-30, macOS 27.2, one built-in display (3024 × 1964); branch
+`spike/persistent-cover` (tag `archive/spike/persistent-cover`),
+`docs/X-PERSISTENT-COVER.md`. A "cover" is a
+borderless, click-through window just above the desktop picture
+`[D-cover-level]`.
+
+### `[X-persistent-cover]` Keeping a cover up between changes
+
+- **Question:** can a cover stay over the desktop all the time, so
+  macOS's wallpaper-change motion never shows, and what does that break?
+- **When, on what:** 2026-10-30 to 2026-10-31, macOS 27.2; one built-in
+  display, then three displays.
+- **Branch:** `spike/persistent-cover`, tag
+  `archive/spike/persistent-cover`. Its own write-up,
+  `docs/X-PERSISTENT-COVER.md`, is in that tag only.
+- **Outcome:** became draft 33's persistent cover `[D-persistent-cover]`
+  (tag `archive/feature/persistent-cover-transitions`). Promoted:
+  `[Q-opaque-cover-freezes-menubar]`, `[Q-space-notify-after-swipe]`.
+- **Findings:** `[L-motion-waits-for-reveal]`, `[L-cover-all-spaces]`,
+  `[L-lockscreen-uses-real-wallpaper]`, `[L-login-dims-wallpaper]`,
+  `[L-desktop-through-cover]`, `[L-outside-change-hidden]`,
+  `[L-cover-memory]`, `[L-menubar-lazy-restyle]`,
+  `[L-cover-three-displays]`, `[L-cover-own-space]`,
+  `[L-space-leave-mid-fade]`; still open: `[L-cover-alpha-later]` (under
+  "Open questions" below).
+
+- `[L-motion-waits-for-reveal]` **macOS seems to hold its wallpaper-change
+  motion until the new wallpaper is first visible, not play it on a
+  timer.** With a fully opaque cover held over a newly set wallpaper,
+  then removed for 100 ms, the shift (`[Q-wallpaper-motion-delay]`)
+  played at the moment of reveal, whether the cover came off 1.5 s or 4 s
+  after the set. *Measured* from 60 fps recordings (building and crane
+  visibly offset in the reveal frame). The "holds until visible" reading
+  is a *hypothesis*. Bears on `[D-cover-settle]`: a longer settle delay
+  alone may not be what fixes the twitch; partial visibility during the
+  delay might be. Unproven.
+- `[L-opaque-cover-freezes-menubar]` Promoted to `[Q-opaque-cover-freezes-menubar]` (2026-10-31).
+- `[L-cover-all-spaces]` **A cover with `.canJoinAllSpaces` and
+  `.stationary` shows on every Space and in Mission Control, and slides
+  with each Space during a swipe like a real wallpaper.** *Observed.*
+  Setting the real wallpaper on arrival (`NSWorkspace
+  .activeSpaceDidChangeNotification`, then `setDesktopImageURL`) worked on
+  every arrival (*verified* in the diagnostic log). On arrival the menu
+  bar kept the previous image's style for about 0.5 s, blinked, then
+  restyled (*observed* once, 99% cover). Bears on "Different wallpaper per
+  Space" in SPEC.md "Out of scope".
+- `[L-lockscreen-uses-real-wallpaper]` **The lock screen and the login
+  window show the real wallpaper of the Space you were on, not anything
+  drawn by an app.** With a cover up and the real wallpaper kept in sync
+  underneath, the lock screen was correct from two Spaces and the login
+  window from one. *Verified* by the author, 2026-10-30. So the lock
+  screen can follow Phases through the public API alone.
+- `[L-login-dims-wallpaper]` **At logout, macOS redraws the wallpaper for
+  the login window, slightly darkened, with a visible twitch.** The
+  twitch appeared just as the login window did. *Observed* by the author
+  2026-10-30 with the experiment build; the redraw explanation is
+  *recalled*, not tested. Not checked on `main`.
+- `[L-desktop-through-cover]` **Desktop features work through a
+  cover.** *Observed.*
+  - Icons and widgets draw above it.
+  - Right-click on the desktop opens Finder's desktop menu.
+  - "Click wallpaper to show desktop" works.
+  - Widgets turn translucent over it when an app is in front.
+  - Calendar in full screen and Stage Manager (turned on for the test)
+    behaved normally.
+  - Quitting Phases removes a cover in a hard cut; a Force Quit shows
+    nothing if the real wallpaper underneath matches.
+- `[L-outside-change-hidden]` **A wallpaper set by anything else while a
+  cover is up is hidden by the cover.** *Observed* (set through System
+  Events). A user changing wallpaper in System Settings would see nothing
+  happen.
+- `[L-cover-memory]` **One full-screen cover image costs about 23 MB at
+  3024 × 1964, and the experiment held it about three times.**
+  - **The three copies:** Core Animation, a large malloc buffer, and CG
+    raster data, about 23 MB each.
+  - **One display** (Debug build, `footprint`), *measured*:
+    - 23 MB with no cover.
+    - 86–93 MB with a cover at launch.
+    - 102 MB after three changes (window-per-change version); the growth
+      is unexplained.
+  - **Idea:** releasing Phases' own copies once the layer has the image
+    might bring it to about one copy (*hypothesis*).
+  - **Update, three displays (2026-10-30, 99% cover B): it's a leak.**
+    *Measured:*
+    - 77 MB with no cover.
+    - 140–187 MB with the cover at launch.
+    - Then about 25–30 MB more with every change, reaching 373 MB after
+      about nine changes. Old cover windows or their images aren't
+      released.
+    - Must be fixed before any persistent cover ships (author,
+      2026-10-30).
+  - **Loose ends, to pin down when fixing it:**
+    - The 77 MB no-cover figure, against 23 MB on one display, isn't
+      explained.
+    - Later in the same run, Activity Monitor showed 242 MB with no
+      further changes (*observed* by the author). So memory may be
+      released slowly rather than leaked, or Activity Monitor and
+      `footprint` measure differently.
+- `[L-menubar-lazy-restyle]` **macOS sometimes leaves menu bar text
+  the wrong color for the wallpaper, with no cover involved, in either
+  direction.** Rule this out before blaming Phases for wrong menu bar
+  text.
+  - **Seen with no cover:** on the ultrawide, the white Ergo Proxy image
+    got white text on a light grey bar, with or without the cover. In
+    the control, the wallpaper was set directly with nothing from Phases
+    running, and the text was still white 8 s later. *Observed*
+    2026-10-30, three displays.
+  - **Other direction:** the author has also seen dark text on a very
+    dark wallpaper (*observed*, several times before 2026-10-30).
+  - **Why we call it lazy:** the text corrects itself the moment any
+    part of the menu bar is clicked (*observed* by the author). That
+    fits `[Q-menubar-restyle-on-app-switch]` (FB25326597): macOS doesn't
+    always restyle until something else happens, such as an app switch
+    or a click in the menu bar.
+- `[L-cover-three-displays]` **The 99% cover held up on three
+  displays.** *Measured/observed* 2026-10-30.
+  - **Setup:** ultrawide main with three Spaces, built-in, and portrait
+    Cinema HD, each with its own image.
+  - **Results:**
+    - No twitch on any display (44–50 dB before and after each fade).
+    - Menu bar text and background tracked each display's image.
+    - Every ultrawide Space synced on arrival without touching the
+      other displays.
+    - Mission Control showed the covers on all three.
+  - **Not tested:** more than one Space on the built-in or portrait
+    display.
+  - **Method note:** recording all three displays at once starves
+    `screencapture` (two dropped to a few frames per second). Record one
+    display at a time for twitch checks `[L-twitch-measurement]`.
+- `[L-cover-own-space]` **A cover without `.canJoinAllSpaces` stays on
+  its own Space, and can be removed when you leave it with nothing
+  visible.** On `activeSpaceDidChangeNotification` the departed Space's
+  cover reported `isOnActiveSpace` false every time (three of three), and
+  removing it then changed no frame. Each Space kept its own real
+  wallpaper through changes on the others. *Verified* 2026-10-31, macOS
+  27.2, one display, three Spaces, 99% cover, branch
+  `spike/persistent-cover` (tag `archive/spike/persistent-cover`;
+  "Covers on their own Space" in `docs/X-PERSISTENT-COVER.md`). Supports
+  `[D-cover-per-space]` on `feature/persistent-cover-transitions` (tag
+  `archive/feature/persistent-cover-transitions`). Not seen at first: the cover
+  sliding with its Space (an app window hid it). **Update, run 2 the same
+  day:** the cover slid away with its Space during the swipe; Space 2
+  came in showing its own image (*observed*). But see
+  `[L-space-leave-mid-fade]`.
+- `[L-space-notify-after-swipe]` Promoted to `[Q-space-notify-after-swipe]` (2026-10-31).
+- `[L-space-leave-mid-fade]` **Leaving a Space mid-fade sends the
+  change to the wrong Space.** With a 3 s fade and ⌃→ at 0.3 s or 1.5 s
+  in, the notification arrived about 0.9 s after the key press, mid-fade;
+  the own-Space cover was removed, and the end-of-fade
+  `setDesktopImageURL` landed on the Space just arrived on. The Space left
+  behind kept its old image. When the images differed, the arrival Space
+  hard-cut to the new image about 0.9 s after the swipe ended, with no
+  fade. *Verified* 2026-10-31, macOS 27.2 (log, each Space's wallpaper
+  read back, recordings; two runs). Breaks `[D-cover-per-space]` as
+  drafted: the public API sets the wallpaper only on the active Space
+  (*recalled*), so a change can't be finished on a Space after leaving it.
+  Untested ideas: set the real wallpaper at the start of the fade, under
+  a cover still showing the old image; or, on leaving mid-fade, skip the
+  set and leave that Space unchanged until its next change. **Update,
+  same day:** draft 33 takes neither; it holds the cover and sets the
+  wallpaper on return `[D-change-stays-on-its-space]` (untested).
+
+### `[X-set-target-read]` Which Space a set reaches during a swipe
+
+- **Question:** when the user swipes to another Space mid-change, can
+  Phases tell which Space its wallpaper set will land on?
+- **When, on what:** 2026-11-03, macOS 27.2, Release builds, one display
+  with two Spaces; trials with a 1 s fade and ⌃→ 0.3–0.5 s after the
+  cover appeared.
+- **Branch:** `spike/set-target-read` (`f05ebef`), tag
+  `archive/spike/set-target-read`; later trials on draft 33's build
+  `3c891b6`.
+- **Outcome:** no check at the moment of the set can be trusted; the race
+  is `[Q-set-target-decided-late]`, handled by `[D-reset-on-quick-return]`.
+- **Findings:** `[L-swipe-set-read]`, `[L-misfire-not-seen]`,
+  `[L-swipe-before-cover]`; promoted: `[L-swipe-set-race]`.
+
+- `[L-swipe-set-race]` Promoted to `[Q-set-target-decided-late]` (2026-11-03).
+- `[L-swipe-set-read]` **Reading the wallpaper just before a set doesn't
+  predict which Space the set reaches.** Hypothesis: if
+  `desktopImageURL(for:)` still returns the departing Space's image, the
+  set goes there too, so a mismatch could hold the change as pending.
+  *Falsified* 2026-11-03: branch `spike/set-target-read` (`f05ebef`; tag
+  `archive/spike/set-target-read`) logged
+  the read just before each set; 16 trials as in `[Q-set-target-decided-late]`
+  (1 s fade, ⌃→ 0.3–0.45 s after the cover appeared), Release build,
+  macOS 27.2.
+  - **Trial h10, decisive:** Space 1 had Angelie, Space 2 Tokyo. The read
+    returned Angelie (Space 1's) with `isOnActiveSpace` true, the set
+    went out 0.48 s after the key press, and the new image (Misty Rocks)
+    landed on Space 2; Space 1 kept Angelie.
+  - **Trial h2:** a second misfire, uninformative for the read (both
+    Spaces had Angelie).
+  - **The other 11 informative trials** landed on Space 1, with sets
+    from 0.1 s before to 0.4 s after the key press.
+  - **Likely reason** (*inference*): the set call returns at once and
+    macOS's wallpaper agent picks the target Space when it handles it,
+    later. So no check made at the moment of the set can be trusted.
+  - Misfire rate across both sittings: 3 in 19 informative trials.
+- `[L-misfire-not-seen]` **With `[D-reset-on-quick-return]` in, the
+  misfire didn't happen in 24 informative trials** (build `3c891b6`,
+  same setup and timings as `[L-swipe-set-read]`, swipe 0.3–0.5 s after
+  the cover appeared). Before, it hit 3 of 19. By chance alone, 0 in 24
+  at that rate is about 2% (*calculation*). The change shouldn't affect
+  where a set lands: Space 2 is read 6 s after the swipe, before the
+  return. Unexplained; what differs between sittings isn't known.
+  *Measured* 2026-11-03.
+- `[L-swipe-before-cover]` **A swipe that starts before the cover appears
+  takes the change with it.** Change Now's cover appeared 0.6–1.15 s
+  after the menu click (the image decode). Twice, ⌃→ sent 0.3–0.4 s after
+  the click put the new cover on Space 2: it was later removed on leaving
+  Space 2, and the wallpaper set landed there, while Space 1 kept its
+  image. *Observed* 2026-11-03, two runs, both with Space 2's own image
+  picked, so nothing visible changed. With different images, Space 2
+  would fade to the change made on Space 1. Bears on the spec's "a
+  change only starts on the Space showing".
+
+### Notes outside any experiment
+
+- `[L-backdrop-private-store]` **Backdrop (Cindori) puts video on the
+  lock screen by registering entries in macOS's private wallpaper store,**
+  `~/Library/Application Support/com.apple.wallpaper/Store/aerials/manifest/entries.json`,
+  so macOS plays them like Aerials. Cleanup after uninstalling means
+  deleting that file and restarting. From Cindori's own support pages,
+  2026-10-29; not inspected. **Rejected for Phases** (author, 2026-10-29):
+  no private macOS operations, consistent with `[D-aerials-untouched]`.
+
+## Memory
+
+Source for this section: branch `investigate/memory` (tag
+`archive/investigate/memory`), 2026-10-30,
+macOS 27.2, three displays (built-in, LG Ultrawide, Cinema HD). Measured
+on the installed Release build of `main` (built 2026-10-29; no `App/`
+changes on `main` since), the window closed unless noted. Two runs: one
+with `MallocStackLogging=1` so `malloc_history` could name allocators (it
+adds 16–64 MB of "Performance Tool Data", subtracted below), and a
+control run without it. Tools: `footprint`, `vmmap`, `heap`,
+`malloc_history`, `leaks`. Changes made with Change Now from the menu.
+Why we looked: Phases runs all day in the background, so it has to stay
+lean; see the *Why* under `[D-memory-flat]` in SPEC.md.
+
+### `[X-memory]` Where Phases' memory goes
+
+- **Question:** why did the installed `main` sit at 179 MB with its
+  window closed, and what fixes it?
+- **When, on what:** 2026-10-30 (investigation and fix runs) and
+  2026-11-03 (draft 33 runs), macOS 27.2, two or three displays.
+- **Branches:** `investigate/memory` (tag `archive/investigate/memory`);
+  the fix on `fix/cover-memory` (tag `archive/fix/cover-memory`);
+  draft 33 runs on `feature/persistent-cover-transitions` (tag
+  `archive/feature/persistent-cover-transitions`).
+- **Outcome:** the cover-memory fix landed on `main`, measured flat
+  across ten changes `[D-memory-flat]`; the run procedure became
+  `[D-memory-protocol]`. Promoted: `[Q-cover-image-copied]`,
+  `[Q-iosurface-color-tag]`.
+- **Findings:** `[L-main-memory]`, `[L-mem-timeline]`,
+  `[L-mem-cover-windows-freed]`, `[L-mem-ca-copy]`,
+  `[L-mem-pressure-relief]`, `[L-mem-no-upscale]`, `[L-mem-freed-held]`,
+  `[L-mem-decode]`, `[L-mem-window]`, `[L-mem-thumbnails]`,
+  `[L-mem-reconcile]`, `[L-mem-fix-ideas]`, `[L-mem-fix-runs]`,
+  `[L-mem-draft33-runs]`.
+
+- `[L-main-memory]` **The installed Release build of `main` measured
+  179 MB with its window closed.** Answered: mostly crossfade images,
+  plus the window's lasting cost; the entries below explain how.
+  - **The reading** (*measured* 2026-10-30 with `footprint`): 82 MB large
+    mallocs, 54 MB small, 9 MB QuickLook thumbnails. That's against
+    23 MB for a fresh Debug launch that never opened the window.
+  - **First guess:** the thumbnail grid isn't released when the window
+    closes (*hypothesis*). Sent to its own branch (author, 2026-10-30).
+  - **Update, same day: investigated** (the entries below). Mostly
+    crossfade images, not the grid; the grid is about 25 MB of it.
+  - **Correction, same day** (`[L-mem-fix-runs]`), *measured*:
+    - "Mostly crossfade images" holds: with covers fixed, ten changes
+      cost 2–3 MB instead of about 200.
+    - "The grid is about 25 MB" doesn't: the 25 MB was the whole
+      window's lasting cost, not the grid's. Releasing the grid gives
+      back about 10 MB of a 40–50 MB lasting cost; the rest is the
+      window itself and allocator-held memory.
+- `[L-mem-timeline]` **Footprint rises and falls with crossfades; it
+  isn't a steady leak on `main`.** *Measured.*
+  - **Control run:** 23 MB idle; after successive changes 23 (nothing
+    changed), 94, 148, 200, 207, 303 MB; window open 208, closed 168;
+    three idle minutes later 134 MB.
+  - **Logging run** (tool data subtracted): 55 at idle after a
+    launch-time fade, then 89, 145, 218, 175 MB over four changes; flat
+    at 174 after two idle minutes.
+  - `leaks`: 0 leaks.
+- `[L-mem-cover-windows-freed]` **`main`'s cover windows are freed after
+  each fade.** `heap` finds no cover `NSWindow`, `CALayer`, or view after
+  fades. So the guess that ordered-out, never-closed windows stay alive
+  is wrong for `main`. *Measured.* Not checked on the spike's persistent
+  covers, which are meant to stay.
+- `[L-mem-ca-copy]` **Core Animation keeps its own full-screen copy of
+  each cover image, and it outlives the window.**
+  - **Where:** `malloc_history` puts the largest live blocks (9, 24,
+    29–43, and 63 MB, one per display and image) in
+    `CA::Render::copy_image` → `create_image_by_rendering`, during the
+    commit that first draws the cover's layer. CA redraws the `CGImage`
+    from `loadImage` into a new buffer instead of using it as is.
+    *Measured.*
+  - **How long:** copies from the last one or two changes were still
+    resident after the fade, 175 MB of them after six changes.
+    *Measured.*
+  - **Purgeable, but still counted:** they sit in CoreGraphics'
+    purgeable zone, and `footprint` counts most of them as "Reclaimable"
+    (86–114 MB). macOS may drop them under memory pressure, but Activity
+    Monitor still shows them. *Measured* (the column); *recalled* (what
+    macOS does under pressure, not tested here).
+  - **Open at the time:**
+    - Why CA copies: a pixel-format or color-space mismatch between the
+      decoded image and what CA wants (*guess*, not checked). **Update,
+      same day: this guess was wrong; see `[L-mem-ca-copy-test]`.**
+    - Who keeps the copy alive after the window is freed: not found
+      (*guess*: a CA or CG image cache keyed by the image).
+- `[L-mem-ca-copy-test]` Promoted to `[Q-cover-image-copied]` (2026-10-30).
+- `[L-mem-iosurface-color]` Promoted to `[Q-iosurface-color-tag]` (2026-10-30).
+- `[L-mem-pressure-relief]` **`malloc_zone_pressure_relief` didn't
+  release the freed-but-held blocks.** It returned 0 every time: it
+  doesn't help. Three rounds on installed `main`, 2026-10-30, all
+  *measured*:
+  - **Round 1, call made from `lldb`** inside the running app, after
+    three changes (23 → 297, 229, 240 MB):
+    - It returned 0 bytes released; "Malloc Large (empty)" stayed at
+      32.6 MB.
+    - Yet footprint fell from 239 to 110 MB within the same few seconds.
+      The timing pointed to Core Animation's purgeable copies
+      `[L-mem-ca-copy]` going, perhaps set off by the debugger pausing
+      the app (*guess*), not to the call.
+  - **Round 2, repeat without `lldb`:**
+    - 23 → 83, 116, 144 MB over three changes, then flat at 143 MB for
+      30 s.
+    - A 2 s pause and resume (`kill -STOP`/`-CONT`) changed nothing
+      (143 MB for 10 s more). Freed blocks 58.7 MB.
+    - So round 1's drop wasn't a timer within 30 s, and wasn't the pause
+      itself. Left open: something `lldb` does when it runs an
+      expression, or the call freeing purgeable memory it doesn't count
+      in its return value (*guesses*).
+  - **Round 3, two runs of ten changes** (fresh launch each, 6 s apart):
+    - Watch run: 23 → 83, 134, 141, 179, 184, 193, 216, 224, 257,
+      296 MB; flat at 295 MB for 30 s after. Freed blocks 71 MB.
+    - Relief run: 23 → 84, 94, 166, 190, 222, 261, 259, **157**, 177,
+      190 MB. The call returned 0, and footprint stayed at 192 MB. Freed
+      blocks 32.6 MB before and after.
+  - **What it adds up to:**
+    - Memory stacks up with each change, roughly 20–40 MB per change
+      across three displays, and only sometimes falls back on its own.
+      The relief run dropped 102 MB between changes 7 and 8 with no
+      help.
+    - That fits macOS purging CA's purgeable copies `[L-mem-ca-copy]`
+      when it chooses (*guess*). So round 1's drop was likely the same
+      thing happening by chance, not the call (*inference*).
+    - Runs vary widely: the same three changes cost 297 MB in round 1 and
+      144 MB in round 2. Unexplained.
+    - Whether the climb has a ceiling is not known; 296 MB was the
+      highest seen in ten changes.
+- `[L-mem-no-upscale]` **`loadImage` never scales an image up.** The
+  max-pixel option only caps size, so a 2880 × 2160 file stays 2880 ×
+  2160 (24.9 MB) on a larger screen; CA scales it when compositing.
+  *Measured* (decoded sizes of the author's files, 2026-10-30). That
+  explains block sizes that don't match any display.
+- `[L-mem-freed-held]` **Freed full-screen buffers stay in the process
+  for minutes.** `vmmap` shows "Malloc Large (empty)": blocks already
+  freed but still resident and dirty, which `footprint` counts in full.
+  24 MB at idle after one launch fade; 40–95 MB after changes; 62 MB
+  still there after three idle minutes. *Measured.* That's the system
+  allocator keeping freed large blocks for reuse rather than handing the
+  pages back (*recalled* allocator behavior; when and whether it returns
+  them is not tested).
+- `[L-mem-decode]` **Each cover also decodes the file at full size
+  first.** `CGImageSourceCreateThumbnailAtIndex` draws the full-size
+  source image, leaving a decoded copy in CoreGraphics' purgeable zone
+  (24 and 22 MB after the launch fade). They were already purged
+  (resident 0) 40 s later, so they cost a peak, not a steady state.
+  *Measured.* `footprint` reported a 161 MB peak at launch from one fade.
+- `[L-mem-window]` **Opening the window adds about 25 MB that stays after
+  it closes.** Small allocations went from 28 to 55 MB (logging run) and
+  21 to 45 MB (control); closing gave none of it back. `heap` still finds
+  the grid's 17 `ThumbnailCell` views and their images after the close,
+  so SwiftUI keeps the closed `Window`'s view tree. *Measured.* A second
+  open and close added only about 2 MB of small allocations, plus 4 MB
+  each of CoreAnimation and QuickLook thumbnails, so it's one-time, not
+  per open. *Measured.* Whether SwiftUI ever releases it: unknown.
+- `[L-mem-thumbnails]` **Thumbnails are small:** the folder has 22
+  images; QuickLook Thumbnails measured 4–9 MB. *Measured.*
+- `[L-mem-reconcile]` **This accounts for the earlier figures.** The
+  179 MB in `[L-main-memory]` (82 MB large, 54 MB small, 9 MB thumbnails)
+  fits: CA copies plus freed-but-held blocks for "large", the window's
+  retained tree for "small". The spike's growth in `[L-cover-memory]`
+  fits the same mechanisms, plus the images the persistent cover holds
+  on purpose. *Inference* from the numbers above, not measured on the
+  spike branch.
+- `[L-mem-fix-ideas]` **Recommended fix, in order (agreed with the
+  author 2026-10-30; untested in Phases).** Earlier versions of this
+  entry suggested a matching CGImage and an allocator call; both are
+  ruled out (`[L-mem-ca-copy-test]`, `[L-mem-pressure-relief]`).
+  1. Covers draw into an IOSurface tagged with the image's color space
+     (`[L-mem-iosurface-color]`); drop our decoded image once drawn;
+     release the surface when the cover goes. Removes CA's copy, most
+     of the per-change pile-up.
+  2. Decode once, straight into that surface, without ImageIO's
+     full-size intermediate (`kCGImageSourceShouldCache` off). Should
+     also shrink the freed-but-held blocks, which mostly come from
+     those buffers (*inference*).
+  3. Release the grid's thumbnails when the window closes (about
+     25 MB, `[L-mem-window]`).
+  4. Measure with ten changes per run, at least two runs before and
+     two after: runs vary widely (`[L-mem-pressure-relief]`).
+
+  For the persistent cover, one tagged surface per display is the floor
+  it can't avoid: about 25–63 MB per display at the author's sizes
+  (*inference* from the decoded sizes). A SPEC.md decision (proposed
+  name `[D-cover-iosurface]`) comes first, for approval.
+
+- `[L-mem-fix-runs]` **`[D-memory-protocol]` runs of the fix, 2026-10-30.**
+  macOS 27.2; two displays (LG Ultrawide, Cinema HD rotated; no built-in),
+  Different per Display, Crossfade 1 s, diagnostics switched on (author's
+  setting). Before = installed Release of `main` (built 2026-10-29); after
+  = Release of `fix/cover-memory` (tag `archive/fix/cover-memory`; code
+  as of `18130ee`), run from its
+  build folder, not installed. Ten Change Now clicks 6 s apart, then 30 s
+  idle, then the window check. *Measured:*
+
+  | Run | Idle | After changes 1–10 (MB) | 30 s idle | Window: before, open, closed 30 s |
+  |---|---|---|---|---|
+  | before 1 | 66 | 96 109 141 144 161 260 230 257 280 291 | 291 | 291, 236, 236 |
+  | before 2 | 21 | 59 66 137 169 137 170 189 221 230 272 | 272 | 272, 314, 291 |
+  | after 1 | 22 | 28 30 30 30 31 31 31 31 31 31 | 31 | 31, 81, 71 |
+  | after 2 | 21 | 28 29 30 30 30 30 30 30 30 30 | 30 | 30, 81, 71 |
+
+  - **Covers pass `[D-memory-flat]`:** 3 MB and 2 MB from change 1 to 10,
+    against a 30 MB allowance; `main` rose 195 and 213 MB.
+  - **Window fails** the `[D-memory-protocol]` window check: 40 MB above
+    the pre-open reading after closing, against 30. (Before-run window
+    figures are swamped by cover purges and say nothing.)
+  - **The grid is released.** Diagnostic run (after build, no changes):
+    open 81, closed 71 MB. `heap` shows 22 `ThumbnailCell` view lists
+    while open and none 30 s after closing. *Measured.*
+  - **What stays:** Malloc Small 13 → 45 MB, unchanged by the close; live
+    heap 7.8 → 27.7 MB (56k → 173k allocations). So about 20 MB is still
+    live (the window's other SwiftUI and AppKit objects: sidebar, toolbar,
+    hosting views, 104 CGImages, 48 NSImages) and about 17 MB is freed but
+    held `[L-mem-freed-held]`. CoreAnimation 11 → 6.6 MB and QuickLook
+    9.3 → 5.2 MB on close. *Measured*; the split into live and held is
+    *inference* from `heap` against `footprint`.
+  - The 30 MB window bar assumed the grid was most of the window's cost
+    (`[L-mem-window]`); at 22 images it isn't.
+  - **Whole-window release, same day.** Experiment: the window's entire
+    content dropped 1 s after closing, not just the detail pane (Release
+    build, window only, no changes). Kept as a measurement only.
+    - Readings: idle 22; open 81, closed 30 s 60; open again 84, closed
+      30 s 62 MB. *Measured.*
+    - 11 MB better than dropping the pane alone, but still 38–40 MB over
+      idle, so it also fails the 30 MB bar. A second open and close
+      added 2 MB.
+    - After the second close: live heap 23.2 MB (idle 7.8), Malloc Small
+      48 MB dirty, CoreAnimation 1.1 MB. So most of what stays is
+      freed-but-held allocator memory `[L-mem-freed-held]` (about 25 MB,
+      *inference*) plus about 15 MB of live objects Phases no longer
+      references (*inference*: SwiftUI and AppKit caches).
+    - The code went back to releasing the pane (author, 2026-10-30):
+      11 MB isn't worth rebuilding the sidebar and its fragile helpers
+      on every reopen.
+  - **Pane-only confirmation, same day,** under the new window check
+    (Release, window only, two rounds): idle 24; open 80 (31
+    `ThumbnailCell` view lists in `heap`), closed 30 s 70 (none); open 83
+    (31), closed 30 s 73 (none). *Measured.* Passes: the grid is released
+    each time, and the second close is 3 MB above the first (limit 5).
+- `[L-mem-draft33-runs]` **`[D-memory-protocol]` runs of draft 33
+  (persistent covers), 2026-11-03.** Release build of
+  `feature/persistent-cover-transitions` (tag
+  `archive/feature/persistent-cover-transitions`) from Bitrig's build folder,
+  macOS 27.2, three displays (LG Ultrawide 5160×2160 px with three
+  Spaces, built-in 3024×1964, Cinema HD 2200×3520), 30 images, Crossfade
+  1 s, schedule paused for the run, `footprint` in MB. *Measured.*
+  - **Run A:** idle 23; changes 1–10: 137, 98, 110, 87, 141, 95, 99, 95,
+    100, 100; 30 s idle 100. Passes (tenth below first).
+  - **Run B:** idle 23; 113, 98, 98, 98, 140, 99, 117, 87, 99, 87; 30 s
+    idle 87. Passes.
+  - **Covers' cost and release** (after run B): leaving the Space 87 → 63
+    (only the main display has other Spaces; its cover held the
+    2880×2160 image, about 25 MB, so the full size came back). Back on
+    the Space: 63, no cover returned. Window open and close with
+    Crossfade: 124. One change: 194 (covers about 101 MB: 66 + 24 + 11
+    from decoded sizes). Transition: None, window closed, 30 s: 80, a
+    114 MB drop. Passes.
+  - **Baseline, Transition: None:** idle 23, 28–29 after every change.
+  - **Window** (Morning, grid scrolled to the end): before 28; open 86,
+    closed 30 s 84; open 92, closed 89; a third round: open 93, closed
+    90. `heap` found 34 `ThumbnailCell` lines with the window open and
+    none after any close. Second close 5 MB above the first, at the
+    limit; the third added 1 MB. Passes, just.
+  - Nothing near 500 MB.
+
+## Sidebar rows
+
+Source for this section: the issue #22 experiment, 2026-11-06, macOS
+27.2, branch `experiment/active-badge-highlight` (commit 204231c), run by
+Claude with the author's yes. Highlight Color was blue. Each run
+relaunched Phases with a launch switch choosing the variant, selected
+the active phase (Nighttime) by clicking Dusk and pressing Down, and
+took window screenshots with the window in front and behind Finder.
+
+### `[X-active-badge-highlight]` The Active badge on the selection highlight
+
+- **Question:** how can the sidebar's accent-coloured Active badge stay
+  readable on the accent-coloured selection highlight? (Issue #22.)
+- **When, on what:** 2026-11-06, macOS 27.2, blue Highlight Color, six
+  runs with window screenshots.
+- **Branch:** `experiment/active-badge-highlight`, tag
+  `archive/experiment/active-badge-highlight` (archived 2026-11-09).
+- **Outcome:** the row is told it's selected and whether the sidebar
+  has focus; promoted to `[Q-tint-on-highlight]`.
+- **Findings:** `[L-row-styles-on-highlight]`, `[L-row-own-selection]`;
+  promoted: `[L-tint-on-highlight]`, `[L-background-prominence-mac-list]`,
+  `[L-row-selection-focus]`.
+
+- `[L-tint-on-highlight]` Promoted to `[Q-tint-on-highlight]` (2026-11-06).
+- `[L-background-prominence-mac-list]` Promoted to `[Q-tint-on-highlight]` (2026-11-06).
+- `[L-row-styles-on-highlight]` **What does adapt on the highlight.**
+  *Verified* (screenshots):
+  - Hierarchical styles (`.primary`, `.secondary`) and a symbol with no
+    style of its own turn white or near white on the highlight, and
+    grey otherwise (run 4's triangle, the trigger line).
+  - The row's leading `Label` icon is accent-coloured normally and white
+    on the highlight, with no code of ours doing it.
+  - A `.multicolor` `exclamationmark.triangle.fill` is yellow with a
+    dark mark and stays yellow on the highlight (run 3). Readable on
+    blue, not adaptive.
+  - An explicit `.orange` stays orange (runs 1–2), so it would vanish
+    on an orange highlight (*hypothesis*, not run).
+- `[L-row-own-selection]` **Telling the row it's selected works, but the
+  accent highlight also needs the sidebar to have focus.** Run 5
+  (commit b880f57): `PhaseRow` gets `isSelected` from the sidebar's
+  `selection` and reads `appearsActive`; the badge is `.primary` when
+  both are true, `.tint` otherwise. *Verified* (screenshots, log):
+  - Selected, window in front, sidebar focused: blue highlight, badge
+    white and readable. The log showed `isSelected` and `appearsActive`
+    following the clicks and the switch to Finder.
+  - Selected, window in front, focus moved to the editor (clicked the
+    Name field): the highlight turned **grey**, like a background window,
+    but the badge stayed white, since both flags were still true.
+    Readable, but it doesn't match the background-window look (accent
+    badge on grey).
+  - Window behind Finder: grey highlight, accent badge.
+  - So the accent highlight follows "selected, window in front, and the
+    sidebar has focus" (*verified* for these three cases). Adding the
+    window's existing `sidebarFocused` to the condition should match all
+    three (*hypothesis*, not run). Confirmed by run 6, below.
+- `[L-row-selection-focus]` Promoted to `[Q-tint-on-highlight]` (2026-11-06). Run 6 (commit 7693bb0): sidebar focused, blue highlight and white badge; focus in the Name field, grey and accent; back on the row, blue and white; window behind Finder, grey and accent.
+
+## Pause banner
+
+Source: the author's hands-on look at draft 49's first build (commit
+78b17b9, branch `feature/window-pause-banner`), 2026-11-07. That build
+put the banner in a `.safeAreaInset(edge: .top)` on the detail pane,
+with `if scheduler.isPaused` inline in the inset's closure.
+
+### `[X-pause-banner-shift]` Window content shifted up while paused
+
+- **Question:** why did the window open with its content shifted up
+  under the toolbar while Phases was paused?
+- **When, on what:** 2026-11-07, macOS 27.2; the author's hands-on
+  looks and screen recordings, Claude's UI test runs and logs.
+- **Branches:** `feature/window-pause-banner` (draft 49);
+  `experiment/pause-banner-shift`, tag
+  `archive/experiment/pause-banner-shift`.
+- **Outcome:** the banner reason's `.fixedSize` made the split view rigid
+  and too tall; dropping it fixed the shift. Promoted to
+  `[Q-fixed-size-text-rigid-split]`, guarded by `PauseBannerTests`.
+- **Findings:** `[L-pause-banner-inset]` (its inset hypothesis refuted),
+  `[L-pause-banner-runs]`, `[L-pause-banner-stack-still-shifts]`,
+  `[L-pause-banner-above-window]`; promoted:
+  `[L-pause-banner-rigid-split]`.
+
+- `[L-pause-banner-inset]` **A top `.safeAreaInset` banner broke the
+  window two ways.** *Observed* by the author, not measured:
+  - **Everything under the toolbar.** Opening the window while already
+    paused, including on a fresh launch with no clicks or scrolling,
+    drew the banner, sidebar, and form shifted up: the branding panel
+    under the traffic lights, the banner's text cut off under the title.
+    The toolbar's title was still drawn in place, so the toolbar seemed
+    present and the content's room for it missing (Claude, from the
+    screenshots). Pausing and resuming with the window open usually
+    looked right.
+  - **The banner stopped following the pause.** It toggled with the
+    menu's Pause and Resume, then after about a dozen toggles stopped
+    appearing. After a click on the notification's body (not its Resume
+    button) opened the window without the banner, it never came back
+    in that run.
+  - *Hypotheses* (Claude, not tested): the inset's content isn't
+    tracked for redraw `[Q-safe-area-inset-refresh]`; an inset present
+    at the first layout keeps SwiftUI from making room for the toolbar
+    the window helper attaches a moment later `[D-window-helper-order]`.
+  - *Next:* draft 49's banner moves into a plain stack above the pane,
+    reading `isPaused` in its own view, with diagnostics (category
+    `window`) and UI tests (`PauseBannerTests`). Run the tests against
+    78b17b9 to watch them fail, then against the fix.
+- `[L-pause-banner-runs]` **UI test runs, 2026-11-07 21:48–21:54**
+  (Claude, author's yes, diagnostics on):
+  - Run 1, `PauseBannerTests` against 78b17b9's build: the toggle test
+    **passed** (10 pauses, 10 resumes); the first-open test failed, but
+    its message wasn't saved. Run 2, against 56bf366's build, failed the
+    same test on the harness: after Pause Schedule, the next click on
+    the menu bar item didn't open the menu, and "Open Phases…" read as
+    (0, 982) (*verified*, output). So run 1's failure may have been the
+    harness, not the bug; it proves nothing either way. The driver now
+    clicks the menu bar item again when the menu doesn't open.
+  - Run 3, the fast suite against 56bf366's build with that driver fix:
+    14 of 15 passed, both `PauseBannerTests` included; the retry was
+    needed once (*verified*). `RelaunchTests` failed on a missing Dock
+    icon, the intermittent failure recorded under `[L-reopen-event]`
+    (2026-11-03); this change doesn't touch reopening (*hypothesis* that
+    it's unrelated, not rerun).
+  - **Toolbar room arrives after the first layout** (*verified*, log,
+    every window open in run 3): the detail pane's top safe area went
+    0 → 32 → 52 pt within about 0.12 s, the 52 pt landing just after
+    "toolbar installed". With the fix, the banner opened while paused
+    followed it: top at 0, 32, then 52 pt. That fits the inset
+    hypothesis above but doesn't prove the inset was the cause.
+  - **The toggle bug didn't reproduce under test** on the old build.
+    What stopped the banner in the author's session (perhaps the click
+    on the notification's body) is still open.
+  - Run 4, 21:56, `PauseBannerTests` against 78b17b9's build again, with
+    the driver fix (Claude, author's yes): **both passed** (*verified*;
+    the build is the old code: its binary lacks the new `window` log
+    text). So neither test reproduces what the author saw; they aren't
+    guards yet. Differences from the author's repro, any of which could
+    matter (*untested*): his pause was saved from an earlier launch, not
+    chosen in the same session; the harness clears the saved window
+    frame and turns off state restoration; test mode uses its own store;
+    and the AX frames may not show a purely visual shift.
+- `[L-pause-banner-stack-still-shifts]` **The stack fix didn't fix the
+  shift** (author's hands-on look, build of a257a51, 2026-11-07, about
+  22:05; *observed*, screenshots):
+  - Pause, quit, run from Bitrig, open from the menu: once it opened
+    right; the next two times it opened shifted up again. Once like
+    before (banner under the toolbar, branding panel under the traffic
+    lights); once worse: the sidebar's branding panel gone above the
+    top, the Settings row under the traffic lights, the banner out of
+    sight above the form, and the form's Name row behind the toolbar.
+  - Resume from the menu put the window right; pausing again after that
+    put the banner in the right place.
+  - Paused by an outside change, then opened from the menu: no banner
+    visible. Likely the same shift with the banner pushed out of sight
+    (Claude, *hypothesis*), not the redraw bug. The notification isn't
+    needed to reproduce (author).
+  - So `[L-pause-banner-inset]`'s inset hypothesis is **refuted** for
+    the shift: the sidebar moves too, and the banner isn't in it. The
+    columns' different shift amounts in the worse case look like each
+    scroll view keeping a scroll position that's off by its top
+    margin, not a window frame moving (Claude, *hypothesis*).
+  - Clicking the notification's body only dismisses it. SPEC.md gives
+    the notification a Resume action and says nothing about the body
+    (as specified, not a bug).
+- `[L-pause-banner-above-window]` **With logging: the content sits
+  above the window, the scroll positions are normal** (build of
+  77a9cd8, author's repro with a screen recording, 2026-11-07
+  22:44:19, first open, shifted; *verified* from the log, matched to
+  the recording by its menu bar clock):
+  - Both columns' top safe areas settled at 52 pt, with the title area
+    52 pt and the toolbar installed.
+  - The banner's top settled at **−64.5 to −67 pt** in the window, above
+    its top edge, though the detail pane's safe area said 52 pt.
+  - The sidebar's scroll view had the usual 52 pt inset and scroll
+    position (−52), yet the recording shows its branding panel gone
+    above the top. So the scroll positions were fine; the columns
+    themselves were placed too high. That refutes the scroll position
+    hypothesis in `[L-pause-banner-stack-still-shifts]`.
+  - During the first 0.3 s the banner's top passed through 129, 0, 416,
+    537.5, −84.5 pt as the window was set up.
+  - The author found that making the window tall enough brings the
+    banner on screen. *Hypothesis* (Claude): SwiftUI laid out the
+    window's content taller than the window and centered it, so the
+    top runs off the window; the pause makes the content taller.
+    Untested. What sets that height is unknown.
+- `[L-pause-banner-rigid-split]` Promoted to
+  `[Q-fixed-size-text-rigid-split]` (2026-11-07). Guard runs, 2026-11-07
+  (Claude, author's yes): the new
+  `windowOpenedWhilePausedByOutsideChangeStartsBelowTheToolbar` failed
+  on the build without the fix (both checks, one at −93.5 pt), then all
+  three `PauseBannerTests` passed on the fix (*verified*, output). The
+  notes below stay as the record. **The split view goes rigid at 943 pt
+  when the banner's reason wraps** (build of f0bb2bc on
+  `experiment/pause-banner-shift`, archived as tag
+  `archive/experiment/pause-banner-shift`; the author's screen recording
+  2026-11-07 23:00:08–23:01:53, matched to the log by its menu bar
+  clock; Claude):
+  - **Content taller than the window, centered: confirmed** (*verified*,
+    log). The `NavigationSplitView`'s own frame was **943 pt tall**
+    while the `.frame(minHeight: 480)` around it followed the window
+    (672–848 pt). Its top sat at 52 + (container − 943) / 2, e.g. −83.5
+    in a 672 pt container: SwiftUI centers an oversized child. The
+    window, content view, layout rect, and `contentMinSize`
+    (700 × 532) were all normal; the hosting view's fitting size read
+    0 × 0. So the window doesn't know the content is too tall.
+  - **The 943 never changed** while the author dragged the window from
+    741 to 999 pt wide and through many heights, paused (*verified*,
+    log, about 300 frames). On resume it snapped back to the container
+    (598 pt in a 650 pt window).
+  - **Shifted only with the two-line reason** (*observed*, three opens):
+    23:00:25, paused from the menu, "Paused from the menu." on one
+    line: opened right, split view following the window. 23:00:48 and
+    23:01:18 (a relaunch), paused by an outside change, the reason
+    wrapped to two lines: both opened shifted. The banner's reason text
+    is the only view with `.fixedSize(horizontal: false, vertical:
+    true)`.
+  - *Hypothesis* (Claude, untested): while sizing the column, SwiftUI
+    measures that text at a very narrow width, where it wraps to many
+    lines, and the resulting rigid height becomes the split view's
+    height. Why a one-line reason doesn't trigger it, and why the
+    number is 943, are unexplained. `[L-pause-banner-inset]`'s first
+    sighting may fit too, if that pause came from an outside change
+    (not recorded). *Observed* later (Claude, 2026-11-07, from the
+    author's screenshots): every shifted screenshot shows the outside
+    change reason, "…because the wallpaper was changed in System
+    Settings.", the first sighting included.
+  - **Dropping the `.fixedSize` fixed it** (build of 54b28b1, the
+    author's runs 2026-11-07 23:09–23:21, with a screen recording from
+    23:18:47; Claude, from the log and the recording). Five opens while
+    paused by an outside change, window closed beforehand, two of them
+    after a relaunch (23:19:19, 23:19:45, 23:20:07, 23:21:19, plus a
+    reopen at 23:19:59): every one settled with the split view filling
+    the window (583 pt in a 635 pt window) and the banner's top at 52 pt
+    (*verified*, log); the recording shows all three opens it covers
+    drawn right (*observed*). The reason still wraps to two lines at
+    the 460 pt minimum editor width: banner 460 × 67 pt (*verified*,
+    log; *observed*, the author's screenshot), not cut off.
+  - **Why the UI tests missed it:** `PauseBannerTests` pause from the
+    menu, so the reason is one line ("Paused from the menu."), the case
+    that never shifted. A guard needs an outside-change pause at launch.
+  - Still unexplained: the 943 pt figure, and why a one-line reason
+    under the same `.fixedSize` never triggered it.
+
+## Notification clicks
+
+### `[X-notice-click]` What a click on the pause notification does
+
+- **Question:** why did a click on the pause notification's body
+  sometimes do nothing, or open the window behind other apps?
+- **When, on what:** 2026-11-08, macOS 27.2, draft 50's hands-on check;
+  the log, `ps`, `lsregister -dump`, and `usernoted`'s log.
+- **Branch:** draft 50's own branch, merged as `92c376a`; no separate
+  experiment branch.
+- **Outcome:** every notification click goes through
+  `FirstLaunchWindow.open` (draft 50). The second copy is a development
+  artifact of stale Launch Services registrations.
+- **Findings:** `[L-notice-click-launches-copy]`.
+
+- `[L-notice-click-launches-copy]` **A click on the pause notification
+  can launch a second copy of Phases** (draft 50 hands-on check,
+  2026-11-08; *verified* from the log and `ps`):
+  - Twice, the running build (12:00:59, pid 73297; 12:09:16, pid 75083)
+    logged "window requested by notification", and at the same moment
+    macOS launched another copy with the same bundle ID: first
+    `/Applications/Phases.app` (pid 73346), then, with that deleted, the
+    build in Bitrig's `DerivedData/…/Debug/Phases.app` (pid 75681). Both
+    copies then sat in the menu bar.
+  - The running copy was Bitrig's launch copy in a temporary folder
+    (`/var/folders/…/BitrigLaunchApps/…`); the copy macOS launched was a
+    different path registered with Launch Services. Launch Services had
+    67 registrations for Phases' bundle ID before cleanup, most for
+    deleted builds (*verified*, `lsregister -dump`).
+  - Before that, at 11:57–12:00, clicks on an older build's notification
+    reached the running copy as a relaunch: it logged "relaunched"
+    (`applicationShouldHandleReopen`), with no second copy (*observed*,
+    log). So a body click does send a reopen when macOS picks the
+    running copy.
+  - *Hypothesis* (Claude, untested): on a body click macOS delivers the
+    response to the running copy and also opens the app by bundle ID
+    through Launch Services; when Launch Services prefers a different
+    path, that's a fresh launch instead of a reopen. If so, it's a
+    development artifact: an installed Phases runs from the one
+    registered path. The author's "window opens but doesn't come to the
+    front" at 12:00:59 fits the second copy taking the front.
+  - **Confirmed from `usernoted`'s log** (*verified*, 12:09:16): it
+    sent the response to the running copy ("Notifying UserNotifications
+    client …:75083 about response"), then "Bringing app … front for
+    response with URL: file:///…/DerivedData/Build/Products/Debug/Phases.app/".
+    It brings the app forward by a path, not by the running process, so
+    a different registered copy gets launched. The hypothesis above
+    holds for that click.
+  - **Unregistering every other copy stops notifications altogether**
+    (*verified*, 12:12): with only Bitrig's temporary launch copy
+    registered, `usernoted` logged "Failed to find or validate client
+    of identifier … PID: 76409", and Phases logged "notification failed:
+    Notifications are not allowed for this application". `usernoted`
+    knows Phases by the DerivedData path; a copy elsewhere isn't a
+    valid client. (Claude unregistered the copies; the author saw no
+    notifications.)
+  - *Next:* run the DerivedData copy itself, the path `usernoted`
+    knows, so the running copy and the one it brings forward are the
+    same.
+  - **Running the DerivedData copy (the only registration) worked**
+    (12:14–12:16, pid 77273, launched with `open`): the author saw the
+    window come to the front on every click, from closed, minimized and
+    another Space (*observed*). No second copy started (*verified*,
+    log). Each of the three body clicks logged "window requested by
+    notification" and then, 0.06–0.6 s later, "relaunched" and "window
+    requested by relaunch" (*verified*, log): `usernoted`'s bring-front
+    reaches the running copy as a reopen, so every click asks for the
+    window twice. Harmless: the window ended visible and key each time.
+  - So a body click opens the window even without the new
+    `UNNotificationDefaultActionIdentifier` handling, whenever macOS
+    picks the running copy. The 2026-11-07 "only dismisses it"
+    (`[L-pause-banner-stack-still-shifts]`) was probably the
+    wrong-copy case (*hypothesis*). The handler should still matter for
+    the cold launch, where a fresh launch isn't a reopen (*hypothesis*;
+    TESTING.md step 8 not yet run).
+  - **Cold launch** (TESTING.md step 8, 12:20:09, pid 79254): the click
+    launched Phases and the request arrived after the menu bar icon's
+    view, so it took the plain path; the window was built but stayed
+    behind the frontmost app `[Q-launch-activate-refused]` (*verified*,
+    log; the author found it with ⌘Tab). No "relaunched" line followed,
+    so the handler is the only thing that opens the window there
+    (*verified*, log). Fixed by sending every notification click
+    through `FirstLaunchWindow.open`; with that build (12:29, author's
+    clicks): step 8 opened the window in front (*observed*), and the
+    warm click (step 7, closed window) still did, ending active and key
+    (*verified*, log).
+  - **Testing notifications under Bitrig:** `bitrig run` launches a
+    temporary copy that `usernoted` won't accept once the DerivedData
+    copy is unregistered, and that a click won't bring forward while
+    it's registered. Run the DerivedData build directly instead, with
+    stale registrations for Phases' bundle ID cleared (`lsregister -u`
+    each path from `lsregister -dump`, then `lsregister -f` the one
+    build).
+
+## UI mockup (issues #2, #3, #26, #27)
+
+An interface-only mockup, archived as tag `archive/experiment/ui-mockup`:
+mock views with throwaway state, nothing wired to the model, and a
+scheduler made read-only so it could run beside a real Phases.
+
+### `[X-ui-mockup]` Interface mockup
+
+- **Question:** do older Mac layout conventions, a split phase editor,
+  and per-display tabs make the window better? (Issues #2, #3, #26, #27.)
+- **When, on what:** 2026-11-08 to 2026-11-09, macOS 27.2.
+- **Branch:** `experiment/ui-mockup`, tag `archive/experiment/ui-mockup`.
+- **Outcome:** the old-style layout was dropped; streamlining continues
+  with modern macOS conventions (author, 2026-11-09).
+- **Findings:** `[L-classic-mac-layout]`, `[L-toolbar-items-crash]`,
+  `[L-mock-known-displays]`.
+
+- `[L-classic-mac-layout]` **Old-style Mac layouts were tried and
+  dropped.** The mockup used a columns form (right-aligned labels),
+  checkboxes instead of switches, and popups instead of segmented
+  controls. It also split the phase editor (a short settings block over
+  a grid that scrolls on its own), added display tabs drawn in each
+  display's shape, and put tinted plates behind selected images with no
+  file names. The author concluded that the old-school layout wasn't as
+  good an idea as it seemed, and the streamlining continues with modern
+  macOS conventions instead (author, 2026-11-09). The other ideas weren't
+  judged on their own; they're in the tag if wanted.
+- `[L-toolbar-items-crash]` **SwiftUI toolbar items crashed the window
+  on open.** Two buttons in a `ToolbarItemGroup(placement:
+  .primaryAction)` on the detail view: choosing Open Phases… raised an
+  uncaught `NSRangeException` inside `-[NSWindow layoutIfNeeded]` while
+  the window was ordering front (`_setUpFirstResponderBeforeBecomingVisible`
+  → `updateConstraintsIfNeeded`). The reason text is redacted in the log,
+  and no frame in the stack names the thrower. With the `.toolbar`
+  modifiers removed and nothing else changed, the window opened.
+  *Observed* 2026-11-08 by Claude, one launch each way. Hypothesis, not
+  tested: it collides with `WindowLayoutConfigurator`, which installs
+  its own `NSToolbar` when SwiftUI has none `[Q-no-items-no-toolbar]`
+  and adjusts the split view items after. Toolbar buttons need this
+  solved first.
+- `[L-mock-known-displays]` **The known-displays list grows without
+  bound.** On the author's Mac a tab per known display showed six:
+  Built-in, Virtual 16:10, and four not connected (Cinema HD, LG
+  Ultrawide, and two with empty names). Disconnected displays have no
+  frame to measure, so the mockup drew them 16:10, wrong for the LG
+  Ultrawide. Showing a disconnected display only when the phase gives it
+  its own images cut the list to the connected ones. *Observed*
+  2026-11-08 (window screenshots).
+
+## Other investigations
+
+Until 2026-11-09 this section was called "Open questions"; most of what
+it held has since been answered. What's still open is under "Still
+open" at its end.
+
+### `[X-wallpaper-store-watch]` Hearing outside wallpaper changes
+
+- **Question:** can Phases hear a wallpaper change made in System
+  Settings by watching macOS's wallpaper store? (Issue #5.)
+- **When, on what:** 2026-11-06, macOS 27.2, one display, Debug build
+  `ebe00f8`.
+- **Branch:** `experiment/wallpaper-store-watch`; no `archive/…` tag
+  exists for it, and the branch is gone (checked 2026-11-09).
+- **Outcome:** yes; promoted to `[Q-wallpaper-store]`. Two displays
+  untested.
+- **Findings:** `[L-store-watch]`.
+
+- `[L-store-watch]` **Can Phases hear a wallpaper change made in System
+  Settings by watching macOS's wallpaper store?** (Issue #5, macOS 27.2.)
+  Promoted to `[Q-wallpaper-store]` (2026-11-06); the notes below stay as
+  the record, and two displays is still untested. Experiment on branch `experiment/wallpaper-store-watch`, started
+  2026-11-06. Agreed behavior if it works (author, 2026-11-06): an outside
+  change pauses all of Phases; how to tell the user is undecided.
+  - Setup: `WallpaperStoreWatcher` watches
+    `~/Library/Application Support/com.apple.wallpaper/Store/` (folder,
+    for atomic replaces) and `Index.plist` in it (in-place writes,
+    reopened after a replace), with `DispatchSource` file-system sources,
+    no polling. On each event it logs the flags, every store Desktop entry
+    that changed (provider, image file, LastSet, LastUse), and each
+    screen's `desktopImageURL`. `WallpaperSetter` logs `phases-set` just
+    before each of Phases' own sets. Diagnostics category `store`; runs
+    only with diagnostics on. Logs only, changes nothing.
+  - Questions: (1) does picking a picture in System Settings fire an
+    event, and how soon; (2) do Phases' own sets fire one too (likely,
+    *hypothesis*), and can they be told apart from outside ones; (3) do
+    Space switches fire one (LastUse may change); (4) is the file
+    replaced or written in place; (5) choosing an Aerial or dynamic
+    wallpaper: what changes.
+  - Hypothesis (*recalled*, not tested): System Settings writes
+    Index.plist when a picture is chosen.
+  - **Results, one display, Debug build `ebe00f8`** (2026-11-06, read
+    from the `store` log by Claude; picks made by the author; *verified*):
+    - **(1) Yes.** Picks at 08:17:51 and 08:29:38 each fired a folder
+      event within about 0.3 s. The display's Desktop entry got a new
+      image and a new `LastSet`, with no `phases-set` line before it.
+    - **(2) Yes, Phases' own sets fire one too,** about 0.25 s after the
+      `phases-set` line, with the same shape (new image, new `LastSet`).
+      Five of five.
+    - **(4) Replaced, not written in place:** every change is a folder
+      `write` plus a `delete` on the old file. Watching the folder is
+      what works; the file watch only sees the old copy go.
+    - **Opening and quitting System Settings** (pane opened at 08:23:30
+      and 08:29:36, quit at 08:23:38 and 08:29:42) each write the store
+      twice in a row, changing only `LastUse`. So "the store changed"
+      isn't an outside change by itself; a new `LastSet` with an image
+      Phases didn't just set is.
+    - **Phases overrode both picks** at its next change: 9 s later
+      (08:18:00) and 23 s later (08:30:02). The current behavior issue #5
+      describes.
+    - **(5) Aerials** (2026-11-06, Golden Gate Sunset picked at 09:06:23
+      with `phases-drive click`, confirmed by screenshot; *verified* from
+      the log by Claude): a folder event within about 1 s, and the
+      current Space's entry got a new `LastSet`, so the detection rule
+      catches it. The entry reads provider `default` with no file URL,
+      and `desktopImageURL` reports `DefaultDesktop.heic`: only the store
+      says what was picked. Phases didn't override it in 105 s
+      (*observed*; its next scheduled change may simply not have come).
+      Picking the canyon still back at 09:08:12 looked like any other
+      pick.
+    - **Spaces keep their own entries** (*verified*, same log): picks
+      changed only `space/D37B581D/…`; `space/272B14E4/…` kept its image.
+      So the rule has to read the current Space's entry.
+    - **(3) Space switch, first try failed** (09:08:24, Claude): System
+      Settings still had focus, so `phases-drive key right control`
+      moved its thumbnail selection and set the next photo (Ergo Proxy),
+      on this Space only. No switch happened. Whether synthetic
+      Control+arrow reaches Mission Control at all is untested. Next try:
+      quit System Settings and focus the desktop first.
+    - **(3) Second try, also no switch** (09:10:44, Claude): System
+      Settings quit, a `phases-drive click` on bare desktop made Finder
+      frontmost, then `key right control`. The click itself set off
+      "Click wallpaper to reveal desktop" (all windows pushed to the
+      edges; the author named it), which looked like a switch in the
+      screenshot. But the wallpaper stayed this Space's Ergo Proxy and
+      the store logged nothing after the keypress (*verified*). So
+      synthetic Control+Right didn't reach Mission Control (*observed*,
+      one clean try). To focus the desktop, use `osascript -e 'tell app
+      "Finder" to activate'`, never a wallpaper click. Space switches
+      are left to the author's hands.
+    - **(3) Space switches are noise** (2026-11-06; the author switched
+      by hand at 09:11:24 and back at 09:11:35, the other Space showing
+      the canyon; *verified* from the log by Claude): each switch wrote
+      the store twice about 1 s apart, changing only `LastUse` on both
+      Spaces' entries, never `LastSet`. The rule holds. But
+      `desktopImageURL` reported Ergo Proxy (this Space's image) through
+      all four events, including while the canyon Space was showing
+      (*observed*; it may lag the switch, or not follow Spaces). Another
+      reason to read the store, not `NSWorkspace`.
+    - Still open: two displays.
+  - **Driving System Settings failed** (2026-11-06, Claude). An AX press
+    on a "Your Photos" thumbnail returned without error and did nothing.
+    CGEvent clicks from a one-off helper (`/tmp`, same calls as
+    `SyntheticInput`) didn't move the pointer (author watching). The
+    helper passed `AXIsProcessTrusted` and `CGPreflightPostEventAccess`,
+    and the shell can write outside the project, so a file sandbox isn't
+    it. Cause unknown; earlier CGEvent clicks worked
+    (`[L-synthetic-clicks]`).
+    - *Follow-up* (2026-11-06, about 08:33): a move-only version of the
+      same helper, and `SyntheticInput.move` run from `swift test`, both
+      read back on target, but the author saw no pointer move either time
+      (*observed*). Only one display was connected.
+    - *Follow-up* (about 08:40): `phases-drive move` (same
+      `SyntheticInput`) moved the pointer twice; the author saw both, and
+      `screencapture -C` showed it at each target (*verified*). Why the
+      08:33 moves didn't show is still unknown. Driving now goes through
+      `phases-drive` (TESTING.md `[D-input-driver]`, `[D-input-lands]`).
+    - *Follow-up* (09:06): `phases-drive click` on a System Settings
+      thumbnail worked twice, confirmed by screenshot and the store log
+      (*verified*). The author didn't notice the first change; the
+      screenshot is the proof `[D-input-lands]` asks for.
+
+### `[X-new-space-pauses]` A new Space read as an outside change
+
+- **Question:** why does going full screen, or adding a desktop, pause
+  Phases with the outside-change notice? (Issue #29.)
+- **When, on what:** 2026-11-07, macOS 27.2; the author's observations
+  and a read-only copy of the wallpaper store.
+- **Branch:** none; read from the store and the code.
+- **Outcome:** a new Space's store entries are copies, which the rule
+  counted as picks; promoted to `[Q-new-space-copies-entry]`.
+- **Findings:** `[L-new-space-pauses]`.
+
+- `[L-new-space-pauses]` **Does a new Space read as an outside change?**
+  (GitHub issue #29, macOS 27.2.) Promoted to `[Q-new-space-copies-entry]`
+  (2026-11-07); the notes below stay as the record. Going full screen in any app pauses
+  Phases with the outside-change notice (*observed* by the author in
+  Fusion and Safari; screen resolution and menu bar hiding made no
+  difference).
+  - Hypothesis (Claude, 2026-11-07, from reading the code, not tested): a
+    new Space gets new store entries, and `OutsideChangeRule.changes`
+    counts any entry missing from the earlier reading as a pick, since
+    only an existing entry's unmoved `LastSet` is skipped. Removed
+    entries are never looked at, because the rule walks only the new
+    reading's keys.
+  - **New desktop from Mission Control (+) pauses Phases** (*observed* by
+    the author, 2026-11-07). So it's any new Space, not full screen as
+    such.
+  - **Leaving full screen doesn't pause Phases** (*observed* by the
+    author, 2026-11-07: started in full screen in Bitrig, resumed Phases,
+    left full screen). The first explanation offered for this (entries
+    removed, and the rule never reads removed entries) was wrong; see the
+    store reading below.
+  - **The store, read 2026-11-07 about 23:36 UTC** (copied, read only,
+    by Claude with the author's go-ahead; *verified*):
+    - **A new Space's entries are copies.** Spaces created at 23:28:36,
+      23:28:37, and 23:32:02 each got a `default` entry and one for
+      display `37D8832A`. Each carries the display's image and its
+      `LastSet` of 13:30:02.893007, exactly as in `display/37D8832A`,
+      which was Phases' last scheduled set. Only `LastUse` is the time
+      the Space was made. macOS doesn't stamp a new `LastSet`.
+    - So the rule sees keys missing from the earlier reading, with an
+      image Phases didn't set in the last 10 seconds, and counts them.
+      The `default` entry has no display, so every display pauses.
+    - **Entries outlive their Spaces.** The store holds 381 Spaces,
+      many last used in September and October. Leaving full screen
+      doesn't pause Phases because no entry's `LastSet` moves; nothing
+      is removed.
+    - **Unexplained:** Space `2A1F37A9` got `IMG_0761.JPG` with `LastSet`
+      23:31:54.7266 and `LastUse` 5 ms later, 1.5 s after Space
+      `D37B581D` got `IMG_1971.JPG` (about when the author resumed
+      Phases). Diagnostics were off (`PhasesDiagnostics = 0`), so there
+      is no `phases-set` log to say whose sets these were.
+  - Still open: whether a real pick on a never-picked Space stamps the
+    current time in `LastSet` (expected, *hypothesis*), which the fix
+    relies on.
+
+### `[X-reopen-window]` Launching Phases again while it runs
+
+- **Question:** what happens when Phases is launched again while it's
+  running, and can the menu bar icon's view open the window? (Issue #13.)
+- **When, on what:** 2026-11-03, macOS 27.2; runs from Terminal with
+  `open`, then `RelaunchTests`.
+- **Branches:** `experiment/reopen-window`, tag
+  `archive/experiment/reopen-window`; the feature on
+  `feature/reopen-window`, tag `archive/feature/reopen-window`.
+- **Outcome:** the menu bar icon's view handles the reopen request;
+  promoted to `[Q-reopen-ignores-closed-window]`. Along the way the UI
+  test harness's newest-build pick was found broken and fixed. Two early
+  `RelaunchTests` failures are still unexplained (22 passes since).
+- **Findings:** `[L-reopen-event]`.
+
+- `[L-reopen-event]` **What happens when Phases is launched again while
+  it's running, and can the menu bar icon's view open the window?**
+  (Issue #13, macOS 27.2.) Answered; experiment on branch
+  `experiment/reopen-window` (tag `archive/experiment/reopen-window`),
+  started 2026-11-03.
+  - Promoted to `[Q-reopen-ignores-closed-window]` (2026-11-03).
+  - Setup: an app delegate logs `applicationShouldHandleReopen`, then the
+    window's state 0.5 s later, under diagnostics category `reopen`.
+    Mode switch `PhasesReopenMode`: `none` (log only, AppKit and SwiftUI
+    defaults) or `label` (the menu bar icon's view opens the window the
+    way "Open Phases…" does).
+  - Questions: does a menu bar accessory get the reopen call at all; does
+    SwiftUI already show a `.suppressed` `Window` on reopen; does the
+    label view stay alive to act on a request while the window is closed;
+    does activation succeed `[Q-launch-activate-refused]`.
+  - Run 1, mode `none`, window never opened (2026-11-03, Claude, `open`
+    from Terminal, read from the log; *verified*): the reopen call
+    arrives (`hasVisibleWindows=false`), Phases becomes active, still an
+    accessory (policy 1), and SwiftUI creates no window, so nothing
+    shows. So a menu bar accessory does get reopen, and activation is
+    granted on a relaunch, unlike `[Q-launch-activate-refused]`.
+  - Run 2, mode `none`, window open behind Bitrig (2026-11-03, same
+    method; *verified* from the log): Phases became active (regular,
+    policy 0) and the window came forward as key, on the active Space.
+    Plain activation already covers this case; nothing to add. The
+    author saw the window come to the front (*observed*, same run).
+  - Run 3, mode `none`, window closed after being open (2026-11-03,
+    same method; *verified* from the log): reopen arrives
+    (`hasVisibleWindows=false`), Phases becomes active as an accessory
+    (policy 1), and the kept, hidden window stays hidden. SwiftUI doesn't
+    re-show it. Same gap as run 1. The author saw focus leave Bitrig and
+    nothing else (*observed*, same run): today a relaunch takes focus
+    from the user's app and shows nothing in exchange.
+  - Run 4, mode `none`, window minimized (2026-11-03, same method;
+    *verified* from the log): reopen arrives with
+    `hasVisibleWindows=true` even though the only window is minimized
+    (AppKit counts it), and AppKit's default handling un-minimizes it:
+    0.5 s later it's visible, key, not minimized. The author saw it come
+    up from the Dock with focus (*observed*, same run). Nothing to add.
+  - Run 5a, mode `label`, window never opened (2026-11-03, same method;
+    *verified* from the log): the menu bar icon's view received the
+    request in the same millisecond as the reopen call and opened the
+    window. 0.5 s later Phases was regular (policy 0), the window
+    visible, key, and on the active Space. So the label view is alive
+    and able to call `openWindow` while no window exists. The author saw
+    the window open (*observed*, same run).
+  - Run 5b, mode `label`, window closed with ⌘W (2026-11-03, same
+    method; *verified* from the log): the label re-showed the kept
+    window; 0.5 s later Phases was regular and the window visible and
+    key on the active Space. The author saw it (*observed*, same run).
+  - Run 5c, mode `label`, window minimized (2026-11-03, same method;
+    *verified* from the log): the label's open routine un-minimized it;
+    0.5 s later visible, key, not minimized. The author saw it come back
+    up from the Dock (*observed*, same run).
+  - **Answer (2026-11-03):** a menu bar accessory does get the reopen
+    call, and activation is granted. SwiftUI and AppKit handle the open
+    and minimized cases on their own but ignore a closed or never-opened
+    window. Handing the request to the menu bar icon's view, which runs
+    the "Open Phases…" routine, covers all three. The mode switch was
+    deleted after the runs (the running process had already read
+    `label`, so run 6 still used it).
+  - Run 6, mode `label`, window moved to Space 2 and closed there, author
+    back on Space 1 (2026-11-03, author's request, same method;
+    *verified* from the log): the window was off the active Space, the
+    `[D-open-here]` flag moved it, and it arrived on Space 1 140 ms
+    later, visible and key. The author saw it open on Space 1 and called
+    that acceptable (*observed*, same run). It's what `[D-open-here]`
+    already promises for "Open Phases…".
+  - **UI test failure, 2026-11-03, `feature/reopen-window` at `d4b73d3`**
+    (tag `archive/feature/reopen-window`)
+    (Claude): `RelaunchTests/relaunchWithTheWindowClosedShowsIt` failed
+    twice (the second run was an accident of a piped command). The test
+    sends the reopen Apple event straight to the process. The log shows
+    the handler fired and the opening routine ran (`relaunched`, then
+    the Space mover's line), but the window never showed and Phases
+    ended with no Dock icon (*verified*). Unlike the experiment's `open`,
+    nothing activated Phases first: in every experiment run, "became
+    active" was logged *before* the reopen call (*verified*), so Launch
+    Services activates, then reopens. Hypothesis, untested: the routine
+    fails when Phases isn't already active.
+  - Rerun with state logging, 2026-11-03 18:00 (Claude, one run): the
+    test **passed**, with `active=false policy=1` logged at the reopen
+    call (*verified*). So "fails when not active" is wrong: the routine
+    can show the window from an inactive accessory. Two failures and one
+    pass on the same code point to something intermittent (*hypothesis*).
+    The +0.5 s and +2 s lines never logged: the test force-quits Phases
+    as soon as the window appears (*likely*, not checked).
+  - Five more runs, 2026-11-03 18:02–18:04 (Claude), the test holding
+    Phases 3 s after the window appears: **5 of 5 passed** (*verified*).
+    Each logged inactive accessory at the reopen call, then active,
+    regular, and the window visible and key 0.5 s later. So: 6 of 6
+    pass on the build with the delayed log lines, 0 of 2 on the build
+    without them.
+  - *Hypothesis* (untested): the delayed log lines are what make it
+    work. They're timers that wake Phases' main run loop; without them,
+    an inactive menu bar app may sit idle with SwiftUI's `openWindow`
+    queued and never carried out. The experiment build had a delayed
+    log line too, and `open` activates Phases first, which also wakes it.
+  - Timers-off check, 2026-11-03 18:06 (Claude, 3 runs): **invalid.** All
+    3 passed, but every run logged the +0.5 s and +2 s lines, so the
+    harness launched an older build, not the timers-off one built at
+    18:06 (*verified* from the log).
+  - **Cause: the harness's "newest build" pick is broken** (*verified*,
+    `stat`, 18:07). It compares the `Phases.app` bundles' modification
+    dates, but Bitrig gives every bundle the same date (12:36:03 for all
+    three builds present), so the pick among ties follows directory
+    order: effectively arbitrary. Only the executable inside carries the
+    build time (17:47, 18:00, 18:06). Any UI test run made while several
+    builds sat in the Builds folder may have tested an older build than
+    intended. Which build each earlier relaunch run used is known only
+    from its log format.
+  - Harness fixed (pick by executable date, print the build). Timers-off
+    check redone, 2026-11-03 18:09–18:10 (Claude, 3 runs, build of
+    18:09:32 confirmed by the harness's printout and by the missing
+    timer lines): **3 of 3 passed** (*verified*). The timer hypothesis is
+    wrong.
+  - The experiment Phases (pid 79653) quit at 17:48:36, before the
+    failing runs (*verified*, system log), so a second instance wasn't
+    the cause either.
+  - **Still unexplained:** the two 17:49 failures ran the same relaunch
+    code (their log format shows it) and never got the window. Since
+    then, 12 of 12 runs passed (1 + 5 + 3 + 3; all ran this relaunch
+    code, 9 of them with the timer lines). The failing runs logged nothing after the
+    opening routine started, so where it stopped is unknown. The only
+    known difference: they were the session's first relaunch test runs.
+  - Ten more runs, 2026-11-03 18:19–18:22 (Claude, author's request,
+    pinned with `PHASES_APP` to the 18:11:16 build of the committed
+    code, since another conversation was active in the workspace):
+    **10 of 10 passed** (*verified*). Tally since the two failures: 22 of
+    22.
+
+### `[X-menubar-launcher-setting]` Missing menu bar icon under Bitrig
+
+- **Question:** why did a Phases launched from Bitrig have no menu bar
+  icon?
+- **When, on what:** 2026-11-04, macOS 27.2.
+- **Branch:** none.
+- **Outcome:** Bitrig's own switch in System Settings → Menu Bar was off;
+  a launched Phases follows it. Why is an untested hypothesis.
+- **Findings:** `[L-menubar-launcher-setting]`.
+
+- `[L-menubar-launcher-setting]` **A Phases launched by Bitrig follows
+  Bitrig's own switch in System Settings → Menu Bar.**
+  - **How it came up, 2026-11-04:** after the UI test runs, the build
+    launched with Bitrig's Run button had no menu bar icon. The process
+    was running, idle, and an accessory app (*verified*, `ps`,
+    `sample`), and Accessibility reported no menu bar item for it at all
+    (*verified*). The system log said nothing. Phases' own entry in
+    Menu Bar settings was on.
+  - **Cause (found by the author):** Bitrig's entry in that list was
+    off. Turning it on made Phases' icon appear; toggling it shows and
+    hides Phases' icon in step (*verified* by the author, repeated
+    toggles).
+  - **Why, hypothesis (author's, untested):** macOS charges a menu bar
+    icon to the app that launched the process (its topmost parent), and
+    the child inherits that app's setting. It fits how macOS attributes
+    privacy permissions to a "responsible" app (*recalled*), but nothing
+    here tested it.
+  - **Apple's docs don't mention it** (searched 2026-11-04: the HIG's
+    "Menu bar extras", `MenuBarExtra`, `NSStatusItem`). The HIG only
+    says the system hides extras to make room, and that people can hide
+    them.
+  - **Not checked:** whether copies launched by the UI tests (`swift test`
+    from Claude's shell inside Bitrig) follow the same switch. They had
+    icons during today's runs, but when Bitrig's switch went off isn't
+    known. Also unchecked: whether an installed copy opened from Finder
+    is affected (it shouldn't be, if the hypothesis holds).
+  - **If an icon is ever missing:** check the launching app's entry in
+    Menu Bar settings, not just Phases'.
+
+### `[X-menubar-overflow]` Menu bar overflow and the test harness
+
+- **Question:** is Phases' menu bar icon hidden when the menu bar runs
+  out of room, and why does the UI test harness sometimes refuse to
+  click it?
+- **When, on what:** 2026-10-30 to 2026-11-04, macOS 27.2, several
+  display setups. Tracked as issue #11.
+- **Branch:** the harness fix on `fix/menubar-hit-retry`, tag
+  `archive/fix/menubar-hit-retry`.
+- **Outcome:** on macOS 27.2 a chevron reveals hidden icons; macOS 26
+  untested. The harness now rechecks ownership for up to 2 s. The test
+  beeps are macOS's type-to-select.
+- **Findings:** `[L-menubar-overflow]`.
+
+- `[L-menubar-overflow]` **Is Phases' menu bar icon hidden when the menu
+  bar runs out of room?** On macOS 27.2, no: a chevron reveals it. Still
+  open for macOS 26. Tracked as GitHub issue #11; no action for now.
+  - **How it came up:** a UI test run on `fix/cover-memory` (tag
+    `archive/fix/cover-memory`), 2026-10-30,
+    two external displays (no built-in), Bartender not running.
+    - The driver found Phases' menu bar item at x = 2630 but refused to
+      click it ("isn't this test instance's"). *Measured.*
+    - That failed `deleteRemovesANewlyAddedPhase` and, most likely, one
+      `FocusTests` test whose message wasn't kept. A rerun of
+      `FocusTests` alone passed all three.
+    - Suspected cause (*guess*): the author runs the Cinema HD at
+      1000 × 1600, narrow enough that macOS may push status items off the
+      menu bar.
+  - **Why it matters beyond tests:** on that display a person might not
+    reach Phases' menu at all.
+  - **Update, same day:** the author checked the narrow display. It had
+    run out of room, and macOS showed a chevron that expands the hidden
+    icons when clicked, so Phases stays reachable on macOS 27.2
+    (*observed* by the author).
+  - **Seen again, 2026-11-03** (Claude, `feature/reopen-window`, fast
+    suite twice): the same refusal, "the menu bar item at (2541.0, 31.5)
+    isn't this test instance's," at launch. 17:51: `brandingPanelScreenshot`
+    (build not known, see the harness note under `[L-reopen-event]`).
+    18:11: `brandingPanelScreenshot` and `gridIsOneTabStopAndArrowsScroll`
+    (build of 18:11:16, printed by the harness); the other 11 passed
+    (*verified*). Same x every time, wide display, no leftover Phases
+    afterward. *Guess:* the previous test's force-quit instance still
+    owns that spot for a moment.
+  - **Seen again, 2026-11-04** (Claude, `main` at `63249c1`, Debug build
+    of 22:53:03 printed by the harness, built-in display only, 3024 ×
+    1964 Retina with the notch): `deletingAMiddlePhaseSelectsTheOneBelow`
+    refused "the menu bar item at (987.0, 15.5) isn't this test
+    instance's." The fast suite logged 2 issues; the other's message
+    was lost (output cut off), so which test it hit is unknown. The
+    installed Phases (`/Applications`, pid 99271) was running throughout
+    (*verified* afterward, `pgrep`). *Hypotheses*, untested: the item
+    found was the installed Phases' icon, or the notch left too little
+    room right of it and hid the test instance's icon.
+  - **Rerun, 2026-11-04** (Claude, same build, built-in display only, the
+    notch area disabled by the author's resolution, no other Phases
+    running, *verified* with `pgrep` before the run): 11 of 13 passed.
+    `brandingPanelScreenshot` and `typingAfterReopeningDoesNotRenameThePhase`
+    refused "the menu bar item at (1023.0, 15.5) isn't this test
+    instance's"; `deletingAMiddlePhaseSelectsTheOneBelow`, which failed
+    the first run, passed. That rules out the installed Phases and the
+    notch. Both failing tests were the second in their suite, right after
+    another test's instance was force-quit (*observed*, two cases).
+    *Hypothesis*, untested: the harness hit-tests the item while the menu
+    bar is still re-laying out after the old instance's item went away,
+    so the point briefly belongs to something else. The refusal message
+    doesn't name the owner it found, so the log can't confirm this.
+  - The author heard a system beep the 2nd and 4th time a window
+    appeared in this run (*observed*, author). *Hypothesis*, untested:
+    the Focus tests press X to prove it doesn't rename the phase, and a
+    key nothing handles beeps. The run's output has no timestamps, so
+    which tests the beeps came from is unknown.
+  - Beeps again in the 13-of-13 run (author). The run's output shows the
+    sidebar outline had focus at every X press (*verified*, the tests'
+    "Focused on" lines; 3 presses in that run, 2 in the rerun before it,
+    where the reopen test failed before pressing). No phase starts with
+    X, and a list's type-to-select beeps when nothing matches
+    (*recalled*, not tested here). That fits, but nothing ties a beep to
+    a press yet.
+  - **Answered, 2026-11-04:** the author pressed keys in the sidebar by
+    hand: focus behaves as the tests expect, and a key that matches no
+    phase beeps (*verified* by the author). The beeps are macOS's, not a
+    failure.
+  - **Harness fix, 2026-11-04** (`fix/menubar-hit-retry`, tag `archive/fix/menubar-hit-retry`, approved by the
+    author): the ownership check rechecks for up to 2 s and names the
+    owner when it refuses. First run with it: 13 of 13 (*verified*).
+
+### `[X-hdr-wallpaper]` HDR photos as wallpaper
+
+- **Question:** does macOS draw an HDR photo as wallpaper in SDR or with
+  HDR headroom?
+- **When, on what:** 2026-10-30, macOS 27.2, built-in display, the
+  author's iPhone HEIC.
+- **Branch:** none.
+- **Outcome:** SDR, by the author's eye against a known-HDR control; no
+  tool here could measure it. Bears on `[D-cover-iosurface]`.
+- **Findings:** `[L-hdr-wallpaper]`.
+
+- `[L-hdr-wallpaper]` **How does macOS draw an HDR photo (an iPhone
+  HEIC with a gain map) as wallpaper: SDR, or with HDR headroom?**
+  - **Answer: SDR,** by the author's eye against a known-HDR control
+    (2026-10-30, below). No tool here could measure it.
+  - **Why it matters:** bears on `[D-cover-iosurface]`. An 8-bit SDR
+    cover surface is right only if macOS shows the wallpaper as SDR.
+  - **Apple's documentation doesn't say.** Read 2026-10-30, macOS 27.0
+    SDK:
+    - `NSWorkspace` desktop-image pages and `DesktopImageOptionKey`: only
+      scaling, clipping, and fill color.
+    - "Enhancing high dynamic range image rendering": how an app shows
+      HDR, not the wallpaper.
+  - **What the SDK offers a cover, if it ever needs to match HDR:**
+    - `kCGImageSourceDecodeRequest` = `kCGImageSourceDecodeToHDR`:
+      decodes with the gain map applied.
+    - `kIOSurfaceContentHeadroom`: tags a surface's headroom.
+    - `CALayer.preferredDynamicRange` (macOS 26+): defaults to
+      `.standard`, which per the header tone-maps `contents` with
+      headroom above 1.0 down to SDR.
+  - **The test photo** (author's iPhone HEIC): 4032 × 3024, Display P3,
+    8-bit base, ISO gain map. *Measured:*
+    - HDR decode: headroom 4.1.
+    - ImageIO's default decode: 8-bit, headroom 1.0, so the default is
+      SDR. (The headers don't say; first noted as *recalled*, now
+      measured.)
+  - **What we saw** with it as wallpaper on the built-in display:
+    - It "looks pretty SDR" (*observed* by the author).
+    - It was set with Finder's Services › Set Desktop Background, not
+      by Phases, so this is macOS's own rendering: what a cover has to
+      match.
+    - A screen capture matched the default SDR decode by eye
+      (*observed*). Weak evidence: `screencapture` output is SDR, so it
+      can't show HDR either way (*recalled*).
+    - The built-in display's
+      `maximumExtendedDynamicRangeColorComponentValue` read 1.2
+      (potential 16). A wallpaper using the photo's 4.1 headroom would
+      likely push that higher (*recalled*, not calibrated).
+  - **Known-HDR control, same day:** the same photo open full screen in
+    Preview on the built-in display, its bright areas visibly brighter
+    than SDR white (*observed* by the author). So the display does show
+    this photo as HDR, and the wallpaper doesn't: the author's
+    side-by-side is the evidence for "SDR".
+    - The EDR reading stayed at 1.2 with Preview showing HDR. It reports
+      headroom available, not headroom in use, so it can't tell the two
+      apart. *Measured.*
+    - ScreenCaptureKit per-window capture with `.hdrLocalDisplay` (16-bit
+      half float, extended linear Display P3) also topped out at SDR
+      white for Preview's window (max 1.09, under 0.01% of pixels above
+      1.05), the same as the wallpaper window. So it didn't see Preview's
+      HDR either and can't settle this. *Measured.* Why not: unknown
+      (*guess*: Preview's HDR content isn't in the window's captured
+      surface, or per-window capture tone-maps). A whole-display capture
+      wasn't tried.
+    - A ⌘⇧3 screenshot with Preview showing HDR also came out SDR
+      (*observed* by the author).
+    - No tool here measures HDR on screen yet; only the eye does.
+  - **How macOS does HDR, as far as we know:**
+    - SDR is the baseline. Pixel value 1.0 is SDR white, shown below the
+      panel's peak; values above 1.0 use the leftover headroom
+      (extended dynamic range, EDR). *Recalled.*
+    - Content gets the headroom only if it carries values above 1.0
+      *and* its layer opts in. `CALayer.preferredDynamicRange` defaults
+      to `.standard`, which tone-maps it down to SDR. *Read* in the SDK
+      header, 2026-10-30.
+    - Screenshots and our captures clip at SDR white, so they can't
+      show the difference (*observed*; the clipping explanation is
+      *recalled*).
+    - So the wallpaper showing SDR fits either of two causes: macOS
+      decodes it without the gain map, or its layer doesn't opt in.
+      Which one doesn't matter to Phases (*inference*).
+  - **Still open:**
+    - Whether Phases' `setDesktopImageURL` gets the same rendering as
+      Finder: *inference* that it does (macOS draws the wallpaper either
+      way), not tested. The new cover will show it: an HDR photo should
+      look the same before and after the cover comes off.
+
+### `[X-first-launch-activation]` First-launch window staying behind
+
+- **Question:** why does the window open behind the frontmost app on a
+  first launch?
+- **When, on what:** recorded in the tag, not here.
+- **Branch:** `experiment/first-launch-activation`, tag
+  `archive/experiment/first-launch-activation` (the branch named below
+  is now deleted; the run-by-run record is in the tag).
+- **Outcome:** promoted to `[Q-launch-activate-refused]` (2026-11-06).
+- **Findings:** `[L-first-launch-activation]`.
+
+- `[L-first-launch-activation]` First-launch window staying behind:
+  promoted to `[Q-launch-activate-refused]` (2026-11-06). The run-by-run
+  record is on `experiment/first-launch-activation`.
+
+### Still open
+
+- `[L-cover-alpha-later]` **Could the 99% cover go to 100% once the menu
+  bar has restyled, and does it matter?** Untested. Measure before
+  acting on any of this (author and Mike, 2026-10-30).
+  - **Risks,** from `[L-opaque-cover-freezes-menubar]`:
+    - An opaque cover might stop the menu bar restyling on Space arrival
+      and on macOS's own late restyles `[L-menubar-lazy-restyle]`.
+    - Every change would have to drop back to 99% first.
+  - **Memory: probably no difference.** The window's backing store is
+    the same size either way, and the experiment's covers were already
+    marked non-opaque (`isOpaque = false`) at both settings (*recalled*
+    AppKit behavior, not measured).
+  - **GPU:** blending costs compositing work, which is near zero while
+    the desktop is still (*believed*).
+- Design questions raised by the experiment (what System Settings
+  changes do under the cover, display changes, a switch to turn the cover
+  off, same-on-every-Space versus per Space, and how Pause, Quit, and
+  Transition: None treat the cover) are tracked as GitHub issues labeled
+  "planning" (author, 2026-10-30), not here.
+
+## Photos library (issue #33)
+
+### `[X-33-photokit]` Photos library from a not-sandboxed Phases (round A)
+
+- **Question:** not recorded as one question. This is Phase 0 of the issue
+  #33 plan (`docs/PLAN-GITHUB-ISSUE-33.md`), round A, not sandboxed.
+- **When, on what:** 2026-11-12, macOS 27.2; the author's library with
+  "Optimize Mac Storage" on, album "NIN 2013" (61 images, 63 items); probe
+  build cdhash `9808ae12`. Run by Claude with the author's yes.
+- **Branch:** `experiment/33-photokit` (probe in
+  `App/Experiments/PhotoKitProbe.swift`); `archive/…` tag not recorded.
+- **Outcome:** not recorded.
+- **Findings:** `[L-photos-x0-paths]`, `[L-photos-x1-permission]`,
+  `[L-photos-x2-albums]`, `[L-photos-x3-download]`,
+  `[L-photos-x4-cache-wallpaper]`, `[L-photos-x5-observer]`,
+  `[L-photos-x6-ids]`, `[L-photos-album-order]`.
+
+Source for this section unless noted: Phase 0 of the issue #33 plan
+(`docs/PLAN-GITHUB-ISSUE-33.md`), round A (not sandboxed), 2026-11-12,
+macOS 27.2, the author's library with "Optimize Mac Storage" on, album
+"NIN 2013" (61 images, 63 items). Probe: `App/Experiments/PhotoKitProbe.swift`
+on branch `experiment/33-photokit`, build cdhash `9808ae12`. Run by Claude
+with the author's yes.
+
+- `[L-photos-x0-paths]` **Not sandboxed, every way of finding home agrees,**
+  and the wallpaper store is readable through `homeDirectoryForCurrentUser`
+  (`/Users/rmohns` from that, `NSHomeDirectory()`, and `getpwuid`). Caches
+  is `~/Library/Caches`. *Verified.* The sandboxed comparison is round B.
+- `[L-photos-x1-permission]` **The Photos prompt worked from the probe
+  launch** (`open -n`, menu bar app, not sandboxed): "not determined" →
+  prompt → "authorized" in 10 s, the author choosing full access.
+  *Verified.* Whether a new build asks again is untested (round B
+  rebuilds).
+- `[L-photos-x2-albums]` **PhotoKit lists the author's albums and folders of
+  albums in sidebar order, nested,** plus 16 shared albums (subtype 101)
+  and the smart albums. Item counts include videos; filtering to images
+  works. Two albums have the same name ("Hydra" twice; "Walllpapers &
+  Desktop Pictures" twice, in different folders), so an album has to be
+  saved by ID, not name. *Verified.*
+  - **Album order is still open.** "NIN 2013" came back in the same order
+    with no sort and with a date sort, so this album can't tell whether
+    the default order is the album's own order. Needs an album sorted by
+    hand in Photos.
+- `[L-photos-x3-download]` **iCloud-only photos fail fast offline and
+  download quickly online.** All 10 test photos (2013 JPEGs, 3264 × 2448)
+  were iCloud-only. *Verified.*
+  - Network off: no data at once, `PHImageResultIsInCloudKey` true, and
+    `PHPhotosErrorDomain` 3164 (with network access not allowed), or "The
+    Internet connection appears to be offline" (with it allowed), both
+    in under 0.1 s. No hang.
+  - Online: 0.51–1.43 s per photo, 927–1493 KB each, the original JPEG at
+    full size, 2–4 progress callbacks. Written to Caches and read back at
+    full size.
+  - Open: whether a download leaves the photo local in Photos. The online
+    run's "in cloud" check came *before* each download, so it says
+    nothing about after. (Corrected 2026-11-12 by Claude: the first
+    version of this entry claimed a later run showed the photo still in
+    the cloud, but no such run took place.) Either way, Phases should keep
+    its own copy, since Photos can drop local originals at any time
+    (*recalled*).
+  - Not covered: edited photos, Live Photos, HEIC, large files, a slow
+    connection. None of the 10 had an edit or a Live Photo.
+- `[L-photos-x4-cache-wallpaper]` **A file in `~/Library/Caches` works as a
+  wallpaper** (not sandboxed). `setDesktopImageURL` raised no error, and
+  `desktopImageURL` read back the cached file after 3 s. The original
+  (`~/Pictures/Desktop Pictures/Peter Lik - Bamboo Forest Path.jpg`) was
+  put back with no error. *Verified* by the API, and on screen by the
+  author: the concert photo showed, then the Bamboo Forest came back.
+  - **The store reading was inconclusive.** The latest desktop entry the
+    probe found named `~/Pictures/Desktop Pictures/IMG_0761.JPG`, neither
+    the cached file nor the original, so the probe's walk probably picked
+    another Space's or display's entry. Not a finding about the store.
+- `[L-photos-x5-observer]` **The change observer fires while Phases is in
+  the background.** Adding a photo to the album, then removing it, gave
+  five notifications in 3 minutes: one "inserted 1" (62 images), one
+  "removed 1" (61), and three that didn't touch the album. *Verified.*
+- `[L-photos-x6-ids]` **First record of IDs saved** (10 local IDs plus
+  cloud IDs) in `~/Library/Caches/PhasesProbe/x6-ids.txt`. Comparing
+  across builds and the sandbox is round B.
+- `[L-photos-album-order]` **The default fetch follows the album's own
+  order.** "Gift Ideas" (4 photos, put in a hand-made order by the
+  author on 2026-11-12) came back with no sort as 6045, 2737, 6046,
+  2736, and sorted by date as 2736, 2737, 6045, 6046. *Verified*: the
+  author confirmed the first list matches the album in Photos. So "In
+  order" for an album can mean the album's own order.
+
+### `[X-33-sandbox]` Photos library from a sandboxed Phases (round B)
+
+- **Question:** not recorded as one question. The same probe as round A,
+  built with `com.apple.security.app-sandbox` only.
+- **When, on what:** 2026-11-12, macOS 27.2; builds cdhash `586935f0`, and
+  `615f31ef` for the wallpaper check. Run by Claude with the author's yes.
+- **Branch:** not recorded (the same probe as `experiment/33-photokit`;
+  the text names no branch for round B).
+- **Outcome:** not recorded.
+- **Findings:** `[L-sandbox-team-needed]`, `[L-sandbox-x0-paths]`,
+  `[L-sandbox-prefs-move]`, `[L-sandbox-x1-no-entitlement]`,
+  `[L-photos-new-build-asks]`, `[L-sandbox-photos-works]`,
+  `[L-photos-ids-stable]`, `[L-sandbox-x4-container-wallpaper]`.
+
+### Round B: sandboxed (2026-11-12, macOS 27.2)
+
+Same probe, built with `com.apple.security.app-sandbox` only (build
+cdhash `586935f0`). Run by Claude with the author's yes.
+
+- `[L-sandbox-team-needed]` **Bitrig won't build the Photos or the
+  wallpaper-store entitlement without a development team.** With either
+  `com.apple.security.personal-information.photos-library` or the
+  `temporary-exception.files.home-relative-path.read-only` exception,
+  the build failed: "This Mac app uses capabilities that require
+  development signing. No development team is available." The sandbox
+  entitlement alone builds. *Verified* (three builds, one entitlement
+  set each).
+- `[L-sandbox-x0-paths]` **In the sandbox, `homeDirectoryForCurrentUser`
+  and `NSHomeDirectory()` both point into the container**
+  (`~/Library/Containers/<bundle ID>/Data`); `getpwuid` still gives
+  `/Users/rmohns`. Caches is in the container. The wallpaper store
+  can't be read either way: "no such file" through the container home,
+  "you don't have permission" through the real home. *Verified.* So
+  `WallpaperStoreWatcher` and `SystemWallpaperInspector` would silently
+  see nothing in a sandboxed build without the exception.
+- `[L-sandbox-prefs-move]` **The first sandboxed launch moved Phases'
+  preferences into the container.** `~/Library/Preferences/<bundle
+  ID>.plist` was gone afterward, and identical copies of it (and of the
+  `.uitest` store) were in the container's `Library/Preferences`.
+  *Verified* (compared against a backup taken just before).
+  - Once the container exists, `defaults import` from Terminal wrote
+    into the container, not `~/Library/Preferences`. *Verified* by the
+    file's time. The TESTING.md `defaults write … PhasesDiagnostics`
+    command would do the same (*inferred*, not tried).
+  - Claude put the backup back at `~/Library/Preferences` by copying
+    the file. Whether the unsandboxed installed Phases reads it
+    correctly is untested until the author relaunches it.
+- `[L-sandbox-x1-no-entitlement]` **Without the Photos entitlement, the
+  sandboxed build still got a Photos prompt.** The TCC log at 11:43:55
+  says "showing the prompt" for Phases. Nobody answered it (the author
+  was away), so `requestAuthorization` waited over 5 minutes until
+  Claude stopped the probe. *Verified* (TCC log). Whether access works
+  without the entitlement once allowed is still open.
+  - (Corrected 2026-11-12 by Claude: the first version said the TCC log
+    showed no Photos request from Phases. That search filtered on
+    "Photos" in the message and missed the lines naming Phases.)
+- `[L-photos-new-build-asks]` **A new build asks for Photos again.** The
+  same TCC request logged "Failed to match existing code requirement …
+  kTCCServicePhotos" with the round A build's cdhash (`9808ae12…`) and
+  this build's (`586935f0…`). So the round A grant didn't carry over to a
+  build with a different signature. *Verified* (TCC log), for one rebuild
+  that also added the sandbox. Whether a plain rebuild with no
+  entitlement change does the same is untested.
+- `[L-sandbox-photos-works]` **The sandbox-only build reads Photos.**
+  With no Photos entitlement, a rerun of X1 (build `586935f0`, author at
+  the Mac) found access already "authorized" before asking, and showed
+  no prompt (author). X6 then read the album and its IDs. *Verified*
+  for this ad-hoc-signed Debug build. How the 11:43 prompt came to be
+  allowed is not known: the TCC log shows it prompting, and the author
+  was away. Whether a Release or notarized build behaves the same is
+  untested.
+- `[L-photos-ids-stable]` **Photo IDs held across builds and the
+  sandbox.** All 10 local IDs and cloud IDs from round A (unsandboxed,
+  `9808ae12`) matched the sandboxed build's (`586935f0`). *Verified.*
+- `[L-sandbox-x4-container-wallpaper]` **A sandboxed Phases can set a file
+  in its container as the wallpaper, and put back one outside it.**
+  Build `615f31ef` (probe store check skipped by
+  `-PhasesProbeSkipStoreCheck`, after Claude confirmed from Terminal
+  that the main display showed `~/Pictures/Desktop Pictures/Peter Lik -
+  Bamboo Forest Path.jpg`) set a JPEG under
+  `~/Library/Containers/<bundle ID>/Data/Library/Caches/` with no error,
+  `desktopImageURL` read it back, and putting back the `~/Pictures`
+  original raised no error. *Verified* by the API, and on screen by the
+  author: the concert photo showed, then the Bamboo Forest came back.
+  The store couldn't be read
+  afterward, as in `[L-sandbox-x0-paths]`.
+
+### `[X-33-photos-checks]` Merge #2 Photos checks
+
+- **Question:** do Photos sources behave as the draft 54 spec says (then
+  draft 53 on the branch) with the author's real settings and library?
+  Nine hands-on checks, listed in TESTING.md "Photos checks".
+- **When, on what:** 2026-11-12, macOS 27.2; builds from 16:44 local on,
+  not sandboxed. Run by the author, with
+  Claude reading the diagnostics log.
+- **Branch:** `feature/33-photos-albums`.
+- **Outcome:** all nine checks passed; two fixes landed on the branch
+  (the brand panel during a wait, and rereading Photos sources before
+  showing).
+- **Findings:** `[L-photos-grant-needs-relaunch]`,
+  `[L-photos-grant-per-build]`, `[L-photos-offline-check]`,
+  `[L-photos-formats-check]`, `[L-photos-deleted-album-race]`.
+
+Draft 53 build of 16:44 local (`feature/33-photos-albums`), not
+sandboxed, the author's real settings and library.
+
+- `[L-photos-grant-needs-relaunch]` **Turning Phases on under Privacy &
+  Security › Photos didn't reach a running Phases.** After the author
+  refused the prompt, then allowed Phases in System Settings, Add Photos
+  Album… still showed "no access". A Phases launched at 21:38 logged
+  "access asked: 2" (denied); whether that was before or after the
+  change in System Settings isn't known. After Claude quit and relaunched
+  Phases (21:4x), the albums showed. *Observed* by the author, once;
+  diagnostics log for the status. System Settings listed one Phases
+  entry (author), so Claude's guess of a grant going to another build's
+  entry was wrong. Why (*hypothesis*): PhotoKit keeps a process's
+  authorization once it has been decided, so only a relaunch rereads it.
+  Not checked: whether a running Phases picks it up after a longer wait.
+- `[L-photos-grant-per-build]` **Each Bitrig build loses the Photos
+  grant.** Bitrig signs debug builds ad hoc (`codesign -dv`:
+  `Signature=adhoc`, no team), so TCC pins the grant to the build's
+  cdhash. On 2026-11-12, after a relaunch into the 22:26 build, every
+  Photos source read "Can't open". tccd logged at 22:30:27 "Failed to
+  match existing code requirement for subject app.bitrig.new.ecd0db30…
+  and service kTCCServicePhotos", with the old and new cdhashes, and the
+  status read as not yet asked. The 22:05 build had prompted again at
+  22:13 for the same reason. *Verified* by Claude from the tccd log. This
+  may also explain `[L-photos-grant-needs-relaunch]` (*hypothesis*).
+  Builds signed with a team (Developer ID or App Store) keep one
+  designated requirement across builds, so users won't see this
+  (*recalled*). During checks: after each new build, Add Photos Album…
+  prompts again; allow it.
+- `[L-photos-offline-check]` **Offline, the fallback worked, but kept
+  landing on the same photo.** Phase: Gift Ideas (4, cached) then 3
+  Buddhism photos (not cached), In order, 1 minute. Wi-Fi off about
+  21:55–22:02. Each Buddhism photo failed ahead in under 0.1 s ("The
+  Internet connection appears to be offline"), failed again at its
+  change, and fell back. All three fell back to IMG_6045, the first
+  Gift Ideas photo: In order's "next on hand after the missing one"
+  wraps to the start for every photo at the end of the list. Only the
+  first fallback logged a set; the next two were the image already
+  showing, so nothing changed on screen. Back online, each Buddhism
+  photo was fetched 30 s ahead in 0.62–0.93 s and set on time.
+  *Verified* (diagnostics log), and *observed* by the author on screen.
+  - The brand panel briefly showed the missing photo's thumbnail at each
+    failed change, because the applied record names the planned pick
+    before the fetch settles (author's screen recording). Fixed the same
+    day: the panel keeps what's showing while a change waits.
+- `[L-photos-formats-check]` **An edited (cropped) photo, a Live Photo,
+  an iPhone ProRAW+HEIC, and a Canon DSLR RAW all showed the way Photos
+  shows them.** *Observed* by the author, 22:13–22:15, build of 22:05.
+  Every cache file was a HEIC or JPEG of 0.3–3.6 MB, none a RAW, so
+  Photos handed over a rendered version for `.current` (or Phases
+  converted it); the log can't tell which. Fetches took 0.52–1.91 s.
+  The edited photo's file carries a modification time minutes old,
+  consistent with an edit giving a new cache file `[D-photos-version]`.
+- `[L-photos-deleted-album-race]` **A photo from an album the author was
+  deleting was set as the wallpaper at 22:18:02,** the change after
+  Photos reported a library change (22:17:41, which made Phases pick
+  again). The phase's selection was only that album, so afterward every
+  pick found nothing and Change Now did nothing, as the spec says for a
+  phase with no available images. *Verified* (diagnostics log), the set
+  *observed* by the author. When the album was deleted isn't known
+  (author), so whether this was a race (PhotoKit still listing the album
+  for a moment after the delete) or a set just before the delete is a
+  *hypothesis*. Treated as a race, the author's call: since the same day
+  Phases rereads its Photos sources just before showing, and a photo no
+  longer in the library counts as missing even if it's cached. If
+  PhotoKit itself lags, that reread can't help.
+
+
+## Image sources (issue #33, merge 1)
+
+### `[X-33-image-sources]` Image sources: findings from merge 1 of issue #33
+
+- **Question:** not recorded as one question; these are findings from merge
+  1 of issue #33, not a planned experiment.
+- **When, on what:** 2026-11-12, macOS 27.2; draft 52 build, not sandboxed
+  (the NAS entry); the closed-menu entry rests on two runs of
+  `undoPutsBackASourceRemovedWithTheMouse` the same day.
+- **Branch:** none; findings from merge 1 of issue #33, no experiment
+  branch.
+- **Outcome:** not recorded as one outcome. `[L-nas-bookmark-rename]`
+  needed no code change; `[L-closed-menu-stale]` was promoted to
+  `[Q-undo-menu-ax]` (2026-11-12), per the entries below.
+- **Findings:** `[L-nas-bookmark-rename]`, `[L-closed-menu-stale]`.
+
+- `[L-nas-bookmark-rename]` **A security-scoped bookmark to a folder on
+  a file server doesn't follow a rename; one to a local folder does.**
+  Draft 52 build, not sandboxed, 2026-11-12, macOS 27.2. Renaming a local
+  source folder while Phases ran: the row followed the new name. Renaming
+  a source folder on the author's NAS: the row showed "Can't open", and
+  Locate… brought the phase's selections back. *Verified* by the author,
+  on screen. Why (*recalled*, not tested here): bookmarks find local
+  items by file ID as well as path, and a network volume over SMB doesn't
+  give a stable file ID, so only the old path is left. Matches
+  `[D-source-location]`'s fallback design; no code change.
+- `[L-closed-menu-stale]` **A closed menu's items, read through AX, keep
+  the title and enabled state from when the menu last opened.** After
+  removing a source, the closed Edit menu read "Undo" (not "Undo Remove
+  “…”"), and after pressing it through AX, Redo still read disabled, so
+  pressing Redo did nothing. Pressing Undo did work: the source came
+  back. *Verified* by `undoPutsBackASourceRemovedWithTheMouse`, 2026-11-12
+  (two runs). The author, opening the menu by hand, saw "Undo Remove
+  “Jocelyn age 15-months-to-5-years”", and Undo and Redo both worked
+  (*verified* by the author, on screen). Why (*recalled*): AppKit
+  validates and retitles menu items when the menu is about to open. The
+  test now opens the Edit menu through AX before reading it.
+  - *Correction, same day:* opening the menu with an AX press didn't
+    help; the items still read "Undo" and "Redo (disabled)". A real
+    click on Edit, then on the item, worked, but only once the test
+    matched plain "Undo"/"Redo": through AX the items never carry the
+    action name, even with the menu open, and on screen a long folder
+    name truncates the title in the middle (the author, watching the
+    run). Passed with real clicks, 2026-11-12 (*verified*). So the
+    "retitles on open" explanation holds for the screen but not for AX.
+    Promoted to `[Q-undo-menu-ax]` (2026-11-12), since the test code
+    depends on it.
+
+## Retired designs
+
+Designs that were on `main` and have since been replaced. Moved here
+from ERRATA.md "Design history" when the code they explain was gone.
+
+### `[X-cover-settle]` Crossfade settle timing (drafts 5–32)
+
+Moved from ERRATA.md on 2026-11-09, followed by "The twitch returns"
+(also from ERRATA.md "Design history", the story of why the delay grew).
+Digest: `[L-cover-settle-delay]`, `[L-twitch-returns]`.
+
+`[D-cover-settle]`, replaced in draft 33 by `[D-persistent-cover]`,
+removed the cover 1.5 s after the wallpaper was set.
+
+- *Why 1.5 s:* macOS plays its own motion 0.55–0.65 s after the wallpaper
+  is set `[Q-wallpaper-motion-delay]`. Draft 5's 0.5 s delay removed the
+  cover right as that motion played, bringing the twitch back (see "The
+  twitch returns"). 1.5 s leaves about 0.7 s of margin.
+- *Cost:* the menu bar's background lags the fade by about 1.5 s instead of
+  0.5 s `[Q-menubar-bg-follows-window]`. The menu bar's text and icon color
+  lag as before `[Q-menubar-restyle-on-app-switch]`.
+- Code was `CrossfadeController.settleDelay`, removed in draft 33.
+
+#### The twitch returns
+
+`[L-twitch-returns]` (demoted from ERRATA.md "Design history" on
+2026-11-09; text unchanged below).
+
+2026-10-28, draft 22. The twitch came back on macOS 27.2, on one display or
+two. A frame-by-frame analysis of a screen recording (seven changes)
+showed:
+
+- The fade itself is smooth, and the cover matches the final wallpaper
+  exactly (before and after differ only at noise level). So the cover's
+  image and geometry aren't the cause.
+- The twitch is about 0.13 s of the image shifting and settling back. It
+  starts 0.55–0.65 s after the fade ends, in the same frames as the menu
+  bar restyle. (Draft 22 read that as when macOS actually shows the new
+  wallpaper; see the correction under `[Q-wallpaper-motion-delay]`.)
+- The cover was removed 0.5 s after the fade ended `[D-cover-settle]`, just
+  before macOS's own motion, so the motion showed through.
+
+The crossfade code's timing hadn't changed since draft 5. The author
+believes (not certain) the original fix was tested on macOS 27.1, so macOS
+27.2 may have made wallpaper changes slower. That's unconfirmed; the draft
+5 timing may also have been marginal from the start. The fix is a longer
+settle delay (1.5 s), not a new mechanism (see "Crossfade settle timing
+(drafts 5–32)", moved on 2026-11-09 to EXPERIMENTS.md `[X-cover-settle]`).
+
+The same recording showed a second, separate problem: turning System
+Settings' "Show menu bar background" on or off started a crossfade to a new
+image `[Q-screen-params-notification]`. See `[D-screen-change-no-reroll]`.

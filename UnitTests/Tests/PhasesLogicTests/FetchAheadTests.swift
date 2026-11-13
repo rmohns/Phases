@@ -50,6 +50,12 @@ struct FetchAheadTests {
     #expect(FetchAhead.replacement(for: "C", in: pool, onHand: ["B"], order: .inOrder, showing: []) == "B")
   }
 
+  @Test func inOrderSkipsWhatTheDisplayIsShowing() {
+    // [D-in-order-remembers] C is showing, so D, unless C is all there is.
+    #expect(FetchAhead.replacement(for: "B", in: pool, onHand: ["C", "D"], order: .inOrder, showing: ["C"]) == "D")
+    #expect(FetchAhead.replacement(for: "B", in: pool, onHand: ["C"], order: .inOrder, showing: ["C"]) == "C")
+  }
+
   @Test func nothingElseOnHandGivesNil() {
     for order in ImageOrder.allCases {
       #expect(FetchAhead.replacement(for: "B", in: pool, onHand: [], order: order, showing: []) == nil)

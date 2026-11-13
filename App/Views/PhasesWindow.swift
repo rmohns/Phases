@@ -1,5 +1,9 @@
 import SwiftUI
 
+/// [D-diagnostics-switch] Window layout: the detail pane's top safe area
+/// and the pause banner [D-window-pause-banner].
+private let windowDiagLog = Diagnostics.logger("window")
+
 /// The single Phases window [D-one-window]: phases and Settings in the sidebar,
 /// the selected item's editor in the detail area.
 struct PhasesWindow: View {
@@ -11,6 +15,9 @@ struct PhasesWindow: View {
   /// moment, so SwiftUI drops the detail pane and the grid's thumbnails.
   @State private var holdsDetail = true
   @State private var isOpen = true
+  /// [D-brand-egg] Held by the window, not the panel row, so scrolling the
+  /// panel away doesn't reset it.
+  @State private var showsMeme = false
   @FocusState private var sidebarFocused: Bool
 
   var body: some View {
@@ -18,7 +25,7 @@ struct PhasesWindow: View {
       List(selection: $selection) {
         // [D-brand-scrolls] First list item, so it scrolls away with long
         // phase lists; never pinned.
-        SidebarBranding(scheduler: scheduler)
+        SidebarBranding(scheduler: scheduler, showsMeme: $showsMeme)
           .selectionDisabled()
           .listRowSeparator(.hidden)
           // [D-brand-inset] [Q-list-row-padding] Sides line up with the traffic lights and row
@@ -35,6 +42,8 @@ struct PhasesWindow: View {
             PhaseRow(
               phase: phase,
               isActive: phase.id == scheduler.activePhase?.id,
+              isSelected: selection == .phase(phase.id),
+              sidebarFocused: sidebarFocused,
               availability: scheduler.location.availability(of: phase)
             )
               .tag(SidebarItem.phase(phase.id))
@@ -51,6 +60,9 @@ struct PhasesWindow: View {
       }
       // [D-ui-test-ids]
       .accessibilityIdentifier("sidebar")
+      .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.top } action: { top in
+        windowDiagLog.log("sidebar top safe area \(top, privacy: .public) pt, paused=\(scheduler.isPaused, privacy: .public)")
+      }
       .safeAreaInset(edge: .bottom, spacing: 0) {
         // [D-sidebar-footer-view] [Q-safe-area-inset-refresh] Its own view with
         // a binding, so it refreshes when the selection changes.
@@ -73,7 +85,18 @@ struct PhasesWindow: View {
       .toolbar(removing: .sidebarToggle)
     } detail: {
       if holdsDetail {
-        detail
+        // [D-window-pause-banner] Above every selection's view; stays put
+        // while the form scrolls. A stack, not `.safeAreaInset`, whose
+        // content may not refresh with the pause [Q-safe-area-inset-refresh].
+        // (The shift up under the toolbar, first blamed on the inset, was
+        // the reason text's `.fixedSize` [Q-fixed-size-text-rigid-split].)
+        VStack(spacing: 0) {
+          PauseBanner(scheduler: scheduler)
+          detail
+        }
+          .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.top } action: { top in
+            windowDiagLog.log("detail top safe area \(top, privacy: .public) pt, paused=\(scheduler.isPaused, privacy: .public)")
+          }
           // [D-window-min-size] The editor never gets narrower than this,
           // whatever the sidebar's width.
           .navigationSplitViewColumnWidth(min: 460, ideal: 720)
@@ -121,6 +144,8 @@ struct PhasesWindow: View {
   /// so nothing visibly blanks; a reopen in the meantime keeps it.
   private func windowClosed() {
     isOpen = false
+    // [D-brand-egg] The window's state outlives a close, so reset explicitly.
+    showsMeme = false
     DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
       if !isOpen { holdsDetail = false }
     }
@@ -204,6 +229,7 @@ private struct SidebarFooter: View {
 /// over the current wallpaper, or the icon's gradient before any is applied.
 private struct SidebarBranding: View {
   var scheduler: WallpaperScheduler
+  @Binding var showsMeme: Bool
   @State private var wallpaper: NSImage?
   @Environment(\.displayScale) private var displayScale
 
@@ -213,7 +239,12 @@ private struct SidebarBranding: View {
       .aspectRatio(16 / 10, contentMode: .fit)
       .frame(maxWidth: .infinity)
       .background {
-        if let wallpaper {
+        if showsMeme {
+          // [D-brand-egg] The meme alone: no icon, text, or gradient.
+          Image("VibeCodingMeme")
+            .resizable()
+            .scaledToFill()
+        } else if let wallpaper {
           // [D-brand-legibility] No overall dimming; a gradient behind the
           // text only.
           Image(nsImage: wallpaper)
@@ -236,30 +267,14 @@ private struct SidebarBranding: View {
         }
       }
       .overlay {
-        // [D-brand-layout] 52 pt icon, two-line tagline with a chosen break.
-        VStack(spacing: 4) {
-          Image(nsImage: NSApp.applicationIconImage)
-            .resizable()
-            .frame(width: 52, height: 52)
-            .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
-          // [D-brand-fixed-text] Fixed sizes: a decorative, fixed-shape panel.
-          Text("Phases")
-            .font(.system(size: 15, weight: .semibold))
-          // Sidebar list rows default to one line, which would cut this off
-          // at the line break; allow both lines explicitly.
-          Text("Wallpaper for every\nphase of your day")
-            .font(.system(size: 12, weight: .light))
-            .lineLimit(2)
-            .multilineTextAlignment(.center)
-            .fixedSize()
+        if !showsMeme {
+          brandText
         }
-        .foregroundStyle(.white)
-        .shadow(color: .black.opacity(0.5), radius: 3, y: 1)
-        .padding(.horizontal, 10)
       }
       .clipShape(shape)
       .overlay(shape.strokeBorder(.separator))
       .animation(.smooth, value: wallpaper)
+      .animation(.smooth, value: showsMeme)
       .task(id: scheduler.currentImageName) {
         guard let name = scheduler.currentImageName else {
           wallpaper = nil
@@ -269,8 +284,39 @@ private struct SidebarBranding: View {
           wallpaper = image
         }
       }
+      // [D-brand-egg] One-way; no pointer change, no selection change.
+      .contentShape(shape)
+      .onTapGesture { showsMeme = true }
       .accessibilityElement(children: .ignore)
-      .accessibilityLabel("Phases. Wallpaper for every phase of your day")
+      .accessibilityAddTraits(.isButton)
+      .accessibilityLabel(showsMeme
+        ? "Meme: three women in a convertible. Get in loser, we're going vibe coding."
+        : "Phases. Wallpaper for every phase of your day")
+      .accessibilityHint(showsMeme ? "" : "Get in.")
+      .accessibilityAction { showsMeme = true }
+  }
+
+  private var brandText: some View {
+    // [D-brand-layout] 52 pt icon, two-line tagline with a chosen break.
+    VStack(spacing: 4) {
+      Image(nsImage: NSApp.applicationIconImage)
+        .resizable()
+        .frame(width: 52, height: 52)
+        .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+      // [D-brand-fixed-text] Fixed sizes: a decorative, fixed-shape panel.
+      Text("Phases")
+        .font(.system(size: 15, weight: .semibold))
+      // Sidebar list rows default to one line, which would cut this off
+      // at the line break; allow both lines explicitly.
+      Text("Wallpaper for every\nphase of your day")
+        .font(.system(size: 12, weight: .light))
+        .lineLimit(2)
+        .multilineTextAlignment(.center)
+        .fixedSize()
+    }
+    .foregroundStyle(.white)
+    .shadow(color: .black.opacity(0.5), radius: 3, y: 1)
+    .padding(.horizontal, 10)
   }
 }
 
@@ -300,7 +346,17 @@ enum SidebarItem: Hashable {
 private struct PhaseRow: View {
   var phase: Phase
   var isActive: Bool
+  var isSelected: Bool
+  var sidebarFocused: Bool
   var availability: PhaseAvailability
+  @Environment(\.appearsActive) private var windowInFront
+
+  /// [D-active-badge] [Q-tint-on-highlight] The row's text color on the
+  /// colored highlight, where the accent color would vanish.
+  private var badgeStyle: AnyShapeStyle {
+    SidebarHighlight.isColored(isSelected: isSelected, windowInFront: windowInFront, sidebarFocused: sidebarFocused)
+      ? AnyShapeStyle(.primary) : AnyShapeStyle(.tint)
+  }
 
   var body: some View {
     Label {
@@ -312,7 +368,7 @@ private struct PhaseRow: View {
           if isActive {
             Text("Active")
               .font(.caption2.weight(.semibold))
-              .foregroundStyle(.tint)
+              .foregroundStyle(badgeStyle)
           }
         }
         HStack(spacing: 4) {
@@ -322,12 +378,7 @@ private struct PhaseRow: View {
               .accessibilityLabel("\(phase.appearance.title) Mode only")
           }
           // [D-row-status-not-cause] The status only; the phase editor names
-          // the cause. [D-phase-turn-off] "Off", with no warning.
-          if availability.rowShowsWarning {
-            Image(systemName: "exclamationmark.triangle.fill")
-              .foregroundStyle(.orange)
-              .accessibilityHidden(true)
-          }
+          // the cause. [D-phase-turn-off] "Off". No warning symbol (draft 45).
           if let status = availability.rowStatus {
             Text(status)
           }

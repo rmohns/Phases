@@ -34,12 +34,11 @@ enum FetchAhead {
     guard !usable.isEmpty else { return nil }
     switch order {
     case .inOrder:
-      guard let start = pool.firstIndex(of: failed) else { return usable.first }
-      for offset in 1..<pool.count {
-        let candidate = pool[(start + offset) % pool.count]
-        if candidate != failed, onHand.contains(candidate) { return candidate }
-      }
-      return nil
+      // [D-in-order-remembers] Never what the display is showing, unless
+      // it's the only one on hand.
+      let start = pool.firstIndex(of: failed) ?? (pool.count - 1)
+      let after = (1...pool.count).map { pool[(start + $0) % pool.count] }.filter(usable.contains)
+      return after.first { !showing.contains($0) } ?? after.first
     case .random:
       return RandomPicker.shared(from: usable, showing: [showing])
     }
