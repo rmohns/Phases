@@ -37,8 +37,135 @@ Written 2026-11-12 by Claude with the author.
     missing selections weren't marked with no reachable source, and a
     lone subfolder lost its heading. The draft 44 conversion it also
     flagged was dropped instead (author: no conversion needed).
-- [ ] Phase 1b: spec for merge #2 (Photos albums), approved
-- [ ] Phase 2b: code for merge #2, tests, merged
+- [ ] Phase 1b: spec for merge #2 (Photos albums), approved. Written
+  as **draft 53** (renumbered **54** on 2026-11-13, when In order's redesign took 53) on branch `feature/33-photos-albums` (from `main` at
+  `a5d06e9`), 2026-11-12: SPEC.md "Photos albums" (`[D-photos-sources]`,
+  `[D-photos-order]`, `[D-photos-names]`, `[D-photos-version]`,
+  `[D-photos-fetch-ahead]`, `[D-photos-cache]`, `[D-photos-permission]`,
+  `[D-photos-changes]`), TESTING.md `[D-fake-photos]` and "Photos
+  checks". The author answered the open calls 2026-11-12: 1 no, 2 yes,
+  3 no, 4 yes (cache management revisited in its own issue), 5 yes,
+  6 yes, 7 edited, always. On 6 the author asked what happens when a
+  photo arrives late or not at all; Claude added the retry and 30-second
+  wait to `[D-photos-fetch-ahead]`, pending approval. The calls, with
+  Claude's defaults in brackets:
+  1. **Whole-album selection:** should a phase be able to use "every
+     photo in this album", so photos added later join the rotation by
+     themselves? [Not in this draft: selections stay per image, as for
+     folders. It would apply to folders too, so it's its own issue.]
+  2. **Folders of albums as one source** [yes, with album headings].
+  3. **Smart albums** [no, this draft].
+  4. **Cache limit** [1 GB, least recently shown deleted first].
+  5. **Cache in Application Support, not Caches** [yes; untested as a
+     wallpaper location, Photos check 8].
+  6. **Fetch-ahead lead** [2 minutes, or half the rotation interval].
+  7. **Edited version, not the original** [edited].
+  **Approved** by the author 2026-11-12, after adding the retry and
+  30-second wait and the "removed is missing, not late" rule. A photo
+  that keeps failing to download is left alone until it's seen (author:
+  "let iCloud handle its own consistency").
+- [ ] Phase 2b: code for merge #2, tests, merged. On
+  `feature/33-photos-albums`. Steps (build with
+  `bitrig build -destination generic/platform=macOS` and `swift test` in
+  `UnitTests/` after each):
+  1. [x] Pure logic and the PhotoKit provider, not wired in (`fbd4b57`):
+     `ImageSource.Kind`, `photosID`, `title`; `PhotoImageName`;
+     `LibraryListing.Entry` (url nil for photos); `PhotoCacheRules`;
+     `FetchAhead`; `PhotosProvider` protocol and types;
+     `PhotoKitProvider` and `PhotoFileWriter`. Unit tests by Sonnet (29).
+  2. [x] (`eacff95`) `FakePhotosProvider` `[D-fake-photos]` and `UITestMode`
+     switches; `PhotoCache` (files, index of file → photo and last shown,
+     in-flight fetches shared, cleanup using
+     `WallpaperStoreWatcher`'s file names and the restore record);
+     `ImageLibrary` reads Photos sources (reload, thumbnails, add, change
+     observer, `name(for:)` for cache files). `NSPhotoLibraryUsageDescription`
+     in `Project.json`.
+  3. [x] (`cc0c61b`, with `AppVersion` 53) Scheduler: resolve photo picks through the cache; fetch-ahead
+     timer event `[D-single-timer]`; 30 s wait, retry, fallback via
+     `FetchAhead.replacement`; record what actually shows in
+     `AppliedState`; cleanup after each change.
+  4. [x] (`2a145e2`; captions use Photos' original file name) Views: + menu (Add Folder…, Add Photos Album…), the album sheet
+     (`OutlineGroup`, shared albums in their own section, empty albums
+     disabled, denied message with Open Privacy & Security Settings…),
+     Photos rows (no switch, `Photos › Trips • 120 photos`, Can't open
+     without Locate…, context menu Remove only), grid headings, removal
+     alert wording for albums.
+  - Opus review (2026-11-12) of steps 1–4, 14 findings. Fixed: a
+    change waiting on photos going ahead after Pause or an outside pick;
+    picks made ahead taken by Change Now or lost after any other apply,
+    and never re-fetched; a held display re-applying at every check;
+    cache cleanup not protecting cover files; thumbnails able to prompt
+    before access; user smart albums offered; a late fetch timer skipping
+    its change; removal wording for Photos folders; double-click adding
+    the wrong album; dead code. **Left open:** a PhotoKit request that
+    never calls back blocks that photo (no cap yet); `AppliedState`
+    names photos during the 30 s wait (a crash then leaves the old
+    wallpaper until the next change); `PHAsset.modificationDate` may
+    change on favorite or title edits, missing the cache (needs a probe);
+    the offline fallback checks the pool one photo at a time (slow for
+    thousands of photos).
+    - 2026-11-13, after the merge with `main`: fixed the stuck request
+      (given up after 5 minutes, then fetched afresh) and the slow
+      fallback (asks about photos only until it finds one on hand).
+      Still open, by choice: the record during the wait (a crash in
+      those 30 s only delays the photo to the next change; changing
+      the record touches every check) and `modificationDate` (worst
+      case a favorite or title edit downloads the photo once more;
+      needs a hands-on probe of the author's library).
+  5. [x] (`c91d14c`) UI tests with the fake library, written by Sonnet,
+     compiled. *Verified* 2026-11-12 (Claude, author's yes, build of
+     21:44:32 UTC): the fast suite passed 25 of 26; the miss was a test
+     helper Tabbing out of a grid it had already focused (fixed,
+     `9b0e40a`); the six Photos tests then passed 6 of 6 (70 s). Still
+     to do: TESTING.md "What they cover"; UI tests with
+     the fake library (harness builds the folder); ask before running.
+  6. [ ] Review (fresh eyes), then the author's Photos checks, then merge
+     with the author's yes. Photos checks so far (2026-11-12): 1
+     permission passes (a grant reached Phases only after a relaunch,
+     `[L-photos-grant-needs-relaunch]`); 2 adding passes; 3 In order
+     follows the album's order; 4 on time ahead, about 1 s late on
+     Change Now; 5 offline falls back but kept landing on the same photo
+     (`[L-photos-offline-check]`); 6 edited, Live, ProRAW, DSLR RAW pass
+     (`[L-photos-formats-check]`); 7 album changes pass, plus a fix for a
+     photo from a just-deleted album being shown
+     (`[L-photos-deleted-album-race]`); 8 cache across Spaces, a
+     relaunch, and restore on quit passes (author, 22:26 build; each new
+     build first needed the Photos grant again,
+     `[L-photos-grant-per-build]`); 9 outside change passes (a System
+     Settings pick paused Phases; after resuming, two of its own photo
+     changes didn't pause it). **All nine Photos checks pass**
+     (author, 2026-11-12, 22:26 build).
+     - Resuming the checks: diagnostics are on in
+       `~/Library/Preferences/<bundle ID>.plist` (written by path,
+       because the sandbox container still redirects `defaults` by
+       domain). Build, then quit Phases (`osascript -e 'tell application
+       id "<bundle ID>" to quit'`) and `open -n` the newest build, picked
+       by its executable's modification time (`ls -t` on the build
+       folders picks the wrong one). A new build may ask for Photos
+       again (`[L-photos-grant-per-build]`); allow it at Add Photos
+       Album….
+     - The author's test phase: "New Phase", In order, 1 minute; its
+       selection is now only photos from a deleted album, so pick new
+       ones before check 8.
+
+**Before merge #2** (author, 2026-11-12), in this order:
+
+1. **Restore drafts 45–50.** Bitrig's restore (`713ca49`, 2026-11-09)
+   undid them by accident (author: "confused by Bitrig's UI"). They're
+   commits `08eaa77`..`4b61ea5` (draft 45 Active badge #22, 46 brand
+   egg #23, 47 version 0.1, 48 new Spaces aren't picks #29, 49–50 pause
+   banner and notification opens the window, plus CLAUDE.md and doc
+   changes). Own branch from `main`, one draft per commit, tests, the
+   author's yes to merge. Found when the author saw the Active badge
+   missing on the selected row.
+2. **In order remembers its place.** The author expected In order to
+   remember the last image and advance from it, not to work out the
+   image from time since the phase began, which reset the position on
+   every selection edit. Its own spec draft and branch from `main`. It
+   also settles the offline fallback rule (`[L-photos-offline-check]`:
+   skip what's showing), which waits for it.
+3. Then bring `feature/33-photos-albums` up to date with `main`, finish
+   Photos checks, and merge #2.
 
 ## Picking this up in a new conversation
 

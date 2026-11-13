@@ -92,7 +92,27 @@ The pure logic that decides what the app does:
   sat in library order, a gone source starts at the first; never the
   image already showing unless it's the only one; consecutive images for
   several displays; a repair keeps the remembered image
-  `[D-in-order-remembers]`
+  `[D-in-order-remembers]`. From draft 54: a deselected image is placed
+  by the library's order; a photo removed from its album starts the
+  album over, or its source if the album is gone
+- `ImageSource` (draft 52): stored names (`<source>:<path>`, splitting at
+  the first colon, draft 44 names with no source part), source IDs,
+  locations under the home folder, saved sources and phases, and library
+  order: sources in their stored order, then each source's own
+  `[D-image-sources]` `[D-source-names]`. From draft 54, Photos names
+  (`<source>:<album>:<photo>`) and sources, photo entries with no file,
+  and a photo in two albums `[D-photos-names]` `[D-photos-sources]`
+- `FetchAhead` (draft 54): the lead before a scheduled change (2
+  minutes, or half a shorter rotation), never before now; and what a
+  display shows when its photo can't be had: In order, the next one on
+  hand, never what's showing unless it's all there is; Random, any on
+  hand, avoiding what's showing; nothing on hand keeps the wallpaper
+  `[D-photos-fetch-ahead]`
+- `PhotoCacheRules` (draft 54): which cached photos a cleanup deletes
+  (least recently shown first, only until under the limit, never a
+  protected file, and with an unreadable wallpaper store, nothing shown
+  in the last 30 days), and cache file names that change with a photo's
+  edit date `[D-photos-cache]` `[D-photos-version]`
 - `OutsideChangeRule`: which store changes count as a wallpaper picked
   outside Phases (System Settings picks and Aerials yes; Phases' own sets,
   "last used"-only writes, and an unreadable store no), and reading
@@ -128,8 +148,8 @@ The pure logic that decides what the app does:
 
 - `[D-hands-on-checks]` **Every check that drives the mouse and keyboard
   or touches the real wallpaper is a hands-on check, and any one of them
-  can run on its own** (draft 33). There are three: Interface tests, Cover
-  checks, and Memory checks. The Interface tests are automated but still
+  can run on its own** (draft 33). There are four: Interface tests, Cover
+  checks, Memory checks, and from draft 54 Photos checks. The Interface tests are automated but still
   belong here, because they move the mouse; the line is touching the Mac,
   not automated versus by hand.
   - **Any check alone.** Each starts from a fresh launch, does its own
@@ -219,7 +239,10 @@ The pure logic that decides what the app does:
     `[D-reopen-shows-window]`, and the pause banner
     `[D-window-pause-banner]`: the window first opened while paused
     starts below the toolbar, and the banner follows 20 pause and resume
-    toggles from the menu.
+    toggles from the menu. Photos albums as image sources, against the
+    fake library `[D-fake-photos]`: adding an album or a folder of
+    albums, adding one twice, an empty album, shared albums, and denied
+    access (draft 54).
   - *Slow* (`PHASES_UI_SLOW=1 swift test`, about two minutes): the
     sidebar limits again after waiting 30 s, across three launches,
     because SwiftUI's rewrite lands seconds after the window opens
@@ -268,8 +291,11 @@ The pure logic that decides what the app does:
     settings (author, 2026-10-30; LEARNINGS.md `[L-menubar-overflow]`).
 - `[D-ui-test-ids]` **Controls the tests use carry accessibility
   identifiers:** `sidebar`, `addPhase`, `deletePhase`, `phaseName`,
-  `imageGrid`, `imageFolderName`, `pauseBannerResume`. They're invisible to users, but renaming
-  one breaks the tests.
+  `imageGrid`, `imageFolderName` (now one per Image Sources row),
+  `pauseBannerResume`, and from draft 52 `imageSources`,
+  `imageSourceCount`, `addImageSource`, `removeImageSource`, and from
+  draft 54 `imageSourceLocation` and `photosAlbumList`. They're invisible
+  to users, but renaming one breaks the tests.
 
 - **Relaunch:** the harness relaunches its own instance by sending it a
   reopen Apple event, as Finder does, rather than `open`, which could
@@ -574,6 +600,64 @@ Each with what passes:
     and Resume Schedule item read correctly. Claude checked steps 1–2 in
     the log (detection about 2 s after the pick, no false pause on
     Phases' own sets). Two displays untested.
+
+### Photos checks (draft 54)
+
+- `[D-photos-checks]` **Real Photos behavior is checked by hand before
+  merge #2 merges,** and after any change to the Photos source or the
+  photo cache. The fake library `[D-fake-photos]` can't show what
+  PhotoKit, iCloud, and the wallpaper do. Ask first, naming the checks;
+  some change the real wallpaper and need the author at the Mac.
+- **The checks**, on the author's library:
+  1. **Permission:** a fresh build, Add Photos Album… shows the prompt;
+     Don't Allow shows the sheet's message and every Photos row "Can't
+     open"; allowing it in System Settings brings them back.
+  2. **Adding:** an album, a folder of albums (headings per album), a
+     shared album; an album already added selects its row.
+  3. **In order:** an album sorted by hand rotates in its Photos order.
+  4. **iCloud-only photo:** shows on time at a scheduled change (fetched
+     ahead), and with Change Now (late by the download).
+  5. **Offline:** Wi-Fi off, a scheduled change falls back to a photo on
+     hand, or keeps the wallpaper if none is.
+  6. **Edited photo, Live Photo, HEIC, RAW:** each shows as it looks in
+     Photos. Phase 0 tested none of these.
+  7. **Album changes:** adding, removing, and reordering photos in Photos
+     updates the grid while Phases runs; deleting the album shows "Can't
+     open"; a deleted photo shows as missing.
+  8. **Cache:** the file path of a showing photo is under Application
+     Support; it survives a change on another Space and a relaunch;
+     Restore original wallpaper on quit puts back the original.
+  9. **Outside change:** picking a wallpaper in System Settings while a
+     photo shows still pauses Phases, and Phases' own photo changes
+     don't `[D-outside-change-rule]`.
+- Record results with date and build in this section, as the other
+  checks do.
+- *Verified* 2026-11-12 by the author, builds from 16:44 to 22:26 local
+  on `feature/33-photos-albums` (draft 53 there, before the move to 54),
+  Claude reading the diagnostics log: **all nine pass.** Notes, with the
+  records in EXPERIMENTS.md `[X-33-photos-checks]`:
+  - 1: a grant made in System Settings reached Phases only after a
+    relaunch `[L-photos-grant-needs-relaunch]`; each new build needs the
+    grant again `[L-photos-grant-per-build]`.
+  - 4: on time when fetched ahead; about 1 s late with Change Now.
+  - 5: fell back, but kept landing on the same photo
+    `[L-photos-offline-check]`. Draft 54 skips what's showing; not yet
+    checked by hand.
+  - 7: passed after a fix for a photo from a just-deleted album being
+    shown `[L-photos-deleted-album-race]`.
+  - 9: a System Settings pick paused Phases; after resuming, two of its
+    own photo changes didn't.
+  - The checks ran before the merge with draft 53's In order
+    `[D-in-order-remembers]`, which changed how fetching ahead picks.
+    Check 4 is worth repeating on the merged build.
+- *Verified* 2026-11-13 by the author, on screen, and by Claude from the
+  diagnostics log, draft 54 build (`87ef762`, merged with `main`):
+  checks 4 and 5 again. 4: fetched ahead 30 s early (0.39 s) and set on
+  the minute; Change Now fetched in 0.91 s and showed about 1 s late.
+  5: offline, each failed photo fell back to a cached one, alternating
+  between the two on hand instead of repeating
+  `[L-photos-offline-check]`. The UI suite passed 29 of 29 (247 s) on
+  the same build.
 
 ## When a fixed bug comes back
 

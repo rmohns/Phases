@@ -12,12 +12,17 @@ struct PhasesUITests {
 }
 
 /// Launches a test-mode Phases [D-ui-test-mode], runs `body`, and always
-/// quits it. `imageFolders` are its image sources, in order.
+/// quits it. `imageFolders` are its image sources, in order. `photosLibrary`
+/// is a fake Photos library [D-fake-photos], and `photosDenied` makes it
+/// refuse access; without a library, test mode has no Photos at all.
 @MainActor
 func withPhases(
-  imageFolders: [URL] = [TestImages.folder], _ body: @MainActor (PhasesApp) async throws -> Void
+  imageFolders: [URL] = [TestImages.folder], photosLibrary: URL? = nil, photosDenied: Bool = false,
+  _ body: @MainActor (PhasesApp) async throws -> Void
 ) async throws {
-  let app = try await PhasesApp.launch(imageFolders: imageFolders)
+  let app = try await PhasesApp.launch(
+    imageFolders: imageFolders, photosLibrary: photosLibrary, photosDenied: photosDenied
+  )
   defer { app.quit() }
   try await body(app)
 }

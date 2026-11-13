@@ -46,6 +46,49 @@ public enum TestImages {
     return url
   }()
 
+  /// [D-fake-photos] The fake Photos library for the Photos sources tests,
+  /// for `-PhasesUITestPhotos`. Each subfolder is an album, a subfolder
+  /// of subfolders is a folder of albums, and `Shared` holds shared albums:
+  /// `Beach` (3), `Mountains` (2), `Trips` holding `Iceland` (2) and
+  /// `Japan` (1), `Empty` (none), and `Shared/Family` (2).
+  public enum Photos {
+    public static let beach = "Beach"
+    public static let beachCount = 3
+    public static let mountains = "Mountains"
+    public static let mountainsCount = 2
+    public static let trips = "Trips"
+    public static let iceland = "Iceland"
+    public static let icelandCount = 2
+    public static let japan = "Japan"
+    public static let japanCount = 1
+    /// What the Trips folder holds in all.
+    public static let tripsCount = icelandCount + japanCount
+    public static let empty = "Empty"
+    public static let family = "Family"
+    public static let familyCount = 2
+
+    /// Made once per run, in the same temporary parent as `folder`.
+    public static let library: URL = {
+      let root = TestImages.makeFolder(named: "Phases UI Test Photos Library")
+      func album(_ path: [String], count: Int, hue: Double) {
+        var url = root
+        for part in path { url = url.appending(path: part, directoryHint: .isDirectory) }
+        try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        for index in 0..<count {
+          let name = String(format: "%@ %02d.png", path.last ?? "Photo", index + 1)
+          try? TestImages.png(hue: hue + Double(index) * 0.07)?.write(to: url.appending(path: name))
+        }
+      }
+      album([beach], count: beachCount, hue: 0.55)
+      album([mountains], count: mountainsCount, hue: 0.35)
+      album([trips, iceland], count: icelandCount, hue: 0.5)
+      album([trips, japan], count: japanCount, hue: 0.95)
+      album([empty], count: 0, hue: 0)
+      album(["Shared", family], count: familyCount, hue: 0.1)
+      return root
+    }()
+  }
+
   /// An empty folder with this name under the run's temporary parent.
   private static func makeFolder(named name: String) -> URL {
     let url = FileManager.default.temporaryDirectory

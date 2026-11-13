@@ -263,6 +263,25 @@ From `[X-memory]` unless noted: macOS 27.2, two or three displays.
   in its container as the wallpaper, and put back one outside it.**
   Verified by the API, and on screen by the author. Record:
   `[X-33-sandbox]`.
+- `[L-photos-grant-needs-relaunch]` **Allowing Phases in System Settings ›
+  Photos didn't reach a running Phases; a relaunch did.** Observed once;
+  why is a hypothesis (perhaps `[L-photos-grant-per-build]`). Record:
+  `[X-33-photos-checks]`.
+- `[L-photos-grant-per-build]` **Each Bitrig build loses the Photos
+  grant:** ad hoc signing pins it to the build's cdhash. Verified (tccd
+  log). After a new build, allow Photos again through Add Photos Album….
+  Record: `[X-33-photos-checks]`.
+- `[L-photos-offline-check]` **Offline, the fallback worked, but kept
+  landing on the same photo.** Verified (diagnostics log). From draft 54
+  In order's fallback skips what the display already shows. Record:
+  `[X-33-photos-checks]`.
+- `[L-photos-formats-check]` **Edited, Live, ProRAW+HEIC, and DSLR RAW
+  photos all showed the way Photos shows them.** Observed by the author.
+  Record: `[X-33-photos-checks]`.
+- `[L-photos-deleted-album-race]` **A photo from an album being deleted
+  was set as the wallpaper.** Verified (log); a race is a hypothesis.
+  Phases now rereads its Photos sources just before showing. Record:
+  `[X-33-photos-checks]`.
 
 ## Image sources (issue #33, merge 1)
 

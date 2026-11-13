@@ -67,6 +67,13 @@ final class CrossfadeController {
 
   /// Every cover, on whichever Space it belongs to [D-cover-per-space].
   private var covers: [Cover] = []
+
+  /// The files every cover shows, fading, settled, or pending on another
+  /// Space; the photo cache keeps them [D-photos-cache].
+  var coverFileNames: Set<String> {
+    Set(covers.map { $0.url.lastPathComponent })
+  }
+
   private var running: [FadeEntry]?
   private var fadeTask: Task<Void, Never>?
   private var observers: [NSObjectProtocol] = []

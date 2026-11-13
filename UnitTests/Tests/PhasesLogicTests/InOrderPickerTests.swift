@@ -94,3 +94,52 @@ struct InOrderPickerTests {
     #expect(next([], after: abc[0]).isEmpty)
   }
 }
+
+/// Photos sources in In order `[D-in-order-remembers]` (draft 54): photo
+/// IDs are random, so a missing photo is placed by the library, not by name.
+struct InOrderPickerPhotosTests {
+  private let folder = "AAAAAAAA"
+  private let photos = "PPPPPPPP"
+
+  private func photo(_ album: String, _ id: String) -> String {
+    StoredImageName.join(source: photos, path: PhotoImageName.path(album: album, photo: id))
+  }
+
+  private func file(_ path: String) -> String { StoredImageName.join(source: folder, path: path) }
+
+  private func next(_ pool: [String], after remembered: String, library: [String]) -> String? {
+    InOrderPicker.picks(
+      count: 1, from: pool, remembered: remembered, library: library, sourceOrder: [folder, photos],
+      photoSources: [photos], showing: [], mode: .advance
+    ).first
+  }
+
+  // Album X in its own order: z, a, m (IDs that sort differently).
+  private var albumX: [String] { [photo("X", "z"), photo("X", "a"), photo("X", "m")] }
+  private var albumY: [String] { [photo("Y", "q"), photo("Y", "b")] }
+
+  @Test func aDeselectedPhotoContinuesAfterWhereItSitsInTheAlbum() {
+    let library = albumX + albumY
+    // z deselected: next is a, though "a" sorts before "z".
+    #expect(next([albumX[1], albumX[2]] + albumY, after: albumX[0], library: library) == albumX[1])
+    // a deselected: next is m.
+    #expect(next([albumX[0], albumX[2]] + albumY, after: albumX[1], library: library) == albumX[2])
+  }
+
+  @Test func aPhotoRemovedFromItsAlbumStartsTheAlbumOver() {
+    let gone = photo("X", "removed")
+    #expect(next(albumX + albumY, after: gone, library: albumX + albumY) == albumX[0])
+    // The album's first photo isn't selected: its first selected one.
+    #expect(next([albumX[2]] + albumY, after: gone, library: albumX + albumY) == albumX[2])
+  }
+
+  @Test func aPhotoWhoseAlbumIsGoneCarriesOnFromItsSource() {
+    let library = [file("f.jpg")] + albumY
+    #expect(next(library, after: photo("X", "z"), library: library) == albumY[0])
+  }
+
+  @Test func aDeselectedFileStillUsesTheLibraryOrder() {
+    let library = [file("a.jpg"), file("b.jpg"), file("c.jpg")]
+    #expect(next([library[0], library[2]], after: library[1], library: library) == library[2])
+  }
+}

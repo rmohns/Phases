@@ -37,6 +37,16 @@ enum UITestMode {
     }
   }
 
+  /// [D-fake-photos] The fake Photos library's folder, from
+  /// `-PhasesUITestPhotos <path>`. Without it, test mode has no Photos
+  /// library at all and never asks for access.
+  static var photosFolder: URL? {
+    UserDefaults.standard.string(forKey: "PhasesUITestPhotos").map { URL(filePath: $0, directoryHint: .isDirectory) }
+  }
+
+  /// `-PhasesUITestPhotosDenied YES`: the fake library refuses access.
+  static let photosRefused = UserDefaults.standard.bool(forKey: "PhasesUITestPhotosDenied")
+
   /// Three clock-time phases, in order through the day, so tests can
   /// delete a middle one [D-delete-selects-next].
   static var fixturePhases: [Phase] {

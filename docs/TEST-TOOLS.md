@@ -107,6 +107,20 @@ neither can leak into normal use.
     `-PhasesUITestImages '("<path 1>", "<path 2>")'`, as its sources in
     that order `[D-image-sources]` (draft 52). The harness makes a second,
     small folder for the tests that need two sources;
+  - `[D-fake-photos]` never touch the Photos library (draft 54). With
+    `-PhasesUITestPhotos <path>`, Phases uses a **fake Photos library**
+    made from a folder the harness builds: each subfolder is an album, a
+    subfolder of subfolders is a folder of albums, and a folder named
+    `Shared` holds shared albums. Photo IDs are made from the file names.
+    Everything above PhotoKit (the Add Photos Album… sheet, rows,
+    headings, counts, saved names, In order, the cache and fetching
+    ahead) runs as it would for real; only the PhotoKit calls are
+    replaced. `-PhasesUITestPhotosDenied YES` makes the fake library
+    refuse access. Without `-PhasesUITestPhotos`, test mode has no
+    Photos library at all and never asks for access.
+    - *Why:* every new build asks for Photos access again
+      `[L-photos-new-build-asks]`, and the real library is the author's.
+      Real PhotoKit is checked by hand (TESTING.md "Photos checks").
   - leave the window closed at launch, as usual. The UI tests open it the
     way the author does, from the menu bar item's Open Phases…, through
     AX actions. *Why:* opening it at launch instead skipped the focus and
