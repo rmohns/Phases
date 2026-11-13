@@ -123,7 +123,10 @@ Written 2026-11-12 by Claude with the author.
      (`[L-photos-deleted-album-race]`); 8 cache across Spaces, a
      relaunch, and restore on quit passes (author, 22:26 build; each new
      build first needed the Photos grant again,
-     `[L-photos-grant-per-build]`). **9 (outside change) still to do.**
+     `[L-photos-grant-per-build]`); 9 outside change passes (a System
+     Settings pick paused Phases; after resuming, two of its own photo
+     changes didn't pause it). **All nine Photos checks pass**
+     (author, 2026-11-12, 22:26 build).
      - Resuming the checks: diagnostics are on in
        `~/Library/Preferences/<bundle ID>.plist` (written by path,
        because the sandbox container still redirects `defaults` by
