@@ -1,4 +1,4 @@
-# Phases — Specification (draft 52)
+# Phases — Specification (draft 53)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -75,15 +75,45 @@ active, and they need no location.
 **Pure periodic changes** (no time-of-day switching) is just a single phase with
 the "Always" trigger plus a rotation interval.
 
-**When a phase starts**, each display changes immediately to the first image
-(in order) or a random one from the selection it uses: its own, or All
-Displays. Rotation then continues within the phase.
+**When a phase starts**, each display changes immediately to an image from
+the selection it uses (its own, or All Displays): In order, the one after
+the image that selection last showed `[D-in-order-remembers]`; Random, a
+random one. Rotation then continues within the phase.
 
-**In order** cycles through each selection in library order and remembers its
-position across launches. Library order is the order of the image sources
-in Settings, then each source's own order: top-level images first, then
-each subfolder, sorted the way Finder sorts `[D-image-sources]`. **Random** avoids repeating the current
-image when there's more than one choice.
+**In order** cycles through each selection in library order. Library order
+is the order of the image sources in Settings, then each source's own
+order: top-level images first, then each subfolder, sorted the way Finder
+sorts `[D-image-sources]`. **Random** avoids repeating the current image
+when there's more than one choice.
+
+- `[D-in-order-remembers]` **In order remembers the last image it showed
+  and moves to the next one.** Each phase keeps, for each selection it
+  uses (All Displays, and each display with its own images), the name of
+  the image it last showed. Every change, scheduled or Change Now, shows
+  the image after that one in the selection's library order, wrapping
+  from the last image to the first. The position is kept across
+  launches, phase changes, and days.
+  - **The selection changes:** nothing is recalculated. Adding or
+    removing images, or reordering sources, only changes what "the next
+    one" is.
+  - **The remembered image is no longer in the selection** (deselected,
+    deleted, or its source removed): the next image is the first one
+    that comes after where it sat in library order; if its source is
+    gone, the first image in the selection.
+  - **No remembered image** (a new or duplicated phase, a selection
+    never shown, settings from draft 52 or earlier): the first image in
+    the selection.
+  - **Never the image already showing** when the selection has another
+    image available: if the next one is what that display already shows,
+    it moves on one more.
+  - *Why:* until draft 53, In order worked the image out from the time:
+    rotations since the phase started (for Always, since a start rounded
+    down to 5 minutes) plus Change Now steps, counted into the current
+    selection. Changing the selection shifted every image's place, so the
+    next image jumped, and a phase that started earlier in the day picked
+    up partway through. The author couldn't predict what should show and
+    expected Phases to remember its last image and advance (2026-11-12,
+    during the Photos checks).
 
 ## Start triggers
 
@@ -368,7 +398,10 @@ image when there's more than one choice.
   active phase: **Same image everywhere** (default) or **Different picks per
   display** (each draws its own pick from the All Displays images).
 - In order: each display's selection (or the shared one) advances in step. With
-  Different picks, sharing displays are offset by one from each other.
+  Different picks, sharing displays are offset by one from each other: the
+  shared selection remembers the image on the first sharing display (the
+  main display first) `[D-in-order-remembers]`, and the others show the
+  images after it.
 
 ### Not included
 - `[D-no-shape-matching]` Automatic matching of images to each display's shape (portrait, ultrawide,
@@ -384,10 +417,12 @@ image when there's more than one choice.
   (connect, disconnect, resolution, arrangement, or anything else that
   changes screen geometry), Phases updates its list of known displays and
   then runs its normal check (the same one used after wake). The wallpaper
-  changes only if something no longer fits: a newly connected display has
+  changes only if something needs repair: a newly connected display has
   no image yet, or a display's image isn't in its selection. Otherwise
-  nothing changes. A screen change never by itself picks new images.
-  - *Why:* a change that leaves every display's image fitting shouldn't
+  nothing changes. A screen change never by itself picks new images. In
+  order, a repair doesn't move the place: displays whose image is still
+  in their selection keep it `[D-in-order-remembers]`.
+  - *Why:* a change that leaves every display's image in its selection shouldn't
     change the wallpaper. Draft 21 re-applied the active phase on every
     display change, so with Random order unrelated system changes such as
     hiding the Dock crossfaded to a new image (found in testing,
@@ -780,10 +815,14 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
 1. Works out which phase should be active right now.
 2. If it differs from the last phase it applied, switches to it immediately.
 3. If the same phase is active but one or more rotations came due while asleep,
-   it applies only the **most recent** missed rotation: the image that would be
-   showing now had the Mac stayed awake. For In order, that means skipping ahead
-   by the number of missed rotations; for Random, a single new random pick. The
-   rotation clock stays aligned to the original schedule.
+   it makes **one** change, not one per missed rotation. For In order, that's
+   the next image after the one last shown `[D-in-order-remembers]`; for
+   Random, a single new random pick. The rotation clock stays aligned to the
+   original schedule.
+   - Until draft 53, In order skipped ahead by the number of missed
+     rotations, to the image that would be showing had the Mac stayed
+     awake. With In order remembering its place, skipping would pass over
+     images nobody saw; the next one is the one to show.
 
 ## Wallpaper changed outside Phases
 
@@ -1568,7 +1607,9 @@ extras don't show them. No global hotkey.
   entry in the record `[D-outside-change-pauses]`.
 - `[D-restore-on-quit]` **App preference: Restore original wallpaper when
   quitting**, **on by default**. When on, an actual **Quit** restores each
-  display's original and clears the record. When off, Quit leaves Phases'
+  display's original and clears the record, and the next launch puts Phases'
+  image back right away, even within the same rotation (until draft 53 it
+  waited for the next change). When off, Quit leaves Phases'
   current image in place and clears the record, so the kept image becomes the
   "original" the next launch records.
   - *Why a preference:* restoring is what the author expects (Phases' images
@@ -1607,7 +1648,8 @@ extras don't show them. No global hotkey.
 ## Persistence
 
 All settings (image sources with their bookmarks and locations, phases including per-display selections,
-preferences, in-order positions, last applied phase and image per display, known
+preferences, in-order positions (the image each selection last showed
+`[D-in-order-remembers]`), last applied phase and image per display, known
 displays and their names, last location) are stored in UserDefaults as Codable
 data. Phases saved by earlier versions load unchanged (no per-display images).
 The image folder setting from draft 44 and earlier isn't carried over

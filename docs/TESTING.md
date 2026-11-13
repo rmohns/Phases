@@ -82,8 +82,17 @@ The pure logic that decides what the app does:
   loops `[D-scan-each-folder-once]` (draft 35). These tests build folders
   in the temporary directory, never the user's.
 - `WallpaperCheck`: what the scheduler's normal check does with what's
-  already applied, including a screen change that leaves every image
-  fitting `[D-screen-change-no-reroll]` (draft 31)
+  already applied, including a screen change that leaves every image in
+  its selection `[D-screen-change-no-reroll]` (draft 31); from draft 53,
+  whether it advances (new occurrence, rotation due, however many were
+  missed) or repairs (a display shows an image not in its selection, or
+  nothing)
+- `InOrderPicker` (draft 53): In order's next image after the remembered
+  one, wrapping; a deselected or deleted image continues after where it
+  sat in library order, a gone source starts at the first; never the
+  image already showing unless it's the only one; consecutive images for
+  several displays; a repair keeps the remembered image
+  `[D-in-order-remembers]`
 - `OutsideChangeRule`: which store changes count as a wallpaper picked
   outside Phases (System Settings picks and Aerials yes; Phases' own sets,
   "last used"-only writes, and an unreadable store no), and reading

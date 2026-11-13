@@ -8,11 +8,11 @@ struct WallpaperCheckTests {
   private let phase = UUID()
   private let start = Date(timeIntervalSinceReferenceDate: 800_000_000)
 
-  private func state(slot: Int = 0, steps: Int = 0, images: [String: String] = ["A": "1.jpg"]) -> AppliedState {
-    AppliedState(phaseID: phase, phaseStart: start, rotationSlot: slot, manualSteps: steps, imagesByDisplay: images)
+  private func state(slot: Int = 0, images: [String: String] = ["A": "1.jpg"]) -> AppliedState {
+    AppliedState(phaseID: phase, phaseStart: start, rotationSlot: slot, imagesByDisplay: images)
   }
 
-  @Test func screenChangeWithEveryImageFittingChangesNothing() {
+  @Test func screenChangeWithEveryImageStillSelectedChangesNothing() {
     // Hiding the Dock: same displays, same images, same slot.
     let action = WallpaperCheck.action(
       applied: state(), phaseID: phase, start: start, slot: 0, pools: ["A": ["1.jpg", "2.jpg"]]
@@ -22,9 +22,18 @@ struct WallpaperCheckTests {
 
   @Test func newDisplayWithImagesGetsOne() {
     let action = WallpaperCheck.action(
-      applied: state(steps: 2), phaseID: phase, start: start, slot: 0, pools: ["A": ["1.jpg"], "B": ["1.jpg"]]
+      applied: state(), phaseID: phase, start: start, slot: 0, pools: ["A": ["1.jpg"], "B": ["1.jpg"]]
     )
-    #expect(action == .apply(manualSteps: 2))
+    #expect(action == .repair)
+  }
+
+  @Test func relaunchAfterARestoringQuitRepairsWithinTheSameRotation() {
+    // Quit restored the original and forgot what Phases showed
+    // [D-restore-on-quit]; a relaunch in the same minute puts it back.
+    let action = WallpaperCheck.action(
+      applied: state(images: [:]), phaseID: phase, start: start, slot: 0, pools: ["A": ["1.jpg", "2.jpg"]]
+    )
+    #expect(action == .repair)
   }
 
   @Test func newDisplayWithNothingToShowChangesNothing() {
@@ -38,14 +47,14 @@ struct WallpaperCheckTests {
     let action = WallpaperCheck.action(
       applied: state(), phaseID: phase, start: start, slot: 0, pools: ["A": ["2.jpg"]]
     )
-    #expect(action == .apply(manualSteps: 0))
+    #expect(action == .repair)
   }
 
-  @Test func missedRotationKeepsChangeNowSteps() {
+  @Test func missedRotationsMakeOneAdvance() {
     let action = WallpaperCheck.action(
-      applied: state(slot: 1, steps: 3), phaseID: phase, start: start, slot: 4, pools: ["A": ["1.jpg"]]
+      applied: state(slot: 1), phaseID: phase, start: start, slot: 4, pools: ["A": ["1.jpg"]]
     )
-    #expect(action == .apply(manualSteps: 3))
+    #expect(action == .advance)
   }
 
   @Test func shiftedStartIsTheSameOccurrence() {
@@ -56,10 +65,10 @@ struct WallpaperCheckTests {
   }
 
   @Test func differentPhaseOrNoStateApplies() {
-    #expect(WallpaperCheck.action(applied: nil, phaseID: phase, start: start, slot: 0, pools: [:]) == .apply(manualSteps: 0))
+    #expect(WallpaperCheck.action(applied: nil, phaseID: phase, start: start, slot: 0, pools: [:]) == .advance)
     #expect(
-      WallpaperCheck.action(applied: state(steps: 2), phaseID: UUID(), start: start, slot: 0, pools: ["A": ["1.jpg"]])
-        == .apply(manualSteps: 0)
+      WallpaperCheck.action(applied: state(), phaseID: UUID(), start: start, slot: 0, pools: ["A": ["1.jpg"]])
+        == .advance
     )
   }
 }

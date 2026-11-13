@@ -76,6 +76,12 @@ final class WallpaperScheduler {
     didSet { Self.save(appliedState, forKey: Keys.appliedState) }
   }
 
+  /// [D-in-order-remembers] Phase ID → selection key (a display UUID, or
+  /// `InOrderPicker.sharedKey`) → the image it last showed.
+  private var inOrderPositions: [String: [String: String]] {
+    didSet { Self.save(inOrderPositions, forKey: Keys.inOrderPositions) }
+  }
+
   /// The wallpaper from before Phases changed anything; restored on quit.
   private(set) var restorePoint: RestorePoint? {
     didSet { Self.save(restorePoint, forKey: Keys.restorePoint) }
@@ -119,6 +125,7 @@ final class WallpaperScheduler {
     static let restoresWallpaperOnQuit = "restoresWallpaperOnQuit"
     static let asksBeforeQuitting = "asksBeforeQuitting"
     static let pausedForOutsideChangeAt = "pausedForOutsideChangeAt"
+    static let inOrderPositions = "inOrderPositions"
   }
 
   init() {
@@ -151,6 +158,7 @@ final class WallpaperScheduler {
     let duration = defaults.object(forKey: Keys.crossfadeDuration) as? Double ?? TransitionStyle.defaultDuration
     crossfadeDuration = min(max(duration, TransitionStyle.durationRange.lowerBound), TransitionStyle.durationRange.upperBound)
     appliedState = Self.load(AppliedState.self, forKey: Keys.appliedState)
+    inOrderPositions = Self.load([String: [String: String]].self, forKey: Keys.inOrderPositions) ?? [:]
     knownDisplays = Self.load([KnownDisplay].self, forKey: Keys.knownDisplays) ?? []
     // Keep an existing restore point: one left over from a crash still holds
     // the true original, while capturing now would record Phases' own image.
@@ -218,8 +226,7 @@ final class WallpaperScheduler {
     guard let active = engine.activePhase(at: now) else { return }
     let start = resolvedStart(for: active, now: now)
     let slot = slot(for: active.phase, start: start, now: now)
-    let steps = appliedState?.phaseID == active.phase.id ? (appliedState?.manualSteps ?? 0) + 1 : 1
-    apply(active.phase, start: start, slot: slot, manualSteps: steps)
+    apply(active.phase, start: start, slot: slot, mode: .advance)
     scheduleNextChange(from: now)
   }
 
@@ -253,6 +260,7 @@ final class WallpaperScheduler {
 
   func deletePhase(id: Phase.ID) {
     phases.removeAll { $0.id == id }
+    inOrderPositions[id.uuidString] = nil
   }
 
   /// Phases in the order they occur through the day, "Always" first.
@@ -305,8 +313,10 @@ final class WallpaperScheduler {
 
     let pools = Dictionary(uniqueKeysWithValues: connectedDisplayUUIDs.map { ($0, imagePool(for: $0, in: active.phase)) })
     switch WallpaperCheck.action(applied: appliedState, phaseID: active.phase.id, start: start, slot: slot, pools: pools) {
-    case .apply(let manualSteps):
-      apply(active.phase, start: start, slot: slot, manualSteps: manualSteps)
+    case .advance:
+      apply(active.phase, start: start, slot: slot, mode: .advance)
+    case .repair:
+      apply(active.phase, start: start, slot: slot, mode: .repair)
     case .updateStart:
       appliedState?.phaseStart = start
     case .nothing:
@@ -323,7 +333,7 @@ final class WallpaperScheduler {
       active.phase,
       start: start,
       slot: slot(for: active.phase, start: start, now: now),
-      manualSteps: appliedState?.manualSteps ?? 0
+      mode: .repair
     )
   }
 
@@ -379,9 +389,9 @@ final class WallpaperScheduler {
   /// Picks and applies an image for each connected display. Displays with
   /// nothing available keep their current wallpaper; the state is still
   /// recorded so the scheduler doesn't retry every evaluation.
-  private func apply(_ phase: Phase, start: Date, slot: Int, manualSteps: Int) {
+  private func apply(_ phase: Phase, start: Date, slot: Int, mode: InOrderPicker.Mode) {
     refreshDisplays()
-    let picks = pickImages(for: phase, step: slot + manualSteps)
+    let picks = pickImages(for: phase, mode: mode)
     let assignments = NSScreen.screens.compactMap { screen -> WallpaperAssignment? in
       guard let uuid = screen.displayUUID, let name = picks[uuid], let url = library.url(for: name) else { return nil }
       return WallpaperAssignment(screen: screen, url: url)
@@ -395,18 +405,17 @@ final class WallpaperScheduler {
         crossfade.apply(assignments, duration: transitionStyle == .crossfade ? crossfadeDuration : nil)
       }
     }
-    appliedState = AppliedState(
-      phaseID: phase.id, phaseStart: start, rotationSlot: slot, manualSteps: manualSteps, imagesByDisplay: picks
-    )
+    appliedState = AppliedState(phaseID: phase.id, phaseStart: start, rotationSlot: slot, imagesByDisplay: picks)
   }
 
   /// Display UUID → image. Displays with their own selection draw from it;
   /// the rest share the All Displays selection per the display mode (spec "Displays sharing the All Displays images").
-  private func pickImages(for phase: Phase, step: Int) -> [String: String] {
+  private func pickImages(for phase: Phase, mode: InOrderPicker.Mode) -> [String: String] {
     let showing = imagesShowing()
     let connected = NSScreen.screens.compactMap(\.displayUUID)
     var picks: [String: String] = [:]
     var sharing: [String] = []
+    var positions = inOrderPositions[phase.id.uuidString] ?? [:]
 
     for uuid in connected {
       // [D-own-images-no-fallback] A display with its own selection never
@@ -416,26 +425,39 @@ final class WallpaperScheduler {
         continue
       }
       let pool = imagePool(for: uuid, in: phase)
-      if let name = pick(from: pool, count: 1, order: phase.order, step: step, showing: [showing[uuid] ?? []]).first {
+      let names = pick(
+        from: pool, count: 1, phase: phase, remembered: positions[uuid], mode: mode, showing: [showing[uuid] ?? []]
+      )
+      if let name = names.first {
         picks[uuid] = name
+        positions[uuid] = name
       }
     }
 
     let shared = library.availableImages(phase.imageNames)
     if !sharing.isEmpty, !shared.isEmpty {
       let current = sharing.map { showing[$0] ?? [] }
+      let remembered = positions[InOrderPicker.sharedKey]
+      let names: [String]
       switch displayMode {
       case .sameOnAll:
-        let name = phase.order == .random
-          ? RandomPicker.shared(from: shared, showing: current)
-          : pick(from: shared, count: 1, order: phase.order, step: step, showing: current).first
-        if let name {
+        let union = current.reduce(into: Set<String>()) { $0.formUnion($1) }
+        names = phase.order == .random
+          ? RandomPicker.shared(from: shared, showing: current).map { [$0] } ?? []
+          : pick(from: shared, count: 1, phase: phase, remembered: remembered, mode: mode, showing: [union])
+        if let name = names.first {
           for uuid in sharing { picks[uuid] = name }
         }
       case .differentPerDisplay:
-        let names = pick(from: shared, count: sharing.count, order: phase.order, step: step, showing: current)
+        // The first sharing display (the main display first) sets the
+        // place; the others show the images after it.
+        names = pick(from: shared, count: sharing.count, phase: phase, remembered: remembered, mode: mode, showing: current)
         for (uuid, name) in zip(sharing, names) { picks[uuid] = name }
       }
+      if let first = names.first { positions[InOrderPicker.sharedKey] = first }
+    }
+    if phase.order == .inOrder, positions != inOrderPositions[phase.id.uuidString] ?? [:] {
+      inOrderPositions[phase.id.uuidString] = positions
     }
     return picks
   }
@@ -456,13 +478,19 @@ final class WallpaperScheduler {
     return showing
   }
 
-  /// In order: consecutive images starting at `step`. Random: each display
-  /// gets an image it isn't showing where possible (issue #10).
-  private func pick(from pool: [String], count: Int, order: ImageOrder, step: Int, showing: [Set<String>]) -> [String] {
+  /// In order: from the image after the one this selection last showed
+  /// [D-in-order-remembers]. Random: each display gets an image it isn't
+  /// showing where possible (issue #10).
+  private func pick(
+    from pool: [String], count: Int, phase: Phase, remembered: String?, mode: InOrderPicker.Mode, showing: [Set<String>]
+  ) -> [String] {
     guard !pool.isEmpty, count > 0 else { return [] }
-    switch order {
+    switch phase.order {
     case .inOrder:
-      return (0..<count).map { pool[(step + $0) % pool.count] }
+      return InOrderPicker.picks(
+        count: count, from: pool, remembered: remembered, sourceOrder: library.sources.map(\.id),
+        showing: showing.first ?? [], mode: mode
+      )
     case .random:
       return RandomPicker.perDisplay(from: pool, showing: showing)
     }
@@ -528,7 +556,7 @@ final class WallpaperScheduler {
       Task { @MainActor in self?.evaluate() }
     }
     // [D-screen-change-no-reroll] [Q-screen-params-notification] This also
-    // fires for Dock and menu bar changes, so only fix displays whose image no longer fits.
+    // fires for Dock and menu bar changes, so only fix displays whose image is no longer in its selection.
     let screens: @Sendable (Notification) -> Void = { [weak self] _ in
       Task { @MainActor in
         // [D-cover-follows-displays]
@@ -564,7 +592,12 @@ final class WallpaperScheduler {
     crossfade.finishRunningFade()
     // [D-cover-pause-quit] At logout or shutdown the covers go with the process.
     guard !isPoweringOff else { return }
-    if restoresWallpaperOnQuit { restorePoint?.restore() }
+    if restoresWallpaperOnQuit {
+      restorePoint?.restore()
+      // Phases' images are gone from the screen, so the next launch must
+      // put them back even within the same rotation [D-restore-on-quit].
+      appliedState?.imagesByDisplay = [:]
+    }
     restorePoint = nil
     // [D-cover-pause-quit] After the restore, so the real wallpaper is in place.
     crossfade.removeAllCovers(reason: "Quit")
