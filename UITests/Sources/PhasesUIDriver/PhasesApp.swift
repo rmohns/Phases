@@ -20,8 +20,18 @@ public final class PhasesApp {
   /// Launches a new instance in test mode and waits for its window. A
   /// Phases the author is already running is left alone. `imageFolders`
   /// become the image sources, in order [D-ui-test-mode]: one path goes as
-  /// is, several as the plist array form of `-PhasesUITestImages`.
-  public static func launch(imageFolders: [URL] = [TestImages.folder]) async throws -> PhasesApp {
+  /// is, several as the plist array form of `-PhasesUITestImages`. With
+  /// `opensWindow` false, the window stays closed until `reopenWindow()`,
+  /// so a test can set things up from the menu before it first opens.
+  /// `pausedByOutsideChange` starts it paused by a System Settings change
+  /// [D-test-paused-by-outside-change]; `windowSize` makes the window open
+  /// at that size instead of the default.
+  public static func launch(
+    imageFolders: [URL] = [TestImages.folder],
+    opensWindow: Bool = true,
+    pausedByOutsideChange: Bool = false,
+    windowSize: CGSize? = nil
+  ) async throws -> PhasesApp {
     guard AXIsProcessTrusted() else {
       throw UITestFailure("The app running these tests needs Accessibility permission (System Settings › Privacy & Security › Accessibility).")
     }
@@ -33,11 +43,16 @@ public final class PhasesApp {
       "-PhasesUITestImages", Self.imagesArgument(for: imageFolders),
       "-ApplePersistenceIgnoreState", "YES",
     ]
+    if pausedByOutsideChange {
+      configuration.arguments += ["-PhasesUITestPausedByOutsideChange", "YES"]
+    }
     let url = try appURL()
+    let appID = Bundle(url: url)?.bundleIdentifier ?? ""
     // [D-ui-test-mode] AppKit keeps the window frame and sidebar layout in
     // the normal settings, outside test mode's store. Clear them so every
     // launch starts from the defaults, and put the author's back on quit.
-    let savedLayout = SavedLayout.clear(for: Bundle(url: url)?.bundleIdentifier ?? "")
+    let savedLayout = SavedLayout.clear(for: appID)
+    if let windowSize { SavedLayout.setWindowSize(windowSize, for: appID) }
     let running: NSRunningApplication
     do {
       running = try await NSWorkspace.shared.openApplication(at: url, configuration: configuration)
@@ -46,6 +61,7 @@ public final class PhasesApp {
       throw error
     }
     let phases = PhasesApp(running: running, savedLayout: savedLayout)
+    guard opensWindow else { return phases }
     do {
       try await phases.openWindowFromMenuBar()
       _ = try await waitFor("the Phases window", timeout: .seconds(15)) { phases.windowIfOpen }
@@ -129,6 +145,12 @@ public final class PhasesApp {
   /// activating Phases the way a click does, which skipped the focus bug
   /// its test guards (2026-10-29).
   private func openWindowFromMenuBar() async throws {
+    try await chooseMenuItem("Open Phases…")
+  }
+
+  /// Clicks the menu bar item, then the menu item titled `title`, with
+  /// real clicks, as a person does.
+  public func chooseMenuItem(_ title: String) async throws {
     let item = try await waitFor("Phases' menu bar item", timeout: .seconds(10)) {
       app.node("AXExtrasMenuBar")?.children.first
     }
@@ -137,11 +159,29 @@ public final class PhasesApp {
     // [D-initial-focus-sidebar]. Best effort; the click may do it anyway.
     try? await bringToFront()
     try await requireWideMenuBar(item)
-    try await clickOwnElement(item, what: "the menu bar item")
-    let open = try await waitFor("Open Phases… in the menu", timeout: .seconds(5)) {
-      item.first { $0.role == kAXMenuItemRole && $0.title == "Open Phases…" }
+    // The menu's items stay in the AX tree while it's closed, at a
+    // made-up position, so "found" doesn't mean "open". A click on the
+    // menu bar item right after the menu closed sometimes didn't open it
+    // (2026-11-07: Pause Schedule, then Open Phases… at (0, 982)). Wait
+    // until the item's spot is really ours; if not, click the bar again.
+    for attempt in 1...3 {
+      try await clickOwnElement(item, what: "the menu bar item")
+      let open = try? await waitFor("\(title) in the open menu", timeout: .seconds(2)) {
+        item.first { $0.role == kAXMenuItemRole && $0.title == title && isOwnedByUs($0) }
+      }
+      if let open {
+        try await clickOwnElement(open, what: title)
+        return
+      }
+      print("The menu didn't open for \(title) on attempt \(attempt) of 3")
     }
-    try await clickOwnElement(open, what: "Open Phases…")
+    throw UITestFailure("Phases' menu didn't open with \(title) in 3 clicks on the menu bar item")
+  }
+
+  /// Whether the point under `node`'s center belongs to this test instance.
+  private func isOwnedByUs(_ node: AXNode) -> Bool {
+    guard let frame = node.frame else { return false }
+    return ownerPID(at: CGPoint(x: frame.midX, y: frame.midY)) == running.processIdentifier
   }
 
   /// [D-ui-menubar-wide] Narrow displays can run out of menu bar room and

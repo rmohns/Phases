@@ -2,16 +2,17 @@ import Foundation
 
 /// [D-version-in-settings] What tells one build of Phases from another.
 enum AppVersion {
-  /// The SPEC.md draft this build was made against. Bump with the spec's
-  /// title; a unit test checks they match.
-  static let specDraft = 52
+  /// The SPEC.md draft this build was made against: the build number, set
+  /// as `CURRENT_PROJECT_VERSION` in Project.json. A unit test checks it
+  /// against the spec's title.
+  static var specDraft: String {
+    Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
+  }
 
-  /// "1.0 (1)": the app's version and build number.
+  /// "0.1 (47)": the app's version and build number.
   static var versionAndBuild: String {
-    let info = Bundle.main.infoDictionary ?? [:]
-    let version = info["CFBundleShortVersionString"] as? String ?? "?"
-    let build = info["CFBundleVersion"] as? String ?? "?"
-    return "\(version) (\(build))"
+    let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+    return "\(version) (\(specDraft))"
   }
 
   /// When this copy of the app was built: its executable's modification date.

@@ -14,15 +14,19 @@ enum OutsideChangeRule {
   /// now. "Last used"-only writes (System Settings opening or quitting, a
   /// Space switch) never count, and nothing counts against an empty
   /// earlier reading, which means the store couldn't be read.
+  /// [Q-new-space-copies-entry] A new entry counts only when it's set later
+  /// than everything in the earlier reading: a new Space's entries are
+  /// copies that keep the display's old "last set" time.
   static func changes(
     from old: [String: WallpaperStoreEntry], to new: [String: WallpaperStoreEntry],
     ownSets: [OwnWallpaperSet], now: Date
   ) -> [OutsideChange] {
     guard !old.isEmpty else { return [] }
+    let newestOld = old.values.compactMap(\.lastSet).max() ?? .distantPast
     var found: [OutsideChange] = []
     for key in new.keys.sorted() {
       guard let entry = new[key], let lastSet = entry.lastSet else { continue }
-      if let previous = old[key]?.lastSet, lastSet <= previous { continue }
+      if lastSet <= (old[key]?.lastSet ?? newestOld) { continue }
       if isOwn(entry, ownSets: ownSets, now: now) { continue }
       let change = OutsideChange(displayUUID: entry.displayUUID, fileName: entry.fileName, isImage: entry.isImage)
       if !found.contains(change) { found.append(change) }
