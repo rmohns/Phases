@@ -650,6 +650,14 @@ Each with what passes:
   - The checks ran before the merge with draft 53's In order
     `[D-in-order-remembers]`, which changed how fetching ahead picks.
     Check 4 is worth repeating on the merged build.
+- *Verified* 2026-11-13 by the author, on screen, and by Claude from the
+  diagnostics log, draft 54 build (`87ef762`, merged with `main`):
+  checks 4 and 5 again. 4: fetched ahead 30 s early (0.39 s) and set on
+  the minute; Change Now fetched in 0.91 s and showed about 1 s late.
+  5: offline, each failed photo fell back to a cached one, alternating
+  between the two on hand instead of repeating
+  `[L-photos-offline-check]`. The UI suite passed 29 of 29 (247 s) on
+  the same build.
 
 ## When a fixed bug comes back
 
