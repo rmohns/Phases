@@ -37,7 +37,7 @@ Written 2026-11-12 by Claude with the author.
     missing selections weren't marked with no reachable source, and a
     lone subfolder lost its heading. The draft 44 conversion it also
     flagged was dropped instead (author: no conversion needed).
-- [ ] Phase 1b: spec for merge #2 (Photos albums), approved. Written
+- [x] Phase 1b: spec for merge #2 (Photos albums), approved. Written
   as **draft 53** (renumbered **54** on 2026-11-13, when In order's redesign took 53) on branch `feature/33-photos-albums` (from `main` at
   `a5d06e9`), 2026-11-12: SPEC.md "Photos albums" (`[D-photos-sources]`,
   `[D-photos-order]`, `[D-photos-names]`, `[D-photos-version]`,
@@ -64,7 +64,7 @@ Written 2026-11-12 by Claude with the author.
   30-second wait and the "removed is missing, not late" rule. A photo
   that keeps failing to download is left alone until it's seen (author:
   "let iCloud handle its own consistency").
-- [ ] Phase 2b: code for merge #2, tests, merged. On
+- [x] (`1148bed`, 2026-11-13) Phase 2b: code for merge #2, tests, merged. On
   `feature/33-photos-albums`. Steps (build with
   `bitrig build -destination generic/platform=macOS` and `swift test` in
   `UnitTests/` after each):
@@ -119,8 +119,12 @@ Written 2026-11-12 by Claude with the author.
      `9b0e40a`); the six Photos tests then passed 6 of 6 (70 s). Still
      to do: TESTING.md "What they cover"; UI tests with
      the fake library (harness builds the folder); ask before running.
-  6. [ ] Review (fresh eyes), then the author's Photos checks, then merge
-     with the author's yes. Photos checks so far (2026-11-12): 1
+  6. [x] (`1148bed`) Review (fresh eyes), then the author's Photos checks, then merge with the author's yes.
+     **Merged** into `main` as `1148bed` on 2026-11-13 with the author's yes,
+     after merging `main` in (draft 53, In order) and renumbering to draft
+     54; checks 4 and 5 repeated on the merged build and passed; UI suite
+     29 of 29, unit tests 170 of 170. Issue #33 closed the same day.
+     Photos checks so far (2026-11-12): 1
      permission passes (a grant reached Phases only after a relaunch,
      `[L-photos-grant-needs-relaunch]`); 2 adding passes; 3 In order
      follows the album's order; 4 on time ahead, about 1 s late on
