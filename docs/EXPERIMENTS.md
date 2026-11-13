@@ -1475,7 +1475,8 @@ open" at its end.
 ### `[X-33-photokit]` Photos library from a not-sandboxed Phases (round A)
 
 - **Question:** not recorded as one question. This is Phase 0 of the issue
-  #33 plan (`docs/PLAN-GITHUB-ISSUE-33.md`), round A, not sandboxed.
+  #33 plan (`docs/PLAN-GITHUB-ISSUE-33.md`, now in tag
+  `archive/feature/33-photos-albums`), round A, not sandboxed.
 - **When, on what:** 2026-11-12, macOS 27.2; the author's library with
   "Optimize Mac Storage" on, album "NIN 2013" (61 images, 63 items); probe
   build cdhash `9808ae12`. Run by Claude with the author's yes.
@@ -1488,7 +1489,8 @@ open" at its end.
   `[L-photos-x6-ids]`, `[L-photos-album-order]`.
 
 Source for this section unless noted: Phase 0 of the issue #33 plan
-(`docs/PLAN-GITHUB-ISSUE-33.md`), round A (not sandboxed), 2026-11-12,
+(`docs/PLAN-GITHUB-ISSUE-33.md`, now in tag `archive/feature/33-photos-albums`),
+round A (not sandboxed), 2026-11-12,
 macOS 27.2, the author's library with "Optimize Mac Storage" on, album
 "NIN 2013" (61 images, 63 items). Probe: `App/Experiments/PhotoKitProbe.swift`
 on branch `experiment/33-photokit`, build cdhash `9808ae12`. Run by Claude
