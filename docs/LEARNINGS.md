@@ -1191,6 +1191,20 @@ sandboxed, the author's real settings and library.
   entry was wrong. Why (*hypothesis*): PhotoKit keeps a process's
   authorization once it has been decided, so only a relaunch rereads it.
   Not checked: whether a running Phases picks it up after a longer wait.
+- `[L-photos-grant-per-build]` **Each Bitrig build loses the Photos
+  grant.** Bitrig signs debug builds ad hoc (`codesign -dv`:
+  `Signature=adhoc`, no team), so TCC pins the grant to the build's
+  cdhash. On 2026-11-12, after a relaunch into the 22:26 build, every
+  Photos source read "Can't open". tccd logged at 22:30:27 "Failed to
+  match existing code requirement for subject app.bitrig.new.ecd0db30…
+  and service kTCCServicePhotos", with the old and new cdhashes, and the
+  status read as not yet asked. The 22:05 build had prompted again at
+  22:13 for the same reason. *Verified* by Claude from the tccd log. This
+  may also explain `[L-photos-grant-needs-relaunch]` (*hypothesis*).
+  Builds signed with a team (Developer ID or App Store) keep one
+  designated requirement across builds, so users won't see this
+  (*recalled*). During checks: after each new build, Add Photos Album…
+  prompts again; allow it.
 - `[L-photos-offline-check]` **Offline, the fallback worked, but kept
   landing on the same photo.** Phase: Gift Ideas (4, cached) then 3
   Buddhism photos (not cached), In order, 1 minute. Wi-Fi off about
