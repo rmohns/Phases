@@ -325,6 +325,14 @@ when there's more than one choice.
     in an app that isn't sandboxed (*recalled*, to be checked with this
     draft's build). Using them now means the sandbox change doesn't
     rewrite this code. Draft 44 and earlier saved a plain bookmark.
+  - *Verified* 2026-11-14 by the author and Claude, draft 54 build, not
+    sandboxed: a security-scoped bookmark reopens a folder after a
+    relaunch. With Phases quit, the author renamed `~/Pictures/Desktop
+    Pictures X` to `Desktop Pictures Y`, so the saved location led
+    nowhere. On relaunch the diagnostics log said "source 2872UXTY found
+    by its bookmark (stale)", and the saved location became
+    `~/Pictures/Desktop Pictures Y`. Earlier, with Phases running, a
+    rename to `Desktop Pictures X` showed up as it happened.
 - **A source that can't be opened** (a drive that isn't connected, a
   folder that was deleted or moved somewhere its bookmark and location
   can't find) shows "Can't open" in its Settings row, with a **Locate…**
