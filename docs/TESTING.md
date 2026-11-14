@@ -108,6 +108,11 @@ The pure logic that decides what the app does:
   hand, never what's showing unless it's all there is; Random, any on
   hand, avoiding what's showing; nothing on hand keeps the wallpaper
   `[D-photos-fetch-ahead]`
+- `ChangeRecord` (draft 55): a change waiting on photos leaves the saved
+  record alone until it shows, a check during the wait applies nothing,
+  and pausing drops the pending change `[D-record-after-wait]` (issue
+  #36). *Verified* 2026-11-14 by Claude: making the change save at its
+  start, as draft 54 did, fails three of its tests
 - `PhotoCacheRules` (draft 54): which cached photos a cleanup deletes
   (least recently shown first, only until under the limit, never a
   protected file, and with an unreadable wallpaper store, nothing shown
