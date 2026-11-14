@@ -451,6 +451,11 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
     original, for example) is written as HEIC.
   - Editing a photo in Photos makes Phases fetch it again the next time
     it's used.
+    - Other changes may count as edits: the cache name follows
+      `PHAsset.modificationDate`, which may also change when a photo is
+      favorited or retitled (*recalled*, not tested here). Fetching again
+      then is fine: "If the user changed a photo, then we are simply
+      respecting their action" (author, 2026-11-14).
   - *Why edits:* the photo should look the way the user made it look.
     Untested: edited photos, Live Photos, HEIC, RAW, very large files
     (Phase 0's test album had none).

@@ -1482,7 +1482,13 @@ open" at its end.
   build cdhash `9808ae12`. Run by Claude with the author's yes.
 - **Branch:** `experiment/33-photokit` (probe in
   `App/Experiments/PhotoKitProbe.swift`); `archive/…` tag not recorded.
+  - *Added 2026-11-14 by Claude:* archived as tag
+    `archive/experiment/33-photokit` (branch deleted the same day). Every
+    `[L-…]` tag on the branch's LEARNINGS.md is on `main` (*verified*,
+    tag lists compared, 2026-11-14).
 - **Outcome:** not recorded.
+  - *Added 2026-11-14 by Claude:* fed spec drafts 52 and 54, which merged
+    as `a5d06e9` and `1148bed`; issue #33 closed 2026-11-13.
 - **Findings:** `[L-photos-x0-paths]`, `[L-photos-x1-permission]`,
   `[L-photos-x2-albums]`, `[L-photos-x3-download]`,
   `[L-photos-x4-cache-wallpaper]`, `[L-photos-x5-observer]`,
@@ -1566,7 +1572,12 @@ with the author's yes.
   `615f31ef` for the wallpaper check. Run by Claude with the author's yes.
 - **Branch:** not recorded (the same probe as `experiment/33-photokit`;
   the text names no branch for round B).
+  - *Added 2026-11-14 by Claude:* round B ran on `experiment/33-photokit`
+    too: its commits `c2cc13b` and `979f220` are there (*verified*,
+    `git log`, 2026-11-14). Tag `archive/experiment/33-photokit`.
 - **Outcome:** not recorded.
+  - *Added 2026-11-14 by Claude:* sandboxing became its own change,
+    issue #19 (author, 2026-11-12); these findings are summarized there.
 - **Findings:** `[L-sandbox-team-needed]`, `[L-sandbox-x0-paths]`,
   `[L-sandbox-prefs-move]`, `[L-sandbox-x1-no-entitlement]`,
   `[L-photos-new-build-asks]`, `[L-sandbox-photos-works]`,
