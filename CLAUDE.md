@@ -34,6 +34,12 @@
   - **Nothing learned is ever dropped.** Digest entries summarize; they
     never replace the record. Records aren't trimmed or reworded later;
     corrections are added next to what they correct.
+  - **When in doubt, preserve.** If it's unclear whether a note, finding,
+    record, or doc change should be kept, landed, or let go, keep it, so
+    the project keeps what it knows. Notes that change no decision land on
+    `main` before their branch is archived, so nothing lives only in a
+    tag. A note kept by mistake costs a later cleanup; one lost costs the
+    knowledge (author, 2026-11-14).
 - **Moving entries.** ERRATA.md holds only quirks the code on `main`
   depends on.
   - *Promotion:* when a learning starts shaping code, it moves to
