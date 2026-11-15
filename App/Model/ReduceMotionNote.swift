@@ -14,4 +14,9 @@ enum ReduceMotionNote {
   static func controlsEnabled(reducesMotion: Bool) -> Bool {
     !reducesMotion
   }
+
+  /// System Settings › Accessibility › Motion, for Open Motion Settings….
+  /// An anchor System Settings doesn't know opens Accessibility itself,
+  /// the spec's fallback.
+  static let motionSettingsURL = URL(string: "x-apple.systempreferences:com.apple.Accessibility-Settings.extension?Motion")!
 }

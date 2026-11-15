@@ -56,9 +56,15 @@ struct SettingsView: View {
           .disabled(!controlsEnabled)
         }
         if let note = ReduceMotionNote.text(reducesMotion: scheduler.reducesMotion) {
-          Text(note)
-            .font(.caption)
-            .foregroundStyle(.secondary)
+          VStack(alignment: .leading, spacing: 6) {
+            Text(note)
+              .font(.caption)
+              .foregroundStyle(.secondary)
+            // Opens only when clicked; Phases never opens it by itself.
+            Button("Open Motion Settings…") {
+              NSWorkspace.shared.open(ReduceMotionNote.motionSettingsURL)
+            }
+          }
         }
       }
 

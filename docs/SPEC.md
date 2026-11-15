@@ -674,6 +674,16 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
   - Their values are kept, defaults included, and show again unchanged
     when Reduce Motion is turned off. Reduce Motion never writes to
     either preference.
+  - Under the note, an **Open Motion Settings…** button opens System
+    Settings › Accessibility › Motion, where Reduce Motion lives. It only
+    opens the pane when clicked; Phases never opens it, or asks about it,
+    by itself. If that pane can't be opened directly, the button opens
+    Accessibility instead.
+    - A button rather than a link in the note: it matches the Location
+      section's **Open Location Settings…** and Startup's **Open Login
+      Items…**, and the HIG suggests "a button that opens it directly"
+      for the system Settings app (HIG "Settings"). Asked for by the
+      author, 2026-11-14.
   - *Why:* drafts up to 55 always showed "Changes are instant when
     Reduce Motion is on.", whatever the setting, so it never said
     whether it applied (issue #32, draft 56).
