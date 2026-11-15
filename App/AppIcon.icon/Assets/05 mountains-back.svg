@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g id="Background" transform="matrix(1.639443,0,0,1.639443,-327.036143,-324.394876)">
+        <g>
+            <g transform="matrix(1,0,0,1,0.609963,0)">
+                <path id="Mountain-Back" affinity:id="Mountain Back" d="M636.33,571.491C633.952,578.982 619.783,602.13 598.205,619.122C588.958,626.404 588.847,626.169 578.589,631.826C561.944,614.761 560.726,614.266 558.72,613.452C557.359,609.593 553.892,607.566 537.823,591.17C513.831,566.689 510.174,566.221 513.053,563.102C514.851,561.154 565.43,510.979 567.581,509.658C570.362,507.951 570.948,508.989 589.067,525.922C592.904,529.509 620.949,555.718 636.33,571.491Z" style="fill:#3e46bc;"/>
+            </g>
+        </g>
+    </g>
+</svg>

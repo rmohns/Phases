@@ -1,0 +1,119 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "display-p3:0.14510,0.53333,0.94118,1.00000",
+      "srgb:0.28627,0.21961,0.84706,1.00000"
+    ]
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "glass" : false,
+          "image-name" : "04 mountains lines.svg",
+          "name" : "04 mountains lines"
+        },
+        {
+          "fill-specializations" : [
+            {
+              "appearance" : "tinted",
+              "value" : "system-light"
+            }
+          ],
+          "image-name" : "07 inner moon.svg",
+          "name" : "07 inner moon",
+          "opacity" : 0.95
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    },
+    {
+      "layers" : [
+        {
+          "glass" : false,
+          "hidden" : true,
+          "image-name" : "06 mountains-front.svg",
+          "name" : "06 mountains-front"
+        },
+        {
+          "glass" : false,
+          "hidden" : true,
+          "image-name" : "05 mountains-back.svg",
+          "name" : "05 mountains-back"
+        },
+        {
+          "fill-specializations" : [
+            {
+              "appearance" : "tinted",
+              "value" : "system-dark"
+            }
+          ],
+          "glass-specializations" : [
+            {
+              "value" : true
+            },
+            {
+              "appearance" : "tinted",
+              "value" : true
+            }
+          ],
+          "hidden-specializations" : [
+            {
+              "value" : false
+            },
+            {
+              "idiom" : "macOS",
+              "value" : false
+            }
+          ],
+          "image-name" : "03 inner bg.svg",
+          "name" : "03 inner bg",
+          "opacity-specializations" : [
+            {
+              "value" : 0.9
+            },
+            {
+              "appearance" : "tinted",
+              "value" : 1
+            }
+          ]
+        },
+        {
+          "blend-mode" : "plus-lighter",
+          "glass" : true,
+          "hidden" : false,
+          "image-name" : "02 circle.svg",
+          "name" : "02 circle",
+          "opacity" : 0.66
+        },
+        {
+          "blend-mode" : "plus-lighter",
+          "image-name" : "01 crescents.svg",
+          "name" : "01 crescents",
+          "opacity" : 0.66
+        }
+      ],
+      "name" : "Group",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : [
+      "macOS"
+    ]
+  }
+}
