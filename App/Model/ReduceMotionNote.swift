@@ -15,8 +15,7 @@ enum ReduceMotionNote {
     !reducesMotion
   }
 
-  /// System Settings › Accessibility › Motion, for Open Motion Settings….
-  /// An anchor System Settings doesn't know opens Accessibility itself,
-  /// the spec's fallback.
+  /// System Settings › Accessibility › Motion, for Open Motion Settings…
+  /// (verified on macOS 27.2; see the spec).
   static let motionSettingsURL = URL(string: "x-apple.systempreferences:com.apple.Accessibility-Settings.extension?Motion")!
 }

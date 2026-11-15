@@ -684,6 +684,12 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
       Items…**, and the HIG suggests "a button that opens it directly"
       for the system Settings app (HIG "Settings"). Asked for by the
       author, 2026-11-14.
+    - The link is `x-apple.systempreferences:com.apple.Accessibility-Settings.extension?Motion`.
+      *Verified* 2026-11-14 by the author, macOS 27.2: it opens
+      Accessibility › Motion. The fallback to Accessibility is untested.
+  - *Verified* 2026-11-14 by the author, draft 56 build: turning Reduce
+    Motion on and off in System Settings shows and hides the note and
+    dims and restores both controls live, with their values kept.
   - *Why:* drafts up to 55 always showed "Changes are instant when
     Reduce Motion is on.", whatever the setting, so it never said
     whether it applied (issue #32, draft 56).
