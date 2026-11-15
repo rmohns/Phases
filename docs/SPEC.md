@@ -1420,6 +1420,10 @@ extras don't show them. No global hotkey.
          further clicks did nothing. *Why the change:* the author asked
          for it to revert on its own (2026-11-14, issue #23), so a meme
          left up doesn't hide the wallpaper the panel exists to show.
+       - *Verified* 2026-11-14 by the author, hands-on, draft 57 build: the
+         meme reverts after 30 seconds; clicking again brings it back; a
+         wallpaper change while it shows reverts it; the timer still fires
+         with the panel scrolled offscreen.
        - **Scrolling doesn't reset it.** The flag and the 30-second timer
          belong to the window, not the panel row, so the meme survives the
          panel scrolling offscreen `[D-brand-scrolls]` and the timer keeps
