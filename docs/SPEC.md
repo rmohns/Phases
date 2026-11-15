@@ -1,4 +1,4 @@
-# Phases — Specification (draft 54)
+# Phases — Specification (draft 55)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -497,6 +497,28 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
     afresh the next time it's needed, so a request Photos never answers
     can't block that photo for good (draft 54, from the 2026-11-12
     review; a request like that hasn't been seen).
+  - `[D-record-after-wait]` **A change is saved only once it shows.**
+    While a change waits on photos, its picks are held in memory as a
+    pending change, and the saved record (the image each display shows,
+    see "Persistence") still names what's on screen. The record is saved
+    when the change shows, at the end of the wait or at once when
+    nothing needs fetching.
+    - The checks that run during the wait (the wallpaper check, display
+      and Space changes, waking) compare against the pending change, so
+      they don't start a second change for the same slot
+      `[D-screen-change-no-reroll]`. A newer change replaces it.
+    - Pausing, or the phase no longer running, drops the pending
+      change. Resuming then applies the phase again.
+    - A display whose photo never arrives and that keeps its wallpaper
+      still gets the planned pick in its record, so later checks don't
+      apply again before the next change.
+    - *Why:* draft 54 saved the planned picks before the wait. If Phases
+      crashed or was force-quit during it, the next launch read a record
+      saying the new photos were showing and applied nothing, so the old
+      wallpaper stayed until the next change. Now a crash loses only the
+      pending change, and the next launch makes it again (issue #36,
+      found in review 2026-11-12, *observed* in the code, not
+      reproduced; draft 55).
   - **A photo that can't be fetched** (offline and only in iCloud,
     deleted, or not there in 30 seconds): that display gets another image from the same selection
     that's on hand (in the cache, or from a folder), chosen as Random or

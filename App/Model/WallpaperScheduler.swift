@@ -56,12 +56,14 @@ final class WallpaperScheduler {
   var isPaused: Bool {
     didSet {
       SettingsStore.defaults.set(isPaused, forKey: Keys.isPaused)
+      // [D-record-after-wait] A change waiting on photos stands down.
+      if isPaused { cancelPendingChange() }
       if !isPaused, pausedForOutsideChangeAt != nil {
         // [D-outside-change-pauses] Resuming puts the phase's image back
         // over the pick at once: forgetting what's applied makes the
         // check below apply again.
         pausedForOutsideChangeAt = nil
-        appliedState?.imagesByDisplay = [:]
+        record.saved?.imagesByDisplay = [:]
         notifier.withdraw()
       }
       evaluate()
@@ -74,9 +76,17 @@ final class WallpaperScheduler {
     didSet { Self.save(pausedForOutsideChangeAt, forKey: Keys.pausedForOutsideChangeAt) }
   }
 
-  private(set) var appliedState: AppliedState? {
-    didSet { Self.save(appliedState, forKey: Keys.appliedState) }
+  /// [D-record-after-wait] What's showing, saved, plus a change waiting on
+  /// photos, held only in memory.
+  private(set) var record: ChangeRecord {
+    didSet {
+      if record.saved != oldValue.saved { Self.save(record.saved, forKey: Keys.appliedState) }
+    }
   }
+
+  /// What the checks compare against: a change waiting on photos, or else
+  /// what's showing [D-record-after-wait].
+  var appliedState: AppliedState? { record.current }
 
   /// [D-in-order-remembers] Phase ID → selection key (a display UUID, or
   /// `InOrderPicker.sharedKey`) → the image it last showed.
@@ -96,8 +106,6 @@ final class WallpaperScheduler {
   private(set) var connectedDisplayUUIDs: Set<String> = []
 
   private(set) var activePhase: Phase?
-  /// What was showing when a change began waiting on photos; nil otherwise.
-  private var imagesBeforeWait: [String: String]?
   private(set) var nextChange: NextChange?
   /// When the next phase starts, ending the active one (nil if none is scheduled).
   private(set) var activePhaseEnds: Date?
@@ -168,7 +176,7 @@ final class WallpaperScheduler {
     transitionStyle = defaults.string(forKey: Keys.transitionStyle).flatMap(TransitionStyle.init) ?? .crossfade
     let duration = defaults.object(forKey: Keys.crossfadeDuration) as? Double ?? TransitionStyle.defaultDuration
     crossfadeDuration = min(max(duration, TransitionStyle.durationRange.lowerBound), TransitionStyle.durationRange.upperBound)
-    appliedState = Self.load(AppliedState.self, forKey: Keys.appliedState)
+    record = ChangeRecord(saved: Self.load(AppliedState.self, forKey: Keys.appliedState))
     inOrderPositions = Self.load([String: [String: String]].self, forKey: Keys.inOrderPositions) ?? [:]
     knownDisplays = Self.load([KnownDisplay].self, forKey: Keys.knownDisplays) ?? []
     // Keep an existing restore point: one left over from a crash still holds
@@ -197,9 +205,9 @@ final class WallpaperScheduler {
 
   /// The image on the main display, or any display if that's unknown.
   var currentImageName: String? {
-    // [D-photos-fetch-ahead] While a change waits on a photo, the record
-    // already names the planned picks; show what's on screen until it lands.
-    guard let images = imagesBeforeWait ?? appliedState?.imagesByDisplay else { return nil }
+    // [D-record-after-wait] While a change waits on a photo, what's on
+    // screen is the saved record, not the pending picks.
+    guard let images = record.saved?.imagesByDisplay else { return nil }
     return NSScreen.main?.displayUUID.flatMap { images[$0] } ?? images.values.first
   }
 
@@ -340,7 +348,7 @@ final class WallpaperScheduler {
     case .repair:
       apply(active.phase, start: start, slot: slot, mode: .repair)
     case .updateStart:
-      appliedState?.phaseStart = start
+      record.updateStart(start)
     case .nothing:
       break
     }
@@ -452,9 +460,8 @@ final class WallpaperScheduler {
       // shows, so fetch for it again.
       forgetFetchedAhead()
     }
-    let showingBefore = imagesBeforeWait ?? appliedState?.imagesByDisplay ?? [:]
-    imagesBeforeWait = nil
-    appliedState = AppliedState(phaseID: phase.id, phaseStart: start, rotationSlot: slot, imagesByDisplay: picks)
+    // [D-record-after-wait] Saved only once it shows, in `showFallingBack`.
+    record.begin(AppliedState(phaseID: phase.id, phaseStart: start, rotationSlot: slot, imagesByDisplay: picks))
     changeGeneration += 1
     let generation = changeGeneration
 
@@ -466,19 +473,28 @@ final class WallpaperScheduler {
       return
     }
     let fetches = missing.compactMap { library.fetchPhoto($0) }
-    imagesBeforeWait = showingBefore
     Task { @MainActor [weak self] in
       await Self.wait(for: fetches, atMost: FetchAhead.waitLimit)
       guard let self, generation == self.changeGeneration else { return }
-      self.imagesBeforeWait = nil
       // Stand down if Phases paused (Pause, or a wallpaper picked outside
       // Phases [D-outside-change-pauses]) or the phase stopped running
-      // while it waited.
-      guard !self.isPaused, self.appliedState?.phaseID == phase.id,
+      // while it waited [D-record-after-wait].
+      guard !self.isPaused, self.record.pending?.phaseID == phase.id,
         self.engine.activePhase(at: Date())?.phase.id == phase.id
-      else { return }
+      else {
+        self.record.dropPending()
+        return
+      }
       self.showFallingBack(picks, phase: phase)
     }
+  }
+
+  /// [D-record-after-wait] Drops a change waiting on photos, so its wait
+  /// ends without showing anything.
+  private func cancelPendingChange() {
+    guard record.pending != nil else { return }
+    record.dropPending()
+    changeGeneration += 1
   }
 
   /// [D-photos-fetch-ahead] Picks made ahead are no good: fetch again for
@@ -518,13 +534,8 @@ final class WallpaperScheduler {
     // differs. A display keeping its wallpaper keeps the planned pick in
     // its record, so later checks don't apply again before the next change
     // [D-screen-change-no-reroll]; the photo shows from then on only if a
-    // later change picks it.
-    if var state = appliedState {
-      for (uuid, name) in shown {
-        if let name { state.imagesByDisplay[uuid] = name }
-      }
-      appliedState = state
-    }
+    // later change picks it. The change is saved now [D-record-after-wait].
+    record.finish(shown: shown)
     show(shown.compactMapValues { $0 })
   }
 
@@ -861,7 +872,7 @@ final class WallpaperScheduler {
       restorePoint?.restore()
       // Phases' images are gone from the screen, so the next launch must
       // put them back even within the same rotation [D-restore-on-quit].
-      appliedState?.imagesByDisplay = [:]
+      record.saved?.imagesByDisplay = [:]
     }
     restorePoint = nil
     // [D-cover-pause-quit] After the restore, so the real wallpaper is in place.
