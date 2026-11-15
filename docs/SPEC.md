@@ -1276,7 +1276,10 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
 
 ### Icons
 - **App icon:** the supplied artwork (landscape in a circle between two lunar
-  crescents, blue gradient).
+  crescents, blue gradient), as a layered Icon Composer icon
+  (`App/AppIcon.icon`), so macOS draws it with Liquid Glass and its
+  default, dark, and tinted appearances. It replaces the earlier flat PNG
+  (author, 2026-11-14).
 - `[D-menubar-icon]` **Menu bar icon:** a simplified version of the app icon, drawn for legibility
   at menu bar size: a bold photo circle (about two-thirds of the width) with a
   filled sun and filled mountains clipped inside, flanked by two solid
