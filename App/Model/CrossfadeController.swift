@@ -77,6 +77,9 @@ final class CrossfadeController {
   private var running: [FadeEntry]?
   private var fadeTask: Task<Void, Never>?
   private var observers: [NSObjectProtocol] = []
+  /// [D-reduce-motion-note] Called with the new Reduce Motion setting
+  /// whenever the display accessibility options change; the one listener.
+  var onReduceMotionChange: ((Bool) -> Void)?
 
   init() {
     let center = NSWorkspace.shared.notificationCenter
@@ -88,7 +91,9 @@ final class CrossfadeController {
       // instant switch, so the covers have no job left.
       center.addObserver(forName: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
         MainActor.assumeIsolated {
-          guard NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { return }
+          let reducesMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+          self?.onReduceMotionChange?(reducesMotion)
+          guard reducesMotion else { return }
           self?.removeAllCovers(reason: "Reduce Motion on")
         }
       },

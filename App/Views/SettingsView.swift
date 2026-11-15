@@ -28,12 +28,15 @@ struct SettingsView: View {
       }
 
       Section("Transition") {
+        // [D-reduce-motion-note] Dimmed, values kept, while Reduce Motion is on.
+        let controlsEnabled = ReduceMotionNote.controlsEnabled(reducesMotion: scheduler.reducesMotion)
         Picker("Transition", selection: $scheduler.transitionStyle) {
           ForEach(TransitionStyle.allCases) { style in
             Text(style.title).tag(style)
           }
         }
         .pickerStyle(.segmented)
+        .disabled(!controlsEnabled)
         if scheduler.transitionStyle == .crossfade {
           LabeledContent("Duration") {
             HStack {
@@ -50,10 +53,19 @@ struct SettingsView: View {
                 .frame(width: 44, alignment: .trailing)
             }
           }
+          .disabled(!controlsEnabled)
         }
-        Text("Changes are instant when Reduce Motion is on.")
-          .font(.caption)
-          .foregroundStyle(.secondary)
+        if let note = ReduceMotionNote.text(reducesMotion: scheduler.reducesMotion) {
+          VStack(alignment: .leading, spacing: 6) {
+            Text(note)
+              .font(.caption)
+              .foregroundStyle(.secondary)
+            // Opens only when clicked; Phases never opens it by itself.
+            Button("Open Motion Settings…") {
+              NSWorkspace.shared.open(ReduceMotionNote.motionSettingsURL)
+            }
+          }
+        }
       }
 
       Section("Startup") {

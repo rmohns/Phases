@@ -1,4 +1,4 @@
-# Phases — Specification (draft 54)
+# Phases — Specification (draft 56)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -497,6 +497,28 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
     afresh the next time it's needed, so a request Photos never answers
     can't block that photo for good (draft 54, from the 2026-11-12
     review; a request like that hasn't been seen).
+  - `[D-record-after-wait]` **A change is saved only once it shows.**
+    While a change waits on photos, its picks are held in memory as a
+    pending change, and the saved record (the image each display shows,
+    see "Persistence") still names what's on screen. The record is saved
+    when the change shows, at the end of the wait or at once when
+    nothing needs fetching.
+    - The checks that run during the wait (the wallpaper check, display
+      and Space changes, waking) compare against the pending change, so
+      they don't start a second change for the same slot
+      `[D-screen-change-no-reroll]`. A newer change replaces it.
+    - Pausing, or the phase no longer running, drops the pending
+      change. Resuming then applies the phase again.
+    - A display whose photo never arrives and that keeps its wallpaper
+      still gets the planned pick in its record, so later checks don't
+      apply again before the next change.
+    - *Why:* draft 54 saved the planned picks before the wait. If Phases
+      crashed or was force-quit during it, the next launch read a record
+      saying the new photos were showing and applied nothing, so the old
+      wallpaper stayed until the next change. Now a crash loses only the
+      pending change, and the next launch makes it again (issue #36,
+      found in review 2026-11-12, *observed* in the code, not
+      reproduced; draft 55).
   - **A photo that can't be fetched** (offline and only in iCloud,
     deleted, or not there in 30 seconds): that display gets another image from the same selection
     that's on hand (in the cache, or from a folder), chosen as Random or
@@ -640,6 +662,37 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
 - **App preference: Transition**: None or **Crossfade** (default).
 - **App preference: Duration**: 0.5 to 3 seconds (default 1 second), shown
   only when Crossfade is selected.
+- `[D-reduce-motion-note]` **Settings says when Reduce Motion turns
+  transitions off.** With Reduce Motion on (System Settings ›
+  Accessibility › Display), the Transition section shows: "Transitions
+  are off because Reduce Motion is on in System Settings." With it off,
+  no note. The note follows the system setting while Settings is open.
+  - While Reduce Motion is on, the Transition and Duration controls are
+    dimmed and can't be changed: they'd have no effect
+    `[D-no-fade-cases]`, and a control that does nothing shouldn't look
+    usable (author, 2026-11-14).
+  - Their values are kept, defaults included, and show again unchanged
+    when Reduce Motion is turned off. Reduce Motion never writes to
+    either preference.
+  - Under the note, an **Open Motion Settings…** button opens System
+    Settings › Accessibility › Motion, where Reduce Motion lives. It only
+    opens the pane when clicked; Phases never opens it, or asks about it,
+    by itself. If that pane can't be opened directly, the button opens
+    Accessibility instead.
+    - A button rather than a link in the note: it matches the Location
+      section's **Open Location Settings…** and Startup's **Open Login
+      Items…**, and the HIG suggests "a button that opens it directly"
+      for the system Settings app (HIG "Settings"). Asked for by the
+      author, 2026-11-14.
+    - The link is `x-apple.systempreferences:com.apple.Accessibility-Settings.extension?Motion`.
+      *Verified* 2026-11-14 by the author, macOS 27.2: it opens
+      Accessibility › Motion. The fallback to Accessibility is untested.
+  - *Verified* 2026-11-14 by the author, draft 56 build: turning Reduce
+    Motion on and off in System Settings shows and hides the note and
+    dims and restores both controls live, with their values kept.
+  - *Why:* drafts up to 55 always showed "Changes are instant when
+    Reduce Motion is on.", whatever the setting, so it never said
+    whether it applied (issue #32, draft 56).
 - macOS has no transition for wallpapers set by apps, so Phases does it itself
   by **fading the new image in over the old one** `[D-fade-in]`
   (see *Why fade in* below), on a cover that then stays up while its
