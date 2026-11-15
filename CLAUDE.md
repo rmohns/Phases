@@ -129,10 +129,13 @@
   GitHub repo (github.com/rmohns/Phases); `origin` is Bitrig's hosted repo.
   "Push to GitHub" means `git push github …`. Say which remote, by name and
   URL, every time.
-- **Mark Claude's commits.** Every commit Claude makes, squash merges
-  included, ends with the trailer
-  `Co-Authored-By: Claude (Bitrig) <noreply@anthropic.com>`. Commits
-  without it are Robert's, except those up to `cf969a9`, all Claude's.
+- **Mark Claude's commits.** Every commit holding work Claude wrote,
+  squash merges included, ends with the trailer
+  `Co-Authored-By: Claude (Bitrig) <noreply@anthropic.com>`. When
+  Claude only commits Robert's own work (files he made or dropped in),
+  leave the trailer off (author, 2026-11-14). Commits without it are
+  Robert's, except those up to `cf969a9`, all Claude's; `33119a6`
+  (app icon) is Robert's despite carrying it.
 - **Commit messages say what changed.** The subject line describes the
   change itself; an issue number can follow it, never replace it. A fix
   says what it fixes, in the subject, and its body ends `Fixes #N` so
