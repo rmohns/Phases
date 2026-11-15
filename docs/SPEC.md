@@ -1,4 +1,4 @@
-# Phases — Specification (draft 55)
+# Phases — Specification (draft 56)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -662,6 +662,21 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
 - **App preference: Transition**: None or **Crossfade** (default).
 - **App preference: Duration**: 0.5 to 3 seconds (default 1 second), shown
   only when Crossfade is selected.
+- `[D-reduce-motion-note]` **Settings says when Reduce Motion turns
+  transitions off.** With Reduce Motion on (System Settings ›
+  Accessibility › Display), the Transition section shows: "Transitions
+  are off because Reduce Motion is on in System Settings." With it off,
+  no note. The note follows the system setting while Settings is open.
+  - While Reduce Motion is on, the Transition and Duration controls are
+    dimmed and can't be changed: they'd have no effect
+    `[D-no-fade-cases]`, and a control that does nothing shouldn't look
+    usable (author, 2026-11-14).
+  - Their values are kept, defaults included, and show again unchanged
+    when Reduce Motion is turned off. Reduce Motion never writes to
+    either preference.
+  - *Why:* drafts up to 55 always showed "Changes are instant when
+    Reduce Motion is on.", whatever the setting, so it never said
+    whether it applied (issue #32, draft 56).
 - macOS has no transition for wallpapers set by apps, so Phases does it itself
   by **fading the new image in over the old one** `[D-fade-in]`
   (see *Why fade in* below), on a cover that then stays up while its
