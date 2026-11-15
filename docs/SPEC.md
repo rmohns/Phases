@@ -1,4 +1,4 @@
-# Phases — Specification (draft 56)
+# Phases — Specification (draft 57)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -1398,15 +1398,32 @@ extras don't show them. No global hotkey.
        632 × 396 px, bundled with the app). The meme fills the panel alone:
        no icon, name, tagline, or bottom gradient `[D-brand-legibility]`.
        It crossfades in with the panel's existing smooth animation.
-       - **One-way, until the window closes.** Further clicks do nothing.
-         Closing the Phases window resets it, so the next open shows the
-         normal panel. The window's state outlives a close (see
-         `[D-grid-release-on-close]`), so the reset happens explicitly when
-         the window closes, alongside the thumbnail release; it doesn't
-         rely on the view going away.
-       - **Scrolling doesn't reset it.** The flag belongs to the window,
-         not the panel row, so it survives the panel scrolling offscreen
-         `[D-brand-scrolls]`.
+       - **It goes back to the normal panel on its own** (draft 57,
+         issue #23), whichever of these comes first:
+         - **30 seconds pass.** The timer starts when the meme appears.
+         - **The wallpaper changes:** anything that would change the
+           panel's thumbnail (see "Background" above: Phases applying a different
+           image to the main display). Nothing new watches for changes; the
+           panel's existing update clears the meme and drops the timer.
+         - **The window closes.** The window's state outlives a close (see
+           `[D-grid-release-on-close]`), so the reset happens explicitly
+           when the window closes, alongside the thumbnail release; it
+           doesn't rely on the view going away. The next open shows the
+           normal panel.
+
+         The return crossfades with the same smooth animation as the way
+         in.
+       - **Clicking while the meme shows does nothing**; it doesn't
+         restart the 30 seconds. Once the panel is back, clicking shows
+         the meme again, for another 30 seconds.
+       - *Until draft 56* the meme stayed until the window closed and
+         further clicks did nothing. *Why the change:* the author asked
+         for it to revert on its own (2026-11-14, issue #23), so a meme
+         left up doesn't hide the wallpaper the panel exists to show.
+       - **Scrolling doesn't reset it.** The flag and the 30-second timer
+         belong to the window, not the panel row, so the meme survives the
+         panel scrolling offscreen `[D-brand-scrolls]` and the timer keeps
+         counting meanwhile.
        - **No hints.** The pointer doesn't change over the panel, and
          clicking it doesn't change the sidebar selection. It stays a
          surprise.
