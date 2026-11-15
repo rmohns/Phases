@@ -16,7 +16,7 @@ struct PhasesWindow: View {
   @State private var holdsDetail = true
   @State private var isOpen = true
   /// [D-brand-egg] Held by the window, not the panel row, so scrolling the
-  /// panel away doesn't reset it.
+  /// panel away doesn't reset it or its 30-second timer.
   @State private var showsMeme = false
   @FocusState private var sidebarFocused: Bool
 
@@ -106,6 +106,16 @@ struct PhasesWindow: View {
     .frame(minHeight: 480)
     // [D-app-menu] For Settings… in the app menu.
     .focusedSceneValue(\.sidebarSelection, $selection)
+    // [D-brand-egg] The meme reverts after 30 seconds. Held here, not on the
+    // panel row, so the timer survives the panel scrolling away. A revert
+    // by any other route changes the id and cancels the sleep.
+    .task(id: showsMeme) {
+      guard showsMeme else { return }
+      try? await Task.sleep(for: .seconds(30))
+      if !Task.isCancelled { showsMeme = false }
+    }
+    // [D-brand-egg] Whatever changes the panel's thumbnail also clears the meme.
+    .onChange(of: scheduler.currentImageName) { showsMeme = false }
     .onAppear {
       windowOpened()
       scheduler.library.reload()
@@ -284,7 +294,8 @@ private struct SidebarBranding: View {
           wallpaper = image
         }
       }
-      // [D-brand-egg] One-way; no pointer change, no selection change.
+      // [D-brand-egg] A click while it shows does nothing (the timer keeps
+      // running); no pointer change, no selection change.
       .contentShape(shape)
       .onTapGesture { showsMeme = true }
       .accessibilityElement(children: .ignore)
