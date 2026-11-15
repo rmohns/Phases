@@ -41,6 +41,10 @@ final class WallpaperScheduler {
     didSet { SettingsStore.defaults.set(crossfadeDuration, forKey: Keys.crossfadeDuration) }
   }
 
+  /// [D-reduce-motion-note] The system's Reduce Motion setting, kept current
+  /// for Settings. Never written to the transition preferences.
+  private(set) var reducesMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+
   /// [D-restore-on-quit] Whether Quit puts back the pre-launch wallpaper.
   var restoresWallpaperOnQuit: Bool {
     didSet { SettingsStore.defaults.set(restoresWallpaperOnQuit, forKey: Keys.restoresWallpaperOnQuit) }
@@ -189,6 +193,7 @@ final class WallpaperScheduler {
     // [D-photos-changes] The library has already reloaded.
     library.onPhotosChange = { [weak self] in self?.evaluate(reloadingLibrary: false) }
     location.onChange = { [weak self] in self?.evaluate() }
+    crossfade.onReduceMotionChange = { [weak self] in self?.reducesMotion = $0 }
     if needsLocation { location.refresh() }
     observeSystemEvents()
     watchForOutsideChanges()

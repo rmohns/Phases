@@ -1,4 +1,4 @@
-# Phases — Specification (draft 55)
+# Phases — Specification (draft 56)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -662,6 +662,37 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
 - **App preference: Transition**: None or **Crossfade** (default).
 - **App preference: Duration**: 0.5 to 3 seconds (default 1 second), shown
   only when Crossfade is selected.
+- `[D-reduce-motion-note]` **Settings says when Reduce Motion turns
+  transitions off.** With Reduce Motion on (System Settings ›
+  Accessibility › Display), the Transition section shows: "Transitions
+  are off because Reduce Motion is on in System Settings." With it off,
+  no note. The note follows the system setting while Settings is open.
+  - While Reduce Motion is on, the Transition and Duration controls are
+    dimmed and can't be changed: they'd have no effect
+    `[D-no-fade-cases]`, and a control that does nothing shouldn't look
+    usable (author, 2026-11-14).
+  - Their values are kept, defaults included, and show again unchanged
+    when Reduce Motion is turned off. Reduce Motion never writes to
+    either preference.
+  - Under the note, an **Open Motion Settings…** button opens System
+    Settings › Accessibility › Motion, where Reduce Motion lives. It only
+    opens the pane when clicked; Phases never opens it, or asks about it,
+    by itself. If that pane can't be opened directly, the button opens
+    Accessibility instead.
+    - A button rather than a link in the note: it matches the Location
+      section's **Open Location Settings…** and Startup's **Open Login
+      Items…**, and the HIG suggests "a button that opens it directly"
+      for the system Settings app (HIG "Settings"). Asked for by the
+      author, 2026-11-14.
+    - The link is `x-apple.systempreferences:com.apple.Accessibility-Settings.extension?Motion`.
+      *Verified* 2026-11-14 by the author, macOS 27.2: it opens
+      Accessibility › Motion. The fallback to Accessibility is untested.
+  - *Verified* 2026-11-14 by the author, draft 56 build: turning Reduce
+    Motion on and off in System Settings shows and hides the note and
+    dims and restores both controls live, with their values kept.
+  - *Why:* drafts up to 55 always showed "Changes are instant when
+    Reduce Motion is on.", whatever the setting, so it never said
+    whether it applied (issue #32, draft 56).
 - macOS has no transition for wallpapers set by apps, so Phases does it itself
   by **fading the new image in over the old one** `[D-fade-in]`
   (see *Why fade in* below), on a cover that then stays up while its

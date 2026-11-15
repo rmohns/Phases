@@ -113,6 +113,9 @@ The pure logic that decides what the app does:
   and pausing drops the pending change `[D-record-after-wait]` (issue
   #36). *Verified* 2026-11-14 by Claude: making the change save at its
   start, as draft 54 did, fails three of its tests
+- `ReduceMotionNote` (draft 56): the Transition section's note shows only
+  while Reduce Motion is on, and the Transition and Duration controls are
+  dimmed only then `[D-reduce-motion-note]` (issue #32)
 - `PhotoCacheRules` (draft 54): which cached photos a cleanup deletes
   (least recently shown first, only until under the limit, never a
   protected file, and with an unreadable wallpaper store, nothing shown
