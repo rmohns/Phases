@@ -208,6 +208,12 @@ From `[X-memory]` unless noted: macOS 27.2, two or three displays.
 - `[L-hdr-wallpaper]` **macOS shows an HDR photo as wallpaper in SDR.**
   Observed by the author against a known-HDR control; no tool here
   measures HDR on screen. Record: `[X-hdr-wallpaper]`.
+- `[L-stale-app-icon]` **After an app icon change, a rebuilt development
+  build can show the old icon in the sidebar brand panel while About
+  shows the new one.** Observed by the author (2026-11-14); a stale
+  macOS icon cache is a hypothesis, not proven. Updating the `.app`
+  folder's date and re-registering it with LaunchServices, then
+  relaunching, fixed it. Not a Phases bug. Record: `[X-stale-app-icon]`.
 - `[L-first-launch-activation]` Promoted to `[Q-launch-activate-refused]`
   (2026-11-06). Record: `[X-first-launch-activation]`.
 
