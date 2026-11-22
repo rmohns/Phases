@@ -1614,6 +1614,12 @@ with the author's yes.
 - **Outcome:** not recorded.
   - *Added 2026-11-14 by Claude:* sandboxing became its own change,
     issue #19 (author, 2026-11-12); these findings are summarized there.
+  - *Added 2026-11-22 by Claude:* draft 58 (branch `feature/19-sandbox`)
+    builds on these findings. Promoted: `[L-sandbox-x0-paths]` →
+    `[Q-sandbox-container-home]`; `[L-sandbox-team-needed]` →
+    `[Q-sandbox-store-exception]`; `[L-sandbox-x4-container-wallpaper]` →
+    `[Q-sandbox-set-unreadable-file]`; `[L-sandbox-prefs-move]` → SPEC.md
+    `[D-sandbox-settings-move]`. The rest stay in LEARNINGS.md.
 - **Findings:** `[L-sandbox-team-needed]`, `[L-sandbox-x0-paths]`,
   `[L-sandbox-prefs-move]`, `[L-sandbox-x1-no-entitlement]`,
   `[L-photos-new-build-asks]`, `[L-sandbox-photos-works]`,

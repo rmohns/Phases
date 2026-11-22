@@ -244,16 +244,12 @@ From `[X-memory]` unless noted: macOS 27.2, two or three displays.
 - `[L-photos-album-order]` **The default fetch follows the album's own
   order.** Verified; the author confirmed the first list matches the album
   in Photos. Record: `[X-33-photokit]`.
-- `[L-sandbox-team-needed]` **Bitrig won't build the Photos or the
-  wallpaper-store entitlement without a development team.** Verified (three
-  builds, one entitlement set each). Record: `[X-33-sandbox]`.
-- `[L-sandbox-x0-paths]` **In the sandbox, `homeDirectoryForCurrentUser`
-  and `NSHomeDirectory()` both point into the container;** the wallpaper
-  store can't be read either way. Verified. Record: `[X-33-sandbox]`.
-- `[L-sandbox-prefs-move]` **The first sandboxed launch moved Phases'
-  preferences into the container.** Verified (compared against a backup);
-  the effect on the TESTING.md `defaults write` command is inferred, not
-  tried. Record: `[X-33-sandbox]`.
+- `[L-sandbox-team-needed]` Promoted to `[Q-sandbox-store-exception]`
+  (2026-11-22). Record: `[X-33-sandbox]`.
+- `[L-sandbox-x0-paths]` Promoted to `[Q-sandbox-container-home]`
+  (2026-11-22). Record: `[X-33-sandbox]`.
+- `[L-sandbox-prefs-move]` Promoted to SPEC.md `[D-sandbox-settings-move]`
+  (2026-11-22). Record: `[X-33-sandbox]`.
 - `[L-sandbox-x1-no-entitlement]` **Without the Photos entitlement, the
   sandboxed build still got a Photos prompt.** Verified (TCC log).
   Corrected 2026-11-12 by Claude. Record: `[X-33-sandbox]`.
@@ -265,10 +261,8 @@ From `[X-memory]` unless noted: macOS 27.2, two or three displays.
   to be allowed is not known. Record: `[X-33-sandbox]`.
 - `[L-photos-ids-stable]` **Photo IDs held across builds and the
   sandbox.** Verified. Record: `[X-33-sandbox]`.
-- `[L-sandbox-x4-container-wallpaper]` **A sandboxed Phases can set a file
-  in its container as the wallpaper, and put back one outside it.**
-  Verified by the API, and on screen by the author. Record:
-  `[X-33-sandbox]`.
+- `[L-sandbox-x4-container-wallpaper]` Promoted to
+  `[Q-sandbox-set-unreadable-file]` (2026-11-22). Record: `[X-33-sandbox]`.
 - `[L-photos-grant-needs-relaunch]` **Allowing Phases in System Settings ›
   Photos didn't reach a running Phases; a relaunch did.** Observed once;
   why is a hypothesis (perhaps `[L-photos-grant-per-build]`). Record:

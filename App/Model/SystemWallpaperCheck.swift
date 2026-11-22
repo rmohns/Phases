@@ -47,7 +47,8 @@ enum SystemWallpaperCheck {
     }
     guard imagePath != nil else { return .leaveAlone(.noImage) }
     // [D-restore-file-check] Only "no such file" skips; "not allowed to
-    // look" still restores, since macOS can set a file Phases can't read.
+    // look" still restores, since macOS can set a file Phases can't read
+    // [Q-sandbox-set-unreadable-file].
     return file == .missing ? .leaveAlone(.fileMissing) : .restore
   }
 

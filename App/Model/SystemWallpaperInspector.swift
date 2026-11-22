@@ -12,7 +12,8 @@ enum SystemWallpaperInspector {
   /// is `.unchecked` if the store can't be read.
   static func kinds(_ displayIDs: [CGDirectDisplayID]) -> [CGDirectDisplayID: WallpaperKind] {
     // [Q-sandbox-container-home] The real home; the sandbox exception
-    // [D-sandbox-entitlements] lets Phases read it there.
+    // [D-sandbox-entitlements] [Q-sandbox-store-exception] lets Phases
+    // read it there.
     let url = SystemWallpaperCheck.storeFile()
     let data: Data?
     do {

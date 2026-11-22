@@ -80,7 +80,17 @@ The pure logic that decides what the app does:
 - `FolderScan`: which images the folder scan finds and what it names
   them, following symlinks and aliases `[D-follow-links]` and ending on
   loops `[D-scan-each-folder-once]` (draft 35). These tests build folders
-  in the temporary directory, never the user's.
+  in the temporary directory, never the user's. From draft 58, links and
+  folders it isn't permitted to read are named apart from broken ones
+  `[D-links-outside-refused]`; a mode-000 folder outside the library stands
+  in for the sandbox's refusal (the tests don't run sandboxed).
+- `SystemWallpaperCheck` (draft 58): reading the wallpaper store for
+  Aerials, with an unreadable or garbled store, or a display with no entry
+  or no UUID, coming out "unchecked" `[D-store-unreadable-safe]`; what Quit
+  does with each kind; telling "no such file" from "not allowed to look"
+  `[D-restore-file-check]`; and that the store is found in the real home
+  `[Q-sandbox-container-home]`. The store is built in memory; the real one
+  is never read.
 - `WallpaperCheck`: what the scheduler's normal check does with what's
   already applied, including a screen change that leaves every image in
   its selection `[D-screen-change-no-reroll]` (draft 31); from draft 53,

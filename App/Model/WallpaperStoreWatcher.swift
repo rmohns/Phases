@@ -14,7 +14,8 @@ final class WallpaperStoreWatcher {
   var onOutsideChange: (([OutsideChange]) -> Void)?
 
   /// [Q-sandbox-container-home] The real home, not the container; the
-  /// sandbox exception covers this folder [D-sandbox-entitlements].
+  /// sandbox exception covers this folder [D-sandbox-entitlements]
+  /// [Q-sandbox-store-exception].
   private let folderURL = SystemWallpaperCheck.storeFolder()
   private var source: DispatchSourceFileSystemObject?
   private var lastReading: [String: WallpaperStoreEntry] = [:]

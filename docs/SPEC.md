@@ -1975,6 +1975,10 @@ project.
     `com.apple.screenIsUnlocked`) (*recalled*).
   - Read-write file access, Apple Events, or any other exception.
 - A new entitlement needs a row here, with its reason, before it's added.
+- *Verified* 2026-11-22 by Claude: `bitrig build` signs with team
+  Y382W2CA47 (no signing change needed), and `codesign -d --entitlements -`
+  on the built app lists exactly these six, plus `get-task-allow`, which
+  Debug development signing adds.
 
 ### What changes inside the sandbox
 
@@ -2030,6 +2034,10 @@ project.
   diagnostics log names each one (category `library`) so a missing image
   can be explained. The same for a subfolder link whose folder can't be
   listed.
+  - *Correction 2026-11-22 by Claude, after the code:* the category is
+    `sources`, the library's existing one, not `library`. A broken link
+    (target gone) is still skipped silently; only "not permitted" is
+    logged.
   - Getting access to them (a second folder picker aimed at the target,
     and a second bookmark) is a later change, with issue #17.
 - **A folder found only by its saved location can't be read in the
