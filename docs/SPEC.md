@@ -2088,6 +2088,42 @@ project.
      bookmarks don't open show "Can't open"; Locate… fixes each.
   - The steps are *untested*; checking them is one of the first
     sandboxed launch's hands-on checks.
+  - *Note 2026-11-22:* the author chose not to test them: Phases is meant
+    to run sandboxed, and going back isn't a path it supports. The steps
+    stay as a starting point, still *untested*.
+
+### Hands-on checks of the first sandboxed build
+
+*Verified* 2026-11-22 by the author, on a build from
+`feature/19-sandbox` with diagnostics on (the list is in TESTING.md
+"Sandbox checks"):
+
+- **Settings moved on first launch** `[D-sandbox-settings-move]`: phases
+  appeared as before (*observed*). The container itself couldn't be
+  inspected: macOS refused to list it, even with `sudo` (see TEST-TOOLS.md
+  "Diagnostics").
+- **Aerials left alone** `[D-aerials-untouched]` `[D-store-unreadable-safe]`:
+  the store was read through the exception, and Quit left the Aerial
+  display alone and restored the other, both logged. This confirms the
+  temporary exception works.
+- **Folder sources** `[D-scoped-bookmarks]`: open after a relaunch
+  (*observed*, "appears to work as intended").
+- **Photos** source: works, nothing logged as failing. So
+  `network.client` wasn't needed for this run (whether an iCloud-only
+  photo was among those shown wasn't recorded).
+- **Crossfade** after a Space switch and after a resolution change: no
+  errors logged.
+- **Restore on quit** from an original outside every source
+  `[D-restore-file-check]`: restored, nothing failing logged.
+- **Links** `[D-links-outside-refused]`: a symlink to an image outside
+  the folder doesn't appear and is logged as not permitted; one to an
+  image inside the folder appears.
+- **Location** `[D-location-on-demand]`: works.
+- **Outside change** `[D-outside-change-rule]`: picking a wallpaper in
+  System Settings paused Phases, so the store watcher works through the
+  exception. *Not checked:* a change missed while locked being applied at
+  unlock (no way to produce one by hand).
+- **Going back:** not checked, by choice (above).
 
 ## Platform notes and limitations
 

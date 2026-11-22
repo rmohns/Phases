@@ -53,6 +53,13 @@ Used by both groups. Reference, not steps.
     don't change (*verified* for `defaults import`, 2026-11-12; *inferred*
     for `write`, `[D-sandbox-settings-move]`). Before the first sandboxed
     launch they write `~/Library/Preferences`, which macOS then moves in.
+  - **The container can't be listed from Terminal,** even with `sudo`
+    (*observed* by the author, 2026-11-22). As I remember it (*recalled*,
+    not tested here), macOS protects other apps' containers through
+    privacy permissions (TCC), not file permissions, so `sudo` doesn't
+    help; giving Terminal Full Disk Access in System Settings › Privacy &
+    Security would. Without that, read settings with `defaults read` for
+    the bundle ID, and diagnostics through the log.
   - Categories added in draft 58: `restore` (the wallpaper store read for
     Aerials, and each display restored or left alone on Quit, with why
     `[D-store-unreadable-safe]`), `store` ("can't read the wallpaper
