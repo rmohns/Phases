@@ -13,15 +13,22 @@ final class WallpaperStoreWatcher {
   /// Called with each batch of outside changes.
   var onOutsideChange: (([OutsideChange]) -> Void)?
 
-  private let folderURL = FileManager.default.homeDirectoryForCurrentUser
-    .appending(path: "Library/Application Support/com.apple.wallpaper/Store")
+  /// [Q-sandbox-container-home] The real home, not the container; the
+  /// sandbox exception covers this folder [D-sandbox-entitlements].
+  private let folderURL = SystemWallpaperCheck.storeFolder()
   private var source: DispatchSourceFileSystemObject?
   private var lastReading: [String: WallpaperStoreEntry] = [:]
   private var ownSets: [OwnWallpaperSet] = []
 
   func start() {
     guard source == nil else { return }
-    lastReading = read()
+    if let reading = read() {
+      lastReading = reading
+    } else {
+      // [D-store-unreadable-safe] Said once, at launch.
+      diagLog.log("can't read the wallpaper store: outside changes won't be noticed")
+      lastReading = [:]
+    }
     let fd = open(folderURL.path, O_EVTONLY)
     guard fd >= 0 else {
       diagLog.log("can't watch the store folder: errno=\(errno)")
@@ -48,9 +55,9 @@ final class WallpaperStoreWatcher {
   }
 
   private func storeChanged() {
-    let reading = read()
-    // An unreadable store mid-replace reads as empty; keep the last good one.
-    guard !reading.isEmpty else { return }
+    // An unreadable store (mid-replace, or not allowed) keeps the last good
+    // reading.
+    guard let reading = read(), !reading.isEmpty else { return }
     let changes = OutsideChangeRule.changes(from: lastReading, to: reading, ownSets: ownSets, now: Date())
     lastReading = reading
     guard !changes.isEmpty else { return }
@@ -64,13 +71,13 @@ final class WallpaperStoreWatcher {
   /// the store can't be read. The photo cache never deletes these
   /// [D-photos-cache].
   func fileNamesInStore() -> Set<String>? {
-    let entries = read()
-    guard !entries.isEmpty else { return nil }
+    guard let entries = read(), !entries.isEmpty else { return nil }
     return Set(entries.values.compactMap(\.fileName))
   }
 
-  private func read() -> [String: WallpaperStoreEntry] {
-    guard let data = try? Data(contentsOf: folderURL.appending(path: "Index.plist")) else { return [:] }
+  /// The store's entries, or nil if it can't be read.
+  private func read() -> [String: WallpaperStoreEntry]? {
+    guard let data = try? Data(contentsOf: folderURL.appending(path: "Index.plist")) else { return nil }
     return WallpaperStoreReader.entries(fromPlist: data)
   }
 }
