@@ -3,7 +3,8 @@ import Foundation
 /// [D-version-in-settings] What tells one build of Phases from another.
 enum AppVersion {
   /// The SPEC.md draft this build was made against: the build number, set
-  /// as `CURRENT_PROJECT_VERSION` in Project.json. A unit test checks it
+  /// as `CURRENT_PROJECT_VERSION` in the Xcode project [D-xcode-project]
+  /// (Project.json through draft 58). A unit test checks it
   /// against the spec's title.
   static var specDraft: String {
     Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"

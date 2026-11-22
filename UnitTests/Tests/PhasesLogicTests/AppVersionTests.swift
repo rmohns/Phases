@@ -21,13 +21,19 @@ struct AppVersionTests {
   /// [D-version-in-settings] The Info.plist repeats neither number, so the
   /// build settings are the only place they're set.
   @Test func infoPlistTakesVersionFromBuildSettings() throws {
-    #expect(try Self.projectValues(for: "CFBundleShortVersionString") == ["$(MARKETING_VERSION)"])
-    #expect(try Self.projectValues(for: "CFBundleVersion") == ["$(CURRENT_PROJECT_VERSION)"])
+    let data = try Data(contentsOf: Self.root.appending(path: "App/Info.plist"))
+    let plist = try #require(PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any])
+    #expect(plist["CFBundleShortVersionString"] as? String == "$(MARKETING_VERSION)")
+    #expect(plist["CFBundleVersion"] as? String == "$(CURRENT_PROJECT_VERSION)")
+    #expect(try Self.projectValues(for: "CFBundleShortVersionString").isEmpty)
+    #expect(try Self.projectValues(for: "CFBundleVersion").isEmpty)
   }
 
-  /// Every value stored under `key` anywhere in Project.json.
+  /// Every value stored under `key` anywhere in the Xcode project
+  /// [D-xcode-project]. Its `project.xcproj` is JSON with trailing commas,
+  /// so it's read as JSON5.
   static func projectValues(for key: String) throws -> [String] {
-    let data = try Data(contentsOf: root.appending(path: "Project.json"))
+    let data = try Data(contentsOf: root.appending(path: "Phases.xcodeproj/project.xcproj"))
     var found: [String] = []
     func walk(_ node: Any) {
       if let dict = node as? [String: Any] {
@@ -39,7 +45,7 @@ struct AppVersionTests {
         array.forEach(walk)
       }
     }
-    walk(try JSONSerialization.jsonObject(with: data))
+    walk(try JSONSerialization.jsonObject(with: data, options: .json5Allowed))
     return found
   }
 }
