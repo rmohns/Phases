@@ -2194,6 +2194,10 @@ never by hand in the project file `[D-xcode-project]`.
   1. `defaults export app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268 ~/Desktop/phases-settings-old-id.plist`.
      This reads the old container's copy (*inferred*) and doubles as the
      backup. If it fails or comes back empty, stop.
+     - *Correction 2026-11-22 by Claude:* run from Bitrig's shell, it came
+       back empty: macOS wouldn't let that process read the old container
+       (`[L-defaults-container-blocked]`, *verified*). The route that
+       works is to be settled with the author and recorded here.
   2. `defaults import com.robertmohns.phases ~/Desktop/phases-settings-old-id.plist`.
      With no container yet, this writes
      `~/Library/Preferences/com.robertmohns.phases.plist`, which macOS

@@ -226,6 +226,14 @@ From `[X-memory]` unless noted: macOS 27.2, two or three displays.
   builds of the result are signed ad hoc with no team, because Bitrig no
   longer passes the saved team on the command line; `--provision` didn't
   change that. Record: `[X-convert-xcode-project]`.
+- `[L-defaults-container-blocked]` **From Bitrig's shell, `defaults` can't
+  read a sandboxed app's container: `defaults export` for the old ID wrote
+  an empty plist (42 bytes, exit 0).** Verified 2026-11-22 by Claude.
+  `defaults read` said the domain at the container's preferences path was
+  "not found", and listing that folder gave "Operation not permitted". Why
+  is *recalled*: macOS's protection of other apps' data (TCC), as in
+  TEST-TOOLS.md "Diagnostics". This contradicts the *inferred* step 1 of
+  `[D-bundle-id-settings-move]`. Record: `[X-convert-xcode-project]`.
 
 ## Photos library (issue #33)
 

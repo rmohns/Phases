@@ -1906,6 +1906,27 @@ result; stopped there.
   at all, or reads the wallpaper store (`[L-sandbox-team-needed]` says the
   exception needs a team).
 
+**Run 4 (signing fixed):** with the author's approval, `xcrun xcodeproj
+setting set --target Phases DEVELOPMENT_TEAM Y382W2CA47`, then a build:
+`Apple Development: William Mohns`, `TeamIdentifier=Y382W2CA47`, the six
+entitlements plus `get-task-allow` (*verified*, codesign; commit
+`422c13d`). No container for `com.robertmohns.phases` existed afterward
+(`ls`: "No such file or directory").
+
+**Settings export, 2026-11-22 16:24 (`[L-defaults-container-blocked]`):**
+the old Phases quit by the author (`pgrep` found none). From Bitrig's
+shell, `defaults export app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268
+~/Desktop/phases-settings-old-id.plist` exited 0 and wrote 42 bytes, an
+empty binary plist (*verified*). Read-only checks after:
+`~/Library/Preferences/<old ID>.plist` doesn't exist; the container
+folder exists (`drwx------`, dated 2026-11-22 11:29); `ls` of its
+`Data/Library/Preferences/` gave "Operation not permitted"; `defaults read
+<old ID>` gave "Domain '…/Containers/<old ID>/Data/Library/Preferences/<old
+ID>' not found" (*verified*). So `defaults` did aim at the container's
+copy, as inferred, but couldn't read it from this process. Stopped there,
+per the plan; nothing imported, nothing launched. The empty file was left
+on the Desktop.
+
 ## Retired designs
 
 Designs that were on `main` and have since been replaced. Moved here
