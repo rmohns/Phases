@@ -47,6 +47,25 @@ Used by both groups. Reference, not steps.
   - Turn on (then quit and relaunch Phases):
     `defaults write app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268 PhasesDiagnostics -bool true`
   - Turn off: the same with `-bool false`, or `defaults delete … PhasesDiagnostics`.
+  - Sandboxed (draft 58 `[D-sandboxed]`): once the container exists,
+    `defaults` for the bundle ID reads and writes the container's copy,
+    which is the one the sandboxed Phases reads, so the commands above
+    don't change (*verified* for `defaults import`, 2026-11-12; *inferred*
+    for `write`, `[D-sandbox-settings-move]`). Before the first sandboxed
+    launch they write `~/Library/Preferences`, which macOS then moves in.
+  - **The container can't be listed from Terminal,** even with `sudo`
+    (*observed* by the author, 2026-11-22). As I remember it (*recalled*,
+    not tested here), macOS protects other apps' containers through
+    privacy permissions (TCC), not file permissions, so `sudo` doesn't
+    help; giving Terminal Full Disk Access in System Settings › Privacy &
+    Security would. Without that, read settings with `defaults read` for
+    the bundle ID, and diagnostics through the log.
+  - Categories added in draft 58: `restore` (the wallpaper store read for
+    Aerials, and each display restored or left alone on Quit, with why
+    `[D-store-unreadable-safe]`), `store` ("can't read the wallpaper
+    store" at launch), and under `sources`, links and folders Phases wasn't
+    permitted to read `[D-links-outside-refused]` and bookmarks it
+    couldn't make.
   - Read: `/usr/bin/log show --last 30m --style compact --predicate 'subsystem == "PhasesDiag"'`
     (in zsh, plain `log` is a shell builtin; use the full path).
   - Code: `App/Model/Diagnostics.swift`. Get a logger with

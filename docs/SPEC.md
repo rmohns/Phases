@@ -1,4 +1,4 @@
-# Phases — Specification (draft 57)
+# Phases — Specification (draft 58)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -263,6 +263,9 @@ when there's more than one choice.
     permission the first time (*recalled*, not tested with Phases). If
     access is refused, that item is skipped. Whether to show it as "can't
     open" instead is open (issue #20).
+  - In the sandbox (draft 58), a link or alias pointing outside the source
+    folder is refused the same way, and the diagnostics log names it
+    `[D-links-outside-refused]`.
   - Two links to the same image list it twice, once under each name.
     That's accepted (author, 2026-11-04).
   - *Why:* until draft 35 the scan skipped every symlink and alias, so
@@ -333,6 +336,11 @@ when there's more than one choice.
     by its bookmark (stale)", and the saved location became
     `~/Pictures/Desktop Pictures Y`. Earlier, with Phases running, a
     rename to `Desktop Pictures X` showed up as it happened.
+  - From draft 58 (sandboxed `[D-sandboxed]`), new bookmarks are made
+    read-only, to match the read-only folder entitlement
+    `[D-sandbox-entitlements]`. Bookmarks saved earlier are kept as they
+    are; one that doesn't open in the sandbox shows "Can't open" with
+    Locate… `[D-sandbox-settings-move]`.
 - **A source that can't be opened** (a drive that isn't connected, a
   folder that was deleted or moved somewhere its bookmark and location
   can't find) shows "Can't open" in its Settings row, with a **Locate…**
@@ -935,6 +943,8 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
     so no cover is redrawn.
   - *Why:* a cover that no longer fits its display would show plainly,
     and the experiment didn't handle this (GitHub issue #6).
+  - The redraw reads its image with source access open (draft 58,
+    `[D-sandboxed]`); before that it worked only outside the sandbox.
   - *Verified* 2026-11-03, draft 33 (cover check 8, partly): changing the
     main display from 2580×1080 to 1720×720 points logged every
     display's cover redrawn (the others moved in the arrangement), and
@@ -1909,8 +1919,211 @@ extras don't show them. No global hotkey.
   reads (never writes) macOS's
   wallpaper store to detect them. The public API can't restore them, so those
   displays are left alone on quit instead of getting a still frame.
+  - From draft 58, a display whose wallpaper couldn't be checked (the store
+    unreadable, or no entry for the display) is left alone the same way
+    `[D-store-unreadable-safe]`. Until then an unreadable store read as
+    "no system wallpapers."
 - Displays that were disconnected in the meantime are skipped. If the original
   image file no longer exists, that display is skipped.
+  - From draft 58, "no longer exists" means macOS says there's no such file;
+    a file Phases isn't allowed to look at (sandbox) is restored anyway
+    `[D-restore-file-check]`.
+
+## Sandbox
+
+`[D-sandboxed]` **Phases runs in the macOS App Sandbox** (draft 58,
+GitHub issue #19).
+
+- *Why:* containment. Phases runs all day with access to the wallpaper,
+  the user's picture folders, Photos, and location; the sandbox limits
+  what a bug (or anything that takes over the process) can reach to
+  what Phases needs. It is **not** a step toward the App Store: Phases
+  still isn't intended for it (see the opening), so App Review's dislike
+  of temporary exceptions isn't a constraint (author, issue #19).
+- **Signing:** the sandbox's privacy entitlements and the temporary
+  exception need a development team (`[L-sandbox-team-needed]`,
+  *verified* 2026-11-12, three builds). Bitrig signs Phases with the
+  author's team, saved for the project in Bitrig; `Project.json` doesn't
+  set `DEVELOPMENT_TEAM`.
+
+### Entitlements
+
+`[D-sandbox-entitlements]` **Only these, each for something Phases does.**
+Set in `Project.json` (`entitlements`), never in a hand-edited Xcode
+project.
+
+| Entitlement | Why Phases needs it |
+|---|---|
+| `com.apple.security.app-sandbox` | Turns the sandbox on. |
+| `com.apple.security.files.user-selected.read-only` | Add Folder… and Locate… open a folder the user picks. Phases only reads image folders, never writes to them, so read-only. |
+| `com.apple.security.files.bookmarks.app-scope` | Keeps access to those folders across launches through security-scoped bookmarks `[D-scoped-bookmarks]`. Apple's documentation lists it as needed for app-scoped bookmarks (*recalled* from the docs, read 2026-11-22; whether current macOS enforces it is untested). |
+| `com.apple.security.personal-information.location` | Local dawn and dusk `[D-location-on-demand]` (see "Location"). |
+| `com.apple.security.personal-information.photos-library` | Photos albums as sources (see "Photos albums"). |
+| `com.apple.security.temporary-exception.files.home-relative-path.read-only` = `/Library/Application Support/com.apple.wallpaper/Store/` | Reading macOS's wallpaper store, read only: Aerials detection `[D-aerials-untouched]`, outside changes `[D-outside-change-rule]`, and the photo cache's keep list `[D-photos-cache]`. The folder, not just `Index.plist`, because macOS replaces the file on every write, so Phases watches the folder `[Q-wallpaper-store]`. Nothing wider. |
+
+- **Not added, because Phases doesn't need them** (each a *hypothesis*
+  until the first sandboxed run, see the hands-on checks below):
+  - `network.client`: Phases makes no network requests of its own.
+    iCloud photos are downloaded by macOS's Photos services on Phases'
+    behalf (*recalled*).
+  - Anything for Launch at Login: `SMAppService.mainApp` works in the
+    sandbox (*recalled*).
+  - Anything for setting the wallpaper: `setDesktopImageURL` works
+    sandboxed, for files inside and outside the container
+    (`[L-sandbox-x4-container-wallpaper]`, *verified* 2026-11-12).
+  - Anything for notifications (user notifications, and listening for
+    `com.apple.screenIsUnlocked`) (*recalled*).
+  - Read-write file access, Apple Events, or any other exception.
+- A new entitlement needs a row here, with its reason, before it's added.
+- *Verified* 2026-11-22 by Claude: `bitrig build` signs with team
+  Y382W2CA47 (no signing change needed), and `codesign -d --entitlements -`
+  on the built app lists exactly these six, plus `get-task-allow`, which
+  Debug development signing adds.
+
+### What changes inside the sandbox
+
+- **"Home" is the container.** The sandbox points
+  `homeDirectoryForCurrentUser` and `NSHomeDirectory()` into
+  `~/Library/Containers/<bundle ID>/Data` `[Q-sandbox-container-home]`.
+  Everything Phases reads in the user's real home (the wallpaper store,
+  saved locations `[D-source-location]`) is found from the real home,
+  from the user database.
+- **Phases' own files live in the container:** preferences, and the photo
+  cache `[D-photos-cache]`.
+- `[D-store-unreadable-safe]` **"Couldn't read the store" is never taken
+  for "no Aerials".** When Phases can't read the wallpaper store (the
+  exception missing, a macOS change, a file mid-replace), each display's
+  wallpaper counts as **unchecked**, not as a plain image. An unchecked
+  display is treated like an Aerial at Quit: left alone, never given a
+  still frame `[D-aerials-untouched]`. The same goes for a display the
+  store has no entry for.
+  - The decision is a pure function, unit-tested `[D-tests-unhosted]`.
+  - The diagnostics log says so (category `restore`), naming each
+    display left alone and why.
+  - Outside changes `[D-outside-change-rule]` can't be heard while the
+    store can't be read; the log says so once, at launch (category
+    `store`). The photo cache already keeps 30 days of files when the
+    store can't be read `[D-photos-cache]`.
+  - *Why:* in a sandboxed build without the exception, the store read
+    fails silently (`[L-sandbox-x0-paths]`, *verified* 2026-11-12), and
+    until draft 58 a failed read meant "no system wallpapers," so Quit
+    would have replaced an Aerial with a still frame. A wallpaper Phases
+    couldn't check is one it mustn't replace (author, issue #19).
+- `[D-restore-file-check]` **Restoring checks a file is gone before
+  skipping it.** Quit skips a display whose original image file no
+  longer exists (see "Restore original wallpaper on quit"). Inside the
+  sandbox, Phases may not be allowed to look at that file at all (it's
+  rarely in a source folder). "Not allowed to look" isn't "gone": Phases
+  restores it anyway, since macOS can set a file Phases can't read
+  (`[L-sandbox-x4-container-wallpaper]`). Only "no such file" skips.
+  Pure function, unit-tested.
+- **Covers redrawn after a display change read with source access open**
+  `[D-cover-follows-displays]` `[D-scoped-bookmarks]`. Until draft 58
+  the redraw read its file without it, which worked only unsandboxed.
+  Covers on a Space change don't read a file: a settled cover is
+  removed, and a pending one just sets its wallpaper, which needs no
+  access (`[L-sandbox-x4-container-wallpaper]`).
+  - The crossfade reads only the incoming image, never the wallpaper it
+    replaces, so a previous wallpaper outside every source doesn't stop
+    a fade (*observed* in the code, 2026-11-22: the outgoing side is the
+    real desktop or the existing cover).
+- `[D-links-outside-refused]` **Links and aliases that point outside the
+  source folder can't be read in the sandbox** (macOS says "not
+  permitted"; *recalled*, issue #19 evaluation). Phases skips them, as
+  it skips any item it can't open `[D-follow-links]`, and the
+  diagnostics log names each one (category `library`) so a missing image
+  can be explained. The same for a subfolder link whose folder can't be
+  listed.
+  - *Correction 2026-11-22 by Claude, after the code:* the category is
+    `sources`, the library's existing one, not `library`. A broken link
+    (target gone) is still skipped silently; only "not permitted" is
+    logged.
+  - Getting access to them (a second folder picker aimed at the target,
+    and a second bookmark) is a later change, with issue #17.
+- **A folder found only by its saved location can't be read in the
+  sandbox,** because only a bookmark or a fresh pick grants access
+  `[D-source-location]`. When the bookmark fails and the location leads
+  to a folder Phases isn't allowed to list, the source shows "Can't
+  open" with **Locate…** (see "Image library"), instead of looking
+  empty. Outside the sandbox this changes nothing: a folder Phases finds
+  it can list.
+- **New bookmarks are read-only** (`securityScopeAllowOnlyReadAccess`),
+  matching the read-only entitlement `[D-scoped-bookmarks]`.
+
+### Settings when switching to the sandboxed build
+
+- `[D-sandbox-settings-move]` **Existing settings carry over, by moving.**
+  On the first sandboxed launch macOS moves Phases' preferences file from
+  `~/Library/Preferences/` into the container's `Library/Preferences/`
+  (`[L-sandbox-prefs-move]`, *verified* 2026-11-12 against a backup).
+  Phases does nothing itself; it reads them as before. After that,
+  `defaults` commands for the bundle ID read and write the container's
+  copy (*verified* for `defaults import`; *inferred* for the others).
+  - **Folder sources:** bookmarks made by an unsandboxed build may not
+    open in the sandbox (*hypothesis*). If one doesn't, its source shows
+    "Can't open"; **Locate…** picks it again and keeps its ID, so phases'
+    selections come back. Bookmarks made inside the sandbox are
+    read-only.
+  - **Photos:** each new build asks for Photos access again
+    (`[L-photos-grant-per-build]`, *verified*). Album and photo IDs carry
+    over (`[L-photos-ids-stable]`, *verified*).
+  - **Photo cache:** the sandboxed build starts a new, empty cache in the
+    container and fetches as needed. The old cache at `~/Library/
+    Application Support/Phases/Photos/` is left where it is (macOS moves
+    only preferences, *observed* in round B), because other Spaces may
+    still show files from it. It can be deleted by hand once no Space
+    shows a photo from it.
+  - **The restore record** is in the preferences, so it carries over.
+  - **Location** may be asked for again (*hypothesis*).
+- **Going back to an unsandboxed build** means moving the settings back
+  by hand; macOS doesn't. With Phases quit:
+  1. `defaults export app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268 ~/Desktop/phases-settings.plist`
+     (reads the container's copy, *inferred*).
+  2. Move the container out of the way:
+     `mv ~/Library/Containers/app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268 ~/Desktop/`.
+     Once it's gone, `defaults` addresses `~/Library/Preferences` again
+     (*observed* by the author and Claude, 2026-11-14).
+  3. `defaults import app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268 ~/Desktop/phases-settings.plist`.
+  4. Build without the entitlements and launch. Folder sources whose
+     bookmarks don't open show "Can't open"; Locate… fixes each.
+  - The steps are *untested*; checking them is one of the first
+    sandboxed launch's hands-on checks.
+  - *Note 2026-11-22:* the author chose not to test them: Phases is meant
+    to run sandboxed, and going back isn't a path it supports. The steps
+    stay as a starting point, still *untested*.
+
+### Hands-on checks of the first sandboxed build
+
+*Verified* 2026-11-22 by the author, on a build from
+`feature/19-sandbox` with diagnostics on (the list is in TESTING.md
+"Sandbox checks"):
+
+- **Settings moved on first launch** `[D-sandbox-settings-move]`: phases
+  appeared as before (*observed*). The container itself couldn't be
+  inspected: macOS refused to list it, even with `sudo` (see TEST-TOOLS.md
+  "Diagnostics").
+- **Aerials left alone** `[D-aerials-untouched]` `[D-store-unreadable-safe]`:
+  the store was read through the exception, and Quit left the Aerial
+  display alone and restored the other, both logged. This confirms the
+  temporary exception works.
+- **Folder sources** `[D-scoped-bookmarks]`: open after a relaunch
+  (*observed*, "appears to work as intended").
+- **Photos** source: works, nothing logged as failing. So
+  `network.client` wasn't needed for this run (whether an iCloud-only
+  photo was among those shown wasn't recorded).
+- **Crossfade** after a Space switch and after a resolution change: no
+  errors logged.
+- **Restore on quit** from an original outside every source
+  `[D-restore-file-check]`: restored, nothing failing logged.
+- **Links** `[D-links-outside-refused]`: a symlink to an image outside
+  the folder doesn't appear and is logged as not permitted; one to an
+  image inside the folder appears.
+- **Location** `[D-location-on-demand]`: works.
+- **Outside change** `[D-outside-change-rule]`: picking a wallpaper in
+  System Settings paused Phases, so the store watcher works through the
+  exception. *Not checked:* a change missed while locked being applied at
+  unlock (no way to produce one by hand).
+- **Going back:** not checked, by choice (above).
 
 ## Platform notes and limitations
 

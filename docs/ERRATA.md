@@ -291,6 +291,61 @@ would stop being true if a future macOS fixed the underlying behavior.
     redraw (*inference*). A first Cinema HD run was invalid (the window
     was wider than the display, so panes didn't line up) and was redone.
 
+### Sandbox (macOS)
+
+Added 2026-11-22 with draft 58 `[D-sandboxed]`. None of these has been
+seen in the shipping sandboxed build yet: Phases hasn't been launched
+sandboxed since round B of `[X-33-sandbox]`. What the shipping build
+needs checked is in the morning report and TESTING.md "Hands-on checks"
+once run.
+
+- `[Q-sandbox-container-home]` **In the sandbox, "home" is the
+  container.** `homeDirectoryForCurrentUser` and `NSHomeDirectory()` both
+  give `~/Library/Containers/<bundle ID>/Data`; `getpwuid` still gives
+  the real home (*verified* 2026-11-12 by Claude, round B probe, macOS
+  27.2; promoted from `[L-sandbox-x0-paths]`, 2026-11-22). So anything
+  Phases reads in the real home is found through `getpwuid`
+  (`SourceLocation.realHome`): the wallpaper store
+  (`SystemWallpaperCheck.storeFolder`, used by `SystemWallpaperInspector`
+  and `WallpaperStoreWatcher`) and saved locations `[D-source-location]`.
+  Through the container home, the store reads as "no such file," which is
+  why `[D-store-unreadable-safe]` exists.
+- `[Q-sandbox-store-exception]` **The wallpaper store needs a temporary
+  exception, and the exception needs a development team.** Through the
+  real home, the sandbox refuses the store ("you don't have permission",
+  *verified* 2026-11-12, round B). Phases carries
+  `temporary-exception.files.home-relative-path.read-only` for
+  `/Library/Application Support/com.apple.wallpaper/Store/`
+  `[D-sandbox-entitlements]`.
+  - Bitrig wouldn't build that exception, or the Photos entitlement,
+    without a team ("No development team is available", *verified*
+    2026-11-12, three builds; promoted from `[L-sandbox-team-needed]`,
+    2026-11-22). With the author's team saved for the project, the build
+    signs and carries every entitlement (*verified* 2026-11-22 by Claude:
+    `bitrig build` succeeded, `codesign -d --entitlements -` lists all
+    six keys, TeamIdentifier Y382W2CA47).
+  - Home-relative paths are taken from the real home, not the container
+    (*recalled*, not yet tested). The folder, with a trailing slash, is
+    granted rather than `Index.plist` alone because macOS replaces the
+    file on every write and Phases watches the folder `[Q-wallpaper-store]`;
+    whether a file-only exception would also allow opening the folder for
+    events is *untested*.
+  - If the read still fails (exception ignored, a future macOS moving the
+    store), `[D-store-unreadable-safe]` keeps Aerials safe and the
+    diagnostics log says "can't read the wallpaper store" (categories
+    `restore` and `store`).
+- `[Q-sandbox-set-unreadable-file]` **macOS sets a wallpaper file that the
+  sandboxed app can't read.** A sandboxed build put back a wallpaper from
+  `~/Pictures`, outside its container and never granted, with no error,
+  and it showed on screen (*verified* 2026-11-12 by the API, and on screen
+  by the author; promoted from `[L-sandbox-x4-container-wallpaper]`,
+  2026-11-22). Shapes `[D-restore-file-check]`: a file Phases isn't
+  allowed to `stat` is restored anyway, and only "no such file" skips it.
+  Also why a pending cover returning to its Space needs no source access
+  `[D-change-stays-on-its-space]`.
+  - Whether the sandbox refuses `stat` itself on such a file (or only
+    reads) is *untested*; the code handles both.
+
 ### Window, sidebar, and toolbar (SwiftUI and AppKit)
 
 - `[Q-split-item-rewrite]` **`NavigationSplitView` rewrites its sidebar's

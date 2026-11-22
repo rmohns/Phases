@@ -34,6 +34,7 @@ author's yes.
 | Hands-on checks | Interface tests | AX-driven UI tests in `UITests/`: the fast suite; the slow suite too when the change touches the sidebar | 1–3 min | the newest Bitrig build, in test mode `[D-ui-test-mode]` | yes | before merging any change to the window or the code it calls, and for every regression guard that's a UI test |
 | Hands-on checks | Cover checks | `[D-cover-checks]`, checks 1–9 | 15–20 min (*estimate*) | Release | yes | before merging cover work, and after any change to `CrossfadeController` |
 | Hands-on checks | Memory checks | `[D-memory-protocol]`: two runs of ten changes, the covers' cost and release, the no-covers baseline, the window check | 30–40 min (*estimate*) | Release | yes | two runs before and two after any change to covers, image loading, the thumbnail grid, or how wallpaper is set |
+| Hands-on checks | Sandbox checks | checks 1–9 in "Sandbox checks" | 15–20 min (*estimate*) | the newest Bitrig build, diagnostics on | yes | after any change to the entitlements, or to how Phases reads the wallpaper store, sources, or the original wallpaper |
 
 The table's order is by time taken, nothing more: no check includes or
 outranks another.
@@ -80,7 +81,17 @@ The pure logic that decides what the app does:
 - `FolderScan`: which images the folder scan finds and what it names
   them, following symlinks and aliases `[D-follow-links]` and ending on
   loops `[D-scan-each-folder-once]` (draft 35). These tests build folders
-  in the temporary directory, never the user's.
+  in the temporary directory, never the user's. From draft 58, links and
+  folders it isn't permitted to read are named apart from broken ones
+  `[D-links-outside-refused]`; a mode-000 folder outside the library stands
+  in for the sandbox's refusal (the tests don't run sandboxed).
+- `SystemWallpaperCheck` (draft 58): reading the wallpaper store for
+  Aerials, with an unreadable or garbled store, or a display with no entry
+  or no UUID, coming out "unchecked" `[D-store-unreadable-safe]`; what Quit
+  does with each kind; telling "no such file" from "not allowed to look"
+  `[D-restore-file-check]`; and that the store is found in the real home
+  `[Q-sandbox-container-home]`. The store is built in memory; the real one
+  is never read.
 - `WallpaperCheck`: what the scheduler's normal check does with what's
   already applied, including a screen change that leaves every image in
   its selection `[D-screen-change-no-reroll]` (draft 31); from draft 53,
@@ -157,7 +168,8 @@ The pure logic that decides what the app does:
 - `[D-hands-on-checks]` **Every check that drives the mouse and keyboard
   or touches the real wallpaper is a hands-on check, and any one of them
   can run on its own** (draft 33). There are four: Interface tests, Cover
-  checks, Memory checks, and from draft 54 Photos checks. The Interface tests are automated but still
+  checks, Memory checks, and from draft 54 Photos checks (from draft 58,
+  Sandbox checks too). The Interface tests are automated but still
   belong here, because they move the mouse; the line is touching the Mac,
   not automated versus by hand.
   - **Any check alone.** Each starts from a fresh launch, does its own
@@ -666,6 +678,51 @@ Each with what passes:
   between the two on hand instead of repeating
   `[L-photos-offline-check]`. The UI suite passed 29 of 29 (247 s) on
   the same build.
+
+### Sandbox checks (draft 58)
+
+- **When:** after any change to the entitlements `[D-sandbox-entitlements]`,
+  to how Phases reads the wallpaper store, sources, or the original
+  wallpaper, and before a change to the sandbox merges. Unit tests cover
+  the decisions (`SystemWallpaperCheckTests`, the refusal cases in
+  `FolderScanTests`), but only a launched, sandboxed build shows what
+  macOS allows. Ask first, naming the checks; most change the real
+  wallpaper and need the author at the Mac.
+- **Setup:** diagnostics on; read the log with
+  `/usr/bin/log show --last 10m --style compact --predicate 'subsystem == "PhasesDiag"'`.
+- **The checks:**
+  1. **Settings:** phases, sources, and options are as they were.
+  2. **Aerials left alone:** an Aerial on one display, a still on
+     another. No "can't read the wallpaper store" line (`restore`,
+     `store`); `store` says "watching the store: N entries". Quit with
+     Restore on: the Aerial display logs "left alone on quit: system
+     wallpaper", the other "restored". This is the check that the store
+     exception works.
+  3. **Folder sources** open, and still open after quit and relaunch
+     (the log says "found by its bookmark").
+  4. **Photos:** Change Now onto a Photos phase, an iCloud-only photo
+     among them if one is handy. A failure only on iCloud photos points
+     at a missing `network.client`.
+  5. **Crossfade** on: Change Now, switch Spaces and back, change a
+     display's resolution. No "cover: no surface" in `cover`.
+  6. **Restore on quit** from an original outside every source (in
+     `/System/Library/Desktop Pictures/` or `~/Downloads`): it comes
+     back, logged "restored", not "file no longer exists".
+  7. **Links:** a symlink or alias to an image outside the folder is
+     missing from the grid, and `sources` logs "not permitted to read
+     <name>"; one to an image inside the folder shows.
+  8. **Location:** a dawn/dusk phase gets times once allowed.
+  9. **Outside change:** a System Settings pick pauses Phases.
+- **Not in the list:** a change missed while locked being applied at
+  unlock has no hand-made way to produce it, and going back to an
+  unsandboxed build isn't supported (SPEC.md `[D-sandbox-settings-move]`).
+- Record results with date and build in this section.
+- *Verified* 2026-11-22 by the author, build from `feature/19-sandbox`
+  (draft 58), diagnostics on: **all nine pass**, with nothing failing in
+  the log. 1: the container couldn't be inspected (TEST-TOOLS.md
+  "Diagnostics"), so settings were checked in the app. 4: whether an
+  iCloud-only photo was shown wasn't recorded. Details in SPEC.md
+  "Hands-on checks of the first sandboxed build".
 
 ## When a fixed bug comes back
 

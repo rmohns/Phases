@@ -167,4 +167,71 @@ struct FolderScanTests {
     try symlink("two.png", to: "real.png")
     #expect(names() == ["one.png", "real.png", "two.png"])
   }
+
+  // MARK: [D-links-outside-refused]
+
+  /// A folder outside the library that nobody may enter (mode 000),
+  /// standing in for the sandbox refusing a link's target. Restored before
+  /// clean-up so it can be deleted.
+  private func lockedFolder() throws -> URL {
+    let locked = try folder("Locked", in: root)
+    try image("hidden.png", in: locked)
+    try folder("Inner", in: locked)
+    try image("Inner/deep.png", in: locked)
+    try fm.setAttributes([.posixPermissions: 0o000], ofItemAtPath: locked.path(percentEncoded: false))
+    return locked
+  }
+
+  private func unlock(_ url: URL) {
+    try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path(percentEncoded: false))
+  }
+
+  @Test func linkToAnImageItCantReadIsSkippedAndNamed() throws {
+    let locked = try lockedFolder()
+    defer { unlock(locked); cleanUp() }
+    try image("real.png")
+    try symlink("_out.png", to: locked.appending(path: "hidden.png").path(percentEncoded: false))
+    let result = FolderScan.scan(library, includesSubfolders: true)
+    #expect(result.items.map(\.name) == ["real.png"])
+    #expect(result.refused == ["_out.png"])
+  }
+
+  @Test func linkToAFolderItCantListIsSkippedAndNamed() throws {
+    let locked = try lockedFolder()
+    defer { unlock(locked); cleanUp() }
+    try image("real.png")
+    try symlink("Out", to: locked.path(percentEncoded: false))
+    let result = FolderScan.scan(library, includesSubfolders: true)
+    #expect(result.items.map(\.name) == ["real.png"])
+    #expect(result.refused == ["Out"])
+  }
+
+  @Test func brokenLinkIsSkippedButNotCalledRefused() throws {
+    defer { cleanUp() }
+    try image("real.png")
+    try symlink("gone.png", to: root.appending(path: "nowhere.png").path(percentEncoded: false))
+    let result = FolderScan.scan(library, includesSubfolders: true)
+    #expect(result.items.map(\.name) == ["real.png"])
+    #expect(result.refused.isEmpty)
+  }
+
+  @Test func sourceFolderItCantListIsRefusedAsTheFolder() throws {
+    let locked = try lockedFolder()
+    defer { unlock(locked); cleanUp() }
+    let result = FolderScan.scan(locked, includesSubfolders: true)
+    #expect(result.items.isEmpty)
+    #expect(result.refused == [""])
+    #expect(!FolderScan.canList(locked))
+  }
+
+  @Test func permissionErrorsAreToldFromOthers() {
+    #expect(FolderScan.isNotPermitted(NSError(domain: NSPOSIXErrorDomain, code: Int(EPERM))))
+    #expect(FolderScan.isNotPermitted(NSError(domain: NSCocoaErrorDomain, code: NSFileReadNoPermissionError)))
+    let wrapped = NSError(
+      domain: NSCocoaErrorDomain, code: NSFileReadUnknownError,
+      userInfo: [NSUnderlyingErrorKey: NSError(domain: NSPOSIXErrorDomain, code: Int(EACCES))]
+    )
+    #expect(FolderScan.isNotPermitted(wrapped))
+    #expect(!FolderScan.isNotPermitted(NSError(domain: NSCocoaErrorDomain, code: NSFileReadNoSuchFileError)))
+  }
 }
