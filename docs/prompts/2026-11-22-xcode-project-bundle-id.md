@@ -1,5 +1,6 @@
 You're working on Phases, a macOS menu-bar app built in Bitrig. Robert (the author) is
-around for this session; checkpoints below wait for his yes.
+around for this session. Two checkpoints wait for his yes: the settings move (step 5)
+and the merge (step 6). Everything else goes ahead without asking.
 
 ## The task
 
@@ -49,8 +50,11 @@ Background, from the conversation that planned this (2026-11-22):
   `xcrun xcodeproj`. Record the new bundle ID and why (a domain Robert controls; the
   placeholder was Bitrig's). Add how the one-time settings move works and what doesn't carry
   over (see step 5). Bump the draft number, and keep the build number matching it (step 3).
-- Open it in Marked (`/opt/homebrew/bin/mk docs/SPEC.md`) and **wait for Robert's approval**
-  before continuing.
+- **No approval needed for this task:** Robert allows the code to follow the spec commit
+  straight away, on the same branch (2026-11-22, Robert: "I just have to trust you. If
+  something breaks, that's what version control is for"). He doesn't need to review the
+  spec, so don't open it in Marked. If the code ends up differing from the spec draft,
+  update the spec in a later commit and say so in the report.
 
 ### 2. Bundle ID, then conversion
 
@@ -128,8 +132,25 @@ have to go into it instead.
 ### 6. Finish
 
 - Report to Robert: commits with short hashes, the `codesign` output before and after,
-  unit test results, what the conversion missed and how you fixed it, and the hands-on
-  results.
+  unit test results, what the conversion missed and how you fixed it, the hands-on
+  results, and the #42 write-up below.
+- **Write up adding a unit test target (#42).** Required, but write it up only; don't
+  build it. With the project now an Xcode project, look at what it would take for
+  `bitrig test` to run the unit tests, and put the write-up in the report and in
+  `docs/handoffs/2026-11-22-xcode-project.md` (committed on the branch). Cover:
+  - How the target would be added (`xcrun xcodeproj`), what it builds, and where the test
+    files live. Today `UnitTests/` is a SwiftPM package whose sources are symlinks to the
+    app's files.
+  - Keeping the tests unhosted: they must never launch Phases `[D-tests-unhosted]`. Say
+    whether that means a logic-only test target, a separate framework target, or something
+    else, and why.
+  - What happens to the SwiftPM package and its symlinks: kept alongside, or retired.
+  - Whether `bitrig test` then works, and anything it can't do that `swift test` can.
+  - The docs and rules that would change (TESTING.md, CLAUDE.md "Testing").
+  - Your recommendation and a rough size.
+
+  Label each claim **verified**, **observed**, or **recalled**. Then ask Robert whether
+  to post it to #42 as a signed comment.
 - Merging into `main` needs Robert's yes. After it: build `main`, archive the branch as
   `archive/feature/xcode-project`, and push `main` and the tag to `origin` and, with his
   yes, to `github`. Then delete the branch locally and on every remote.
@@ -149,6 +170,6 @@ have to go into it instead.
 
 ## Not in scope
 
-- Adding a unit test target so `bitrig test` works (#42). Once the project is an Xcode
-  project, write up in the report what adding the target would take, but don't do it.
+- Building the unit test target for #42. The write-up in step 6 is required; the target
+  itself waits for Robert's call.
 - Any change to what Phases does.
