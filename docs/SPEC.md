@@ -1,4 +1,4 @@
-# Phases — Specification (draft 58)
+# Phases — Specification (draft 59)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -1714,11 +1714,13 @@ extras don't show them. No global hotkey.
   - *Version scheme:* "0.1" until the author calls Phases finished; the
     build number is the SPEC.md draft number.
   - *How:* the draft number is set in one place, the build number
-    (`CURRENT_PROJECT_VERSION` in `Project.json`). The Info.plist takes
+    (`CURRENT_PROJECT_VERSION`, the Phases target's build setting in the
+    Xcode project `[D-xcode-project]`; in `Project.json` through draft
+    58). The Info.plist takes
     its version and build number from those build settings rather than
     repeating them, and the Spec line reads the app's build number
     (`App/Model/AppVersion.swift`). A unit test reads SPEC.md's title and
-    fails if `Project.json` doesn't match it, so the number can't drift
+    fails if the project's setting doesn't match it, so the number can't drift
     from the spec `[D-tests-carry-tags]`. Bump it with each new draft.
   - *Replaced:* through draft 46 the version was a fixed "1.0 (1)" on the
     theory that a personal app's version never changes, and the draft was
@@ -1942,15 +1944,38 @@ GitHub issue #19).
   of temporary exceptions isn't a constraint (author, issue #19).
 - **Signing:** the sandbox's privacy entitlements and the temporary
   exception need a development team (`[L-sandbox-team-needed]`,
-  *verified* 2026-11-12, three builds). Bitrig signs Phases with the
-  author's team, saved for the project in Bitrig; `Project.json` doesn't
-  set `DEVELOPMENT_TEAM`.
+  *verified* 2026-11-12, three builds). From draft 59 the Xcode project
+  sets `DEVELOPMENT_TEAM = Y382W2CA47` (the author's team) on the Phases
+  target. Through draft 58 `Project.json` set no team, and Bitrig signed
+  with the team saved for the project in Bitrig.
+  - *Resolved 2026-11-22:* the author approved setting the team in the
+    project. The next build signed `Apple Development`, team Y382W2CA47,
+    with the six entitlements plus `get-task-allow` (*verified* by Claude,
+    codesign). The note below is kept as written.
+  - *Open, 2026-11-22 by Claude:* the code doesn't meet this yet. Since
+    the conversion `[D-xcode-project]`, Bitrig's Mac builds of the Xcode
+    project are signed ad hoc with no team: Bitrig passed the saved team
+    on the command line for `Project.json` builds, but doesn't for the
+    Xcode project, even after `bitrig build --provision` registered the
+    new ID (*verified*, three builds and their logs; `--provision` itself
+    did get the team). Proposed fix, awaiting the author: set
+    `DEVELOPMENT_TEAM = Y382W2CA47` on the Phases target, and change this
+    line to say the project sets it. See LEARNINGS.md
+    `[L-convert-xcode-project]`.
 
 ### Entitlements
 
 `[D-sandbox-entitlements]` **Only these, each for something Phases does.**
-Set in `Project.json` (`entitlements`), never in a hand-edited Xcode
-project.
+Set in the entitlements file the Phases target's `CODE_SIGN_ENTITLEMENTS`
+names (`App/Phases.entitlements`), edited directly, since `xcrun
+xcodeproj` edits the project, not that file. Not through sandbox build
+settings such as `ENABLE_APP_SANDBOX`, so all six stay in one place. Build
+settings that point at the file are changed with `xcrun xcodeproj`,
+never by hand in the project file `[D-xcode-project]`.
+
+- *Replaced:* through draft 58 the entitlements were set in
+  `Project.json` (`entitlements`), and Bitrig generated the file from it
+  on every build.
 
 | Entitlement | Why Phases needs it |
 |---|---|
@@ -2077,13 +2102,13 @@ project.
   - **Location** may be asked for again (*hypothesis*).
 - **Going back to an unsandboxed build** means moving the settings back
   by hand; macOS doesn't. With Phases quit:
-  1. `defaults export app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268 ~/Desktop/phases-settings.plist`
+  1. `defaults export com.robertmohns.phases ~/Desktop/phases-settings.plist`
      (reads the container's copy, *inferred*).
   2. Move the container out of the way:
-     `mv ~/Library/Containers/app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268 ~/Desktop/`.
+     `mv ~/Library/Containers/com.robertmohns.phases ~/Desktop/`.
      Once it's gone, `defaults` addresses `~/Library/Preferences` again
      (*observed* by the author and Claude, 2026-11-14).
-  3. `defaults import app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268 ~/Desktop/phases-settings.plist`.
+  3. `defaults import com.robertmohns.phases ~/Desktop/phases-settings.plist`.
   4. Build without the entitlements and launch. Folder sources whose
      bookmarks don't open show "Can't open"; Locate… fixes each.
   - The steps are *untested*; checking them is one of the first
@@ -2091,6 +2116,9 @@ project.
   - *Note 2026-11-22:* the author chose not to test them: Phases is meant
     to run sandboxed, and going back isn't a path it supports. The steps
     stay as a starting point, still *untested*.
+  - *Note, draft 59:* the steps name the bundle ID from draft 59
+    `[D-bundle-id]`. Through draft 58 they named Bitrig's placeholder,
+    `app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268`.
 
 ### Hands-on checks of the first sandboxed build
 
@@ -2124,6 +2152,89 @@ project.
   exception. *Not checked:* a change missed while locked being applied at
   unlock (no way to produce one by hand).
 - **Going back:** not checked, by choice (above).
+
+## Project and bundle ID
+
+- `[D-xcode-project]` **Phases is an Xcode project** (the `.xcodeproj`
+  in the repository root, from draft 59), built with `bitrig build`.
+  Build settings, targets, and `INFOPLIST_KEY_` settings are changed
+  with `xcrun xcodeproj`, never by editing the project file by hand; the
+  Info.plist and entitlements files are edited directly
+  (`[D-sandbox-entitlements]`).
+  - *Replaced:* through draft 58 the project was defined by
+    `Project.json`, Bitrig's older format, from which Bitrig generated a
+    fresh Xcode project on every build. It was converted with
+    `bitrig convert-to-xcode-project`.
+  - *Why:* `Project.json` is Bitrig's legacy format (*recalled* from
+    Bitrig's guidance): a project regenerated on every build can't build
+    incrementally, and `bitrig test` can't see test targets in it
+    `[Q-bitrig-test-targets]` (GitHub issue #42). An Xcode project fixes
+    the first and opens the way to the second; adding a test target is a
+    change of its own.
+- `[D-bundle-id]` **The bundle ID is `com.robertmohns.phases`** (draft
+  59), all lowercase, and permanent: preferences, the sandbox container,
+  and privacy grants are all keyed to it.
+  - *Why:* the author controls `robertmohns.com`, so the ID is his.
+    Through draft 58 Phases used Bitrig's placeholder,
+    `app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268`, which Bitrig
+    generates for a new project and isn't meant to be kept.
+  - Phases' code never names the bundle ID (*verified* 2026-11-22 by
+    Claude, by searching the code). The UI tests' preferences suite and
+    the input driver read it at run time.
+  - The project folder and Bitrig's `origin` repository are named for
+    Bitrig's project ID, not the bundle ID, so neither changes
+    (*inferred* from the names).
+- `[D-bundle-id-settings-move]` **Settings move to the new ID once, by
+  hand, from the shell.** Phases has no migration code: one person uses
+  it, and moves once. A new bundle ID means a new, empty container; the
+  old one stays on disk untouched, and setting the old ID back would find
+  it again (*inferred* from how containers work, not tested). With Phases
+  quit, and before any build with the new ID has launched (a launch makes
+  an empty container, and the import would have to go into it instead):
+  1. `defaults export app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268 ~/Desktop/phases-settings-old-id.plist`.
+     This reads the old container's copy (*inferred*) and doubles as the
+     backup. If it fails or comes back empty, stop.
+     - *Correction 2026-11-22 by Claude:* run from Bitrig's shell, it came
+       back empty: macOS wouldn't let that process read the old container
+       (`[L-defaults-container-blocked]`, *verified*). The route that
+       worked (2026-11-22): the author copied the old container's
+       `Data/Library/Preferences/<old ID>.plist` to the Desktop in Finder
+       (Go › Go to Folder…, Option-drag), and step 2 imported that copy.
+  2. `defaults import com.robertmohns.phases ~/Desktop/phases-settings-old-id.plist`.
+     With no container yet, this writes
+     `~/Library/Preferences/com.robertmohns.phases.plist`, which macOS
+     moves into the new container on first launch, as it did for the
+     first sandboxed build `[D-sandbox-settings-move]`.
+  3. Launch the new build and check phases, sources, and options. If
+     they're missing, quit, run step 2 again (it then writes the
+     container's copy), and relaunch.
+  - **What doesn't carry over:**
+    - **Folder sources:** bookmarks belong to the app that made them, so
+      each probably shows "Can't open" (*recalled*). One **Locate…** per
+      source; it keeps the source's ID, so phases' selections come back.
+    - **Photos and location:** macOS asks again, as it does for each new
+      build (`[L-photos-grant-per-build]`). Album and photo IDs are in
+      the settings, so Photos sources come back once allowed
+      (`[L-photos-ids-stable]`).
+    - **Launch at Login:** off until turned on again in Phases
+      `[D-login-consent]`. System Settings › General › Login Items may
+      keep a leftover entry for the old ID.
+    - **Photo cache:** starts empty in the new container and fills as
+      needed `[D-photos-cache]`.
+  - **The old container stays.** Nothing deletes it; the author can
+    remove it by hand later.
+  - **Done 2026-11-22.** The import wrote
+    `~/Library/Preferences/com.robertmohns.phases.plist`, identical to the
+    copy, and it was gone from there once the new build launched
+    (*verified* by Claude; that macOS moved it into the container is
+    *inferred*, since the container can't be listed). The author then
+    *verified* in the app: settings came over; folder sources reopened
+    after Locate…; location and Launch at Login back on. Photos stayed
+    blocked though System Settings shows it allowed, which the author has
+    seen before when the Bitrig build and the installed copy compete
+    (`[L-photos-bitrig-vs-installed]`). It counts as passing unless it
+    persists after installing to /Applications. Sandbox checks 1–3 are
+    deferred to GitHub issue #43.
 
 ## Platform notes and limitations
 
