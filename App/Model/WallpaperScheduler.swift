@@ -554,9 +554,9 @@ final class WallpaperScheduler {
     }
     // [D-ui-test-mode] Test mode records what it would show but never shows it.
     guard !assignments.isEmpty, !UITestMode.isOn else { return }
-    // [D-scoped-bookmarks] Open while the images are read. A cover
-    // remade later (a Space switch) reads without it; the sandbox change
-    // has to revisit that.
+    // [D-scoped-bookmarks] Open while the images are read. A cover redrawn
+    // later, after a display change, opens it again (see the screen-change
+    // handler); a Space change reads no file [D-sandboxed].
     library.withAccessToAllSources {
       crossfade.apply(assignments, duration: transitionStyle == .crossfade ? crossfadeDuration : nil)
     }
@@ -840,10 +840,12 @@ final class WallpaperScheduler {
     // fires for Dock and menu bar changes, so only fix displays whose image is no longer in its selection.
     let screens: @Sendable (Notification) -> Void = { [weak self] _ in
       Task { @MainActor in
-        // [D-cover-follows-displays]
-        self?.crossfade.screensChanged()
-        self?.refreshDisplays()
-        self?.evaluate(reloadingLibrary: false)
+        // [D-cover-follows-displays] A redrawn cover reads its image file, so
+        // source access is open for it [D-scoped-bookmarks] [D-sandboxed].
+        guard let self else { return }
+        self.library.withAccessToAllSources { self.crossfade.screensChanged() }
+        self.refreshDisplays()
+        self.evaluate(reloadingLibrary: false)
       }
     }
 

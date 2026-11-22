@@ -222,7 +222,8 @@ final class CrossfadeController {
         continue
       }
       if cover.window.isOnActiveSpace {
-        // Showing: draw it again at the new size, on this Space.
+        // Showing: draw it again at the new size, on this Space. Reads the
+        // file; the caller opens source access first [D-sandboxed].
         let replacement = makeCover(for: screen, displayID: cover.displayID, showing: cover.url, state: cover.state)
         if let replacement {
           replacement.window.alphaValue = Self.coverOpacity
