@@ -1947,6 +1947,16 @@ GitHub issue #19).
   *verified* 2026-11-12, three builds). Bitrig signs Phases with the
   author's team, saved for the project in Bitrig; the Xcode project
   doesn't set `DEVELOPMENT_TEAM` (nor did `Project.json` before draft 59).
+  - *Open, 2026-11-22 by Claude:* the code doesn't meet this yet. Since
+    the conversion `[D-xcode-project]`, Bitrig's Mac builds of the Xcode
+    project are signed ad hoc with no team: Bitrig passed the saved team
+    on the command line for `Project.json` builds, but doesn't for the
+    Xcode project, even after `bitrig build --provision` registered the
+    new ID (*verified*, three builds and their logs; `--provision` itself
+    did get the team). Proposed fix, awaiting the author: set
+    `DEVELOPMENT_TEAM = Y382W2CA47` on the Phases target, and change this
+    line to say the project sets it. See LEARNINGS.md
+    `[L-convert-xcode-project]`.
 
 ### Entitlements
 

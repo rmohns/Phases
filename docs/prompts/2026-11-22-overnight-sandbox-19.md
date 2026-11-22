@@ -1,3 +1,9 @@
+> *Note 2026-11-22, added later:* from draft 59 Phases is `Phases.xcodeproj` with
+> bundle ID `com.robertmohns.phases` (SPEC.md `[D-xcode-project]`, `[D-bundle-id]`).
+> Reusing this prompt as a template: settings and entitlements now go in the Xcode
+> project (`xcrun xcodeproj`) and `App/Phases.entitlements`, not `Project.json`, and
+> `defaults` commands take the new ID. The prompt below is kept as it was run.
+
 You're working overnight and unattended on Phases, a macOS menu-bar app built in Bitrig.
 Robert (the author) is asleep. Nobody will answer questions until morning, so when
 something needs his call, write it down and move on to work that doesn't depend on it.

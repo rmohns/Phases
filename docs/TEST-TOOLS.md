@@ -45,8 +45,12 @@ Used by both groups. Reference, not steps.
   default.** Every build is the same; logging is switched on at launch,
   not compiled in or out.
   - Turn on (then quit and relaunch Phases):
-    `defaults write app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268 PhasesDiagnostics -bool true`
+    `defaults write com.robertmohns.phases PhasesDiagnostics -bool true`
   - Turn off: the same with `-bool false`, or `defaults delete … PhasesDiagnostics`.
+  - The bundle ID is `com.robertmohns.phases` from draft 59 `[D-bundle-id]`.
+    Builds from draft 58 and earlier use Bitrig's placeholder,
+    `app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268`; a command with
+    the wrong ID changes nothing the running Phases reads.
   - Sandboxed (draft 58 `[D-sandboxed]`): once the container exists,
     `defaults` for the bundle ID reads and writes the container's copy,
     which is the one the sandboxed Phases reads, so the commands above
@@ -211,6 +215,12 @@ neither can leak into normal use.
   `bundle.ui-testing` target and a scheme naming it in `testTargets`: same
   message. So the Interface tests drive the app through the AX API instead of
   XCUITest `[D-ui-test-runner]`.
+  - *Update 2026-11-22, draft 59:* the project is now `Phases.xcodeproj`
+    `[D-xcode-project]`. `bitrig test` reports "The scheme 'Phases' has
+    no tests", and `bitrig test -package UnitTests` reports that
+    `Phases.xcodeproj` doesn't build the package (*verified* 2026-11-22 by
+    Claude). Neither is the old Project.json refusal: an Xcode project can
+    take a test target. Whether to add one is GitHub issue #42.
 
 - `[Q-launch-activate-refused]` **A menu bar app launched in the
   background can't bring itself to the front with `NSApp.activate()`

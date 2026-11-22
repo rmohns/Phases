@@ -62,9 +62,9 @@ a Dock icon, appears in ⌘Tab, and has a normal menu bar with Quit.
 
 ## Building
 
-Phases is built with [Bitrig](https://bitrig.app). The project is defined
-by `Project.json` rather than a checked-in Xcode project, so the easiest
-way to build it is to open the repository in Bitrig.
+Phases is built with [Bitrig](https://bitrig.app). The project is
+`Phases.xcodeproj`, in the JSON project format Xcode 27 introduced; the
+easiest way to build it is to open the repository in Bitrig.
 
 The unit tests are a separate Swift package and don't need Bitrig or Xcode
 project files:

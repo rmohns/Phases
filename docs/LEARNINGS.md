@@ -216,6 +216,16 @@ From `[X-memory]` unless noted: macOS 27.2, two or three displays.
   relaunching, fixed it. Not a Phases bug. Record: `[X-stale-app-icon]`.
 - `[L-first-launch-activation]` Promoted to `[Q-launch-activate-refused]`
   (2026-11-06). Record: `[X-first-launch-activation]`.
+- `[L-convert-xcode-project]` **`bitrig convert-to-xcode-project` carried
+  every Project.json setting over, added two sandbox build settings, and
+  lost team signing.** Verified 2026-11-22 by Claude (settings lists,
+  codesign, build logs). It kept the bundle ID as set (no App Store
+  Connect app connected) and wrote the JSON `project.xcproj` format. It
+  added `ENABLE_APP_SANDBOX` and `ENABLE_OUTGOING_NETWORK_CONNECTIONS`,
+  which signed an extra `network.client` entitlement (unset since). Mac
+  builds of the result are signed ad hoc with no team, because Bitrig no
+  longer passes the saved team on the command line; `--provision` didn't
+  change that. Record: `[X-convert-xcode-project]`.
 
 ## Photos library (issue #33)
 

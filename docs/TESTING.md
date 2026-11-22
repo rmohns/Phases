@@ -49,6 +49,11 @@ outranks another.
   - *Why a package, not a test target in Project.json:* `swift test` runs
     without a test target or a generated Xcode project. The tooling fights
     the test-target route; see `[Q-bitrig-test-targets]`.
+  - *Since draft 59* the project is `Phases.xcodeproj` `[D-xcode-project]`,
+    which has no test target and doesn't build this package, so `bitrig
+    test` still can't run these tests (*verified* 2026-11-22 by Claude).
+    Whether to add a test target is GitHub issue #42; the write-up is in
+    `docs/handoffs/2026-11-22-xcode-project.md`.
 
 ### What they cover
 
@@ -76,8 +81,10 @@ The pure logic that decides what the app does:
 - `SidebarHighlight`: a row has the colored highlight only when it's
   selected, the window is in front, and the sidebar has focus
   `[D-active-badge]` (draft 45)
-- `AppVersion`: the build number in `Project.json` matches SPEC.md's title
-  `[D-version-in-settings]`
+- `AppVersion`: the build number in the Xcode project
+  (`Phases.xcodeproj/project.xcproj`; `Project.json` through draft 58)
+  matches SPEC.md's title, and `App/Info.plist` takes both version
+  numbers from build settings `[D-version-in-settings]`
 - `FolderScan`: which images the folder scan finds and what it names
   them, following symlinks and aliases `[D-follow-links]` and ending on
   loops `[D-scan-each-folder-once]` (draft 35). These tests build folders
@@ -297,7 +304,8 @@ The pure logic that decides what the app does:
     process that owned the point (author's approval, 2026-11-04;
     `[L-menubar-overflow]`).
   - *Why:* `bitrig test` can't run test targets in a Project.json project
-    `[Q-bitrig-test-targets]`, and the AX API reads these controls
+    `[Q-bitrig-test-targets]` (the project became `Phases.xcodeproj` in
+    draft 59, with no UI test target either), and the AX API reads these controls
     reliably where System Events doesn't `[Q-system-events-ax]`.
 - `[D-ui-menubar-wide]` **Phases' menu bar item is only clicked on a
   display at least 1200 points wide.** If the item is on a narrower
