@@ -1944,9 +1944,14 @@ GitHub issue #19).
   of temporary exceptions isn't a constraint (author, issue #19).
 - **Signing:** the sandbox's privacy entitlements and the temporary
   exception need a development team (`[L-sandbox-team-needed]`,
-  *verified* 2026-11-12, three builds). Bitrig signs Phases with the
-  author's team, saved for the project in Bitrig; the Xcode project
-  doesn't set `DEVELOPMENT_TEAM` (nor did `Project.json` before draft 59).
+  *verified* 2026-11-12, three builds). From draft 59 the Xcode project
+  sets `DEVELOPMENT_TEAM = Y382W2CA47` (the author's team) on the Phases
+  target. Through draft 58 `Project.json` set no team, and Bitrig signed
+  with the team saved for the project in Bitrig.
+  - *Resolved 2026-11-22:* the author approved setting the team in the
+    project. The next build signed `Apple Development`, team Y382W2CA47,
+    with the six entitlements plus `get-task-allow` (*verified* by Claude,
+    codesign). The note below is kept as written.
   - *Open, 2026-11-22 by Claude:* the code doesn't meet this yet. Since
     the conversion `[D-xcode-project]`, Bitrig's Mac builds of the Xcode
     project are signed ad hoc with no team: Bitrig passed the saved team
