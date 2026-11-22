@@ -731,6 +731,12 @@ Each with what passes:
   "Diagnostics"), so settings were checked in the app. 4: whether an
   iCloud-only photo was shown wasn't recorded. Details in SPEC.md
   "Hands-on checks of the first sandboxed build".
+- 2026-11-22, build from `feature/xcode-project` (draft 59, bundle ID
+  `com.robertmohns.phases`, after the settings move): checks 1–3
+  **deferred** by the author to GitHub issue #43. The launch log showed
+  the store read ("watching the store: 988 entries"), and the author
+  *verified* settings and folder sources after Locate… in the app
+  (SPEC.md `[D-bundle-id-settings-move]`).
 
 ## When a fixed bug comes back
 

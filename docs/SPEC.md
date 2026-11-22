@@ -2197,7 +2197,9 @@ never by hand in the project file `[D-xcode-project]`.
      - *Correction 2026-11-22 by Claude:* run from Bitrig's shell, it came
        back empty: macOS wouldn't let that process read the old container
        (`[L-defaults-container-blocked]`, *verified*). The route that
-       works is to be settled with the author and recorded here.
+       worked (2026-11-22): the author copied the old container's
+       `Data/Library/Preferences/<old ID>.plist` to the Desktop in Finder
+       (Go › Go to Folder…, Option-drag), and step 2 imported that copy.
   2. `defaults import com.robertmohns.phases ~/Desktop/phases-settings-old-id.plist`.
      With no container yet, this writes
      `~/Library/Preferences/com.robertmohns.phases.plist`, which macOS
@@ -2221,6 +2223,18 @@ never by hand in the project file `[D-xcode-project]`.
       needed `[D-photos-cache]`.
   - **The old container stays.** Nothing deletes it; the author can
     remove it by hand later.
+  - **Done 2026-11-22.** The import wrote
+    `~/Library/Preferences/com.robertmohns.phases.plist`, identical to the
+    copy, and it was gone from there once the new build launched
+    (*verified* by Claude; that macOS moved it into the container is
+    *inferred*, since the container can't be listed). The author then
+    *verified* in the app: settings came over; folder sources reopened
+    after Locate…; location and Launch at Login back on. Photos stayed
+    blocked though System Settings shows it allowed, which the author has
+    seen before when the Bitrig build and the installed copy compete
+    (`[L-photos-bitrig-vs-installed]`). It counts as passing unless it
+    persists after installing to /Applications. Sandbox checks 1–3 are
+    deferred to GitHub issue #43.
 
 ## Platform notes and limitations
 

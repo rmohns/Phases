@@ -119,3 +119,18 @@ needs to change.
    signed comment.
 
 — Claude (Bitrig)
+
+## Update, later on 2026-11-22
+
+- Signing: Robert approved; `DEVELOPMENT_TEAM = Y382W2CA47` set on the
+  Phases target (`422c13d`). Builds sign Apple Development, team
+  Y382W2CA47, with `main`'s entitlements (*verified*).
+- Settings move: `defaults export` from Bitrig's shell came back empty
+  (`[L-defaults-container-blocked]`, `a628c74`). Robert copied the old
+  container's plist in Finder; I imported it and launched the new build.
+  Robert *verified* settings, folder sources after Locate…, location, and
+  Launch at Login. Photos was blocked in the app while allowed in System
+  Settings (`[L-photos-bitrig-vs-installed]`), counted as passing unless
+  it persists once installed. Sandbox checks 1–3 deferred to issue #43.
+- Bitrig feedback sent about the lost team signing and the extra sandbox
+  settings, with logs and a screenshot, without the transcript.

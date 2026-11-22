@@ -234,6 +234,13 @@ From `[X-memory]` unless noted: macOS 27.2, two or three displays.
   is *recalled*: macOS's protection of other apps' data (TCC), as in
   TEST-TOOLS.md "Diagnostics". This contradicts the *inferred* step 1 of
   `[D-bundle-id-settings-move]`. Record: `[X-convert-xcode-project]`.
+- `[L-photos-bitrig-vs-installed]` **Photos access can read "blocked" in
+  the app while System Settings shows Phases allowed, when a Bitrig build
+  runs alongside an installed copy of Phases.** Observed by the author,
+  more than once (latest 2026-11-22, draft 59 Bitrig build). Why is a
+  hypothesis, perhaps the per-build grant of `[L-photos-grant-per-build]`.
+  The test: install to /Applications and see whether it clears (GitHub
+  issue #43). Record: `[X-convert-xcode-project]`.
 
 ## Photos library (issue #33)
 

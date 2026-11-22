@@ -1927,6 +1927,29 @@ copy, as inferred, but couldn't read it from this process. Stopped there,
 per the plan; nothing imported, nothing launched. The empty file was left
 on the Desktop.
 
+**Settings move, 2026-11-22 16:22–16:29:** the author copied the old
+container's preferences plist to `~/Desktop/phases-settings-old-container.plist`
+in Finder (7,515 bytes, `plutil -lint` OK, keys including `phases`,
+`imageSources`, `appliedState`, `PhasesDiagnostics`). No container or
+preferences file existed yet for `com.robertmohns.phases`. `defaults
+import com.robertmohns.phases` that copy exited 0 and wrote
+`~/Library/Preferences/com.robertmohns.phases.plist`, identical by
+`plutil -p` diff (*verified*). `bitrig preview -platform macOS` built but
+didn't launch (Bitrig's Mac preview waits for Run), so `bitrig run … -destination
+id=mac` launched it (signed team Y382W2CA47). Seconds later the
+preferences file was gone from `~/Library/Preferences` (*verified*;
+moved into the container, *inferred*). Diagnostics at launch: "watching
+the store: 988 entries" (the exception works), and both folder sources
+"found by its location, but not permitted to read it" (*verified*, log).
+
+**Author's checks, same session:** settings came over, folder sources
+reopened after Locate…, location allowed again, Launch at Login back on
+(all *verified* by the author). Photos: blocked in the app while System
+Settings shows it allowed; the author has seen this before with the
+Bitrig build and the installed copy (`[L-photos-bitrig-vs-installed]`,
+*observed*), and counts it passing unless it persists once installed.
+Sandbox checks 1–3 deferred: GitHub issue #43.
+
 ## Retired designs
 
 Designs that were on `main` and have since been replaced. Moved here
