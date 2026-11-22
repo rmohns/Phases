@@ -207,9 +207,15 @@ final class ImageLibrary {
         continue
       }
       // [D-follow-links] [D-scan-each-folder-once] [D-scoped-bookmarks]
-      let items = withAccess(to: folder) {
-        FolderScan.items(in: folder, includesSubfolders: source.includesSubfolders)
+      let result = withAccess(to: folder) {
+        FolderScan.scan(folder, includesSubfolders: source.includesSubfolders)
       }
+      // [D-links-outside-refused] Skipped, but named, so a missing image
+      // can be explained.
+      for name in result.refused {
+        diagLog.log("source \(source.id, privacy: .public): not permitted to read \(name.isEmpty ? "the folder" : name, privacy: .public)")
+      }
+      let items = result.items
       scans.append((source.id, items.map(LibraryListing.Entry.init)))
       counts[source.id] = items.count
     }
@@ -381,6 +387,13 @@ final class ImageLibrary {
       diagLog.log("source \(source.id, privacy: .public) can't be opened")
       return nil
     }
+    // [D-sandboxed] Without a working bookmark the sandbox grants no access
+    // to the folder, so it shows "Can't open" with Locate… rather than
+    // looking empty. Unsandboxed, a folder found here can be listed.
+    guard FolderScan.canList(url) else {
+      diagLog.log("source \(source.id, privacy: .public) found by its location, but not permitted to read it")
+      return nil
+    }
     diagLog.log("source \(source.id, privacy: .public) found by its location, not its bookmark")
     folderURLs[source.id] = url
     // Outside test mode, a bookmark that stopped working is remade from
@@ -405,9 +418,18 @@ final class ImageLibrary {
       && isDirectory.boolValue
   }
 
-  /// [D-scoped-bookmarks]
+  /// [D-scoped-bookmarks] Read-only, matching the read-only folder
+  /// entitlement [D-sandbox-entitlements].
   private static func scopedBookmark(for url: URL) -> Data? {
-    try? url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
+    do {
+      return try url.bookmarkData(
+        options: [.withSecurityScope, .securityScopeAllowOnlyReadAccess],
+        includingResourceValuesForKeys: nil, relativeTo: nil
+      )
+    } catch {
+      diagLog.log("can't make a bookmark for \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+      return nil
+    }
   }
 
   /// [D-scoped-bookmarks] Access is open only while reading.

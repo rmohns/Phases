@@ -16,10 +16,26 @@ enum FolderScan {
 
   static let supportedTypes: [UTType] = [.jpeg, .png, .heic, .tiff]
 
+  /// What a scan found.
+  struct Result: Equatable {
+    /// The folder's images in display order.
+    var items: [Item]
+    /// [D-links-outside-refused] Links, aliases, and folders macOS wouldn't
+    /// let Phases read ("not permitted"), by their name in the source; ""
+    /// is the source folder itself. Skipped like any item that can't be
+    /// opened [D-follow-links]; the caller logs them. In the sandbox, a
+    /// link pointing outside the source lands here.
+    var refused: [String]
+  }
+
   /// The folder's images in display order.
   static func items(in folder: URL, includesSubfolders: Bool) -> [Item] {
+    scan(folder, includesSubfolders: includesSubfolders).items
+  }
+
+  static func scan(_ folder: URL, includesSubfolders: Bool) -> Result {
     var scan = Scan(includesSubfolders: includesSubfolders)
-    guard let rootID = FolderID(folder) else { return [] }
+    guard let rootID = FolderID(folder) else { return Result(items: [], refused: []) }
     scan.visited.insert(rootID)
     // The real tree first, so every folder reachable directly is claimed
     // before any link can name it.
@@ -28,7 +44,35 @@ enum FolderScan {
       scan.pendingLinks.sort { inDisplayOrder($0.name, $1.name) }
       scan.follow(scan.pendingLinks.removeFirst())
     }
-    return scan.items.sorted { inDisplayOrder($0.name, $1.name) }
+    return Result(
+      items: scan.items.sorted { inDisplayOrder($0.name, $1.name) },
+      refused: scan.refused.sorted { inDisplayOrder($0, $1) }
+    )
+  }
+
+  /// Whether a folder's contents can be listed. [D-sandboxed] A folder
+  /// found only by its saved location can't be, in the sandbox.
+  static func canList(_ folder: URL) -> Bool {
+    (try? FileManager.default.contentsOfDirectory(atPath: folder.path(percentEncoded: false))) != nil
+  }
+
+  /// [D-links-outside-refused] Whether an error is macOS refusing access
+  /// (the sandbox, or a privacy or file permission), as opposed to the
+  /// item being missing or broken.
+  static func isNotPermitted(_ error: Error) -> Bool {
+    let error = error as NSError
+    if error.domain == NSCocoaErrorDomain,
+      [NSFileReadNoPermissionError, NSFileWriteNoPermissionError].contains(error.code)
+    {
+      return true
+    }
+    if error.domain == NSPOSIXErrorDomain, [Int(EPERM), Int(EACCES)].contains(error.code) {
+      return true
+    }
+    if let underlying = error.userInfo[NSUnderlyingErrorKey] as? Error {
+      return isNotPermitted(underlying)
+    }
+    return false
   }
 
   /// Top-level files first, then each subfolder, sorted the way Finder
@@ -79,6 +123,8 @@ private struct Scan {
   var visited: Set<FolderID> = []
   var items: [FolderScan.Item] = []
   var pendingLinks: [Link] = []
+  /// [D-links-outside-refused]
+  var refused: [String] = []
 
   private static let keys: Set<URLResourceKey> = [
     .isHiddenKey, .isAliasFileKey, .isDirectoryKey, .isPackageKey, .contentTypeKey,
@@ -93,11 +139,17 @@ private struct Scan {
   /// Lists a folder's images and real subfolders; links wait in
   /// `pendingLinks` until the real tree is done.
   mutating func walk(_ folder: URL, prefix: String) {
-    guard let children = try? FileManager.default.contentsOfDirectory(
-      at: folder,
-      includingPropertiesForKeys: Array(Self.keys),
-      options: []
-    ) else { return }
+    let children: [URL]
+    do {
+      children = try FileManager.default.contentsOfDirectory(
+        at: folder,
+        includingPropertiesForKeys: Array(Self.keys),
+        options: []
+      )
+    } catch {
+      if FolderScan.isNotPermitted(error) { refused.append(String(prefix.dropLast())) }
+      return
+    }
     for child in children {
       guard let values = try? child.resourceValues(forKeys: Self.keys), values.isHidden != true else { continue }
       let name = prefix + child.lastPathComponent
@@ -113,17 +165,21 @@ private struct Scan {
   mutating func follow(_ link: Link) {
     var target = link.url
     for _ in 0..<Self.maxLinkHops {
-      guard let resolved = try? URL(resolvingAliasFileAt: target, options: [.withoutUI, .withoutMounting]) else {
-        return
+      // [D-links-outside-refused] Each step that can fail tells "not
+      // permitted" (logged by the caller) from missing or broken (skipped
+      // quietly, as before).
+      do {
+        target = try URL(resolvingAliasFileAt: target, options: [.withoutUI, .withoutMounting])
+        let values = try target.resourceValues(forKeys: Self.keys)
+        if values.isAliasFile == true { continue }
+        if values.isHidden == true { return }
+        // A refused privacy-protected image still reports its type, so check
+        // it can actually be opened.
+        if values.isDirectory != true { try FileHandle(forReadingFrom: target).close() }
+        add(target, values: values, name: link.name)
+      } catch {
+        if FolderScan.isNotPermitted(error) { refused.append(link.name) }
       }
-      target = resolved
-      guard let values = try? target.resourceValues(forKeys: Self.keys) else { return }  // broken
-      if values.isAliasFile == true { continue }
-      if values.isHidden == true { return }
-      // A refused privacy-protected image still reports its type, so check
-      // it can actually be opened.
-      if values.isDirectory != true, (try? FileHandle(forReadingFrom: target).close()) == nil { return }
-      add(target, values: values, name: link.name)
       return
     }
   }
