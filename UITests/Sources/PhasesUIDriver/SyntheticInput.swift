@@ -42,27 +42,73 @@ public enum SyntheticInput {
     try await pause(0.4)
   }
 
-  /// Presses `key`, holding Shift around it when `shift` is set. Shift is
-  /// pressed as a key of its own, down before `key` and up after it, as a
-  /// keyboard sends it. Flags on `key`'s events alone left the system
-  /// holding the modifier afterward, so later clicks came out as
-  /// modifier-clicks (GitHub issue #39; seen with Control in MDPrinter's
-  /// copy of this driver). Throws if Shift still reads held afterward.
-  package static func press(_ key: Key, shift: Bool = false) async throws {
-    let source = CGEventSource(stateID: .hidSystemState)
-    let flags: CGEventFlags = shift ? .maskShift : []
-    if shift { post(keyCode: shiftKeyCode, isDown: true, flags: .maskShift, source: source) }
-    post(keyCode: key.rawValue, isDown: true, flags: flags, source: source)
-    post(keyCode: key.rawValue, isDown: false, flags: flags, source: source)
-    if shift { post(keyCode: shiftKeyCode, isDown: false, flags: [], source: source) }
-    try await pause(0.15)
-    if CGEventSource.flagsState(.hidSystemState).contains(.maskShift) {
-      throw UITestFailure("Shift still reads held after pressing \(key) (GitHub issue #39); later clicks would be Shift-clicks")
+  /// A modifier key, pressed as a key of its own [D-input-modifier-keys].
+  /// Declared in the order they go down (and the reverse of how they come up).
+  public enum Modifier: CaseIterable, CustomStringConvertible, Sendable {
+    case control, option, shift, command
+
+    /// The left-hand key.
+    var keyCode: CGKeyCode {
+      switch self {
+      case .control: 59
+      case .option: 58
+      case .shift: 56
+      case .command: 55
+      }
+    }
+
+    var flag: CGEventFlags {
+      switch self {
+      case .control: .maskControl
+      case .option: .maskAlternate
+      case .shift: .maskShift
+      case .command: .maskCommand
+      }
+    }
+
+    public var description: String {
+      switch self {
+      case .control: "Control"
+      case .option: "Option"
+      case .shift: "Shift"
+      case .command: "Command"
+      }
     }
   }
 
-  /// The left Shift key.
-  private static let shiftKeyCode: CGKeyCode = 56
+  /// The modifiers the system reads as held right now.
+  package static func heldModifiers() -> [Modifier] {
+    let flags = CGEventSource.flagsState(.hidSystemState)
+    return Modifier.allCases.filter { flags.contains($0.flag) }
+  }
+
+  /// Presses `key` with `modifiers` held. Each modifier is pressed as a key
+  /// of its own, down before `key` and up after it, as a keyboard sends it.
+  /// Flags on `key`'s events alone left the system holding the modifier
+  /// afterward, so later clicks came out as modifier-clicks (GitHub issue
+  /// #39; seen with Control in MDPrinter's copy of this driver). Throws if
+  /// any modifier still reads held afterward [D-input-modifier-keys].
+  package static func press(_ key: Key, modifiers: Set<Modifier> = []) async throws {
+    let source = CGEventSource(stateID: .hidSystemState)
+    let ordered = Modifier.allCases.filter(modifiers.contains)
+    var held: CGEventFlags = []
+    for modifier in ordered {
+      held.insert(modifier.flag)
+      post(keyCode: modifier.keyCode, isDown: true, flags: held, source: source)
+    }
+    post(keyCode: key.rawValue, isDown: true, flags: held, source: source)
+    post(keyCode: key.rawValue, isDown: false, flags: held, source: source)
+    for modifier in ordered.reversed() {
+      held.remove(modifier.flag)
+      post(keyCode: modifier.keyCode, isDown: false, flags: held, source: source)
+    }
+    try await pause(0.15)
+    let stuck = heldModifiers()
+    if !stuck.isEmpty {
+      throw UITestFailure(
+        "\(stuck.map(\.description).joined(separator: ", ")) still reads held after pressing \(key) (GitHub issue #39); later clicks would carry it")
+    }
+  }
 
   private static func post(keyCode: CGKeyCode, isDown: Bool, flags: CGEventFlags, source: CGEventSource?) {
     let event = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: isDown)

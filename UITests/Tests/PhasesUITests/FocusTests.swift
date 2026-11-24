@@ -85,7 +85,7 @@ extension PhasesUITests {
         try await app.press(.tab)
         #expect(app.focusedElement()?.isInside(grid) != true, "One Tab didn't leave the grid")
 
-        try await app.press(.tab, shift: true)
+        try await app.press(.tab, modifiers: [.shift])
         try #require(app.focusedElement()?.isInside(grid) == true, "Shift-Tab didn't return to the grid")
 
         let top = try #require(grid.frame?.minY)
