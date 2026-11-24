@@ -2003,6 +2003,27 @@ Sandbox checks 1–3 deferred: GitHub issue #43.
   the sandboxed app can read and the unsandboxed runner can write. No
   app or entitlement change. It's a TESTING.md decision, so it needs the
   author's approval.
+- **Container probe, 2026-11-24 (Claude, author's request): the fix
+  above won't work as things stand.** From the shell the UI tests run
+  in (spawned by Bitrig's `claude`, so Bitrig is the responsible app),
+  every access to `~/Library/Containers/com.robertmohns.phases/Data`
+  failed with "Operation not permitted": listing `Data`, `Data/tmp`,
+  `Data/Library/Caches`, and `Data/Library/Application Support`, and
+  making a folder in each (*verified*). Listing the container's top level
+  and reading its metadata xattr worked. A control write, read and
+  delete in `~/Library/Caches` worked (*verified*), so the shell can write
+  in `~/Library` generally. No prompt appeared, and neither the TCC nor
+  the sandbox log recorded anything. The TCC database couldn't be opened
+  either (needs Full Disk Access), so Bitrig doesn't have it.
+  - *Explanation (recalled, not tested here):* since macOS 14, a process
+    outside an app's sandbox can't touch that app's Data container unless
+    its responsible app has Full Disk Access or the user consents ("would
+    like to access data from other apps"), or both are signed by the same
+    team. Bitrig and Phases are signed by different teams.
+  - *Not tried:* giving Bitrig Full Disk Access or App Data consent, both
+    the author's call, or a probe with Claude Code's own shell sandbox
+    turned off. The control write suggests that sandbox isn't what refused
+    (*inferred*).
 
 ## Retired designs
 
