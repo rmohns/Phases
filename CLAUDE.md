@@ -103,11 +103,12 @@
   `tools/…` branches stay; they hold tools we come back to. Docs cite
   the tag, not the branch: an experiment's `[X-…]` header names the tag
   and gets its outcome filled in.
-- **Testing.** Unit tests need no permission. Run them with `swift test`
-  in `UnitTests/`: `bitrig test` can't run them, since the Phases
-  scheme has no tests and `Phases.xcodeproj` doesn't build that package
-  (author, 2026-11-22; still so after the Xcode project conversion,
-  *verified* 2026-11-22 by Claude; GitHub issue #42). Prefer pulling decision
+- **Testing.** Unit tests need no permission. Run them with `bitrig test
+  -package UnitTests` from the project folder: `Phases.xcodeproj` holds
+  `UnitTests/` as a folder reference so Xcode loads the package
+  `[Q-bitrig-test-targets]` (GitHub issue #42, 2026-11-24). `swift test`
+  in `UnitTests/` still works, as a fallback when `bitrig` can't run.
+  Prefer pulling decision
   logic into pure files the unit tests can reach, as `WallpaperCheck`
   was; unit tests never launch Phases or exercise the UI
   `[D-tests-unhosted]`. Anything that drives the mouse and keyboard or

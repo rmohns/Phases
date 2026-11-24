@@ -2320,6 +2320,10 @@ never by hand in the project file `[D-xcode-project]`.
   - The Phases target skips Xcode's App Intents metadata step, since
     Phases has no App Intents; Xcode fights this, see
     `[Q-app-intents-metadata]`.
+  - The project lists the unit test package, `UnitTests/`, as a folder
+    reference, so `bitrig test -package UnitTests` runs it; nothing in
+    the app links it (2026-11-24, GitHub issue #42; TEST-TOOLS.md
+    `[Q-bitrig-test-targets]`).
 - `[D-bundle-id]` **The bundle ID is `com.robertmohns.phases`** (draft
   59), all lowercase, and permanent: preferences, the sandbox container,
   and privacy grants are all keyed to it.

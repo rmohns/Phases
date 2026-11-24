@@ -30,7 +30,7 @@ author's yes.
 
 | Group | Check | What runs | Takes | Build | Asks first | Required |
 |---|---|---|---|---|---|---|
-| Unit tests | Logic tests | `swift test` in `UnitTests/` | under a second once built | none (compiles the sources) | no | with every build |
+| Unit tests | Logic tests | `bitrig test -package UnitTests` (or `swift test` in `UnitTests/`) | under a second once built | none (compiles the sources) | no | with every build |
 | Hands-on checks | Interface tests | AX-driven UI tests in `UITests/`: the fast suite; the slow suite too when the change touches the sidebar | 1–3 min | the newest Bitrig build, in test mode `[D-ui-test-mode]` | yes | before merging any change to the window or the code it calls, and for every regression guard that's a UI test |
 | Hands-on checks | Cover checks | `[D-cover-checks]`, checks 1–9 | 15–20 min (*estimate*) | Release | yes | before merging cover work, and after any change to `CrossfadeController` |
 | Hands-on checks | Memory checks | `[D-memory-protocol]`: two runs of ten changes, the covers' cost and release, the no-covers baseline, the window check | 30–40 min (*estimate*) | Release | yes | two runs before and two after any change to covers, image loading, the thumbnail grid, or how wallpaper is set |
@@ -44,16 +44,20 @@ outranks another.
 ### What they are
 
 - A small Swift package in `UnitTests/`, using Swift Testing. Run it with
-  `swift test` from that folder (about 30 tests, well under a second once
-  built).
+  `bitrig test -package UnitTests` from the project folder (about 200
+  tests, well under a second once built). `swift test` from `UnitTests/`
+  runs the same tests without Bitrig's build cache, and is the fallback
+  when `bitrig` can't run.
   - *Why a package, not a test target in Project.json:* `swift test` runs
     without a test target or a generated Xcode project. The tooling fights
     the test-target route; see `[Q-bitrig-test-targets]`.
-  - *Since draft 59* the project is `Phases.xcodeproj` `[D-xcode-project]`,
-    which has no test target and doesn't build this package, so `bitrig
-    test` still can't run these tests (*verified* 2026-11-22 by Claude).
-    Whether to add a test target is GitHub issue #42; the write-up is in
-    `docs/handoffs/2026-11-22-xcode-project.md`.
+  - *Since draft 59* the project is `Phases.xcodeproj` `[D-xcode-project]`.
+    *Since 2026-11-24* it lists `UnitTests/` as a folder reference, so
+    Xcode loads the package and `bitrig test -package UnitTests` runs it.
+    The app links nothing from it, and the tests stay unhosted
+    `[D-tests-unhosted]` (GitHub issue #42; how, and what didn't work, in
+    `[Q-bitrig-test-targets]`). Until then only `swift test` could run
+    them (write-up: `docs/handoffs/2026-11-22-xcode-project.md`).
 
 ### What they cover
 

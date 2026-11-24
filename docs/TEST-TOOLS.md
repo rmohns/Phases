@@ -247,6 +247,40 @@ neither can leak into normal use.
     `Phases.xcodeproj` doesn't build the package (*verified* 2026-11-22 by
     Claude). Neither is the old Project.json refusal: an Xcode project can
     take a test target. Whether to add one is GitHub issue #42.
+  - *Update 2026-11-24 (GitHub issue #42):* `bitrig test -package
+    UnitTests` runs the unit tests once `Phases.xcodeproj` lists
+    `UnitTests/` as a plain folder reference in its file tree
+    (`{ "path": "UnitTests" }` in `project.xcproj`, added with
+    `xcrun xcodeproj group add-file UnitTests --group /`). Xcode then
+    loads the package and makes a `PhasesLogicTests` scheme for it; the
+    app links nothing from it, and the app's build only resolves it
+    (*verified* 2026-11-24 by Claude: 209 tests in 26 suites passed
+    through `bitrig test`, the same as `swift test`; a following `bitrig
+    build` of Phases compiled none of the package). What didn't work,
+    same day:
+    - A package dependency reference (`xcrun xcodeproj pkg add-local
+      UnitTests`, a `"packages"` entry): Bitrig reported "xcodebuild found
+      none of the package's test targets ('PhasesLogicTests')", and
+      xcodebuild said the scheme "is not currently configured for the
+      build-for-testing action" (*verified*).
+    - The same, plus a library product in `Package.swift`: Xcode then
+      listed a `PhasesLogic` scheme, but `-package` failed the same way,
+      and `bitrig test -scheme PhasesLogic` found no tests (*verified*).
+      Renaming the package to match its folder changed nothing
+      (*verified*).
+    - With the folder reference, the product isn't needed (*verified*),
+      so `Package.swift` declares none (only its comment changed).
+      *Explanation (hypothesis, from
+      the results):* a dependency reference only exposes a package's
+      products, while a folder reference opens the whole package, as a
+      package dragged into Xcode's navigator does.
+  - *Side effect:* the test build runs Xcode's App Intents metadata step
+    on the package's test bundle (`PhasesLogicTests-product`), which logs
+    the "Metadata extraction skipped" warning (*verified* 2026-11-24). A
+    package can't set Xcode build settings, so the app target's fix for
+    that warning (GitHub issue #46) doesn't reach it. Harmless.
+  - The UI tests stay a separate package run with `swift test`: they
+    drive the app through the AX API by design `[D-ui-test-runner]`.
 - `[Q-bitrig-build-dates]` **File dates in Bitrig's Builds folder don't
   say which build is newest.** Every `Phases.app` bundle carries one
   date (12:36:03 on 2026-11-03; Nov 22 12:55:28 on 2026-11-24), whatever
