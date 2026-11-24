@@ -247,6 +247,21 @@ neither can leak into normal use.
     `Phases.xcodeproj` doesn't build the package (*verified* 2026-11-22 by
     Claude). Neither is the old Project.json refusal: an Xcode project can
     take a test target. Whether to add one is GitHub issue #42.
+- `[Q-bitrig-build-dates]` **File dates in Bitrig's Builds folder don't
+  say which build is newest.** Every `Phases.app` bundle carries one
+  date (12:36:03 on 2026-11-03; Nov 22 12:55:28 on 2026-11-24), whatever
+  build it came from (*verified* both days, `stat`). The executable
+  inside is no better: when a build doesn't relink it, the copy keeps
+  the earlier build's date. On 2026-11-24 the build in folder
+  `1795550139491-…` (made 14:55:39) had an executable dated 14:44:22,
+  the same as the build before it (*verified* 2026-11-24 by Claude,
+  `stat`). The folder names do carry the build time, as milliseconds
+  since 1970 (`1795549462628` is 14:44:22.628 that day, matching its
+  build log), *verified* 2026-11-24 for all three builds present. Why
+  the dates are flattened is not known (*hypothesis:* Bitrig copies
+  earlier builds into the workspace keeping their dates). Bitrig keeps
+  a build's app until three newer builds replace it (per
+  `bitrig --help`). Shapes `[D-ui-test-build-pick]`.
 
 - `[Q-launch-activate-refused]` **A menu bar app launched in the
   background can't bring itself to the front with `NSApp.activate()`

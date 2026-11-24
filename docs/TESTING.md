@@ -290,12 +290,31 @@ The pure logic that decides what the app does:
     finds controls by accessibility identifier `[D-ui-test-ids]`, clicks,
     drags, and types with synthetic mouse and key events, reads results
     back through the AX API, and force-quits the instance after each test.
-  - *Which build:* the newest by its executable's modification date, and
-    the harness prints the path and date. Until 2026-11-03 it compared
-    the `Phases.app` bundles' dates, which Bitrig sets the same on every
-    build, so with several builds present it could test a stale one
-    (*verified* 2026-11-03, `stat`; `[L-reopen-event]`). Runs before
-    then may have tested an older build than intended.
+  - *Which build:* see `[D-ui-test-build-pick]`, next.
+- `[D-ui-test-build-pick]` **The UI tests launch the newest Bitrig Debug
+  build, by the time in its folder's name, and refuse it unless its
+  build number matches the project's.**
+  - *How:* each build sits in
+    `Builds/<project>/Apps/Debug/Phases.app/<ms since 1970>-<ID>/`; the
+    harness takes the folder with the largest time, reads the build's
+    `CFBundleVersion`, and compares it with `CURRENT_PROJECT_VERSION` in
+    `Phases.xcodeproj/project.xcproj`. On a mismatch the test fails before
+    launching anything and says to build again. It prints the path, build
+    number, and build time of what it launches. `PHASES_APP` still
+    overrides both, unchecked, and the printout says so. The logic is
+    pure (`UITests/Sources/PhasesUIDriver/BuildPick.swift`), symlinked
+    into the unit tests, and tested there (`BuildPickTests`).
+  - *Why:* file dates can't tell Bitrig's builds apart
+    `[Q-bitrig-build-dates]`. The build number is the spec draft
+    `[D-version-in-settings]`, so the check catches a build from an
+    earlier draft; it can't catch code changed since the last build
+    within one draft.
+  - *History:* until 2026-11-03 the harness compared the `Phases.app`
+    bundles' dates; then, until 2026-11-24, the executables' dates. Both
+    can tie, so with several builds present a run could test a stale one
+    (*verified* 2026-11-03, `stat`; `[L-reopen-event]`; GitHub issue
+    #47). Runs before 2026-11-24 may have tested an older build than
+    intended; each printed the path it used.
   - *Safety:* before any click or keystroke, the harness checks that the
     test instance of Phases is frontmost; if not, the test fails without
     sending input, so a stray keystroke can't land in another app.
