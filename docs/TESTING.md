@@ -415,7 +415,7 @@ The pure logic that decides what the app does:
   build): with the 2 s recheck, the fast suite passed 13 of 13 (116 s).
   The harness doesn't log whether a recheck was needed, so this one run
   doesn't show the recheck was what fixed it.
-- 2026-11-24 (Claude, `fix/driver-shift-key`, with the author's yes):
+- 2026-11-24 (Claude, tag `archive/fix/driver-shift-key`, with the author's yes):
   modifiers are now pressed as keys of their own `[D-input-modifier-keys]`
   (GitHub issue #39). Old and new driver checked with `phases-drive`
   (results in TEST-TOOLS.md under that tag). Then the fast suite on

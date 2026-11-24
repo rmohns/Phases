@@ -64,7 +64,7 @@ Used by both groups. Reference, not steps.
     make a test pass or fail for the wrong reason. The only modified
     press in the tests is Shift-Tab in `FocusTests`.
   - *Verified* 2026-11-24 by Claude (`phases-drive` built from `main` at
-    `257a247` and from `fix/driver-shift-key`, keys typed into a scratch
+    `257a247` and from the fix branch, tag `archive/fix/driver-shift-key`, keys typed into a scratch
     TextEdit file, modifiers read with `phases-drive flags`):
     - **The old driver left Shift held.** After its Shift-X the system
       read Shift held, still held 1 s later. Its next plain X typed a
