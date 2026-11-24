@@ -531,6 +531,31 @@ once run.
   "Workarounds". Experiment record: `[L-reopen-event]`, now in
   EXPERIMENTS.md `[X-reopen-window]` (in LEARNINGS.md until 2026-11-09).
 
+### Build (Xcode)
+
+- `[Q-app-intents-metadata]` **Xcode runs its App Intents metadata step
+  on every app build and warns when the app doesn't use App Intents
+  (Xcode 27.3 beta, 27C5035i).** The step, `ExtractAppIntentsMetadata`,
+  logged "Metadata extraction skipped, no AppIntents.framework dependency
+  found" on every Debug and Release build, incremental ones included
+  (*verified* 2026-11-24 by Claude, from Bitrig's build logs; GitHub
+  issue #46). Phases has no App Intents (*verified* 2026-11-24, by
+  searching the code for `import AppIntents`).
+  - *Workaround:* the Phases target sets `LM_SKIP_METADATA_EXTRACTION =
+    YES` (both configurations), a setting Xcode's build system reads
+    (found in SwiftBuild's `SWBCore`, 2026-11-24) that drops the step.
+    With it, the build log has neither the step nor the warning
+    (*verified* 2026-11-24 by Claude, `bitrig build`). The other
+    candidate, `LM_FILTER_WARNINGS` (`--quiet-warnings`), would still
+    run the step for nothing.
+  - *If Phases ever adopts App Intents* (Shortcuts, Siri, Spotlight
+    actions), remove the setting first, or Xcode won't extract the
+    intents' metadata and the system won't find them (*recalled*, not
+    tested). Shapes `[D-xcode-project]`.
+  - *Not ours:* the build log's other warning, xcodebuild's "Using the
+    first of multiple matching destinations", comes from how Bitrig
+    calls xcodebuild, not from the project (*observed* 2026-11-24).
+
 ## Workarounds
 
 How the tagged decisions route around the quirks above.

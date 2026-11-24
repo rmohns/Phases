@@ -2317,6 +2317,9 @@ never by hand in the project file `[D-xcode-project]`.
     `[Q-bitrig-test-targets]` (GitHub issue #42). An Xcode project fixes
     the first and opens the way to the second; adding a test target is a
     change of its own.
+  - The Phases target skips Xcode's App Intents metadata step, since
+    Phases has no App Intents; Xcode fights this, see
+    `[Q-app-intents-metadata]`.
 - `[D-bundle-id]` **The bundle ID is `com.robertmohns.phases`** (draft
   59), all lowercase, and permanent: preferences, the sandbox container,
   and privacy grants are all keyed to it.
