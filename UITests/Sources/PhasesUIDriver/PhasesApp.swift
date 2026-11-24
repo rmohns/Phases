@@ -285,9 +285,12 @@ public final class PhasesApp {
     return "\(name) (pid \(pid))"
   }
 
-  /// `PHASES_APP`, or the newest Debug build Bitrig made for this project.
+  /// `PHASES_APP`, or the newest Debug build Bitrig made for this project,
+  /// by the time in its folder's name, refused unless its build number
+  /// matches the project's [D-ui-test-build-pick].
   private static func appURL() throws -> URL {
     if let path = ProcessInfo.processInfo.environment["PHASES_APP"] {
+      print("Testing \(path) (PHASES_APP; not checked)")
       return URL(filePath: path, directoryHint: .isDirectory)
     }
     // UITests/Sources/PhasesUIDriver/PhasesApp.swift → project folder.
@@ -296,24 +299,20 @@ public final class PhasesApp {
     let builds = project.deletingLastPathComponent().deletingLastPathComponent()
       .appending(path: "Builds/\(project.lastPathComponent)/Apps/Debug/Phases.app")
     let fm = FileManager.default
-    let candidates = (try? fm.contentsOfDirectory(at: builds, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
-    let newest = candidates
-      .map { $0.appending(path: "Phases.app") }
-      .filter { fm.fileExists(atPath: $0.path(percentEncoded: false)) }
-      .max { modified($0) < modified($1) }
-    guard let newest else {
+    let folders = ((try? fm.contentsOfDirectory(atPath: builds.path(percentEncoded: false))) ?? [])
+      .filter { fm.fileExists(atPath: builds.appending(path: "\($0)/Phases.app").path(percentEncoded: false)) }
+    guard let folder = BuildPick.newest(folderNames: folders), let built = BuildPick.buildTime(folderName: folder) else {
       throw UITestFailure("No built Phases.app under \(builds.path(percentEncoded: false)); build first, or set PHASES_APP.")
     }
-    print("Testing \(newest.path(percentEncoded: false)), built \(modified(newest))")
-    return newest
-  }
-
-  /// When the app was built: its executable's date. Bitrig gives every
-  /// `Phases.app` bundle the same date, so the bundle's own can't tell
-  /// builds apart (TESTING.md "Interface tests", 2026-11-03).
-  private static func modified(_ app: URL) -> Date {
-    let executable = app.appending(path: "Contents/MacOS/Phases")
-    return (try? executable.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
+    let app = builds.appending(path: "\(folder)/Phases.app")
+    let buildNumber = Bundle(url: app)?.object(forInfoDictionaryKey: "CFBundleVersion") as? String
+    let projectFile = project.appending(path: "Phases.xcodeproj/project.xcproj")
+    let projectNumber = (try? String(contentsOf: projectFile, encoding: .utf8)).flatMap(BuildPick.projectVersion)
+    if let mismatch = BuildPick.versionMismatch(built: buildNumber, project: projectNumber) {
+      throw UITestFailure("\(mismatch) (\(app.path(percentEncoded: false))) Or set PHASES_APP.")
+    }
+    print("Testing \(app.path(percentEncoded: false)), build \(buildNumber ?? "?"), built \(built)")
+    return app
   }
 
   // MARK: - Reading the window
