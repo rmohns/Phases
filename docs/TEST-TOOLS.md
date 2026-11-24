@@ -166,6 +166,16 @@ neither can leak into normal use.
     pause's one line never triggered it, and a real outside change
     would mean changing the real wallpaper (author's approval,
     2026-11-07, GitHub issue #30).
+  - `[D-test-memory-size]` act as if the Mac had `<n>` GB of memory,
+    when launched with `-PhasesUITestMemoryGB <n>` as well (a whole
+    number of GB, 1024³ bytes each). Only the low-memory note
+    `[D-low-memory-note]` reads it; the About section's Memory line
+    `[D-memory-in-about]` is Phases' own use, not the Mac's, and isn't
+    faked. Ignored outside test mode. *Why:* on any one Mac the note
+    either always or never shows, so without it a UI test couldn't check
+    both sides. Faking the Mac's memory rather than moving the 16 GB line
+    tests the real threshold (author asked for a way to test it,
+    2026-11-24, GitHub issue #2).
   - AppKit's own saved window frame and sidebar layout live in the normal
     settings, outside the separate store. The UI tests record both before
     each launch, clear them so the test starts from the defaults, and put

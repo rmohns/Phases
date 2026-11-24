@@ -18,10 +18,10 @@ extension PhasesUITests {
     @Test func windowOpenedWhilePausedStartsBelowTheToolbar() async throws {
       let app = try await PhasesApp.launch(opensWindow: false)
       defer { app.quit() }
-      try await app.chooseMenuItem("Pause Schedule")
+      try await app.chooseMenuItem("Pause Wallpaper Changes")
       try await app.reopenWindow()
       let resume = try await waitFor("the pause banner") { try? app.element("pauseBannerResume") }
-      try expectBelowToolbar(resume, "The banner's Resume Schedule button", app: app)
+      try expectBelowToolbar(resume, "The banner's Resume Wallpaper Changes button", app: app)
       let panel = try #require(try app.sidebarRows().first, "No sidebar rows")
       try expectBelowToolbar(panel, "The branding panel", app: app)
     }
@@ -43,7 +43,7 @@ extension PhasesUITests {
       let resume = try await waitFor("the pause banner") { try? app.element("pauseBannerResume") }
       // Let the first layout passes settle; the shift lands after them.
       try await Task.sleep(for: .seconds(1))
-      try expectBelowToolbar(resume, "The banner's Resume Schedule button", app: app)
+      try expectBelowToolbar(resume, "The banner's Resume Wallpaper Changes button", app: app)
       let panel = try #require(try app.sidebarRows().first, "No sidebar rows")
       try expectBelowToolbar(panel, "The branding panel", app: app)
     }
@@ -54,12 +54,12 @@ extension PhasesUITests {
     @Test func bannerFollowsTwentyToggles() async throws {
       try await withPhases { app in
         for round in 1...10 {
-          try await app.chooseMenuItem("Pause Schedule")
+          try await app.chooseMenuItem("Pause Wallpaper Changes")
           let resume = try await waitFor("the pause banner, round \(round)", timeout: .seconds(3)) {
             try? app.element("pauseBannerResume")
           }
-          try expectBelowToolbar(resume, "Round \(round): the banner's Resume Schedule button", app: app)
-          try await app.chooseMenuItem("Resume Schedule")
+          try expectBelowToolbar(resume, "Round \(round): the banner's Resume Wallpaper Changes button", app: app)
+          try await app.chooseMenuItem("Resume Wallpaper Changes")
           try await waitUntil("the pause banner to go, round \(round)", timeout: .seconds(3)) {
             (try? app.element("pauseBannerResume")) == nil
           }

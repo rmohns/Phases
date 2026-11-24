@@ -3,40 +3,48 @@ import SwiftUI
 struct SettingsView: View {
   @Bindable var scheduler: WallpaperScheduler
   @State private var isConfirmingLaunchAtLogin = false
+  /// [D-memory-in-about] Read each time Settings appears, not on every
+  /// body evaluation.
+  @State private var memoryFootprint: UInt64?
 
   var body: some View {
     Form {
-      // [D-settings-schedule-switch] At the top for now; a Settings cleanup
-      // may move it. No note: the pause banner says why [D-window-pause-banner].
-      Section("Schedule") {
-        Toggle("Change wallpaper on schedule", isOn: changesOnScheduleBinding)
+      // [D-settings-order] [D-settings-pause-switch] On means paused; same
+      // state as the menu's Pause Wallpaper Changes. No heading, and no
+      // note: the pause banner says why [D-window-pause-banner].
+      Section {
+        Toggle("Pause wallpaper changes", isOn: $scheduler.isPaused)
       }
 
       ImageSourcesSection(scheduler: scheduler)
 
-      Section("Displays") {
-        Picker("Displays", selection: $scheduler.displayMode) {
-          ForEach(DisplayMode.allCases) { mode in
-            Text(mode.title).tag(mode)
-          }
-        }
-        .pickerStyle(.radioGroup)
-        .labelsHidden()
-        Text("Applies to displays that don't have their own images in a phase. Changes apply to the current Space on each display.")
-          .font(.caption)
-          .foregroundStyle(.secondary)
-      }
+      // [D-sharing-no-interface] Display sharing has no control for now; the preference still applies.
 
       Section("Transition") {
         // [D-reduce-motion-note] Dimmed, values kept, while Reduce Motion is on.
         let controlsEnabled = ReduceMotionNote.controlsEnabled(reducesMotion: scheduler.reducesMotion)
-        Picker("Transition", selection: $scheduler.transitionStyle) {
-          ForEach(TransitionStyle.allCases) { style in
-            Text(style.title).tag(style)
+        // [D-low-memory-note] The note shares the control's row: no
+        // separator, normal size.
+        VStack(alignment: .leading, spacing: 6) {
+          Picker("Transition", selection: $scheduler.transitionStyle) {
+            ForEach(TransitionStyle.allCases) { style in
+              Text(style.title).tag(style)
+            }
+          }
+          .pickerStyle(.segmented)
+          .disabled(!controlsEnabled)
+          if let note = LowMemoryNote.text(
+            physicalMemory: MemoryUse.physicalMemory,
+            transitionStyle: scheduler.transitionStyle,
+            reducesMotion: scheduler.reducesMotion,
+            footprint: memoryFootprint
+          ) {
+            Text(note)
+              .foregroundStyle(.secondary)
+              // [D-ui-test-ids]
+              .accessibilityIdentifier("lowMemoryNote")
           }
         }
-        .pickerStyle(.segmented)
-        .disabled(!controlsEnabled)
         if scheduler.transitionStyle == .crossfade {
           LabeledContent("Duration") {
             HStack {
@@ -68,7 +76,13 @@ struct SettingsView: View {
         }
       }
 
-      Section("Startup") {
+      Section("Location") {
+        LocationStatusView(scheduler: scheduler)
+      }
+
+      // [D-settings-order] Startup and Quitting, merged. [D-restore-on-quit]
+      // No Quit button; Quit is in the app menu [D-app-menu].
+      Section("Launch & Quit") {
         Toggle("Launch at Login", isOn: launchAtLoginBinding)
         if scheduler.launchAtLogin.needsApproval {
           HStack {
@@ -81,14 +95,6 @@ struct SettingsView: View {
           Text(error)
             .foregroundStyle(.red)
         }
-      }
-
-      Section("Location") {
-        LocationStatusView(scheduler: scheduler)
-      }
-
-      // [D-restore-on-quit] No Quit button; Quit is in the app menu [D-app-menu].
-      Section("Quitting") {
         Toggle(isOn: $scheduler.restoresWallpaperOnQuit) {
           Text("Restore original wallpaper when quitting")
           Text(
@@ -111,10 +117,15 @@ struct SettingsView: View {
         if let built = AppVersion.buildDate {
           LabeledContent("Built", value: built.formatted(date: .abbreviated, time: .shortened))
         }
+        // [D-memory-in-about] A snapshot taken when Settings appears.
+        if let memoryFootprint {
+          LabeledContent("Memory", value: LowMemoryNote.memoryText(bytes: memoryFootprint))
+        }
       }
     }
     .formStyle(.grouped)
     .navigationTitle("Settings")
+    .onAppear { memoryFootprint = MemoryUse.footprint() }
     .alert("Launch Phases at login?", isPresented: $isConfirmingLaunchAtLogin) {
       Button("Add Login Item") { scheduler.launchAtLogin.enable() }
       Button("Cancel", role: .cancel) {}
@@ -122,15 +133,6 @@ struct SettingsView: View {
       Text(
         "This adds Phases to System Settings › General › Login Items so it opens when you log in. It doesn't install any launch agents or background helpers. You can remove it at any time."
       )
-    }
-  }
-
-  /// The inverse of Pause Schedule; turning it on resumes.
-  private var changesOnScheduleBinding: Binding<Bool> {
-    Binding {
-      !scheduler.isPaused
-    } set: { isOn in
-      scheduler.isPaused = !isOn
     }
   }
 
@@ -166,26 +168,46 @@ private struct LocationStatusView: View {
             NSWorkspace.shared.open(url)
           }
         }
+        LocationPrivacyNote()
       }
     } else if let coordinate = location.coordinate {
-      LabeledContent("Current location") {
-        Text(
-          "\(coordinate.latitude.formatted(.number.precision(.fractionLength(2)))), \(coordinate.longitude.formatted(.number.precision(.fractionLength(2))))"
-        )
-        .monospacedDigit()
+      // [D-location-privacy-note] Joined to Current location: same row.
+      VStack(alignment: .leading, spacing: 6) {
+        LabeledContent("Current location") {
+          Text(
+            "\(coordinate.latitude.formatted(.number.precision(.fractionLength(2)))), \(coordinate.longitude.formatted(.number.precision(.fractionLength(2))))"
+          )
+          .monospacedDigit()
+        }
+        LocationPrivacyNote()
       }
       SolarTimesView(coordinate: coordinate)
       LocationUpdateRow(location: location)
     } else if scheduler.needsLocation {
-      HStack {
-        Text("Waiting for location…")
-          .foregroundStyle(.secondary)
-        Button("Retry") { location.refresh() }
+      VStack(alignment: .leading, spacing: 6) {
+        HStack {
+          Text("Waiting for location…")
+            .foregroundStyle(.secondary)
+          Button("Retry") { location.refresh() }
+        }
+        LocationPrivacyNote()
       }
     } else {
-      Text("Location is requested when you add a dawn or dusk phase.")
-        .foregroundStyle(.secondary)
+      VStack(alignment: .leading, spacing: 6) {
+        Text("Location is requested when you add a dawn or dusk phase.")
+          .foregroundStyle(.secondary)
+        LocationPrivacyNote()
+      }
     }
+  }
+}
+
+/// [D-location-privacy-note] Shown in every state, in the same row as the
+/// section's first line: under Current location when there is one.
+private struct LocationPrivacyNote: View {
+  var body: some View {
+    Text("Phases uses this to work out your dawn and dusk times. Phases never sends your location anywhere; it stays on your Mac.")
+      .foregroundStyle(.secondary)
   }
 }
 

@@ -55,8 +55,9 @@ final class WallpaperScheduler {
     didSet { SettingsStore.defaults.set(asksBeforeQuitting, forKey: Keys.asksBeforeQuitting) }
   }
 
-  /// Pause Schedule, and the inverse of Settings' "Change wallpaper on
-  /// schedule" [D-settings-schedule-switch]: one state, two controls.
+  /// Pause Wallpaper Changes [D-menu-pause-verb], and Settings' "Pause
+  /// wallpaper changes" switch [D-settings-pause-switch] (on means paused):
+  /// one state, two controls.
   var isPaused: Bool {
     didSet {
       SettingsStore.defaults.set(isPaused, forKey: Keys.isPaused)
