@@ -10,9 +10,9 @@ between them at the right time, with a crossfade.
 It's a personal project, not on the App Store, and still in active
 development.
 
-![The Phases window, editing a Dusk phase that starts an hour before dusk and picks randomly from four selected images](docs/images/phases-window.png)
+![The Phases window, editing a Dusk phase that starts an hour before dusk and picks randomly from selected images](docs/images/phases-window-dark-phase-edit.png)
 
-## Origin
+## Why this exists
 
 My friends share sky photos in a `cloud-game` channel on our Discord server. Some of them are pretty amazing. I wanted my Mac’s screens to feature them, but I also like different desktop pictures at different times of day, and I like variety.
 
@@ -44,6 +44,8 @@ It isn’t the best app ever, but it’s mine, so I like it. Maybe you’ll find
 Phases lives in the menu bar. Everything else, Settings included, is in
 one window, opened from the menu. While that window is open, Phases shows
 a Dock icon, appears in ⌘Tab, and has a normal menu bar with Quit.
+
+![The Phases settings window, showing image sources, transition options, and location info for dusk and day time lookup](docs/images/phases-window-light-settings.png)
 
 ## Privacy and permissions
 
