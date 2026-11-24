@@ -20,7 +20,7 @@ extension PhasesUITests {
     /// [D-window-helper-order] [D-sidebar-limits-watch] Limits right after
     /// opening. The slow suite checks them again after SwiftUI's rewrite.
     @Test func dividerStaysWithin240To320() async throws {
-      try await withPhases { app in
+      try await withPhases(windowSize: try sidebarLimitsWindowSize()) { app in
         try await expectSidebarLimitsHold(app)
       }
     }
@@ -34,7 +34,7 @@ extension PhasesUITests {
   struct SlowSidebarTests {
     @Test(arguments: 1...3)
     func limitsHoldAfterSwiftUIRewrite(launch: Int) async throws {
-      try await withPhases { app in
+      try await withPhases(windowSize: try sidebarLimitsWindowSize()) { app in
         try await Task.sleep(for: .seconds(30))
         try await expectSidebarLimitsHold(app)
       }

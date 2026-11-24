@@ -346,3 +346,11 @@ the Mac in tests".
   - *Update, same day:* failed the same way in the next full run, on
     the draft 62 build (239.5 pt again), so it reproduces (*verified*,
     2 of 2 runs). Still not diagnosed; GitHub issue #49.
+  - *Update, diagnosed the same day:* a test bug, not an app one. The
+    sidebar can only widen to 320 pt in a window at least 780 pt wide
+    (320 + the detail pane's 460 pt minimum); the test window had opened
+    narrower (*observed* by hand by the author; why it opened narrow is
+    unknown). The sidebar-limit tests now open the window at 1000 pt, or
+    as wide as a narrow screen allows, and the test passed (*verified*,
+    Claude, 1 run). Record: `[X-ui-tests-sandboxed]`, "The divider
+    failure explained".
