@@ -2,15 +2,16 @@ import SwiftUI
 
 private let diagLog = Diagnostics.logger("window")
 
-/// [D-window-pause-banner] Above the detail pane while paused: what's wrong
-/// on the left, the fix on the right. Always in the window and reads
-/// `isPaused` in its own body, so it follows the pause whatever else
-/// redraws [Q-safe-area-inset-refresh].
+/// [D-window-pause-banner] Above the detail pane while paused for an
+/// outside change (never for a pause someone chose): what's wrong on the
+/// left, the fix on the right. Always in the window and reads the pause in
+/// its own body, so it follows the pause whatever else redraws
+/// [Q-safe-area-inset-refresh].
 struct PauseBanner: View {
   var scheduler: WallpaperScheduler
 
   var body: some View {
-    if scheduler.isPaused {
+    if scheduler.isPausedForOutsideChange, let pausedAt = scheduler.pausedForOutsideChangeAt {
       VStack(spacing: 0) {
         HStack(spacing: 10) {
           HStack(spacing: 10) {
@@ -20,7 +21,7 @@ struct PauseBanner: View {
             VStack(alignment: .leading, spacing: 2) {
               Text("Phases is paused")
                 .font(.headline)
-              Text(PauseReason.text(pausedForOutsideChangeAt: scheduler.pausedForOutsideChangeAt))
+              Text(PauseReason.text(pausedForOutsideChangeAt: pausedAt))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 // [Q-fixed-size-text-rigid-split] No `.fixedSize` here: with

@@ -125,6 +125,15 @@ public final class PhasesApp {
     try await waitUntil("the window to close") { windowIfOpen == nil }
   }
 
+  /// [D-test-outside-change-now] Pauses the test-mode instance as if the
+  /// wallpaper had just been changed in System Settings. Only a test-mode
+  /// launch listens, so a Phases the author is running ignores it.
+  public func fakeOutsideChange() {
+    DistributedNotificationCenter.default().postNotificationName(
+      .init("PhasesUITestOutsideChange"), object: nil, userInfo: nil, deliverImmediately: true
+    )
+  }
+
   /// Reopens the window from the menu bar, as on launch.
   public func reopenWindow() async throws {
     try await openWindowFromMenuBar()

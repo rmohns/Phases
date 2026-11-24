@@ -34,7 +34,7 @@ struct MenuContent: View {
   /// [D-menu-status-header] One compact line, e.g. "Dusk · until 7:13 PM".
   /// [D-outside-change-notice] An outside change replaces the phase line.
   private var statusLine: String {
-    if scheduler.isPaused && scheduler.pausedForOutsideChangeAt != nil {
+    if scheduler.isPausedForOutsideChange {
       return "Paused · wallpaper changed in System Settings"
     }
     guard let phase = scheduler.activePhase else { return "No active phase" }

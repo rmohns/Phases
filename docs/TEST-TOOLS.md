@@ -166,6 +166,22 @@ neither can leak into normal use.
     pause's one line never triggered it, and a real outside change
     would mean changing the real wallpaper (author's approval,
     2026-11-07, GitHub issue #30).
+  - `[D-test-outside-change-now]` pause as if the wallpaper had just
+    been changed in System Settings, at any moment, when the test posts
+    the distributed notification `PhasesUITestOutsideChange` (the
+    driver's `fakeOutsideChange()`). As with the launch switch above:
+    no notification, and nothing changes but the pause. Only a
+    test-mode launch listens for it. *Why:* from draft 61 the banner
+    shows only for an outside-change pause `[D-window-pause-banner]`,
+    so the test that pauses and resumes 20 times needs to cause one
+    again and again without relaunching (author's approval, 2026-11-24).
+    - *Right after launch, one post can be lost:* posted as soon as
+      `launch(opensWindow: false)` returned, the pause never arrived
+      (*verified* by Claude, 2026-11-24; the cause, probably Phases not
+      listening yet, is a hypothesis). A test that fakes one before the
+      window opens posts until the menu bar item's AX **title** reads
+      "Phases, paused"; its AX description is empty (*verified* the same
+      day).
   - `[D-test-memory-size]` act as if the Mac had `<n>` GB of memory,
     when launched with `-PhasesUITestMemoryGB <n>` as well (a whole
     number of GB, 1024³ bytes each). Only the low-memory note

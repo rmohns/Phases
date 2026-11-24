@@ -4,16 +4,15 @@ import Foundation
 /// pause banner shows. Pure, so the unit tests can reach it
 /// [D-tests-unhosted].
 enum PauseReason {
-  /// "Paused from the menu." for a manual pause; for an outside change
-  /// [D-outside-change-pauses], when it happened, with the date added when
-  /// it wasn't today.
+  /// When the outside change [D-outside-change-pauses] happened, with the
+  /// date added when it wasn't today. A manual pause has no banner, so no
+  /// reason (draft 61).
   static func text(
-    pausedForOutsideChangeAt date: Date?,
+    pausedForOutsideChangeAt date: Date,
     now: Date = Date(),
     calendar: Calendar = .current,
     locale: Locale = .autoupdatingCurrent
   ) -> String {
-    guard let date else { return "Paused from the menu." }
     var style = Date.FormatStyle(date: .omitted, time: .shortened)
     if !calendar.isDate(date, inSameDayAs: now) {
       style = Date.FormatStyle(date: .abbreviated, time: .shortened)
