@@ -1950,6 +1950,60 @@ Bitrig build and the installed copy (`[L-photos-bitrig-vs-installed]`,
 *observed*), and counts it passing unless it persists once installed.
 Sandbox checks 1–3 deferred: GitHub issue #43.
 
+## UI tests on the sandboxed build
+
+### `[X-ui-tests-sandboxed]` First fast-suite run since the sandbox
+
+- **Question:** does the UI test harness still work now that Phases is
+  sandboxed (draft 59 on), and does the #47 build pick choose the right
+  build?
+- **When and on what:** 2026-11-24, 15:2x local, by Claude with the
+  author's yes. `main` at `bbd8735`, Debug build
+  `1795551375230-57492B11` (build 61, made 15:16:15). No branch; nothing
+  changed.
+- **Outcome:** the build pick works; the image-folder tests fail under
+  the sandbox. Digest: LEARNINGS.md `[L-ui-tests-sandboxed]`. Not fixed.
+- **Run 1:** `swift test --filter toolbarIs52PointsTall` in `UITests/`:
+  passed (7.8 s). The harness printed the newest build, number 61
+  (*verified*).
+- **Run 2:** the fast suite, `swift test` in `UITests/` (280 s): 32 tests
+  in 11 suites, **20 passed, 12 failed**. All 31 launches used the same,
+  newest build (*verified*, the harness's printout).
+  - Failed on missing image content: `imageFolderNameScreenshot` (no
+    `imageSourceCount`), `gridIsOneTabStopAndArrowsScroll` and
+    `arrowKeysCrossSources` (no `imageGrid`), `eachSourceHasAHeadingInOrder`,
+    `selectAllSelectsBothSources`, `settingsRowsCountPerSourceAndTogglePerRow`
+    (timed out), and all five `PhotosSourcesTests` (timed out waiting for
+    the album list).
+  - Failed otherwise: `dividerStaysWithin240To320`. Dragged far right,
+    the sidebar stayed 239.5 pt (expected 320); the far-left drags
+    measured as expected. *Observed* once; no rerun.
+  - Passed: everything that needs no image content (toolbar, branding,
+    rename-on-type, remove button, undo, tab, low-memory note, pause
+    banner, phase list, Photos denied, relaunch, divider far left).
+- **Evidence for the cause:** the run's screenshot of the image source
+  row (`UITests/Screenshots/2026-11-24T202423 image folder name.png`)
+  shows the test folder under `/var/folders/…` with "Can't open" and
+  Locate…, not its image count (*verified*). The harness passes that
+  folder by `-PhasesUITestImages` with no bookmark, and the sandbox only
+  lets Phases read folders the user picked or its own container
+  (*recalled* sandbox rules; the entitlements grant
+  `files.user-selected.read-only` and one home-relative exception). The
+  system log kept no sandbox denials for Phases over the run (`log show`
+  for "sandbox" and "Phases"; denials can go unlogged, *recalled*), so
+  the sandbox cause is *inferred* from the screenshot, not shown by a
+  denial. The fake Photos library (`-PhasesUITestPhotos`) is presumably
+  blocked the same way (*hypothesis*).
+- **Predicted:** the sandbox handoff
+  (`docs/handoffs/2026-11-23-sandbox.md`, follow-ups) flagged that the
+  harness's temporary folders without bookmarks might behave differently
+  sandboxed.
+- **Possible fix (not tried):** make the test folders inside Phases' own
+  container (`~/Library/Containers/com.robertmohns.phases/Data/…`), which
+  the sandboxed app can read and the unsandboxed runner can write. No
+  app or entitlement change. It's a TESTING.md decision, so it needs the
+  author's approval.
+
 ## Retired designs
 
 Designs that were on `main` and have since been replaced. Moved here

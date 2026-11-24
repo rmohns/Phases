@@ -335,3 +335,13 @@ Findings about the test tools themselves (`[L-nswindow-screen-rect]`,
 `[L-settings-panes]`, `[L-synthetic-clicks]`, `[L-cover-check-driving]`,
 `[L-no-fullscreen-apps]`) are in TEST-TOOLS.md "Driving and measuring
 the Mac in tests".
+
+- `[L-ui-tests-sandboxed]` **The sandboxed build can't open the UI
+  tests' image folders, so 11 of the fast suite's 32 tests fail.** The
+  harness makes them in the runner's temporary folder (`/var/folders/…`)
+  and passes them by launch argument, with no bookmark; Phases shows
+  "Can't open" for them. *Verified* 2026-11-24 by Claude (screenshot, the
+  failure messages); the cause in the sandbox is *inferred*, since the
+  system log kept no denials. A 12th failure, the sidebar divider not
+  dragging out to 320 pt, is *observed* once and not diagnosed. Record:
+  EXPERIMENTS.md `[X-ui-tests-sandboxed]`.
