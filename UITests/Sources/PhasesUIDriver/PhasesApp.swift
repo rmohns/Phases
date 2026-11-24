@@ -502,9 +502,9 @@ public final class PhasesApp {
     try await SyntheticInput.drag(from: start, to: CGPoint(x: windowFrame.minX + x, y: start.y))
   }
 
-  public func press(_ key: SyntheticInput.Key, shift: Bool = false) async throws {
+  public func press(_ key: SyntheticInput.Key, modifiers: Set<SyntheticInput.Modifier> = []) async throws {
     try await ensureFrontmost()
-    try await SyntheticInput.press(key, shift: shift)
+    try await SyntheticInput.press(key, modifiers: modifiers)
   }
 
   // MARK: - Screenshots

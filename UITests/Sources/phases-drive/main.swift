@@ -10,7 +10,9 @@ import PhasesUIDriver
 //   swift run phases-drive where            pointer position
 //   swift run phases-drive move <x> <y>     global points, top-left origin
 //   swift run phases-drive click <x> <y>
-//   swift run phases-drive key tab|down|x [shift]
+//   swift run phases-drive key tab|down|x [shift] [cmd] [opt] [ctrl]
+//   swift run phases-drive flags            modifiers the system reads as held
+//                                           (sends no input)
 
 func pointer() -> CGPoint { CGEvent(source: nil)?.location ?? .zero }
 
@@ -23,6 +25,13 @@ func fail(_ message: String) -> Never {
   FileHandle.standardError.write(Data((message + "\n").utf8))
   exit(2)
 }
+
+func describe(_ modifiers: [SyntheticInput.Modifier]) -> String {
+  modifiers.isEmpty ? "none" : modifiers.map(\.description).joined(separator: ", ")
+}
+
+let usage = "usage: phases-drive where | move <x> <y> | click <x> <y> | key tab|down|x [shift] [cmd] [opt] [ctrl] | flags"
+let modifierNames: [String: SyntheticInput.Modifier] = ["shift": .shift, "cmd": .command, "opt": .option, "ctrl": .control]
 
 let args = CommandLine.arguments.dropFirst()
 let before = pointer()
@@ -39,9 +48,17 @@ case "click":
   print("click at \(Int(target.x)),\(Int(target.y))")
 case "key":
   let keys: [String: SyntheticInput.Key] = ["tab": .tab, "down": .downArrow, "x": .x]
-  guard let name = args.dropFirst().first, let key = keys[name] else { fail("usage: key tab|down|x [shift]") }
-  try await SyntheticInput.press(key, shift: args.contains("shift"))
-  print("key \(name)\(args.contains("shift") ? " with shift" : "")")
+  guard let name = args.dropFirst().first, let key = keys[name] else { fail(usage) }
+  var modifiers = Set<SyntheticInput.Modifier>()
+  for word in args.dropFirst(2) {
+    guard let modifier = modifierNames[word] else { fail("unknown modifier \(word); \(usage)") }
+    modifiers.insert(modifier)
+  }
+  let ordered = SyntheticInput.Modifier.allCases.filter(modifiers.contains)
+  try await SyntheticInput.press(key, modifiers: modifiers)
+  print("key \(name) with \(describe(ordered)); held afterward: \(describe(SyntheticInput.heldModifiers()))")
+case "flags":
+  print("held: \(describe(SyntheticInput.heldModifiers()))")
 default:
-  fail("usage: phases-drive where | move <x> <y> | click <x> <y> | key tab|down|x [shift]")
+  fail(usage)
 }

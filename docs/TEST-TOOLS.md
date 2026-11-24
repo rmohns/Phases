@@ -26,7 +26,10 @@ Used by both groups. Reference, not steps.
   new input helpers; if something's missing (a key, a right-click), add
   it to `SyntheticInput` and `phases-drive`.
   - From `UITests/`: `swift run phases-drive where`,
-    `… move <x> <y>`, `… click <x> <y>`, `… key tab|down|x [shift]`.
+    `… move <x> <y>`, `… click <x> <y>`,
+    `… key tab|down|x [shift] [cmd] [opt] [ctrl]` (modifiers are pressed
+    around the key `[D-input-modifier-keys]`), and `… flags`, which sends
+    no input and prints the modifiers the system reads as held.
     Points are global, top-left origin, the same as accessibility
     positions. It's a hands-on check `[D-hands-on-checks]`; prove each
     action landed `[D-input-lands]`.
@@ -38,6 +41,49 @@ Used by both groups. Reference, not steps.
     one-off helper look easier.
   - Its functions are `package` access, so the tests and `phases-drive`
     can call them and nothing outside `UITests/` can.
+- `[D-input-modifier-keys]` **A modifier is pressed as a key of its own,
+  down before the key it modifies and up after it, the way a keyboard
+  sends it** (Robert, 2026-11-24, GitHub issue #39).
+  `SyntheticInput.press(_:modifiers:)` takes any of Control, Option,
+  Shift and Command (`SyntheticInput.Modifier`; left-hand key codes 59,
+  58, 56, 55). It posts each modifier's key down in that order, each
+  carrying the flags held so far, then the key down and up with all of
+  them, then the modifiers up in reverse, each carrying what's still
+  held. After its 0.15 s pause it reads
+  `CGEventSource.flagsState(.hidSystemState)` and throws if any modifier
+  still reads held, so every press checks itself, modified or not.
+  `SyntheticInput.heldModifiers()` is that read on its own.
+  - *Why:* until 2026-11-24 the driver had only Shift, set as a flag on
+    the key's own down and up; Shift itself was never pressed. In
+    MDPrinter's copy of this driver (copied from Phases at `a5d06e9`),
+    the same pattern with Control left the system holding Control after
+    a synthetic ⌃Esc, and left clicks went out as Control-clicks
+    (*verified* in MDPrinter, 2026-11-15, by Claude). It matters in
+    Phases: the image grid reads `NSEvent.modifierFlags` on a click to
+    extend a range (`App/Views/ImageGrid.swift`), so a stuck Shift could
+    make a test pass or fail for the wrong reason. The only modified
+    press in the tests is Shift-Tab in `FocusTests`.
+  - *Verified* 2026-11-24 by Claude (`phases-drive` built from `main` at
+    `257a247` and from `fix/driver-shift-key`, keys typed into a scratch
+    TextEdit file, modifiers read with `phases-drive flags`):
+    - **The old driver left Shift held.** After its Shift-X the system
+      read Shift held, still held 1 s later. Its next plain X typed a
+      capital X and left Shift held too: the old unmodified press set no
+      flags of its own, so the event took the stuck state from its
+      source and passed it on.
+    - **The new driver leaves nothing held.** Shift, Command, Option and
+      Control alone, then Shift-Option, Control-Option and
+      Command-Shift, each read "none" afterward. The typed text matched:
+      X for Shift, ≈ for Option, ˛ for Shift-Option, nothing for the
+      Command and Control presses. Its first plain press after the old
+      driver's stuck Shift cleared it, since it sets empty flags
+      explicitly.
+    - The 0.15 s pause was long enough for the read to show the release
+      on all 11 presses. That's one run, not a timing guarantee.
+  - *Related, open:* MDPrinter's copy also sets `mouseEventClickState`
+    to 1 on mouse down, up and drag events, because without it AppKit
+    saw `clickCount` 0 there. Phases' clicks don't set it; whether they
+    need to hasn't been checked (GitHub issue #39).
 
 ### Diagnostics
 

@@ -354,3 +354,13 @@ the Mac in tests".
     as wide as a narrow screen allows, and the test passed (*verified*,
     Claude, 1 run). Record: `[X-ui-tests-sandboxed]`, "The divider
     failure explained".
+  - *Update, later the same day:* with the window-width fix in, the full
+    fast suite failed it again, far right at **290.5 pt** (*verified*,
+    1 run, Claude, `fix/driver-shift-key`, build 62). That fits a window
+    about 750 pt wide, short of the 780 pt the fix asks for (*inferred*);
+    the window's width wasn't logged. Not rerun or diagnosed. Record:
+    TESTING.md "Interface tests" History, 2026-11-24 modifier-keys entry.
+    The author, watching that run, saw the first far-left drag not move
+    the sidebar because it was already at its 240 pt minimum
+    (*observed*); that's expected, and the test read 240 as it should.
+    Only the far-right drag fell short.
