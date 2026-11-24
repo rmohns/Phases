@@ -20,10 +20,17 @@ extension PhasesUITests {
     @Test func windowOpenedWhilePausedStartsBelowTheToolbar() async throws {
       let app = try await PhasesApp.launch(opensWindow: false)
       defer { app.quit() }
-      app.fakeOutsideChange()
-      // Distributed notifications arrive asynchronously; let the pause land
-      // before the window first opens.
-      try await Task.sleep(for: .seconds(1))
+      // Right after launch Phases may not be listening yet (a single post
+      // was lost, 2026-11-24), so post until the menu bar icon says paused
+      // [D-menubar-icon-paused], before the window first opens.
+      // The item's label is its AX title, "Phases, paused" (the
+      // description is empty; checked 2026-11-24).
+      try await waitUntil("the faked outside-change pause", timeout: .seconds(10)) {
+        let label = app.app.node("AXExtrasMenuBar")?.children.first?.title ?? ""
+        if label.contains("paused") { return true }
+        app.fakeOutsideChange()
+        return false
+      }
       try await app.reopenWindow()
       let resume = try await waitFor("the pause banner") { try? app.element("pauseBannerResume") }
       try expectBelowToolbar(resume, "The banner's Resume Wallpaper Changes button", app: app)
