@@ -125,7 +125,11 @@ neither can leak into normal use.
     phases are never read or changed and every test starts from the same
     list. Deleting phases can never run out;
   - use the image folder given by `-PhasesUITestImages <path>` (the
-    harness makes one with 60 images and a long name) as its one image
+    harness makes one with 60 images and a long name; it and every other
+    folder the harness makes, the fake Photos library included, live in
+    `~/Library/Caches/PhasesUITests/`, the one folder a Debug build's
+    sandbox lets Phases read for tests `[D-debug-test-folder]`; until
+    draft 62 they were in the runner's temporary folder) as its one image
     source, or several folders given as a list,
     `-PhasesUITestImages '("<path 1>", "<path 2>")'`, as its sources in
     that order `[D-image-sources]` (draft 52). The harness makes a second,
@@ -296,6 +300,20 @@ neither can leak into normal use.
   earlier builds into the workspace keeping their dates). Bitrig keeps
   a build's app until three newer builds replace it (per
   `bitrig --help`). Shapes `[D-ui-test-build-pick]`.
+- `[Q-container-closed-to-tests]` **The sandboxed Phases can't read the
+  harness's temporary folders, and the harness can't write into
+  Phases' container.** Folders passed by launch argument, with no
+  bookmark, show "Can't open" (*verified* 2026-11-24, screenshot; 11 of 32
+  fast-suite tests failed). From the shell the tests run in (Bitrig is
+  the responsible app), every list or write inside
+  `~/Library/Containers/com.robertmohns.phases/Data` fails with
+  "Operation not permitted", with no prompt and nothing logged, while
+  writing in `~/Library/Caches` works (*verified* 2026-11-24 by Claude).
+  *Explanation (recalled):* since macOS 14 an app's container is closed
+  to other apps without Full Disk Access, consent, or the same signing
+  team. Shapes `[D-debug-test-folder]`. Record: EXPERIMENTS.md
+  `[X-ui-tests-sandboxed]` (promoted from `[L-ui-tests-sandboxed]`,
+  2026-11-24).
 
 - `[Q-launch-activate-refused]` **A menu bar app launched in the
   background can't bring itself to the front with `NSApp.activate()`

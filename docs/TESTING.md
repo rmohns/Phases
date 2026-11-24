@@ -722,6 +722,10 @@ Each with what passes:
   `FolderScanTests`), but only a launched, sandboxed build shows what
   macOS allows. Ask first, naming the checks; most change the real
   wallpaper and need the author at the Mac.
+- **Which build's sandbox:** a Debug build's sandbox also reads
+  `~/Library/Caches/PhasesUITests/` `[D-debug-test-folder]`. That changes
+  nothing these checks look at, but a check of exactly what ships runs
+  on a Release build.
 - **Setup:** diagnostics on; read the log with
   `/usr/bin/log show --last 10m --style compact --predicate 'subsystem == "PhasesDiag"'`.
 - **The checks:**

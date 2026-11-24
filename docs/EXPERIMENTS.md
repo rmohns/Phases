@@ -1963,6 +1963,10 @@ Sandbox checks 1–3 deferred: GitHub issue #43.
   changed.
 - **Outcome:** the build pick works; the image-folder tests fail under
   the sandbox. Digest: LEARNINGS.md `[L-ui-tests-sandboxed]`. Not fixed.
+  *Update 2026-11-24:* promoted to TEST-TOOLS.md
+  `[Q-container-closed-to-tests]`; fixed by SPEC.md
+  `[D-debug-test-folder]` (draft 62). The divider failure is
+  `[L-divider-drag-right]`, still open.
 - **Run 1:** `swift test --filter toolbarIs52PointsTall` in `UITests/`:
   passed (7.8 s). The harness printed the newest build, number 61
   (*verified*).

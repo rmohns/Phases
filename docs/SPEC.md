@@ -1,4 +1,4 @@
-# Phases — Specification (draft 61)
+# Phases — Specification (draft 62)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -2115,7 +2115,9 @@ GitHub issue #19).
 Set in the entitlements file the Phases target's `CODE_SIGN_ENTITLEMENTS`
 names (`App/Phases.entitlements`), edited directly, since `xcrun
 xcodeproj` edits the project, not that file. Not through sandbox build
-settings such as `ENABLE_APP_SANDBOX`, so all six stay in one place. Build
+settings such as `ENABLE_APP_SANDBOX`, so all six stay in one place
+(Debug builds use a copy with one test folder added
+`[D-debug-test-folder]`). Build
 settings that point at the file are changed with `xcrun xcodeproj`,
 never by hand in the project file `[D-xcode-project]`.
 
@@ -2146,6 +2148,28 @@ never by hand in the project file `[D-xcode-project]`.
     `com.apple.screenIsUnlocked`) (*recalled*).
   - Read-write file access, Apple Events, or any other exception.
 - A new entitlement needs a row here, with its reason, before it's added.
+- `[D-debug-test-folder]` **Debug builds can also read one test folder;
+  Release builds, the ones that ship, can't** (draft 62). Debug builds
+  sign with `App/Phases-Debug.entitlements`: the six above, plus
+  `/Library/Caches/PhasesUITests/` added to the same home-relative
+  read-only exception as the wallpaper store. Release builds keep
+  `App/Phases.entitlements`, unchanged. The Phases target's
+  `CODE_SIGN_ENTITLEMENTS` names one file per configuration.
+  - *Why:* the UI tests run Debug builds and hand Phases image folders
+    and a fake Photos library by launch argument `[D-ui-test-mode]`.
+    Sandboxed, Phases can't open folders it wasn't given through the
+    open panel or a bookmark, so 11 of 32 UI tests failed (2026-11-24,
+    EXPERIMENTS.md `[X-ui-tests-sandboxed]`). The test runner can't
+    write into Phases' container instead `[Q-container-closed-to-tests]`.
+  - *Cost:* Debug and Release sandboxes differ by that one folder, which
+    holds nothing but test images. A hands-on sandbox check on a Debug
+    build sees the shipping sandbox plus that folder (TESTING.md
+    "Sandbox checks").
+  - *Guarded by* a unit test that Debug's entitlements are Release's
+    plus exactly that path, so the two files can't drift apart.
+  - *Rejected:* giving Bitrig Full Disk Access (every agent in every
+    project could then reach every file); driving Add Folder…'s open
+    panel in every test (slow and fragile).
 - *Verified* 2026-11-22 by Claude: `bitrig build` signs with team
   Y382W2CA47 (no signing change needed), and `codesign -d --entitlements -`
   on the built app lists exactly these six, plus `get-task-allow`, which
