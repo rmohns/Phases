@@ -360,3 +360,7 @@ the Mac in tests".
     about 750 pt wide, short of the 780 pt the fix asks for (*inferred*);
     the window's width wasn't logged. Not rerun or diagnosed. Record:
     TESTING.md "Interface tests" History, 2026-11-24 modifier-keys entry.
+    The author, watching that run, saw the first far-left drag not move
+    the sidebar because it was already at its 240 pt minimum
+    (*observed*); that's expected, and the test read 240 as it should.
+    Only the far-right drag fell short.
