@@ -11,9 +11,13 @@ struct SettingsView: View {
     Form {
       // [D-settings-order] [D-settings-pause-switch] On means paused; same
       // state as the menu's Pause Wallpaper Changes. No heading, and no
-      // note: the pause banner says why [D-window-pause-banner].
+      // note. [D-pause-switch-disabled] Disabled while the pause banner
+      // shows; its Resume is the way back [D-window-pause-banner].
       Section {
         Toggle("Pause wallpaper changes", isOn: $scheduler.isPaused)
+          .disabled(scheduler.isPausedForOutsideChange)
+          // [D-ui-test-ids]
+          .accessibilityIdentifier("pauseSwitch")
       }
 
       ImageSourcesSection(scheduler: scheduler)

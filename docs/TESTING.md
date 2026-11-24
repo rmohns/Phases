@@ -265,8 +265,10 @@ The pure logic that decides what the app does:
     toolbar height, a relaunch with the window closed
     `[D-reopen-shows-window]`, and the pause banner
     `[D-window-pause-banner]`: the window first opened while paused
-    starts below the toolbar, and the banner follows 20 pause and resume
-    toggles from the menu. Photos albums as image sources, against the
+    starts below the toolbar; the banner follows 20 outside-change
+    pauses `[D-test-outside-change-now]`, resumed from the banner and the
+    menu in turn; and a pause from the menu or the Settings switch shows
+    no banner (draft 61). Photos albums as image sources, against the
     fake library `[D-fake-photos]`: adding an album or a folder of
     albums, adding one twice, an empty album, shared albums, and denied
     access (draft 54).
@@ -322,7 +324,8 @@ The pure logic that decides what the app does:
   `imageGrid`, `imageFolderName` (now one per Image Sources row),
   `pauseBannerResume`, and from draft 52 `imageSources`,
   `imageSourceCount`, `addImageSource`, `removeImageSource`, and from
-  draft 54 `imageSourceLocation` and `photosAlbumList`. They're invisible
+  draft 54 `imageSourceLocation` and `photosAlbumList`, and from draft
+  61 `pauseSwitch`. They're invisible
   to users, but renaming one breaks the tests.
 
 - **Relaunch:** the harness relaunches its own instance by sending it a

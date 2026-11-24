@@ -18,6 +18,11 @@ enum UITestMode {
   static let startsPausedByOutsideChange = isOn
     && UserDefaults.standard.bool(forKey: "PhasesUITestPausedByOutsideChange")
 
+  /// [D-test-outside-change-now] Posted by the UI test driver to pause a
+  /// running test-mode launch as if the wallpaper had just been changed in
+  /// System Settings. Only test mode listens.
+  static let outsideChangeNotification = Notification.Name("PhasesUITestOutsideChange")
+
   /// [D-test-memory-size] `-PhasesUITestMemoryGB <n>` makes the low-memory
   /// note [D-low-memory-note] act as if the Mac had `n` GB of memory (a whole
   /// number, 1024³ bytes each). Nil unless test mode is on and `n` is above

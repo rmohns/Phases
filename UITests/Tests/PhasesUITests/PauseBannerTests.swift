@@ -15,10 +15,15 @@ extension PhasesUITests {
     /// shifted up under the toolbar: the branding panel under the traffic
     /// lights, the banner under the title (found by the author,
     /// 2026-11-07, on draft 49's first build).
+    /// From draft 61 only an outside change shows the banner, so the pause
+    /// is faked [D-test-outside-change-now] before the window first opens.
     @Test func windowOpenedWhilePausedStartsBelowTheToolbar() async throws {
       let app = try await PhasesApp.launch(opensWindow: false)
       defer { app.quit() }
-      try await app.chooseMenuItem("Pause Wallpaper Changes")
+      app.fakeOutsideChange()
+      // Distributed notifications arrive asynchronously; let the pause land
+      // before the window first opens.
+      try await Task.sleep(for: .seconds(1))
       try await app.reopenWindow()
       let resume = try await waitFor("the pause banner") { try? app.element("pauseBannerResume") }
       try expectBelowToolbar(resume, "The banner's Resume Wallpaper Changes button", app: app)
@@ -48,24 +53,66 @@ extension PhasesUITests {
       try expectBelowToolbar(panel, "The branding panel", app: app)
     }
 
-    /// Toggling from the menu with the window open: after about a dozen
+    /// Pausing and resuming with the window open: after about a dozen
     /// toggles the banner stopped appearing (found by the author,
-    /// 2026-11-07, on draft 49's first build).
+    /// 2026-11-07, on draft 49's first build). From draft 61 only an
+    /// outside change shows the banner, so each pause is faked
+    /// [D-test-outside-change-now]; resume alternates between the banner's
+    /// button and the menu.
     @Test func bannerFollowsTwentyToggles() async throws {
       try await withPhases { app in
         for round in 1...10 {
-          try await app.chooseMenuItem("Pause Wallpaper Changes")
+          app.fakeOutsideChange()
           let resume = try await waitFor("the pause banner, round \(round)", timeout: .seconds(3)) {
             try? app.element("pauseBannerResume")
           }
           try expectBelowToolbar(resume, "Round \(round): the banner's Resume Wallpaper Changes button", app: app)
-          try await app.chooseMenuItem("Resume Wallpaper Changes")
+          if round.isMultiple(of: 2) {
+            try await app.click(resume)
+          } else {
+            try await app.chooseMenuItem("Resume Wallpaper Changes")
+          }
           try await waitUntil("the pause banner to go, round \(round)", timeout: .seconds(3)) {
             (try? app.element("pauseBannerResume")) == nil
           }
         }
         let panel = try #require(try app.sidebarRows().first, "No sidebar rows")
         try expectBelowToolbar(panel, "After the toggles, the branding panel", app: app)
+      }
+    }
+
+    /// [D-window-pause-banner] A pause someone chose shows no banner, from
+    /// the menu or the Settings switch. [D-pause-switch-disabled] The
+    /// switch is enabled then, and disabled while an outside change's
+    /// banner shows; resuming from the banner enables it again. The
+    /// outside change lands while the switch's own pause is still on, so
+    /// it also covers a manual pause turning into an outside-change one.
+    @Test func manualPauseShowsNoBannerAndOutsideChangeDisablesTheSwitch() async throws {
+      try await withPhases { app in
+        try await app.click(try #require(try app.row(named: "Settings")))
+        let pauseSwitch = try await waitFor("the pause switch") { try? app.element("pauseSwitch") }
+
+        try await app.chooseMenuItem("Pause Wallpaper Changes")
+        try await Task.sleep(for: .seconds(1))
+        #expect((try? app.element("pauseBannerResume")) == nil, "A pause from the menu showed the banner")
+        #expect(pauseSwitch.isEnabled, "The switch is disabled after a pause from the menu")
+        try await app.chooseMenuItem("Resume Wallpaper Changes")
+
+        try await app.click(pauseSwitch)
+        try await Task.sleep(for: .seconds(1))
+        #expect((try? app.element("pauseBannerResume")) == nil, "A pause from the Settings switch showed the banner")
+        #expect(pauseSwitch.isEnabled, "The switch is disabled after a pause from itself")
+
+        app.fakeOutsideChange()
+        let resume = try await waitFor("the pause banner", timeout: .seconds(3)) {
+          try? app.element("pauseBannerResume")
+        }
+        try await waitUntil("the switch to be disabled", timeout: .seconds(3)) { !pauseSwitch.isEnabled }
+        try await app.click(resume)
+        try await waitUntil("the pause banner to go", timeout: .seconds(3)) {
+          (try? app.element("pauseBannerResume")) == nil
+        }
+        try await waitUntil("the switch to be enabled again", timeout: .seconds(3)) { pauseSwitch.isEnabled }
       }
     }
 

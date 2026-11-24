@@ -7,14 +7,10 @@ struct PauseReasonTests {
   static let locale = Locale(identifier: "en_US")
   static let now = TestCalendar.date(2026, 11, 7, 15, 30)
 
-  static func text(_ date: Date?) -> String {
+  static func text(_ date: Date) -> String {
     // Formatters may put a narrow no-break space before AM/PM.
     PauseReason.text(pausedForOutsideChangeAt: date, now: now, calendar: TestCalendar.newYork, locale: locale)
       .replacingOccurrences(of: "\u{202F}", with: " ")
-  }
-
-  @Test func manualPauseSaysMenu() {
-    #expect(Self.text(nil) == "Paused from the menu.")
   }
 
   @Test func outsideChangeTodayGivesTimeOnly() {

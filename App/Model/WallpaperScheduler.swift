@@ -81,6 +81,11 @@ final class WallpaperScheduler {
     didSet { Self.save(pausedForOutsideChangeAt, forKey: Keys.pausedForOutsideChangeAt) }
   }
 
+  /// [D-window-pause-banner] Paused by an outside change rather than by
+  /// choice: the only pause the banner shows for, and the one that
+  /// disables the Settings switch [D-pause-switch-disabled].
+  var isPausedForOutsideChange: Bool { isPaused && pausedForOutsideChangeAt != nil }
+
   /// [D-record-after-wait] What's showing, saved, plus a change waiting on
   /// photos, held only in memory.
   private(set) var record: ChangeRecord {
@@ -783,7 +788,19 @@ final class WallpaperScheduler {
   private func watchForOutsideChanges() {
     // [D-ui-test-mode] Test mode never changes the wallpaper, so it has
     // nothing to step aside from.
-    guard !UITestMode.isOn else { return }
+    guard !UITestMode.isOn else {
+      // [D-test-outside-change-now] The UI tests fake one on demand
+      // instead: the pause only, no notification.
+      let distributed = DistributedNotificationCenter.default()
+      observers.append((distributed, distributed.addObserver(forName: UITestMode.outsideChangeNotification, object: nil, queue: .main) { [weak self] _ in
+        Task { @MainActor in
+          guard let self else { return }
+          self.pausedForOutsideChangeAt = Date()
+          if !self.isPaused { self.isPaused = true }
+        }
+      }))
+      return
+    }
     notifier.onResume = { [weak self] in self?.isPaused = false }
     WallpaperStoreWatcher.shared.onOutsideChange = { [weak self] changes in self?.wallpaperChangedOutside(changes) }
     WallpaperStoreWatcher.shared.start()

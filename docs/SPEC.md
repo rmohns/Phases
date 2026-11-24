@@ -1,4 +1,4 @@
-# Phases — Specification (draft 60)
+# Phases — Specification (draft 61)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -1728,22 +1728,35 @@ extras don't show them. No global hotkey.
       requirement; see also `[D-single-timer]`).
 - **Phase selected:** editor with name, trigger, offset, appearance condition,
   order, rotation, and the Images section (Display picker and thumbnail grid).
-- `[D-window-pause-banner]` **While paused, for any reason, a pause
-  banner sits at the top of the detail pane,** whatever is selected (a
-  phase, Settings, or nothing). It stays put while the form scrolls.
+- `[D-window-pause-banner]` **While Phases has paused itself for an
+  outside change `[D-outside-change-pauses]`, a pause banner sits at the
+  top of the detail pane,** whatever is selected (a phase, Settings, or
+  nothing). It stays put while the form scrolls. A pause the person
+  chose, from the menu or the Settings switch, shows no banner.
+  - *Why only then:* a pause someone chose is a normal state they already
+    know about, so a banner explaining it is noise, and its one-line
+    reason ("Paused from the menu.") was wrong whenever the switch had
+    done it. An outside change pauses without anyone choosing to, so
+    that's the case that needs explaining (author, 2026-11-24). A manual
+    pause still shows in the menu bar icon's badge
+    `[D-menubar-icon-paused]`, the menu, and the Settings switch. Drafts
+    49–60 showed the banner for any pause, with "Paused from the menu."
+    as the manual reason.
+  - If the person had already paused when a wallpaper is picked in
+    System Settings, the pause becomes an outside-change pause and the
+    banner appears.
   - **Left:** a pause symbol (`pause.fill`, secondary), then "Phases is
     paused" in a bold headline, with the reason under it in secondary
-    text: "Paused from the menu." or "Paused at 9:06 AM because the
-    wallpaper was changed in System Settings." (the date is added when
-    it wasn't today). The symbol repeats what the words say; it carries
-    no meaning of its own.
+    text: "Paused at 9:06 AM because the wallpaper was changed in System
+    Settings." (the date is added when it wasn't today). The symbol
+    repeats what the words say; it carries no meaning of its own.
   - **Right:** a **Resume Wallpaper Changes** button, the menu's wording
     `[D-menu-pause-verb]` (Resume Schedule through draft 59). It resumes
     exactly as the menu does `[D-outside-change-pauses]`.
     - The new label is longer, so the banner's wrapping at the narrowest
       window (GitHub issue #30) is rechecked when it lands.
   - VoiceOver reads the symbol and text as one element ("Phases is
-    paused. Paused from the menu."), then the button.
+    paused. Paused at 9:06 AM because…"), then the button.
   - The reason text is worked out in the model, not the view, and
     unit-tested `[D-tests-unhosted]`.
   - While it shows, the detail form starts lower, so its first row no
@@ -1761,9 +1774,16 @@ extras don't show them. No global hotkey.
   changes switch,** in a section of its own with no heading. On means
   paused: it's the same state as the menu's Pause Wallpaper Changes (one
   state, two controls) `[D-menu-pause-verb]`. A pause for an outside
-  change `[D-outside-change-pauses]` turns it on too, and turning it off
-  resumes. No note under it: the pause banner above says why
-  `[D-window-pause-banner]`.
+  change `[D-outside-change-pauses]` turns it on too. Otherwise turning
+  it off resumes. No note under it.
+  - `[D-pause-switch-disabled]` **While the pause banner shows
+    `[D-window-pause-banner]`, the switch is disabled:** on, greyed out,
+    no extra text. The banner's **Resume Wallpaper Changes** is the way
+    back; the menu's Resume still works too.
+    - *Why:* two controls one above the other doing the same thing is
+      ambiguous. The banner's button resolves the outside change, and
+      resolving it is what puts Phases back to normal (author,
+      2026-11-24). Underneath, both resume the same way.
   - *Why:* changing wallpaper is what Phases is for, so nobody turns it
     "off"; pausing is what people actually want to do, so the switch
     names that (author, 2026-11-24, GitHub issue #2). No heading, because
