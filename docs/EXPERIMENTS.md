@@ -2040,6 +2040,25 @@ Sandbox checks 1–3 deferred: GitHub issue #43.
   `dividerStaysWithin240To320` failed exactly as in run 2 (far right:
   239.5 pt, expected 320), so it reproduces and isn't caused by the
   missing folders: `[L-divider-drag-right]`.
+- **The divider failure explained (issue #49), 2026-11-24.** The author
+  checked by hand: the app's divider works, and the sidebar can't widen
+  only when the window is too narrow (*observed* by the author). The
+  window's minimum is 700 pt, the 240 pt sidebar minimum plus the 460 pt
+  detail minimum (*verified* from the code, Claude), so at that width the
+  divider can't move right at all; reaching 320 needs at least 780 pt.
+  Why the test window opened narrow instead of at the 960 pt default
+  wasn't found: the saved-frame keys `SavedLayout` clears were absent
+  from Phases' settings afterward (*verified*, Claude), and only
+  `PauseBannerTests` asks for a size (700 × 600). Fix, on branch
+  `fix/sidebar-test-window-width`: the tests that call
+  `expectSidebarLimitsHold` open the window at 1000 × 680, narrower on a
+  narrow active screen (the author's suggestion; he runs a portrait
+  monitor), and throw if the screen can't fit 780 pt.
+- **Run 4, the test fix:** `dividerStaysWithin240To320` alone,
+  2026-11-24 ~16:20 local, by Claude with the author's yes, build 62
+  (`1795555173693-F7169932`): **passed** in 12 s (*verified*). Not run
+  against the old test to show it failing alone; runs 2 and 3 already
+  did, inside the suite.
 
 ## Retired designs
 
