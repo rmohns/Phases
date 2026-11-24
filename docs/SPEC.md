@@ -1807,8 +1807,13 @@ extras don't show them. No global hotkey.
     from the app's executable file).
   - `[D-memory-in-about]` **Memory:** how much memory Phases is using,
     e.g. "142 MB". It's the process's physical footprint, the figure
-    Activity Monitor shows in its Memory column (*recalled*, to be
-    compared with Activity Monitor when it lands).
+    Activity Monitor shows in its Memory column (*verified* 2026-11-24
+    by Robert and Claude: Activity Monitor showed Phases at 79.4 MB
+    while `footprint` read its `phys_footprint` as 83,674,144 bytes,
+    79.8 MB in 1024² units, which Phases rounds to "80 MB". Activity
+    Monitor uses the same 1024² megabytes; in decimal megabytes it would
+    have read about 83.7. The 0.4 MB gap is drift between the two
+    readings, which weren't taken at the same moment.)
     - Read once each time Settings appears, not updated while it shows.
       The figure includes the open window's own cost (about 25 MB stayed
       after opening it, *measured*, LEARNINGS.md `[L-mem-window]`).
