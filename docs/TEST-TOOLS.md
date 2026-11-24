@@ -269,7 +269,8 @@ neither can leak into normal use.
       Renaming the package to match its folder changed nothing
       (*verified*).
     - With the folder reference, the product isn't needed (*verified*),
-      so `Package.swift` is unchanged. *Explanation (hypothesis, from
+      so `Package.swift` declares none (only its comment changed).
+      *Explanation (hypothesis, from
       the results):* a dependency reference only exposes a package's
       products, while a folder reference opens the whole package, as a
       package dragged into Xcode's navigator does.
