@@ -18,6 +18,16 @@ enum UITestMode {
   static let startsPausedByOutsideChange = isOn
     && UserDefaults.standard.bool(forKey: "PhasesUITestPausedByOutsideChange")
 
+  /// [D-test-memory-size] `-PhasesUITestMemoryGB <n>` makes the low-memory
+  /// note [D-low-memory-note] act as if the Mac had `n` GB of memory (a whole
+  /// number, 1024³ bytes each). Nil unless test mode is on and `n` is above
+  /// zero. The About section's Memory line isn't faked.
+  static let fakedMemoryBytes: UInt64? = {
+    guard isOn else { return nil }
+    let gigabytes = UserDefaults.standard.integer(forKey: "PhasesUITestMemoryGB")
+    return gigabytes > 0 ? UInt64(gigabytes) * 1024 * 1024 * 1024 : nil
+  }()
+
   /// The harness's image folders, from `-PhasesUITestImages <path>` or a
   /// list, `-PhasesUITestImages '("<path 1>", "<path 2>")'`, in that order
   /// [D-image-sources].

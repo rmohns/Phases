@@ -28,14 +28,18 @@ public final class PhasesApp {
   /// at that size instead of the default. `photosLibrary` is the fake
   /// Photos library's folder (`-PhasesUITestPhotos`) and `photosDenied`
   /// makes it refuse access (`-PhasesUITestPhotosDenied YES`)
-  /// [D-fake-photos]; both are off unless a test asks.
+  /// [D-fake-photos]; both are off unless a test asks. `memoryGB` makes
+  /// the low-memory note act as if the Mac had that much memory
+  /// (`-PhasesUITestMemoryGB`) [D-test-memory-size]; without it the Mac's
+  /// real size applies.
   public static func launch(
     imageFolders: [URL] = [TestImages.folder],
     opensWindow: Bool = true,
     pausedByOutsideChange: Bool = false,
     windowSize: CGSize? = nil,
     photosLibrary: URL? = nil,
-    photosDenied: Bool = false
+    photosDenied: Bool = false,
+    memoryGB: Int? = nil
   ) async throws -> PhasesApp {
     guard AXIsProcessTrusted() else {
       throw UITestFailure("The app running these tests needs Accessibility permission (System Settings › Privacy & Security › Accessibility).")
@@ -50,6 +54,9 @@ public final class PhasesApp {
     ]
     if pausedByOutsideChange {
       configuration.arguments += ["-PhasesUITestPausedByOutsideChange", "YES"]
+    }
+    if let memoryGB {
+      configuration.arguments += ["-PhasesUITestMemoryGB", "\(memoryGB)"]
     }
     if let photosLibrary {
       configuration.arguments += ["-PhasesUITestPhotos", photosLibrary.path(percentEncoded: false)]

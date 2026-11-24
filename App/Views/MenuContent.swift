@@ -19,7 +19,7 @@ struct MenuContent: View {
       .disabled(scheduler.activePhase == nil)
 
       // [D-menu-pause-verb] A command that says what it will do, not a checkmark.
-      Button(scheduler.isPaused ? "Resume Schedule" : "Pause Schedule") {
+      Button(scheduler.isPaused ? "Resume Wallpaper Changes" : "Pause Wallpaper Changes") {
         scheduler.isPaused.toggle()
       }
     }

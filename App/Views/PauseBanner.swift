@@ -32,7 +32,7 @@ struct PauseBanner: View {
           .accessibilityElement(children: .combine)
           Spacer(minLength: 8)
           // [D-menu-pause-verb] The menu's wording.
-          Button("Resume Schedule") { scheduler.isPaused = false }
+          Button("Resume Wallpaper Changes") { scheduler.isPaused = false }
             // [D-ui-test-ids]
             .accessibilityIdentifier("pauseBannerResume")
         }
