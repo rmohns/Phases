@@ -2317,6 +2317,10 @@ never by hand in the project file `[D-xcode-project]`.
     `[Q-bitrig-test-targets]` (GitHub issue #42). An Xcode project fixes
     the first and opens the way to the second; adding a test target is a
     change of its own.
+  - The project lists the unit test package, `UnitTests/`, as a folder
+    reference, so `bitrig test -package UnitTests` runs it; nothing in
+    the app links it (2026-11-24, GitHub issue #42; TEST-TOOLS.md
+    `[Q-bitrig-test-targets]`).
 - `[D-bundle-id]` **The bundle ID is `com.robertmohns.phases`** (draft
   59), all lowercase, and permanent: preferences, the sandbox container,
   and privacy grants are all keyed to it.

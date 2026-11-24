@@ -66,8 +66,14 @@ Phases is built with [Bitrig](https://bitrig.app). The project is
 `Phases.xcodeproj`, in the JSON project format Xcode 27 introduced; the
 easiest way to build it is to open the repository in Bitrig.
 
-The unit tests are a separate Swift package and don't need Bitrig or Xcode
-project files:
+The unit tests are a separate Swift package. In Bitrig, run them from the
+repository root with:
+
+```sh
+bitrig test -package UnitTests
+```
+
+They don't need Bitrig or the Xcode project, though:
 
 ```sh
 cd UnitTests

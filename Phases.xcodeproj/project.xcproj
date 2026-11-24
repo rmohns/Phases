@@ -32,6 +32,7 @@
         { "path": "<PRODUCTS>/Phases.app", "id": "C50C718E413DFE8FBEE83665", "type": "wrapper.application", "index": false },
       ],
     },
+    { "path": "UnitTests" },
   ],
   "targets": [
     {
