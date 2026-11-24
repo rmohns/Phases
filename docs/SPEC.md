@@ -1,4 +1,4 @@
-# Phases — Specification (draft 59)
+# Phases — Specification (draft 60)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -630,6 +630,14 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
 - Preference, applying only to displays **without** their own images in the
   active phase: **Same image everywhere** (default) or **Different picks per
   display** (each draws its own pick from the All Displays images).
+- `[D-sharing-no-interface]` **From draft 60 this preference has no
+  control.** It left Settings in the Settings cleanup (GitHub issue #2)
+  and moves into each phase's editor in a later change. Until then the
+  saved value keeps applying and the logic is unchanged; only the
+  Displays section in Settings is gone.
+  - *Why:* it makes more sense per phase than app-wide (author,
+    2026-11-24, issue #2; the per-phase move was GitHub issue #26, closed
+    in favor of #2).
 - In order: each display's selection (or the shared one) advances in step. With
   Different picks, sharing displays are offset by one from each other: the
   shared selection remembers the image on the first sharing display (the
@@ -688,7 +696,7 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
     by itself. If that pane can't be opened directly, the button opens
     Accessibility instead.
     - A button rather than a link in the note: it matches the Location
-      section's **Open Location Settings…** and Startup's **Open Login
+      section's **Open Location Settings…** and Launch & Quit's **Open Login
       Items…**, and the HIG suggests "a button that opens it directly"
       for the system Settings app (HIG "Settings"). Asked for by the
       author, 2026-11-14.
@@ -701,6 +709,27 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
   - *Why:* drafts up to 55 always showed "Changes are instant when
     Reduce Motion is on.", whatever the setting, so it never said
     whether it applied (issue #32, draft 56).
+- `[D-low-memory-note]` **On a Mac with less than 16 GB of memory,
+  Settings suggests turning transitions off.** Directly under the
+  None / Crossfade control, a note: "You can disable transitions to
+  reduce Phases' memory usage."
+  - Shown only when all three hold: the Mac's physical memory is under
+    16 GB (16 × 1024³ bytes; a 16 GB Mac reports exactly that, so it
+    gets no note), Transition is Crossfade, and Reduce Motion is off.
+    With None selected, or Reduce Motion on `[D-reduce-motion-note]`,
+    transitions are already off and the note would be noise.
+  - The decision is a pure function in the model, unit-tested
+    `[D-tests-unhosted]`; the view only shows the text. The memory
+    size can be faked in test mode so a UI test can see the note appear
+    and disappear (TEST-TOOLS.md `[D-test-memory-size]`).
+  - *Why the note is true:* crossfades are what cost Phases memory
+    between changes, one cover buffer per display (see "The persistent
+    cover", *Cost*), and before the cover fixes crossfade images were
+    most of `main`'s 179 MB (*measured*, LEARNINGS.md `[L-main-memory]`).
+    With Transition set to None no covers are kept
+    `[D-cover-only-for-crossfade]`.
+  - *Why:* on smaller Macs, Phases' memory use is a reasonable thing to
+    trade against a fade (author, 2026-11-24, GitHub issue #2).
 - macOS has no transition for wallpapers set by apps, so Phases does it itself
   by **fading the new image in over the old one** `[D-fade-in]`
   (see *Why fade in* below), on a cover that then stays up while its
@@ -1102,7 +1131,7 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
     the pick looked broken. Pausing is the author's call (2026-11-06,
     GitHub issue #5).
 - **What pausing does:**
-  - Scheduled changes stop, exactly as with **Pause Schedule** in the menu: it's the
+  - Scheduled changes stop, exactly as with **Pause Wallpaper Changes** in the menu: it's the
     same paused state, saved across launches, with a reason attached
     (see "Interface" below).
   - Any cover on the changed display fades out over the Transition
@@ -1116,7 +1145,10 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
   phase's image right away, with the usual transition, and the schedule
   carries on. The restore record keeps the pick.
 - **Change Now while paused** changes the image once and stays paused, as
-  it does today with Pause Schedule.
+  it does with Pause Wallpaper Changes. Change Now is a deliberate one-off,
+  so pausing doesn't block it; that's why the pause controls say "Pause
+  wallpaper changes", not "Pause all wallpaper changes"
+  `[D-menu-pause-verb]`.
 - `[D-outside-change-rule]` **How a change is recognised:** Phases watches
   macOS's wallpaper store (read only, as `[D-aerials-untouched]` already
   does), event-driven with no polling. A change counts as outside when an
@@ -1176,6 +1208,22 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
   a dawn/dusk trigger, not at launch.
 - Settings shows the current location, today's civil dawn and dusk, when the
   location was last updated, and an **Update Now** button.
+- `[D-location-privacy-note]` **The Location section always ends with a
+  note:** "Phases uses this to work out your dawn and dusk times. Phases
+  never sends your location anywhere; it stays on your Mac." It shows in
+  every state: location shown, waiting, denied, or not needed yet.
+  - *Why it's true:* Phases has no network access. Its entitlements don't
+    include `com.apple.security.network.client`, so the sandbox blocks
+    any outgoing connection (*verified* 2026-11-24 by Claude, reading
+    `App/Phases.entitlements`). The location is saved only in Phases' own
+    settings on the Mac.
+  - *Why "Phases never sends":* macOS's Location Services may ask Apple's
+    servers to work out the position (*recalled*, not tested). That's
+    outside Phases, so the note speaks only for Phases.
+  - **If Phases ever gets network access, recheck this note** before that
+    change lands.
+  - *Why:* people reasonably wonder why a wallpaper app wants their
+    location, and where it goes (author, 2026-11-24, GitHub issue #2).
 - Uses low-accuracy, infrequent updates. The last known location is saved so
   dawn/dusk still work offline or after a restart.
 - If permission is denied: dawn/dusk phases are disabled and marked with a
@@ -1319,7 +1367,7 @@ following the pattern of Apple's own menu bar extras (e.g. Time Machine's
   - "Dusk · Paused" while paused; "No active phase" if none applies
   - "Paused · wallpaper changed in System Settings" while Phases has
     paused itself for an outside change `[D-outside-change-notice]`, in
-    place of the phase line. **Resume Schedule** resumes.
+    place of the phase line. **Resume Wallpaper Changes** resumes.
     - *Why:* it's status, so it stays in the header, the way Apple's own
       menu bar extras show status. Draft 37 first added it as a second,
       dimmed line, which made two hard-to-read lines (author,
@@ -1327,13 +1375,21 @@ following the pattern of Apple's own menu bar extras (e.g. Time Machine's
       reserves dimming for unavailable items (*verified* 2026-11-06,
       HIG "Menus").
 - **Change Now**: advances to the next image in the active phase
-- `[D-menu-pause-verb]` **Pause Schedule**, which reads **Resume Schedule**
-  while paused (for any reason). The pause is saved across launches.
+- `[D-menu-pause-verb]` **Pause Wallpaper Changes**, which reads **Resume
+  Wallpaper Changes** while paused (for any reason). The pause is saved
+  across launches.
   - *Why:* a command names what it will do. A checked "Pause Schedule"
     reads as a state and leaves people working out what unchecking means
     (author, 2026-11-06). The HIG allows either; it suggests a verb when
     a changeable label could be read as a state (*verified* 2026-11-06,
     HIG "Menus"). Draft 36 and earlier used a checkmark.
+  - *Why "Wallpaper Changes":* it names what the person wants to stop.
+    "Pause Schedule" was accurate but not what someone reaching for it
+    means (author, 2026-11-24, GitHub issue #2). It doesn't say "all",
+    because Change Now still works while paused (see "Change Now while
+    paused"). The Settings switch `[D-settings-pause-switch]` and the
+    pause banner's button `[D-window-pause-banner]` use the same words.
+    Drafts 36–59 said Pause Schedule / Resume Schedule.
 - **Open Phases…**: opens the Phases window
 - If location access is denied and a phase needs it, one extra dimmed line
   says so (see "Location").
@@ -1665,9 +1721,11 @@ extras don't show them. No global hotkey.
     wallpaper was changed in System Settings." (the date is added when
     it wasn't today). The symbol repeats what the words say; it carries
     no meaning of its own.
-  - **Right:** a **Resume Schedule** button, the menu's wording
-    `[D-menu-pause-verb]`. It resumes exactly as the menu does
-    `[D-outside-change-pauses]`.
+  - **Right:** a **Resume Wallpaper Changes** button, the menu's wording
+    `[D-menu-pause-verb]` (Resume Schedule through draft 59). It resumes
+    exactly as the menu does `[D-outside-change-pauses]`.
+    - The new label is longer, so the banner's wrapping at the narrowest
+      window (GitHub issue #30) is rechecked when it lands.
   - VoiceOver reads the symbol and text as one element ("Phases is
     paused. Paused from the menu."), then the button.
   - The reason text is worked out in the model, not the view, and
@@ -1683,30 +1741,74 @@ extras don't show them. No global hotkey.
     status bar at the bottom of the sidebar was considered and rejected:
     at 240 pt the System Settings reason wraps to three lines, and it
     would sit beside the phase list's + / − (Claude, 2026-11-07).
-- `[D-settings-schedule-switch]` **Settings starts with a Schedule
-  section:** a **Change wallpaper on schedule** switch, the inverse of
-  the menu's Pause Schedule (one state, two controls). Turning it on
-  resumes `[D-outside-change-pauses]`. No note under it: the pause
-  banner above says why `[D-window-pause-banner]`.
-  - *Why:* resuming shouldn't depend on finding a menu item; the window is
-    where someone goes to ask why Phases stopped. Placed at the top for
-    now; a broader Settings cleanup may move it (author, 2026-11-06).
-    Drafts 37–48 put the pause reason in a note under the switch; draft
-    49 moved it to the banner so it shows in every view.
-- **Settings selected:** the Schedule section above, then the Image Sources list `[D-image-sources]`; display sharing
-  preference (see "Displays sharing the All Displays images"); transition and duration; Launch at Login; location status
-  with today's civil dawn and dusk and Update Now; and, at the bottom, a
-  **Quitting** section with the **Restore original wallpaper when quitting**
-  toggle and a note that says what quitting will do `[D-restore-on-quit]`,
-  and the **Ask before quitting** toggle `[D-quit-confirm]`.
-  No Quit button: Quit lives in the app menu `[D-app-menu]` (draft 24 and
-  earlier had a Quit Phases button here).
+- `[D-settings-pause-switch]` **Settings starts with a Pause wallpaper
+  changes switch,** in a section of its own with no heading. On means
+  paused: it's the same state as the menu's Pause Wallpaper Changes (one
+  state, two controls) `[D-menu-pause-verb]`. A pause for an outside
+  change `[D-outside-change-pauses]` turns it on too, and turning it off
+  resumes. No note under it: the pause banner above says why
+  `[D-window-pause-banner]`.
+  - *Why:* changing wallpaper is what Phases is for, so nobody turns it
+    "off"; pausing is what people actually want to do, so the switch
+    names that (author, 2026-11-24, GitHub issue #2). No heading, because
+    the switch's own label says it all.
+  - *Why in Settings at all:* resuming shouldn't depend on finding a menu
+    item; the window is where someone goes to ask why Phases stopped
+    (author, 2026-11-06).
+  - *Replaced:* `[D-settings-schedule-switch]`, drafts 37–59: a
+    **Change wallpaper on schedule** switch under a Schedule heading, on
+    meaning not paused. Drafts 37–48 also put the pause reason in a note
+    under it; draft 49 moved that to the banner so it shows in every
+    view.
+- `[D-settings-order]` **Settings selected,** top to bottom (GitHub issue
+  #2, draft 60):
+  1. The pause switch `[D-settings-pause-switch]`.
+  2. **Image Sources** `[D-image-sources]`.
+  3. **Transition:** None / Crossfade and duration, with the Reduce
+     Motion note `[D-reduce-motion-note]` and the low-memory note
+     `[D-low-memory-note]`.
+  4. **Location:** status, today's civil dawn and dusk, Update Now, and
+     the privacy note `[D-location-privacy-note]`.
+  5. **Launch & Quit:** **Launch at Login** `[D-login-consent]` (with its
+     approval and error lines), **Restore original wallpaper when
+     quitting** with a note that says what quitting will do
+     `[D-restore-on-quit]`, and **Ask before quitting** `[D-quit-confirm]`.
+  6. **About** `[D-version-in-settings]`.
+  - No Displays section: display sharing has no control for now
+    `[D-sharing-no-interface]`.
+  - No Quit button: Quit lives in the app menu `[D-app-menu]` (draft 24
+    and earlier had a Quit Phases button here).
+  - *Why Launch & Quit is one section:* both are about Phases starting and
+    stopping, and as two sections each held a toggle or two (author,
+    2026-11-24, GitHub issue #2).
+  - *Replaced:* drafts up to 59 ran Schedule, Image Sources, Displays,
+    Transition, Startup, Location, Quitting, About.
 - `[D-version-in-settings]` **About section,** last in Settings, below
-  Quitting, one line each:
+  Launch & Quit, one line each:
   - **Version:** the app's version and build number, e.g. "0.1 (47)".
   - **Spec:** the SPEC.md draft the build was made against, e.g. "Draft 47".
   - **Built:** the date and time this copy of the app was built (taken
     from the app's executable file).
+  - `[D-memory-in-about]` **Memory:** how much memory Phases is using,
+    e.g. "142 MB". It's the process's physical footprint, the figure
+    Activity Monitor shows in its Memory column (*recalled*, to be
+    compared with Activity Monitor when it lands).
+    - Read once each time Settings appears, not updated while it shows.
+      The figure includes the open window's own cost (about 25 MB stayed
+      after opening it, *measured*, LEARNINGS.md `[L-mem-window]`).
+    - Reading it lives in the model, not the view. If it can't be read,
+      the line is left out.
+    - *Why a snapshot:* memory use doesn't depend much on the images'
+      size, since covers are screen-sized `[D-cover-only-for-crossfade]`;
+      a live figure would mostly catch a display being connected while
+      Settings is open, which isn't worth a timer (author, 2026-11-24).
+      Before the memory fixes each change also had a short full-size
+      decode peak, purged within 40 s (*measured*, LEARNINGS.md
+      `[L-mem-decode]`); a snapshot may catch one, and reopening Settings
+      shows a fresh figure.
+    - *Why:* lets someone see what Phases costs, and whether the
+      low-memory note `[D-low-memory-note]` is worth acting on (GitHub
+      issue #2).
   - *Why:* during testing, the author needs to tell which build is
     running. The build number *is* the spec draft, so Finder's Get Info,
     the standard About panel, and this section all name the same draft;
@@ -1866,7 +1968,7 @@ extras don't show them. No global hotkey.
   - **Buttons:** **Quit** (default, Return), **Keep in Menu Bar** (closes the
     window; Phases keeps running), **Cancel** (Esc; nothing happens).
   - **"Don't ask again"** checkbox. Checked plus Quit turns the question off.
-    Settings' Quitting section has an **Ask before quitting** toggle (on by
+    Settings' Launch & Quit section has an **Ask before quitting** toggle (on by
     default, saved across launches) to turn it back on.
   - Only the Quit menu item asks. Logging out, restarting, or shutting down
     quits without asking, so it never blocks them.
