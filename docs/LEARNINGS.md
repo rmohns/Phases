@@ -345,4 +345,4 @@ the Mac in tests".
   rerun or diagnosed. Record: EXPERIMENTS.md `[X-ui-tests-sandboxed]`.
   - *Update, same day:* failed the same way in the next full run, on
     the draft 62 build (239.5 pt again), so it reproduces (*verified*,
-    2 of 2 runs). Still not diagnosed.
+    2 of 2 runs). Still not diagnosed; GitHub issue #49.
