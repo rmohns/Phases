@@ -23,24 +23,27 @@ struct SettingsView: View {
       Section("Transition") {
         // [D-reduce-motion-note] Dimmed, values kept, while Reduce Motion is on.
         let controlsEnabled = ReduceMotionNote.controlsEnabled(reducesMotion: scheduler.reducesMotion)
-        Picker("Transition", selection: $scheduler.transitionStyle) {
-          ForEach(TransitionStyle.allCases) { style in
-            Text(style.title).tag(style)
+        // [D-low-memory-note] The note shares the control's row: no
+        // separator, normal size.
+        VStack(alignment: .leading, spacing: 6) {
+          Picker("Transition", selection: $scheduler.transitionStyle) {
+            ForEach(TransitionStyle.allCases) { style in
+              Text(style.title).tag(style)
+            }
           }
-        }
-        .pickerStyle(.segmented)
-        .disabled(!controlsEnabled)
-        // [D-low-memory-note] Directly under None / Crossfade.
-        if let note = LowMemoryNote.text(
-          physicalMemory: MemoryUse.physicalMemory,
-          transitionStyle: scheduler.transitionStyle,
-          reducesMotion: scheduler.reducesMotion
-        ) {
-          Text(note)
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            // [D-ui-test-ids]
-            .accessibilityIdentifier("lowMemoryNote")
+          .pickerStyle(.segmented)
+          .disabled(!controlsEnabled)
+          if let note = LowMemoryNote.text(
+            physicalMemory: MemoryUse.physicalMemory,
+            transitionStyle: scheduler.transitionStyle,
+            reducesMotion: scheduler.reducesMotion,
+            footprint: memoryFootprint
+          ) {
+            Text(note)
+              .foregroundStyle(.secondary)
+              // [D-ui-test-ids]
+              .accessibilityIdentifier("lowMemoryNote")
+          }
         }
         if scheduler.transitionStyle == .crossfade {
           LabeledContent("Duration") {
@@ -75,10 +78,6 @@ struct SettingsView: View {
 
       Section("Location") {
         LocationStatusView(scheduler: scheduler)
-        // [D-location-privacy-note] Always last, in every state.
-        Text("Phases uses this to work out your dawn and dusk times. Phases never sends your location anywhere; it stays on your Mac.")
-          .font(.caption)
-          .foregroundStyle(.secondary)
       }
 
       // [D-settings-order] Startup and Quitting, merged. [D-restore-on-quit]
@@ -120,7 +119,7 @@ struct SettingsView: View {
         }
         // [D-memory-in-about] A snapshot taken when Settings appears.
         if let memoryFootprint {
-          LabeledContent("Memory", value: Int64(clamping: memoryFootprint).formatted(.byteCount(style: .memory)))
+          LabeledContent("Memory", value: LowMemoryNote.memoryText(bytes: memoryFootprint))
         }
       }
     }
@@ -169,26 +168,46 @@ private struct LocationStatusView: View {
             NSWorkspace.shared.open(url)
           }
         }
+        LocationPrivacyNote()
       }
     } else if let coordinate = location.coordinate {
-      LabeledContent("Current location") {
-        Text(
-          "\(coordinate.latitude.formatted(.number.precision(.fractionLength(2)))), \(coordinate.longitude.formatted(.number.precision(.fractionLength(2))))"
-        )
-        .monospacedDigit()
+      // [D-location-privacy-note] Joined to Current location: same row.
+      VStack(alignment: .leading, spacing: 6) {
+        LabeledContent("Current location") {
+          Text(
+            "\(coordinate.latitude.formatted(.number.precision(.fractionLength(2)))), \(coordinate.longitude.formatted(.number.precision(.fractionLength(2))))"
+          )
+          .monospacedDigit()
+        }
+        LocationPrivacyNote()
       }
       SolarTimesView(coordinate: coordinate)
       LocationUpdateRow(location: location)
     } else if scheduler.needsLocation {
-      HStack {
-        Text("Waiting for location…")
-          .foregroundStyle(.secondary)
-        Button("Retry") { location.refresh() }
+      VStack(alignment: .leading, spacing: 6) {
+        HStack {
+          Text("Waiting for location…")
+            .foregroundStyle(.secondary)
+          Button("Retry") { location.refresh() }
+        }
+        LocationPrivacyNote()
       }
     } else {
-      Text("Location is requested when you add a dawn or dusk phase.")
-        .foregroundStyle(.secondary)
+      VStack(alignment: .leading, spacing: 6) {
+        Text("Location is requested when you add a dawn or dusk phase.")
+          .foregroundStyle(.secondary)
+        LocationPrivacyNote()
+      }
     }
+  }
+}
+
+/// [D-location-privacy-note] Shown in every state, in the same row as the
+/// section's first line: under Current location when there is one.
+private struct LocationPrivacyNote: View {
+  var body: some View {
+    Text("Phases uses this to work out your dawn and dusk times. Phases never sends your location anywhere; it stays on your Mac.")
+      .foregroundStyle(.secondary)
   }
 }
 

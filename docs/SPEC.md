@@ -712,7 +712,16 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
 - `[D-low-memory-note]` **On a Mac with less than 16 GB of memory,
   Settings suggests turning transitions off.** Directly under the
   None / Crossfade control, a note: "You can disable transitions to
-  reduce Phases' memory usage."
+  reduce Phases' memory usage. Current memory use: 142 MB", with
+  Phases' actual figure, the same snapshot as About's Memory line
+  `[D-memory-in-about]`. If the figure can't be read, the note ends
+  after the first sentence.
+  - The note shares the control's row: no separator between them, in
+    the normal text size (secondary color), not a caption.
+  - *Why:* the note is about that control, so it sits visually joined
+    to it; the figure shows what's at stake without scrolling to About
+    (author, 2026-11-24, after seeing draft 60's first build, where it
+    was a separate caption row).
   - Shown only when all three hold: the Mac's physical memory is under
     16 GB (16 × 1024³ bytes; a 16 GB Mac reports exactly that, so it
     gets no note), Transition is Crossfade, and Reduce Motion is off.
@@ -1208,10 +1217,17 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
   a dawn/dusk trigger, not at launch.
 - Settings shows the current location, today's civil dawn and dusk, when the
   location was last updated, and an **Update Now** button.
-- `[D-location-privacy-note]` **The Location section always ends with a
+- `[D-location-privacy-note]` **The Location section always carries a
   note:** "Phases uses this to work out your dawn and dusk times. Phases
   never sends your location anywhere; it stays on your Mac." It shows in
   every state: location shown, waiting, denied, or not needed yet.
+  - It sits immediately under **Current location**, in the same row (no
+    separator), in the normal text size (secondary color). In the other
+    states there's no Current location row, so it joins the section's
+    first row (the status line) the same way.
+  - *Why:* the note describes that data, so it stays visually joined to
+    it (author, 2026-11-24, after seeing draft 60's first build, where it
+    was a separate caption row at the end of the section).
   - *Why it's true:* Phases has no network access. Its entitlements don't
     include `com.apple.security.network.client`, so the sandbox blocks
     any outgoing connection (*verified* 2026-11-24 by Claude, reading
@@ -1798,6 +1814,9 @@ extras don't show them. No global hotkey.
       after opening it, *measured*, LEARNINGS.md `[L-mem-window]`).
     - Reading it lives in the model, not the view. If it can't be read,
       the line is left out.
+    - Shown in whole megabytes (1 MB = 1024² bytes, rounded), the same
+      way here and in the low-memory note `[D-low-memory-note]`. The
+      formatting is a pure function, unit-tested.
     - *Why a snapshot:* memory use doesn't depend much on the images'
       size, since covers are screen-sized `[D-cover-only-for-crossfade]`;
       a live figure would mostly catch a display being connected while
