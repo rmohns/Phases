@@ -294,6 +294,12 @@ The pure logic that decides what the app does:
     finds controls by accessibility identifier `[D-ui-test-ids]`, clicks,
     drags, and types with synthetic mouse and key events, reads results
     back through the AX API, and force-quits the instance after each test.
+  - *Modifier keys:* a Shift press (Shift-Tab in `FocusTests`) presses
+    and releases Shift itself, and fails the test if Shift still reads
+    held afterward `[D-input-modifier-keys]`. A failure that names
+    GitHub issue #39 means the driver left a modifier down, not that
+    Phases is wrong; any click after it may have gone out as a
+    Shift-click.
   - *Which build:* see `[D-ui-test-build-pick]`, next.
 - `[D-ui-test-build-pick]` **The UI tests launch the newest Bitrig Debug
   build, by the time in its folder's name, and refuse it unless its
@@ -408,6 +414,12 @@ The pure logic that decides what the app does:
   build): with the 2 s recheck, the fast suite passed 13 of 13 (116 s).
   The harness doesn't log whether a recheck was needed, so this one run
   doesn't show the recheck was what fixed it.
+- 2026-11-24 (Claude, `fix/driver-shift-key`): Shift is now pressed as
+  its own key `[D-input-modifier-keys]` (GitHub issue #39). The UI
+  package compiles (*verified*, `swift build --build-tests`); nothing has
+  been run. Still to do, hands-on: `phases-drive key tab shift` on the
+  old and new driver, reading the Shift bit afterward, and the fast
+  suite on the new one.
 
 ### Cover checks (draft 33)
 
