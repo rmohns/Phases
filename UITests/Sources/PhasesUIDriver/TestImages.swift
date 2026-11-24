@@ -10,7 +10,7 @@ public enum TestImages {
     "Phases UI Test Images in a Folder With a Deliberately Long Name So That the Settings Row Has to Truncate It in the Middle Even in a Wide Window"
   public static let count = 60
 
-  /// Creates the folder once per run, in the temporary directory.
+  /// Creates the folder once per run, under `parent`.
   public static let folder: URL = {
     let url = makeFolder(named: folderName)
     for index in 0..<count {
@@ -29,7 +29,7 @@ public enum TestImages {
   public static let nestedFolderName = "Nested"
   public static let nestedCount = 2
 
-  /// Made once per run, in the same temporary parent as `folder`. Hues are
+  /// Made once per run, under `parent`, like `folder`. Hues are
   /// spread so the images are told apart at a glance.
   public static let secondFolder: URL = {
     let url = makeFolder(named: secondFolderName)
@@ -67,7 +67,7 @@ public enum TestImages {
     public static let family = "Family"
     public static let familyCount = 2
 
-    /// Made once per run, in the same temporary parent as `folder`.
+    /// Made once per run, under `parent`, like `folder`.
     public static let library: URL = {
       let root = TestImages.makeFolder(named: "Phases UI Test Photos Library")
       func album(_ path: [String], count: Int, hue: Double) {
@@ -89,11 +89,18 @@ public enum TestImages {
     }()
   }
 
-  /// An empty folder with this name under the run's temporary parent.
+  /// [D-debug-test-folder] Where every folder the harness makes lives:
+  /// the one folder a Debug build's sandbox lets Phases read for tests.
+  /// The runner's temporary folder can't be opened by the sandboxed app,
+  /// and Phases' container is closed to the runner
+  /// [Q-container-closed-to-tests]. Must match the path in
+  /// App/Phases-Debug.entitlements (relative to the home folder).
+  public static let parent = URL.homeDirectory
+    .appending(path: "Library/Caches/PhasesUITests", directoryHint: .isDirectory)
+
+  /// An empty folder with this name under `parent`.
   private static func makeFolder(named name: String) -> URL {
-    let url = FileManager.default.temporaryDirectory
-      .appending(path: "PhasesUITests", directoryHint: .isDirectory)
-      .appending(path: name, directoryHint: .isDirectory)
+    let url = parent.appending(path: name, directoryHint: .isDirectory)
     try? FileManager.default.removeItem(at: url)
     try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
     return url
