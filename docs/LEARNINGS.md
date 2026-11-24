@@ -343,3 +343,6 @@ the Mac in tests".
   sidebar at 239.5 pt, not 320** (`dividerStaysWithin240To320`; the
   far-left drags measured right). *Observed* once, 2026-11-24, not
   rerun or diagnosed. Record: EXPERIMENTS.md `[X-ui-tests-sandboxed]`.
+  - *Update, same day:* failed the same way in the next full run, on
+    the draft 62 build (239.5 pt again), so it reproduces (*verified*,
+    2 of 2 runs). Still not diagnosed.

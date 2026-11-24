@@ -2028,6 +2028,18 @@ Sandbox checks 1–3 deferred: GitHub issue #43.
     the author's call, or a probe with Claude Code's own shell sandbox
     turned off. The control write suggests that sandbox isn't what refused
     (*inferred*).
+- **Run 3, the fix:** the fast suite again, 2026-11-24 15:5x local, by
+  Claude with the author's yes, on branch `fix/ui-tests-sandbox-folder`
+  (spec draft 62, `[D-debug-test-folder]`), Debug build
+  `1795553173707-C7EA3758` (build 62; all 31 launches used it,
+  *verified* from the harness's printout). 32 tests in 11 suites, 248 s:
+  **31 passed, 1 failed** (*verified*). All 11 failures of run 2 that
+  needed image or album content passed, the five `PhotosSourcesTests`
+  included, so the sandboxed Debug build reads
+  `~/Library/Caches/PhasesUITests/` through the exception.
+  `dividerStaysWithin240To320` failed exactly as in run 2 (far right:
+  239.5 pt, expected 320), so it reproduces and isn't caused by the
+  missing folders: `[L-divider-drag-right]`.
 
 ## Retired designs
 
