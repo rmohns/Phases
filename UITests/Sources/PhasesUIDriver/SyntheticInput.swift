@@ -116,9 +116,17 @@ public enum SyntheticInput {
     event?.post(tap: .cghidEventTap)
   }
 
+  /// Mouse down, up and drag carry click state 1, a single click, as a
+  /// mouse sends them [D-input-click-state]. Left alone, mouse up goes out
+  /// with 0, and AppKit reads `clickCount` 0 (from MDPrinter's copy of
+  /// this driver, `e40eef1`; Phases' clicks worked without it,
+  /// [L-click-state-not-needed]).
   private static func post(_ type: CGEventType, at point: CGPoint) {
-    CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .left)?
-      .post(tap: .cghidEventTap)
+    let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .left)
+    if [.leftMouseDown, .leftMouseUp, .leftMouseDragged].contains(type) {
+      event?.setIntegerValueField(.mouseEventClickState, value: 1)
+    }
+    event?.post(tap: .cghidEventTap)
   }
 
   private static func pause(_ seconds: Double) async throws {
