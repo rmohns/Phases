@@ -35,6 +35,7 @@ author's yes.
 | Hands-on checks | Cover checks | `[D-cover-checks]`, checks 1–9 | 15–20 min (*estimate*) | Release | yes | before merging cover work, and after any change to `CrossfadeController` |
 | Hands-on checks | Memory checks | `[D-memory-protocol]`: two runs of ten changes, the covers' cost and release, the no-covers baseline, the window check | 30–40 min (*estimate*) | Release | yes | two runs before and two after any change to covers, image loading, the thumbnail grid, or how wallpaper is set |
 | Hands-on checks | Sandbox checks | checks 1–9 in "Sandbox checks" | 15–20 min (*estimate*) | the newest Bitrig build, diagnostics on | yes | after any change to the entitlements, or to how Phases reads the wallpaper store, sources, or the original wallpaper |
+| Hands-on checks | Phase editor checks | `[D-editor-checks]`, checks 1–10, several displays for 1–4 | 20–30 min (*estimate*) | the newest Bitrig build, diagnostics on | yes | before merging the draft 63 editor, and after any change to the display tabs, the image header, or the Starts row |
 
 The table's order is by time taken, nothing more: no check includes or
 outranks another.
@@ -156,6 +157,37 @@ The pure logic that decides what the app does:
   and no saved settings yes; a recorded launch or settings from an
   earlier version no; test mode only with its switch
   `[D-first-launch-shows-window]` (draft 39)
+- **Phase editor (draft 63, planned).** The editor's decisions are pulled
+  into pure files so these can be unit tests; the type names settle with
+  the code:
+  - Offset: stored minutes to number, unit, and before / after / at, in
+    the largest unit that divides evenly (120 → 2 hours, 90 → 90
+    minutes, 0 → at), and back; limits (1–720 minutes, 1–12 hours) with
+    typed values clamped; changing the unit keeps the number, clamped;
+    leaving "at" starts from 30 minutes `[D-starts-row]`
+  - Rotation: "Only when the phase starts" turns rotation off, and
+    minutes or hours turns it back on with the interval it had
+    `[D-rotation-row]`
+  - Today's start: "Today 6:12 AM (dawn 6:42 AM)", "Today 6:42 AM" at
+    exactly dawn, "No dusk today" on a day without one (using the
+    far-north dates the `SolarCalculator` tests already use)
+    `[D-start-readout]`
+  - Messages: which message shows and under which row, with turned off
+    winning `[D-phase-status-inline]` (extends `PhaseAvailability`)
+  - Display tabs: which tabs show, in what order, and when the row is
+    hidden, including one connected display with its own images
+    `[D-display-tabs-visibility]`; disconnected displays left out but
+    their selections kept `[D-connected-displays-only]`
+    `[D-keep-display-settings]`; the selected tab falls back to Shared
+    when its display disconnects; captions ("18 images", "Uses Shared",
+    "Own · 1 image") `[D-display-tabs]`; outline sizes for portrait,
+    standard, and ultrawide displays, one height and capped width
+    `[D-display-tab-shapes]`
+  - Display sharing: settings from draft 62 copy the app-wide preference
+    into every phase; a new phase starts with the same image everywhere,
+    and a duplicate copies its phase's setting `[D-sharing-per-phase]`;
+    turning on "Use different images on this display" starts from a
+    copy of Shared `[D-own-images-start-from-shared]`
 
 ### Rules
 
@@ -180,7 +212,7 @@ The pure logic that decides what the app does:
   or touches the real wallpaper is a hands-on check, and any one of them
   can run on its own** (draft 33). There are four: Interface tests, Cover
   checks, Memory checks, and from draft 54 Photos checks (from draft 58,
-  Sandbox checks too). The Interface tests are automated but still
+  Sandbox checks too; from draft 63, Phase editor checks). The Interface tests are automated but still
   belong here, because they move the mouse; the line is touching the Mac,
   not automated versus by hand.
   - **Any check alone.** Each starts from a fresh launch, does its own
@@ -357,6 +389,12 @@ The pure logic that decides what the app does:
   draft 54 `imageSourceLocation` and `photosAlbumList`, and from draft
   61 `pauseSwitch`. They're invisible
   to users, but renaming one breaks the tests.
+  - From draft 63: `phaseIsOn` (the name row's switch; draft 62's
+    switch already carries it in `PhaseEditor.swift`, but it wasn't
+    listed here),
+    `phaseNamePencil`, `startTrigger`, `imageHeader`, `displayTabs`,
+    `ownImagesCheckbox`, `sharingCheckbox`, and `removeMissing`.
+    `phaseName` stays on the name field `[D-name-row]`.
 
 - **Relaunch:** the harness relaunches its own instance by sending it a
   reopen Apple event, as Finder does, rather than `open`, which could
@@ -366,11 +404,43 @@ The pure logic that decides what the app does:
   Space were checked by hand on the experiment build, which used the
   same routing (`[L-reopen-event]`, 2026-11-03).
 
+#### Phase editor tests (draft 63, planned)
+
+New UI tests for the redesigned editor (GitHub issue #27), in a new
+`PhaseEditorTests` file, fast suite:
+
+- **Name in place** `[D-name-row]`: clicking the pencil focuses
+  `phaseName` with its text selected; typing a name and pressing Return
+  renames the phase, and the sidebar row reads the new name; editing
+  again and pressing Escape puts the old name back.
+- **The focus tests still hold** `[D-initial-focus-sidebar]`: the three
+  `FocusTests` that type after opening or reopening must pass unchanged
+  against the borderless name field; they're the guard that it never
+  takes focus on its own.
+- **Starts row** `[D-starts-row]`: choosing Dawn in `startTrigger` shows
+  the offset controls; choosing **at** hides the number and unit;
+  choosing Clock Time shows the time field.
+- **Rotation off** `[D-rotation-row]`: choosing "Only when the phase
+  starts" hides the number; choosing minutes brings it back with the
+  same value.
+- **Pinned header** `[D-image-header]`: after the arrow keys scroll the
+  grid well down (as in `gridIsOneTabStopAndArrowsScroll`),
+  `imageHeader`'s top is where it was once pinned, just under the
+  toolbar, and the grid's top has moved up past it.
+- `gridIsOneTabStopAndArrowsScroll` must still pass: the grid stays one
+  Tab stop after the new header, and the display tabs are one Tab stop
+  of their own.
+- Multi-display behavior isn't here: the test window runs on whatever
+  displays are connected, so the display tabs are the Phase editor
+  checks, below.
+
 #### Not covered here
 
 - Crossfade timing (the twitch) and the persistent cover's Space behavior
   are the Cover checks. Memory is the Memory checks. The screen-change
   rule `[D-screen-change-no-reroll]` is a unit test.
+- The display tabs with more than one display, and the editor's look,
+  are the Phase editor checks (draft 63).
 
 #### History
 
@@ -735,6 +805,66 @@ Each with what passes:
   between the two on hand instead of repeating
   `[L-photos-offline-check]`. The UI suite passed 29 of 29 (247 s) on
   the same build.
+
+### Phase editor checks (draft 63)
+
+- `[D-editor-checks]` **The redesigned phase editor is checked by hand
+  before it merges,** and after any change to the display tabs, the
+  image header, or the Starts row. The UI tests can't add or remove
+  displays, and nothing automated judges how the editor looks. Ask
+  first, naming the checks. Checks 1–4 need several displays: real
+  ones, or the author's tool that adds displays that aren't physically
+  connected.
+  - Build: the newest Bitrig Debug build, diagnostics on.
+- **The checks:**
+  1. **Tab row shows and hides** `[D-display-tabs-visibility]`: one
+     display, the row is hidden; two or more, it shows Shared, the
+     divider, then each display in macOS's order; back to one display
+     after giving it its own images, the row shows Shared plus that
+     display.
+  2. **Shapes** `[D-display-tab-shapes]`: a rotated (portrait) display
+     is drawn tall and an ultrawide wide, all at one height; a long name
+     wraps, then truncates at the end, with the full name in the
+     tooltip.
+  3. **Overflow** `[D-display-tabs]`: with enough displays to overflow
+     at the minimum window width, Shared and the divider stay put, the
+     other tabs scroll sideways with a trackpad, and the edge fades on
+     each side with tabs out of view. Note whether a mouse's scroll wheel
+     scrolls the row without ⇧ (*recalled* that it doesn't; record what
+     happens).
+  4. **Disconnect and reconnect** `[D-connected-displays-only]`: with a
+     display's tab selected and its own images chosen, disconnect it:
+     Shared is selected and the tab is gone. Reconnect: the tab is back,
+     "Own · N images", same selection.
+  5. **Sharing checkbox** `[D-sharing-per-phase]`: dimmed when fewer than
+     two connected displays use Shared; with two, turning it on gives the
+     displays different images at the next change, per phase. A Mac
+     upgraded from draft 62 with **Different picks per display** shows
+     it on in every phase.
+  6. **Own images** `[D-own-images-start-from-shared]`: turning on "Use
+     different images on this display" shows the Shared selection
+     already chosen, and the wallpaper doesn't change; turning it off
+     shows "Uses the Shared images".
+  7. **Pinned header** `[D-image-header]`: scrolled down a long grid, the
+     tabs, checkbox, count, and Select All / Select None stay in view,
+     with no thumbnail showing through; with a missing image, Remove
+     Missing is in the header and works.
+  8. **Starts row and messages** `[D-starts-row]` `[D-start-readout]`
+     `[D-phase-status-inline]`: each trigger's row reads as a sentence;
+     a dawn phase's "Today …" line matches Settings' dawn time minus
+     the offset; with Location off, the message and Open System
+     Settings… replace that line; a phase turned off shows its message
+     under the name row only.
+  9. **Fit and look** `[D-window-min-size]` `[D-editor-layout]`: at the
+     minimum window width, the dawn Starts row and "Any | Light Mode |
+     Dark Mode" fit without clipping; Light and Dark Mode both read
+     well; the branding panel's top lines up with the name row
+     `[D-brand-inset]`.
+  10. **VoiceOver:** the name field reads "Name", the switch "Use this
+      phase", the display tabs as one control with each tab's name,
+      caption, and "selected".
+- Record results with date and build in this section, as the other
+  checks do.
 
 ### Sandbox checks (draft 58)
 
