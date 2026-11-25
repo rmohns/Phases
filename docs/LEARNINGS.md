@@ -401,3 +401,13 @@ the Mac in tests".
     separate launches, so when it grew isn't known). Not measured over
     time; the two hypotheses above stay untested.
 - `[L-window-size-ignored]` is GitHub issue #50.
+- `[L-select-all-outside-window]` **`selectAllSelectsBothSources` now
+  fails: the driver refuses to click Select All, judging it outside the
+  window, and sends no click.** Select All's AX frame was (1572, 633.5,
+  81 × 24). *Verified* 2026-11-25 by Claude, build 62, 3 of 3 runs: the
+  fast suite and a rerun of `ImageSourcesTests` with the
+  `[D-input-click-state]` driver, and the test alone with `main`'s
+  driver before that change, so it isn't the click state. It passed in
+  the 2026-11-24 fast suite. The window's frame wasn't logged.
+  *Hypothesis,* untested: the test window opens at a size other than the
+  one the test expects, as in #50. Not diagnosed.
