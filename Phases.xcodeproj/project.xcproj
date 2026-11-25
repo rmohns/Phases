@@ -51,7 +51,7 @@
         "CODE_SIGN_ENTITLEMENTS[config=Debug]": "App/Phases-Debug.entitlements",
         "CODE_SIGN_ENTITLEMENTS[config=Release]": "App/Phases.entitlements",
         "COMBINE_HIDPI_IMAGES": "YES",
-        "CURRENT_PROJECT_VERSION": "62",
+        "CURRENT_PROJECT_VERSION": "63",
         "DEVELOPMENT_TEAM": "Y382W2CA47",
         "INFOPLIST_FILE": "App/Info.plist",
         "LD_RUNPATH_SEARCH_PATHS": [

@@ -5,11 +5,15 @@ struct Phase: Identifiable, Codable, Hashable {
   var id = UUID()
   var name: String
   var trigger: PhaseTrigger
-  /// Selected images for All Displays, as paths relative to the library folder.
+  /// The Shared selection (All Displays through draft 62), as stored image
+  /// names (spec "Image library").
   var imageNames: [String] = []
   /// Separate selections for specific displays, keyed by display UUID. A
   /// display with an entry here draws only from it (spec "Per-display images").
   var displayImageNames: [String: [String]] = [:]
+  /// [D-sharing-per-phase] Whether the displays using the Shared images
+  /// show the same image or each a different one.
+  var displayMode: DisplayMode = .sameOnAll
   var order: ImageOrder = .inOrder
   var isRotating = false
   var rotation = RotationInterval(value: 30, unit: .minutes)
@@ -39,9 +43,32 @@ struct Phase: Identifiable, Codable, Hashable {
     copy.name = "\(name) copy"
     return copy
   }
+
+  /// Whether `display` draws from its own images in this phase.
+  func hasOwnImages(_ display: String) -> Bool {
+    displayImageNames[display] != nil
+  }
+
+  /// [D-own-images-start-from-shared] Turning own images on starts from a
+  /// copy of the Shared selection; turning them off discards them.
+  mutating func setOwnImages(_ isOn: Bool, for display: String) {
+    displayImageNames[display] = isOn ? imageNames : nil
+  }
 }
 
 extension Phase {
+  /// [D-sharing-per-phase] Through draft 62 display sharing was one app-wide
+  /// preference. A phase saved then has no `displayMode`, and takes the
+  /// value given here in the decoder's `userInfo`.
+  static let legacyDisplayModeKey = CodingUserInfoKey(rawValue: "legacyDisplayMode")!
+
+  /// Decodes saved phases, giving any saved before draft 63 `legacyDisplayMode`.
+  static func decodeSaved(_ data: Data, legacyDisplayMode: DisplayMode) throws -> [Phase] {
+    let decoder = JSONDecoder()
+    decoder.userInfo[legacyDisplayModeKey] = legacyDisplayMode
+    return try decoder.decode([Phase].self, from: data)
+  }
+
   /// Decodes leniently so phases saved by older versions (without newer
   /// fields) keep loading.
   init(from decoder: Decoder) throws {
@@ -51,6 +78,8 @@ extension Phase {
     trigger = try container.decode(PhaseTrigger.self, forKey: .trigger)
     imageNames = try container.decodeIfPresent([String].self, forKey: .imageNames) ?? []
     displayImageNames = try container.decodeIfPresent([String: [String]].self, forKey: .displayImageNames) ?? [:]
+    displayMode = try container.decodeIfPresent(DisplayMode.self, forKey: .displayMode)
+      ?? decoder.userInfo[Self.legacyDisplayModeKey] as? DisplayMode ?? .sameOnAll
     order = try container.decodeIfPresent(ImageOrder.self, forKey: .order) ?? .inOrder
     isRotating = try container.decodeIfPresent(Bool.self, forKey: .isRotating) ?? false
     rotation = try container.decodeIfPresent(RotationInterval.self, forKey: .rotation)
@@ -71,6 +100,15 @@ enum AppearanceCondition: String, Codable, CaseIterable, Identifiable {
     case .any: "Any"
     case .light: "Light"
     case .dark: "Dark"
+    }
+  }
+
+  /// The phase editor's Use in segments (spec "Light and Dark Mode").
+  var editorTitle: String {
+    switch self {
+    case .any: "Any"
+    case .light: "Light Mode"
+    case .dark: "Dark Mode"
     }
   }
 
@@ -156,8 +194,9 @@ enum ImageOrder: String, Codable, CaseIterable, Identifiable {
 
   var title: String {
     switch self {
+    // [D-order-row] Read after "Show images".
     case .inOrder: "In Order"
-    case .random: "Random"
+    case .random: "Randomly"
     }
   }
 }
@@ -185,8 +224,9 @@ enum TimeUnit: String, Codable, CaseIterable, Identifiable {
 
   var title: String {
     switch self {
-    case .minutes: "Minutes"
-    case .hours: "Hours"
+    // Lowercase: the editor's rows read as sentences [D-starts-row].
+    case .minutes: "minutes"
+    case .hours: "hours"
     }
   }
 }

@@ -21,13 +21,6 @@ final class WallpaperScheduler {
     }
   }
 
-  var displayMode: DisplayMode {
-    didSet {
-      SettingsStore.defaults.set(displayMode.rawValue, forKey: Keys.displayMode)
-      reapplyCurrentPhase()
-    }
-  }
-
   var transitionStyle: TransitionStyle {
     didSet {
       SettingsStore.defaults.set(transitionStyle.rawValue, forKey: Keys.transitionStyle)
@@ -114,6 +107,9 @@ final class WallpaperScheduler {
     didSet { Self.save(knownDisplays, forKey: Keys.knownDisplays) }
   }
   private(set) var connectedDisplayUUIDs: Set<String> = []
+  /// [D-display-tabs] [D-connected-displays-only] Connected displays in
+  /// macOS's order, for the phase editor's display tabs.
+  private(set) var connectedDisplays: [ConnectedDisplay] = []
 
   private(set) var activePhase: Phase?
   private(set) var nextChange: NextChange?
@@ -144,7 +140,9 @@ final class WallpaperScheduler {
 
   private enum Keys {
     static let phases = "phases"
-    static let displayMode = "displayMode"
+    /// The app-wide display sharing preference through draft 62, read only
+    /// to upgrade older phases [D-sharing-per-phase].
+    static let legacyDisplayMode = "displayMode"
     static let isPaused = "isPaused"
     static let appliedState = "appliedState"
     static let restorePoint = "restorePoint"
@@ -170,9 +168,11 @@ final class WallpaperScheduler {
     )
     defaults.set(true, forKey: FirstLaunch.recordKey)
     // [D-ui-test-mode] Test mode's store starts empty, so it gets the fixtures.
-    phases = Self.load([Phase].self, forKey: Keys.phases)
+    // [D-sharing-per-phase] Phases saved before draft 63 take the old
+    // app-wide display sharing preference, which is no longer read after.
+    let legacyDisplayMode = defaults.string(forKey: Keys.legacyDisplayMode).flatMap(DisplayMode.init) ?? .sameOnAll
+    phases = defaults.data(forKey: Keys.phases).flatMap { try? Phase.decodeSaved($0, legacyDisplayMode: legacyDisplayMode) }
       ?? (UITestMode.isOn ? UITestMode.fixturePhases : Phase.starterPhases)
-    displayMode = defaults.string(forKey: Keys.displayMode).flatMap(DisplayMode.init) ?? .sameOnAll
     isPaused = defaults.bool(forKey: Keys.isPaused)
     pausedForOutsideChangeAt = Self.load(Date.self, forKey: Keys.pausedForOutsideChangeAt)
     // [D-test-paused-by-outside-change] No notification: the pause is
@@ -222,26 +222,17 @@ final class WallpaperScheduler {
     return NSScreen.main?.displayUUID.flatMap { images[$0] } ?? images.values.first
   }
 
-  /// Known displays, connected ones first, for the phase editor's picker.
-  var displaysForPicker: [KnownDisplay] {
-    knownDisplays.sorted { lhs, rhs in
-      let l = connectedDisplayUUIDs.contains(lhs.uuid), r = connectedDisplayUUIDs.contains(rhs.uuid)
-      if l != r { return l }
-      return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
-    }
-  }
-
-  func isConnected(_ display: KnownDisplay) -> Bool {
-    connectedDisplayUUIDs.contains(display.uuid)
-  }
-
-  /// Records connected displays and their current names.
+  /// Records connected displays and their current names. Known displays are
+  /// never pruned [D-keep-display-settings].
   private func refreshDisplays() {
     var known = knownDisplays
     var connected: Set<String> = []
+    var tabs: [ConnectedDisplay] = []
+    // NSScreen.screens lists the main display first (recalled).
     for screen in NSScreen.screens {
       guard let uuid = screen.displayUUID else { continue }
       connected.insert(uuid)
+      tabs.append(ConnectedDisplay(uuid: uuid, name: screen.localizedName, size: screen.frame.size))
       if let index = known.firstIndex(where: { $0.uuid == uuid }) {
         known[index].name = screen.localizedName
       } else {
@@ -250,6 +241,7 @@ final class WallpaperScheduler {
     }
     if known != knownDisplays { knownDisplays = known }
     connectedDisplayUUIDs = connected
+    if tabs != connectedDisplays { connectedDisplays = tabs }
   }
 
   // MARK: - Actions
@@ -366,18 +358,6 @@ final class WallpaperScheduler {
     scheduleNextChange(from: now)
   }
 
-  private func reapplyCurrentPhase() {
-    let now = Date()
-    guard !isPaused, let active = engine.activePhase(at: now) else { return }
-    let start = resolvedStart(for: active, now: now)
-    apply(
-      active.phase,
-      start: start,
-      slot: slot(for: active.phase, start: start, now: now),
-      mode: .repair
-    )
-  }
-
   /// "Always" phases have no natural start, so rotation is anchored to when
   /// the phase was first applied.
   private func resolvedStart(for active: ScheduleEngine.ActivePhase, now: Date) -> Date {
@@ -391,7 +371,7 @@ final class WallpaperScheduler {
   }
 
   /// The available images a display draws from: its own selection if it has
-  /// one (even if empty), otherwise the All Displays selection.
+  /// one (even if empty), otherwise the Shared selection.
   private func imagePool(for uuid: String, in phase: Phase) -> [String] {
     library.availableImages(phase.displayImageNames[uuid] ?? phase.imageNames)
   }
@@ -525,11 +505,11 @@ final class WallpaperScheduler {
     if picks.values.contains(where: library.isPhoto) { library.reload() }
     let showing = imagesShowing()
     var shown: [String: String?] = picks
-    // Displays sharing All Displays in Same on All get one replacement.
+    // Displays sharing Shared with the same image everywhere get one replacement.
     var sharedReplacement: [String: String?] = [:]
     for (uuid, name) in picks.sorted(by: { $0.key < $1.key }) where library.fileOnHand(for: name) == nil {
       let hasOwn = phase.displayImageNames[uuid] != nil
-      if !hasOwn, displayMode == .sameOnAll, let replacement = sharedReplacement[name] {
+      if !hasOwn, phase.displayMode == .sameOnAll, let replacement = sharedReplacement[name] {
         shown[uuid] = replacement
         continue
       }
@@ -620,8 +600,8 @@ final class WallpaperScheduler {
 
     struct Inputs: Equatable {
       var phase: Phase
+      /// The phase includes its display sharing [D-sharing-per-phase].
       var displays: Set<String>
-      var displayMode: DisplayMode
       var pools: [String: [String]]
       /// In order's remembered place [D-in-order-remembers]: Change Now
       /// before the change moves it.
@@ -638,7 +618,6 @@ final class WallpaperScheduler {
     FetchedAhead.Inputs(
       phase: phase,
       displays: connectedDisplayUUIDs,
-      displayMode: displayMode,
       pools: Dictionary(uniqueKeysWithValues: connectedDisplayUUIDs.map { ($0, imagePool(for: $0, in: phase)) }),
       positions: inOrderPositions[phase.id.uuidString] ?? [:]
     )
@@ -697,7 +676,7 @@ final class WallpaperScheduler {
   }
 
   /// Display UUID → image. Displays with their own selection draw from it;
-  /// the rest share the All Displays selection per the display mode (spec "Displays sharing the All Displays images").
+  /// the rest share the Shared selection per the phase's display sharing [D-sharing-per-phase].
   /// Changes nothing.
   private func planImages(for phase: Phase, mode: InOrderPicker.Mode) -> ImagePlan {
     let showing = imagesShowing()
@@ -708,7 +687,7 @@ final class WallpaperScheduler {
 
     for uuid in connected {
       // [D-own-images-no-fallback] A display with its own selection never
-      // falls back to All Displays, even if none of its images are available.
+      // falls back to Shared, even if none of its images are available.
       guard phase.displayImageNames[uuid] != nil else {
         sharing.append(uuid)
         continue
@@ -728,7 +707,7 @@ final class WallpaperScheduler {
       let current = sharing.map { showing[$0] ?? [] }
       let remembered = positions[InOrderPicker.sharedKey]
       let names: [String]
-      switch displayMode {
+      switch phase.displayMode {
       case .sameOnAll:
         let union = current.reduce(into: Set<String>()) { $0.formUnion($1) }
         names = phase.order == .random

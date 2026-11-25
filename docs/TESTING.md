@@ -157,9 +157,10 @@ The pure logic that decides what the app does:
   and no saved settings yes; a recorded launch or settings from an
   earlier version no; test mode only with its switch
   `[D-first-launch-shows-window]` (draft 39)
-- **Phase editor (draft 63, planned).** The editor's decisions are pulled
-  into pure files so these can be unit tests; the type names settle with
-  the code:
+- **Phase editor (draft 63)**, in `PhaseEditorRulesTests.swift`: the
+  editor's decisions live in pure files (`OffsetParts`, `RotationChoice`,
+  `StartReadout`, `DisplayTabs`, and additions to `Phase` and
+  `PhaseAvailability`) so these can be unit tests:
   - Offset: stored minutes to number, unit, and before / after / at, in
     the largest unit that divides evenly (120 → 2 hours, 90 → 90
     minutes, 0 → at), and back; limits (1–720 minutes, 1–12 hours) with
@@ -188,6 +189,9 @@ The pure logic that decides what the app does:
     and a duplicate copies its phase's setting `[D-sharing-per-phase]`;
     turning on "Use different images on this display" starts from a
     copy of Shared `[D-own-images-start-from-shared]`
+  - *Verified* 2026-11-25 by Claude: `bitrig test -package UnitTests`,
+    239 of 239 passed, these included (and `AppVersion` with the build
+    number at 63).
 
 ### Rules
 
@@ -392,9 +396,12 @@ The pure logic that decides what the app does:
   - From draft 63: `phaseIsOn` (the name row's switch; draft 62's
     switch already carries it in `PhaseEditor.swift`, but it wasn't
     listed here),
-    `phaseNamePencil`, `startTrigger`, `imageHeader`, `displayTabs`,
-    `ownImagesCheckbox`, `sharingCheckbox`, and `removeMissing`.
-    `phaseName` stays on the name field `[D-name-row]`.
+    `phaseNamePencil`, `startTrigger`, `startTime`, `offsetValue`,
+    `offsetDirection`, `rotationValue`, `rotationChoice`, `imageHeader`,
+    `displayTabs`, `ownImagesCheckbox`, `sharingCheckbox`, and
+    `removeMissing`. `phaseName` stays on the name field `[D-name-row]`.
+  - From draft 63 the driver also presses Y, Return, and Escape
+    (`SyntheticInput.Key`), for renaming in place.
 
 - **Relaunch:** the harness relaunches its own instance by sending it a
   reopen Apple event, as Finder does, rather than `open`, which could
@@ -404,26 +411,29 @@ The pure logic that decides what the app does:
   Space were checked by hand on the experiment build, which used the
   same routing (`[L-reopen-event]`, 2026-11-03).
 
-#### Phase editor tests (draft 63, planned)
+#### Phase editor tests (draft 63)
 
-New UI tests for the redesigned editor (GitHub issue #27), in a new
-`PhaseEditorTests` file, fast suite:
+UI tests for the redesigned editor (GitHub issue #27), in
+`PhaseEditorTests.swift`, fast suite. Written 2026-11-25 and compiled;
+not yet run (each run needs the author's yes):
 
-- **Name in place** `[D-name-row]`: clicking the pencil focuses
-  `phaseName` with its text selected; typing a name and pressing Return
-  renames the phase, and the sidebar row reads the new name; editing
-  again and pressing Escape puts the old name back.
+- **Name in place** `[D-name-row]` (`nameEditsInPlace`): clicking the
+  pencil focuses `phaseName` with its text selected; typing "x" and
+  pressing Return renames the phase, and the sidebar row reads the new
+  name; editing again, typing "y", and pressing Escape puts "x" back.
 - **The focus tests still hold** `[D-initial-focus-sidebar]`: the three
   `FocusTests` that type after opening or reopening must pass unchanged
   against the borderless name field; they're the guard that it never
   takes focus on its own.
-- **Starts row** `[D-starts-row]`: choosing Dawn in `startTrigger` shows
-  the offset controls; choosing **at** hides the number and unit;
-  choosing Clock Time shows the time field.
-- **Rotation off** `[D-rotation-row]`: choosing "Only when the phase
-  starts" hides the number; choosing minutes brings it back with the
-  same value.
-- **Pinned header** `[D-image-header]`: after the arrow keys scroll the
+- **Starts row** `[D-starts-row]` (`startsRowFollowsTheTrigger`):
+  choosing Dawn in `startTrigger` shows the offset controls; choosing
+  **at** hides the number and unit, and choosing before brings it back
+  at 30; choosing Clock Time shows the time field.
+- **Rotation off** `[D-rotation-row]` (`rotationTurnsOffAndBackOn`):
+  choosing "Only when the phase starts" hides the number; choosing
+  minutes brings it back with the same value.
+- **Pinned header** `[D-image-header]`
+  (`imageHeaderPinsWhileTheGridScrolls`): after the arrow keys scroll the
   grid well down (as in `gridIsOneTabStopAndArrowsScroll`),
   `imageHeader`'s top is where it was once pinned, just under the
   toolbar, and the grid's top has moved up past it.

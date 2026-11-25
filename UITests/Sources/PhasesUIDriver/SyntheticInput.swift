@@ -12,6 +12,10 @@ public enum SyntheticInput {
     case rightArrow = 124
     case space = 49
     case x = 7
+    // Draft 63: renaming a phase in place [D-name-row].
+    case y = 16
+    case returnKey = 36
+    case escape = 53
   }
 
   package static func click(at point: CGPoint) async throws {

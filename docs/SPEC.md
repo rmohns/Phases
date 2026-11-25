@@ -667,7 +667,8 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
   real proportions:** a rounded rectangle at the display's current
   aspect ratio, as arranged in System Settings, so a rotated display is
   drawn tall and an ultrawide drawn wide. The outlines share one height
-  (about 32 pt), capped in width so an ultrawide still fits the tab.
+  (32 pt), and one too wide for the tab is scaled down to fit, keeping
+  its proportions, so a very wide display is drawn shorter.
   - *Why:* per-display images exist mostly for portrait and ultrawide
     displays, so the shape is what tells the tabs apart. Only connected
     displays are listed, so the shape is always known (author's mockup,
@@ -1908,10 +1909,18 @@ branch) supplied the display tabs and pinned header.
   after it, and the On/Off switch at the trailing edge `[D-phase-turn-off]`.
   - **The name is a text field drawn without a border,** in a larger
     title style than the form's text (a system text style, no fixed
-    size). Clicking the name or the pencil starts editing in place, with
-    the text selected; Return or clicking elsewhere saves it, and Escape
-    puts back the name it had before. The sidebar row and the toolbar
-    title `[D-tall-toolbar]` follow the saved name.
+    size). Clicking the pencil starts editing in place with the text
+    selected; clicking the name puts the insertion point where it was
+    clicked, as in any text field. Return or clicking elsewhere ends
+    editing, and Escape puts back the name it had when editing started.
+    The sidebar row and the toolbar title `[D-tall-toolbar]` follow the
+    name as it's typed, as in draft 62.
+    - *Changed while building* (Claude, 2026-11-25): the approved draft
+      said clicking the name also selected the text, and that the name
+      was saved on Return. A click in a text field places the insertion
+      point, and the name already saved with each keystroke in draft 62;
+      matching both keeps the field ordinary, and Escape still undoes
+      the edit.
     - The pencil (`square.and.pencil`) is only a hint that the name can
       be edited; VoiceOver sees one text field labelled "Name". It keeps
       the `phaseName` accessibility identifier `[D-ui-test-ids]`.
