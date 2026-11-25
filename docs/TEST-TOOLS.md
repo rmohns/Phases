@@ -124,13 +124,14 @@ Used by both groups. Reference, not steps.
   `SyntheticInput.post(_:at:)` sets `mouseEventClickState` to 1 on left
   mouse down, up and dragged; mouse moved is left alone. Taken from
   MDPrinter's copy of this driver (`e40eef1` there, 2026-11-15).
-  - *Why:* left alone, mouse up goes out with click state 0 (*verified*,
-    above), and in MDPrinter AppKit then read `clickCount` 0 (*verified*
-    there). Phases' clicks worked without it (`[L-click-state-not-needed]`),
-    so this is a precaution: it costs nothing, makes the events match a
-    real mouse, and means no one has to rediscover the gap if a control
-    that reads the click count, or a double click, ever needs testing
-    (Robert's reasoning).
+  - *Why:* left alone, a created mouse up has click state 0 (*verified*,
+    above). Nothing is known to fail because of it: Phases' clicks
+    worked without it (`[L-click-state-not-needed]`), and MDPrinter's
+    claim that AppKit read `clickCount` 0 is unsupported (correction,
+    above). So this is a precaution: it costs nothing, and no one has to
+    rediscover the gap if a control that reads the click count, or a
+    double click, ever needs testing (Robert's reasoning). That a real
+    mouse's up carries click state 1 is *recalled*, not measured here.
   - *Checked:* the experiment's tile test passed with click state 1
     (`[X-click-state]` run 9).
 
