@@ -502,6 +502,13 @@ public final class PhasesApp {
     try await SyntheticInput.drag(from: start, to: CGPoint(x: windowFrame.minX + x, y: start.y))
   }
 
+  /// Turns the scroll wheel `lines` lines over the node's center (which
+  /// must be in the window); positive brings what's below into view.
+  public func scroll(_ node: AXNode, lines: Int) async throws {
+    try await ensureFrontmost()
+    try await SyntheticInput.scroll(at: try center(of: node), lines: lines)
+  }
+
   public func press(_ key: SyntheticInput.Key, modifiers: Set<SyntheticInput.Modifier> = []) async throws {
     try await ensureFrontmost()
     try await SyntheticInput.press(key, modifiers: modifiers)

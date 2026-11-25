@@ -27,6 +27,21 @@ public enum SyntheticInput {
     try await pause(0.5)
   }
 
+  /// Moves to `point` and turns the scroll wheel `lines` lines, one line
+  /// per event. Positive scrolls the content up (toward what's below), the
+  /// way a scroll down on a mouse with standard scrolling does.
+  package static func scroll(at point: CGPoint, lines: Int) async throws {
+    post(.mouseMoved, at: point)
+    try await pause(0.1)
+    for _ in 0..<abs(lines) {
+      let event = CGEvent(scrollWheelEvent2Source: nil, units: .line, wheelCount: 1, wheel1: lines > 0 ? -1 : 1, wheel2: 0, wheel3: 0)
+      event?.location = point
+      event?.post(tap: .cghidEventTap)
+      try await pause(0.03)
+    }
+    try await pause(0.4)
+  }
+
   /// Presses at `start`, moves to `end` in steps, and releases there.
   package static func drag(from start: CGPoint, to end: CGPoint, steps: Int = 30) async throws {
     post(.mouseMoved, at: start)
@@ -116,9 +131,17 @@ public enum SyntheticInput {
     event?.post(tap: .cghidEventTap)
   }
 
+  // EXPERIMENT [X-click-state]: PHASES_CLICK_STATE=1 sets click state 1 on
+  // down, up and drag. Not for main.
+  private static let setsClickState = ProcessInfo.processInfo.environment["PHASES_CLICK_STATE"] == "1"
+
   private static func post(_ type: CGEventType, at point: CGPoint) {
-    CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .left)?
-      .post(tap: .cghidEventTap)
+    guard let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .left) else { return }
+    if setsClickState, [.leftMouseDown, .leftMouseUp, .leftMouseDragged].contains(type) {
+      event.setIntegerValueField(.mouseEventClickState, value: 1)
+    }
+    print("[X-click-state] posted \(type.rawValue) clickState \(event.getIntegerValueField(.mouseEventClickState))")
+    event.post(tap: .cghidEventTap)
   }
 
   private static func pause(_ seconds: Double) async throws {

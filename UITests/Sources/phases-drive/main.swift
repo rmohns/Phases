@@ -10,6 +10,7 @@ import PhasesUIDriver
 //   swift run phases-drive where            pointer position
 //   swift run phases-drive move <x> <y>     global points, top-left origin
 //   swift run phases-drive click <x> <y>
+//   swift run phases-drive scroll <x> <y> <lines>   positive brings what's below into view
 //   swift run phases-drive key tab|down|x [shift] [cmd] [opt] [ctrl]
 //   swift run phases-drive flags            modifiers the system reads as held
 //                                           (sends no input)
@@ -30,7 +31,7 @@ func describe(_ modifiers: [SyntheticInput.Modifier]) -> String {
   modifiers.isEmpty ? "none" : modifiers.map(\.description).joined(separator: ", ")
 }
 
-let usage = "usage: phases-drive where | move <x> <y> | click <x> <y> | key tab|down|x [shift] [cmd] [opt] [ctrl] | flags"
+let usage = "usage: phases-drive where | move <x> <y> | click <x> <y> | scroll <x> <y> <lines> | key tab|down|x [shift] [cmd] [opt] [ctrl] | flags"
 let modifierNames: [String: SyntheticInput.Modifier] = ["shift": .shift, "cmd": .command, "opt": .option, "ctrl": .control]
 
 let args = CommandLine.arguments.dropFirst()
@@ -46,6 +47,12 @@ case "click":
   guard let target = point(args.dropFirst()) else { fail("usage: click <x> <y>") }
   try await SyntheticInput.click(at: target)
   print("click at \(Int(target.x)),\(Int(target.y))")
+case "scroll":
+  guard let target = point(args.dropFirst()), let lines = args.dropFirst(3).first.flatMap(Int.init) else {
+    fail("usage: scroll <x> <y> <lines> (positive brings what's below into view)")
+  }
+  try await SyntheticInput.scroll(at: target, lines: lines)
+  print("scroll \(lines) lines at \(Int(target.x)),\(Int(target.y))")
 case "key":
   let keys: [String: SyntheticInput.Key] = ["tab": .tab, "down": .downArrow, "x": .x]
   guard let name = args.dropFirst().first, let key = keys[name] else { fail(usage) }
