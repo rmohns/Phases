@@ -364,3 +364,29 @@ the Mac in tests".
     the sidebar because it was already at its 240 pt minimum
     (*observed*); that's expected, and the test read 240 as it should.
     Only the far-right drag fell short.
+  - *Update, 2026-11-25:* `[L-window-size-ignored]` fits this. A test
+    that asked the harness for a 1000 pt wide window got one 751 pt
+    wide, about the width inferred above (*verified*, AX frame, 4 runs).
+    A lead for #49, not a diagnosis.
+- `[L-click-state-not-needed]` **Phases' clicks work with click state 0
+  on mouse up; the driver doesn't need to set it** (GitHub issue #39's
+  last question). An image grid tile, the click judged most at risk,
+  toggled on and off the same with click state 0 or 1 (*verified*,
+  Claude, 2026-11-25, 2 passing runs plus 1 with the same result).
+  Mouse events created by `CGEvent(mouseEventSource:…)` read click
+  state 1 on down and drag and 0 on up (*verified*). Record:
+  `[X-click-state]`, tag `archive/experiment/click-state`.
+- `[L-window-size-ignored]` **The harness's `windowSize` didn't size the
+  window.** Asked for 1000 × 1104 pt, the test window opened 751 × 645
+  (*verified*, AX frame, 4 launches, 2026-11-25). Setting the size
+  through AX after opening worked. Why is untested. Record:
+  `[X-click-state]`.
+- `[L-detail-scroll-short]` **In a 645 pt tall window, the detail pane
+  hardly scrolls: the image grid's first row stays below the window's
+  bottom edge.** 40 lines of synthetic scroll wheel moved it 30 pt, and
+  AX scroll-to-visible 20 pt (*verified*, AX frames, 2026-11-25). Not
+  looked at by hand, so whether a person sees the same is open. If so,
+  it's an app bug: the images couldn't be reached in a short window.
+  *Hypothesis,* untested: the grid's own scroll view takes the wheel
+  events, or the pane's scroll range ends early. Record:
+  `[X-click-state]`.

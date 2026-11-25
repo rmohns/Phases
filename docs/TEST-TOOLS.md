@@ -100,6 +100,11 @@ Used by both groups. Reference, not steps.
       `onTapGesture`, the image grid's tile click
       (`App/Views/ImageGrid.swift`), which no UI test clicks; that it
       reads the click count on mouse up is a hypothesis.
+    - *Answered* 2026-11-25 by Claude: **not needed.** A tile click
+      toggled the tile with click state 0 on mouse up, the same as with
+      1 (*verified*, UI test runs with Robert's go-ahead). The driver
+      stays as it is. Revisit if a test ever needs a double click.
+      `[L-click-state-not-needed]`, record `[X-click-state]`.
 
 ### Diagnostics
 
