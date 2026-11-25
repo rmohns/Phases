@@ -84,6 +84,22 @@ Used by both groups. Reference, not steps.
     to 1 on mouse down, up and drag events, because without it AppKit
     saw `clickCount` 0 there. Phases' clicks don't set it; whether they
     need to hasn't been checked (GitHub issue #39).
+    - *Verified* 2026-11-25 by Claude (macOS 27.2, events created and
+      read back, never posted, so no input was sent): a mouse event made
+      the way `SyntheticInput.post(_:at:)` makes it, with
+      `CGEvent(mouseEventSource:mouseType:…)`, has `mouseEventClickState`
+      1 for left mouse down and left mouse dragged, and **0 for left
+      mouse up** (and for mouse moved). A `.hidSystemState` source gives
+      the same values. So Phases' clicks go out with click state 0 on the
+      up, the same gap MDPrinter found. Still open: whether the window
+      server rewrites it on posting, and whether anything in Phases
+      reads it. *Recalled, not tested here:* buttons, list rows and
+      text fields act on mouse down or track the press themselves, which
+      fits the 2026-11-24 fast suite passing its clicks. Nothing in Phases
+      asks for a double click. The surface at risk is SwiftUI's
+      `onTapGesture`, the image grid's tile click
+      (`App/Views/ImageGrid.swift`), which no UI test clicks; that it
+      reads the click count on mouse up is a hypothesis.
 
 ### Diagnostics
 
