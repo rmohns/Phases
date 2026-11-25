@@ -390,3 +390,14 @@ the Mac in tests".
   *Hypothesis,* untested: the grid's own scroll view takes the wheel
   events, or the pane's scroll range ends early. Record:
   `[X-click-state]`.
+  - *Update, same day:* Robert, scrolling by hand in his installed
+    Phases (a folder and a Photos album, 293 images), sees the scroll
+    bar resize several times over a couple of seconds as the pane takes
+    in more images (*observed* by Robert). His reading: the short
+    scroll was a side effect of the form resizing itself while images
+    load, not a pane that can't scroll. The test's numbers fit it
+    without proving it: the grid's frame read 649 pt tall in runs 3–5
+    and 766.5 pt after run 6's scrolling (*verified*, AX frames, but
+    separate launches, so when it grew isn't known). Not measured over
+    time; the two hypotheses above stay untested.
+- `[L-window-size-ignored]` is GitHub issue #50.
