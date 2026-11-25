@@ -84,6 +84,18 @@ Used by both groups. Reference, not steps.
     to 1 on mouse down, up and drag events, because without it AppKit
     saw `clickCount` 0 there. Phases' clicks don't set it; whether they
     need to hasn't been checked (GitHub issue #39).
+    - *Correction,* 2026-11-25, Claude, from MDPrinter's own records:
+      **that AppKit saw `clickCount` 0 in MDPrinter is unsupported.** It
+      appears only in a code comment in MDPrinter's `e40eef1` and in
+      issue #39, with no run, log or measurement behind it. MDPrinter's
+      one recorded click count, in its divider experiment, is
+      `mouseDown` with `clickCount` **1**. Its `e40eef1` landed 25 s
+      after the divider fix (`c6efa3d`, an `NSSplitView` setting), so
+      the click state was likely a suspect in that hunt, ruled out
+      without the comment being updated (*hypothesis*). "The same gap
+      MDPrinter found", below, rests on that claim; what's verified is
+      only that a created mouse up has click state 0. What AppKit
+      receives hasn't been measured in either app.
     - *Verified* 2026-11-25 by Claude (macOS 27.2, events created and
       read back, never posted, so no input was sent): a mouse event made
       the way `SyntheticInput.post(_:at:)` makes it, with
