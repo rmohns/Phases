@@ -267,6 +267,25 @@ From `[X-memory]` unless noted: macOS 27.2, two or three displays.
     Cause still unknown. Claude couldn't read the TCC log this time:
     `log show` from Bitrig's shell returned only its header, even for
     the last 2 minutes (*observed*).
+  - Same day, the author's tries (*observed* by the author): quitting
+    both copies and relaunching only the Bitrig build changed nothing.
+    System Settings › Photos lists one Phases (plus a UI test copy kept
+    in the home folder). `tccutil reset Photos com.robertmohns.phases`
+    printed "Successfully reset…" seven times, and the Bitrig build,
+    started with Bitrig's Run, still showed no access and no prompt.
+    Phases asks only when PhotoKit reports "not determined"
+    (`PhotosAlbumSheet.load`), so after the reset PhotoKit still
+    reported denied or restricted to that process (*inferred* from the
+    code). Launch Services lists over a dozen registered copies of
+    Phases, from Bitrig's build folders of this and older project IDs
+    (*verified* by Claude, `lsregister -dump`); whether that explains
+    the seven lines is a *hypothesis*.
+  - *Hypothesis* (Claude, 2026-11-26): macOS checks privacy permissions
+    against the process *responsible* for an app (*recalled*), so a
+    Phases started by Bitrig's Run may be checked against Bitrig's
+    Photos permission, not Phases'. That would fit every report: an
+    installed copy started from Finder works, a Bitrig-started one
+    doesn't. Test: start the same Bitrig build from Finder instead.
 
 ## Photos library (issue #33)
 
