@@ -253,6 +253,20 @@ From `[X-memory]` unless noted: macOS 27.2, two or three displays.
   hypothesis, perhaps the per-build grant of `[L-photos-grant-per-build]`.
   The test: install to /Applications and see whether it clears (GitHub
   issue #43). Record: `[X-convert-xcode-project]`.
+  - *Seen again* 2026-11-26 by the author: the draft 64 Bitrig build's
+    Add Photos Album… sheet says "Phases doesn't have access to Photos",
+    with no prompt, while the installed copy has access. *Verified* by
+    Claude the same day (`codesign -dv`, `-dr`, `--entitlements`): the
+    running build (`DerivedData/Build/Products/Debug/Phases.app`, build
+    64), the newest Bitrig build, and `/Applications/Phases.app` are all
+    `com.robertmohns.phases`, signed with team `Y382W2CA47`, with the
+    same designated requirement (Apple Development certificate), and the
+    running build has the sandbox and `photos-library` entitlements. So
+    the per-build hash pinning of `[L-photos-grant-per-build]` (ad hoc
+    builds) can't be the cause here: a grant should match both copies.
+    Cause still unknown. Claude couldn't read the TCC log this time:
+    `log show` from Bitrig's shell returned only its header, even for
+    the last 2 minutes (*observed*).
 
 ## Photos library (issue #33)
 
