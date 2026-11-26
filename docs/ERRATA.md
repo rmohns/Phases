@@ -530,6 +530,42 @@ once run.
   `[D-reopen-shows-window]`; see "Relaunch opens the window" under
   "Workarounds". Experiment record: `[L-reopen-event]`, now in
   EXPERIMENTS.md `[X-reopen-window]` (in LEARNINGS.md until 2026-11-09).
+- `[Q-settings-popup-look]` **SwiftUI draws System Settings' pop-up look
+  (no box, the chevron in a circle) only for a menu picker inside a
+  grouped `Form` (macOS 27.2).** *Verified* by Claude 2026-11-26 in a
+  test copy's screenshots. Outside a grouped `Form`, a menu `Picker`
+  draws the gray-box pop-up by default and with `.glass` or
+  `.accessoryBar`; `.borderless` drops the box but leaves a bare
+  chevron with no circle and no highlight under the pointer; `.plain`
+  shows only the text; and a custom `ButtonStyle` is ignored. Wrapping a
+  picker in its own small grouped `Form` drew the form's row box and
+  margins around it. Inside the `Form` it isn't an AppKit pop-up button
+  at all: listing the window's `NSPopUpButton`s found the others but not
+  that one, so SwiftUI draws it itself. Record: EXPERIMENTS.md
+  `[X-settings-popup-look]`.
+  - **AppKit gets most of the way** (*verified* by Claude 2026-11-26,
+    test-copy screenshots and the accessibility tree): an
+    `NSPopUpButton` with `bezelStyle = .flexiblePush` and
+    `showsBorderOnlyWhileMouseInside = true` draws System Settings' box
+    and chevron under the pointer, every point of it opens the menu (9
+    of 9 clicks across it), and the menu opens over the control with the
+    checked item on the control's own y. The settings came from Apple
+    Developer Forums thread 788097 (a reply not from Apple, unconfirmed
+    there).
+  - **But on macOS 26 and later it draws no chevron at rest,** only the
+    text (*verified* 2026-11-26 on macOS 27.2; the same thread's reply
+    says it did before macOS 26, *recalled* there, not checked here).
+  - **And it's as wide as its longest item,** as any `NSPopUpButton`
+    (*verified*: 213 pt for Change images whether it showed "Only when
+    the phase starts" or "minutes").
+  - Shapes `[D-editor-popups]`: `SettingsPopUp` wraps that button,
+    draws the resting chevron and circle over it in SwiftUI (no hit
+    testing, hidden under the pointer), and narrows the button to its
+    current item (`FittingPopUpButton`, 96 pt for "minutes").
+  - *Correction* (Claude, 2026-11-26): this entry first said the look
+    was drawn on a SwiftUI `Menu` label. That version had dead zones and
+    opened like a pull-down, and was replaced the same day; see the
+    record.
 
 ### Build (Xcode)
 

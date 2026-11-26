@@ -12,15 +12,22 @@ struct PhaseNameRow: View {
   private let font = Font.title2.weight(.semibold)
 
   var body: some View {
-    HStack(spacing: 8) {
+    // No spacing, so the pencil's highlight can start 8 pt after the
+    // name's last letter; 17.5 pt, with spacing 8 and padding 6, looked
+    // detached (author, 2026-11-26).
+    HStack(spacing: 0) {
       // The hidden text sizes the field to its name, so the pencil sits
-      // right after it; a long name truncates instead.
+      // right after it; a long name truncates instead. The padding leaves
+      // room for the insertion point after the last letter.
       Text(name.isEmpty ? "Name" : name)
         .font(font)
         .lineLimit(1)
-        .padding(.trailing, 6)
+        .padding(.trailing, 2)
         .hidden()
-        .overlay(alignment: .leading) {
+        // On the hidden text's baseline: centered in its frame, the field
+        // drew its text about 1.25 pt above the pencil and switch
+        // (measured by Claude, 2026-11-26).
+        .overlay(alignment: Alignment(horizontal: .leading, vertical: .firstTextBaseline)) {
           TextField("Name", text: $name)
             .textFieldStyle(.plain)
             .font(font)
@@ -30,6 +37,10 @@ struct PhaseNameRow: View {
               if let nameBeforeEditing { name = nameBeforeEditing }
               isEditing = false
             }
+            // VoiceOver hears "Name"; the placeholder alone is spoken
+            // only while the field is empty (Phase editor checks,
+            // 2026-11-25).
+            .accessibilityLabel("Name")
             // [D-ui-test-ids]
             .accessibilityIdentifier("phaseName")
         }
@@ -37,21 +48,39 @@ struct PhaseNameRow: View {
 
       Button("Edit Name", systemImage: "square.and.pencil") { isEditing = true }
         .labelStyle(.iconOnly)
-        .buttonStyle(.borderless)
+        // Highlights under the pointer, so it reads as clickable
+        // [D-name-row].
+        .buttonStyle(.accessoryBar)
         .font(.title3)
         .foregroundStyle(.secondary)
+        // Centered on its cap height, as the symbol sits beside text;
+        // centered on its frame, its square sat 1.5 pt below the name's
+        // capitals (measured by Claude, 2026-11-26).
+        .alignmentGuide(VerticalAlignment.center) { dimensions in
+          dimensions[.firstTextBaseline]
+            - NSFont.preferredFont(forTextStyle: .title3).capHeight / 2
+        }
+        // With the field's 2 pt, the highlight starts 8 pt after the
+        // name's last letter [D-name-row].
+        .padding(.leading, 2)
         .help("Edit the name")
         // The field itself is what VoiceOver uses to edit the name.
         .accessibilityHidden(true)
         .accessibilityIdentifier("phaseNamePencil")
 
-      Spacer(minLength: 12)
+      // 12 plus the 8 pt the row's spacing gave on each side.
+      Spacer(minLength: 28)
 
       Toggle(isOn: $isOn) {
         Text(isOn ? "On" : "Off")
+          // The text keeps the size it had before the switch shrank.
+          .font(.body)
           .foregroundStyle(.secondary)
       }
       .toggleStyle(.switch)
+      // The regular switch gave the row undue emphasis (author,
+      // 2026-11-26) [D-name-row].
+      .controlSize(.mini)
       .accessibilityLabel("Use this phase")
       .accessibilityIdentifier("phaseIsOn")
     }

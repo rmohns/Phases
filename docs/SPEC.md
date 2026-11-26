@@ -1952,12 +1952,40 @@ branch) supplied the display tabs and pinned header.
     - The pencil (`square.and.pencil`) is only a hint that the name can
       be edited; VoiceOver sees one text field labelled "Name". It keeps
       the `phaseName` accessibility identifier `[D-ui-test-ids]`.
+    - **The pencil shows it can be clicked:** when the pointer is over
+      it, a rounded highlight appears behind it, using a standard macOS
+      button style that does this (`.accessoryBar`, the style of the
+      buttons in accessory bars), not a custom effect.
+      - *Changed while building* (Claude, 2026-11-26): the approved
+        draft named `.accessoryBarAction`; in a test copy it drew a gray
+        box all the time that didn't change under the pointer.
+        `.accessoryBar` shows nothing until the pointer is over it
+        (*verified* by Claude, 2026-11-26, screenshots with and without
+        the pointer over it).
+      The pencil stays centered on the name's capitals, level with the
+      switch, and the highlight starts 8 pt after the name's last letter,
+      leaving room for the insertion point when editing.
+      - *Why:* a bare symbol gave no sign that clicking it does anything
+        (author, 2026-11-26).
+      - *Why 8 pt:* the first build with the highlight left 17.5 pt,
+        which looked detached from the name (author, 2026-11-26); 5.5 pt
+        nearly touched the last letter; 9 pt looked right, and the author
+        chose 8 pt, an even number. At 8 pt the pencil symbol sits 2 pt
+        further right than before the highlight, and the style draws it
+        about 1.5 pt smaller (*verified* by Claude, 2026-11-26,
+        screenshots of a test copy).
     - `[D-initial-focus-sidebar]` still applies: the window opens with
       the sidebar focused, never the name field.
     - *Why in place:* the mockup's pencil could have opened a separate
       editor; editing the name where it's shown is simpler, and works
       the same from the keyboard and with VoiceOver (Claude's suggestion,
       approved by the author 2026-11-25).
+  - **The switch is mini size** (`.controlSize(.mini)`, about 35 × 15 pt,
+    *verified* by Claude 2026-11-26; the size System Settings' switches
+    look like, *recalled*), with its On/Off text at the form's text
+    size.
+    - *Why:* the regular switch (about 53 × 23 pt) gave the row undue
+      emphasis (author, 2026-11-26).
   - **The switch** is labelled **On** or **Off**, to match its state, with
     "Use this phase" as its VoiceOver label and `phaseIsOn` as its
     accessibility identifier, as now. When it's off, "This phase is
@@ -2034,6 +2062,48 @@ branch) supplied the display tabs and pinned header.
   - *Why separate:* found in review of draft 51 (Claude, 2026-11-09) and
     confirmed by the author 2026-11-25; one "in order / randomly / never"
     menu would lose a combination.
+- `[D-editor-popups]` **The settings block's pop-up menus look like
+  System Settings' own:** the current choice, then the chevron in a
+  small circle, with no box around them; when the pointer is over the
+  menu, a rounded box appears behind the text and chevron, and the
+  circle goes away. That covers the four menus: the trigger, minutes /
+  hours, before / after / at, and Change images.
+  - **They behave as standard pop-up menus,** as System Settings' do:
+    a click anywhere in the control opens the menu, over the control,
+    with the current choice under the pointer and checked; they work
+    from the keyboard; and they keep their VoiceOver names ("Trigger",
+    "Offset unit", "Before or after", "Change images") and accessibility
+    identifiers `[D-ui-test-ids]` (author, 2026-11-26).
+  - Each is as wide as its current choice, so Change images showing
+    "minutes" isn't as wide as "Only when the phase starts" (author,
+    2026-11-25).
+  - The look copies System Settings' Sidebar icon size menu: the chevron
+    in a 20 pt circle about 12 pt after the text; under the pointer, a
+    box 23 pt tall with 6 pt corners, the same light gray as the circle
+    (*verified* by Claude, 2026-11-26, measured from the author's
+    screenshots of macOS 27.2).
+  - *Why:* the standard pop-up's gray box around the whole control made
+    the form harder to read; System Settings marks its menus with the
+    chevron alone (author, 2026-11-26).
+  - *How:* each is a real AppKit pop-up button set to draw its box only
+    under the pointer, which draws System Settings' box and chevron there
+    and opens its menu the standard way. On macOS 26 and later it draws
+    no chevron at rest, so Phases draws the resting chevron and circle
+    itself, on the same spot, taking no clicks `[Q-settings-popup-look]`.
+    - **Check again on macOS 28 and later:** the resting chevron is
+      Phases' own drawing, so a macOS that changes its pop-ups' look
+      won't change it to match. The author will revisit then (author,
+      2026-11-26).
+    - *Set aside:* rebuilding the settings block as a grouped `Form`
+      (where SwiftUI draws this look itself): the editor scrolls as one
+      page under a pinned image header, and a `Form` scrolls on its own.
+      A first version drew the whole look on a SwiftUI `Menu`; clicks
+      between the text and the chevron, on the chevron, and in the
+      box's margins did nothing, and its menu opened below the control
+      like a pull-down (author's screen recording, 2026-11-26). Both are
+      in EXPERIMENTS.md `[X-settings-popup-look]`.
+  - *Replaced:* the standard pop-up button (gray box, chevrons at the
+    trailing end) these four menus used through draft 63.
 - `[D-phase-status-inline]` **Why a phase can't run shows under the row
   that fixes it,** in secondary text, with no banner:
   - Turned off: "This phase is turned off, so it's skipped." under the

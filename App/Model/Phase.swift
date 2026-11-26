@@ -159,8 +159,10 @@ enum PhaseTrigger: Codable, Hashable {
 }
 
 /// Flat list of trigger types, for pickers.
+/// [D-starts-row] In the trigger menu's order: Clock Time, Dawn, Dusk,
+/// then Always.
 enum TriggerKind: String, CaseIterable, Identifiable {
-  case always, clockTime, dawn, dusk
+  case clockTime, dawn, dusk, always
 
   var id: Self { self }
 

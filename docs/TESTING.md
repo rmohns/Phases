@@ -1042,12 +1042,74 @@ Each with what passes:
     (*recalled* that placeholders are spoken only when empty; not
     tested). `[D-name-row]` says it's labelled "Name". The radio group
     has no name of its own either. Not fixed yet.
+- 2026-11-25, follow-ups (author's answers; branch
+  `fix/editor-spec-gaps`):
+  - **Trackpad:** scrolling the display tabs sideways works with a real
+    trackpad (*observed* by the author). Check 3 is complete.
+  - **The arrow-key beeps** (check 3's open finding): dropped by the
+    author, not pursued.
+  - **Fixed to match the spec:** the name field carries the
+    accessibility label "Name" (read back from the accessibility tree,
+    *observed*); the trigger menu lists Clock Time, Dawn, Dusk, Always,
+    as `[D-starts-row]` does (screenshot, *observed*). Debug build 63
+    `1795667585641-33B38DA7`: unit tests 239 of 239, and the
+    `PhaseEditorTests` and `FocusTests` UI tests 8 of 8 (94 s,
+    *verified*).
   - *Left behind:* the image copy,
     `~/Library/Caches/PhasesUITests/Phases Editor Check Images` (deleting
     it was refused).
   - *Process note:* the spoken warnings before and after driving
     (`[D-hands-on-checks]`) were missed for the first clicks of this
     sitting and used from the key presses on.
+- 2026-11-26, name row polish (branch `fix/editor-spec-gaps`; Claude
+  measured screenshots of test copies, 2× pixels halved to points):
+  - **Alignment:** the name's capitals sat 1.25 pt above the switch and
+    the pencil's square 1.5 pt below the capitals. A first fix (a
+    cap-height guide on the name, caa133e) moved nothing (*verified*,
+    the author's screenshot). Putting the field on the sizing text's
+    baseline and centering the pencil on its cap height brought all
+    four (capitals, pencil, "On", switch) within 0.5 pt (*verified*).
+  - **Pencil highlight:** `.accessoryBarAction` drew a gray box at rest
+    that didn't change under the pointer; `.accessoryBar` shows nothing
+    at rest and a highlight under the pointer (*verified*, screenshots
+    with the pointer moved by `phases-drive move`).
+  - **Gap:** the highlight started 17.5 pt after the name's last letter;
+    5.5 pt nearly touched it; 9 pt settled (author asked to pull it in).
+    While editing, the insertion point fits after the last letter
+    (*observed*, a screenshot frame caught it).
+  - **UI tests:** `nameEditsInPlace` first failed at launch, before any
+    input, timing out on the test copy's menu bar item while the
+    author's own copy was running. With it quit, it passed (*observed*;
+    hypothesis: the author's copy's item crowded the menu bar,
+    `[L-menubar-overflow]`, not tested). One rerun to read that error
+    was started without the spoken warning (it failed at the same
+    launch step, sending no input).
+  - At 9 pt, `PhaseEditorTests` and `FocusTests` 8 of 8 (93.9 s,
+    *verified*). An earlier run of the same build was stopped after the
+    author heard a system beep and their own input may have landed in
+    it; which step beeped wasn't found.
+  - **8 pt and the mini switch** (author's choices): the highlight
+    starts 8 pt after the last letter; the switch measures 35.5 × 15.5
+    pt (was 53.5 × 23.5), its right edge unmoved, and "On" keeps its
+    size and its 9.5 pt from the switch. The rows below sit back where
+    they were before the highlight (the 0.5 pt drop is gone). All
+    *verified* from screenshots. `PhaseEditorTests` and `FocusTests` 8
+    of 8 (93.0 s, *verified*).
+- 2026-11-26, System Settings pop-ups `[D-editor-popups]` (branch
+  `fix/editor-spec-gaps`, commit `e2e4c7b`; Claude, with the author's
+  go-ahead and spoken warnings):
+  - Hands-on checks in test copies: the look at rest and under the
+    pointer, a nine-click sweep across Change images, and its width
+    with "minutes" chosen. All *verified*; details in EXPERIMENTS.md
+    `[X-settings-popup-look]`. The author checked the Dawn and Dusk
+    row's menus in the preview (*observed*).
+  - The preview copy was still running when the run was due; the author
+    quit it first, as `[L-menubar-overflow]` advises.
+  - `PhaseEditorTests` and `FocusTests` 8 of 8 (94.5 s, *verified*),
+    including `startsRowFollowsTheTrigger` and
+    `rotationTurnsOffAndBackOn`, which choose items in the trigger,
+    before / after / at, and Change images menus through the new
+    control.
 
 ### Sandbox checks (draft 58)
 

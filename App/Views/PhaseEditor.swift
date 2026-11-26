@@ -146,16 +146,13 @@ struct PhaseEditor: View {
         Stepper("Interval", value: rotationValue(phase), in: Phase.rotationRange)
           .labelsHidden()
       }
-      Picker("Change images", selection: phase.rotationChoice) {
-        ForEach(RotationChoice.allCases.dropLast()) { choice in
-          Text(choice.title).tag(choice)
-        }
-        Divider()
-        Text(RotationChoice.onlyAtStart.title).tag(RotationChoice.onlyAtStart)
-      }
-      .labelsHidden()
+      // [D-editor-popups]
+      SettingsPopUp(
+        title: "Change images", selection: phase.rotationChoice,
+        items: RotationChoice.allCases.dropLast().map { .choice($0, title: $0.title) }
+          + [.separator, .choice(.onlyAtStart, title: RotationChoice.onlyAtStart.title)]
+      )
       .accessibilityIdentifier("rotationChoice")
-      .popUpWidth(fitting: phase.wrappedValue.rotationChoice.title)
     }
   }
 
