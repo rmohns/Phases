@@ -463,6 +463,11 @@ when there's more than one choice.
     image or a heading moves the highlight there and focuses the grid.
   - Collapsing the section the cursor is in (by clicking its heading)
     moves the cursor to that heading.
+  - Tabbing into the grid puts the cursor on the first image that
+    shows, as before, or on the first heading when every section is
+    collapsed. *Added while building* (Claude, 2026-11-26): the approved
+    draft didn't say; keeping the first image keeps Space selecting an
+    image straight away, as it always has.
   - *Changed in draft 64:* up to draft 63, only images were stops, and up
     and down crossed headings in the same column.
   - Images are not individual Tab stops, and VoiceOver still sees each image

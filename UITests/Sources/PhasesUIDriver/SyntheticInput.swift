@@ -16,6 +16,8 @@ public enum SyntheticInput {
     case y = 16
     case returnKey = 36
     case escape = 53
+    // Draft 64: folding grid headings [D-grid-collapse].
+    case leftArrow = 123
   }
 
   package static func click(at point: CGPoint) async throws {
@@ -24,6 +26,36 @@ public enum SyntheticInput {
     post(.leftMouseDown, at: point)
     post(.leftMouseUp, at: point)
     try await pause(0.2)
+  }
+
+  /// A click with `modifiers` held (⇧-click, ⌥-click; draft 64). Each
+  /// modifier goes down as a key of its own before the click and up after
+  /// it, as `press` does, and the click carries their flags. Throws if any
+  /// modifier still reads held afterward [D-input-modifier-keys].
+  package static func click(at point: CGPoint, modifiers: Set<Modifier>) async throws {
+    let source = CGEventSource(stateID: .hidSystemState)
+    let ordered = Modifier.allCases.filter(modifiers.contains)
+    post(.mouseMoved, at: point)
+    try await pause(0.05)
+    var held: CGEventFlags = []
+    for modifier in ordered {
+      held.insert(modifier.flag)
+      post(keyCode: modifier.keyCode, isDown: true, flags: held, source: source)
+    }
+    try await pause(0.05)
+    post(.leftMouseDown, at: point, flags: held)
+    post(.leftMouseUp, at: point, flags: held)
+    try await pause(0.05)
+    for modifier in ordered.reversed() {
+      held.remove(modifier.flag)
+      post(keyCode: modifier.keyCode, isDown: false, flags: held, source: source)
+    }
+    try await pause(0.2)
+    let stuck = heldModifiers()
+    if !stuck.isEmpty {
+      throw UITestFailure(
+        "\(stuck.map(\.description).joined(separator: ", ")) still reads held after a modifier-click (GitHub issue #39); later clicks would carry it")
+    }
   }
 
   package static func move(to point: CGPoint) async throws {
@@ -167,11 +199,12 @@ public enum SyntheticInput {
   /// [L-click-state-not-needed]. Taken from MDPrinter's copy of this
   /// driver (`e40eef1`), whose claim that AppKit read `clickCount` 0 is
   /// unsupported.
-  private static func post(_ type: CGEventType, at point: CGPoint) {
+  private static func post(_ type: CGEventType, at point: CGPoint, flags: CGEventFlags = []) {
     let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .left)
     if [.leftMouseDown, .leftMouseUp, .leftMouseDragged].contains(type) {
       event?.setIntegerValueField(.mouseEventClickState, value: 1)
     }
+    if !flags.isEmpty { event?.flags = flags }
     event?.post(tap: .cghidEventTap)
   }
 

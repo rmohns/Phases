@@ -51,14 +51,16 @@ extension PhasesUITests {
 
     /// [D-grid-one-tab-stop] Left and right step through the images in
     /// order, across sources: Right from the first source's last image
-    /// lands on the second source's first. The cursor is only drawn, not in
-    /// AX, so Space toggles the image under it and the cell's selected state
-    /// shows where it was.
+    /// lands on the second source's heading (a stop from draft 64,
+    /// [D-grid-collapse]), and Right again on its first image. The cursor
+    /// is only drawn, not in AX, so Space toggles the image under it and the
+    /// cell's selected state shows where it was.
     @Test func arrowKeysCrossSources() async throws {
       try await withPhases(imageFolders: Self.folders) { app in
         try await Self.focusGrid(app)
         // Focusing puts the cursor on the first image; walk to the 60th.
         for _ in 0..<(TestImages.count - 1) { try await app.press(.rightArrow) }
+        try await app.press(.rightArrow)
         try await app.press(.rightArrow)
         try await app.press(.space)
         let landed = try await waitFor("Second Image 01.png to be selected") {

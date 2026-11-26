@@ -73,7 +73,14 @@ The pure logic that decides what the app does:
     (*recalled*, not checked against a source). The tests allow ±10
     minutes, which catches real breakage (wrong day, wrong time zone,
     AM/PM swapped) without depending on the almanac's exact rounding.
-- `ImageGridNavigation`: arrow-key movement `[D-grid-one-tab-stop]`
+- `ImageGridNavigation`: arrow-key movement `[D-grid-one-tab-stop]`,
+  including headings as stops, the column kept across them, and ←/→
+  (and ⌥←/⌥→) folding headings `[D-grid-collapse]` (draft 64)
+- `GridOutline` (draft 64): what the grid shows with headings collapsed
+  `[D-grid-collapse]`: sections and subheadings, flat subheadings, the
+  saved heading keys `[D-grid-collapse-saved]`, counts under a heading,
+  ⇧ ranges that skip collapsed images, and where the cursor goes when
+  its section folds
 - `PhaseListSelection`: which phase is selected after a delete
   `[D-delete-selects-next]`
 - `PhaseAvailability`: whether a phase can run and why not
@@ -402,6 +409,12 @@ The pure logic that decides what the app does:
     `removeMissing`. `phaseName` stays on the name field `[D-name-row]`.
   - From draft 63 the driver also presses Y, Return, and Escape
     (`SyntheticInput.Key`), for renaming in place.
+  - From draft 64: `gridHeading`, on every heading in the image grid
+    (one per heading; tests tell them apart by label, the heading's
+    name) `[D-grid-collapse]`. The driver also presses ← (`leftArrow`)
+    and clicks with modifiers held (`app.click(_:modifiers:)`, for
+    ⇧-click and ⌥-click), each modifier pressed as a key of its own and
+    checked afterward as `press` does `[D-input-modifier-keys]`.
 
 - **Relaunch:** the harness relaunches its own instance by sending it a
   reopen Apple event, as Finder does, rather than `open`, which could
@@ -492,6 +505,43 @@ run the same day (see Runs, below):
     `setWindowSize`). Passed twice alone, but both launches opened wide
     enough, so the resize itself hasn't run in a passing test yet.
   - Then the whole fast suite, 286 s: **36 of 36 passed** (*verified*).
+
+#### Grid collapse tests (draft 64)
+
+UI tests for collapsible grid headings (GitHub issue #37), in
+`GridCollapseTests.swift`, fast suite. Written 2026-11-26 by Claude;
+not run yet. A heading is one AX element with identifier
+`gridHeading`, its name as label, and "Expanded" or "Collapsed,
+<count>" as value.
+
+- **Click** `[D-grid-collapse]`
+  (`clickingAHeadingFoldsItsImagesAndShowsItsCount`): clicking the first
+  source's heading removes its images from the grid and its value reads
+  "Collapsed, 60 images"; clicking again brings them back.
+- **Keyboard** `[D-grid-one-tab-stop]`
+  (`keyboardFoldsAndUnfoldsAHeading`): from the first image, ← moves to
+  its heading; Space collapses and expands it; ← collapses, → expands;
+  → on the open heading moves to the first image, which Space selects.
+- **Select All** (`selectAllIncludesCollapsedImages`): with the first
+  source collapsed, Select All gives "64 of 64 selected" and the heading
+  reads "Collapsed, 60 of 60 selected".
+- **⇧-click** (`shiftClickRangeSkipsCollapsedImages`): three sources,
+  Nested (2), the second folder (4, collapsed), the big folder (60);
+  Nested Image 01 then ⇧-click Test Image 01 selects 3, not 7.
+- **Kept** `[D-grid-collapse-saved]`
+  (`collapsedHeadingStaysAfterTheWindowCloses`): collapsed, the window
+  closed and reopened by a relaunch, the heading is still collapsed.
+  Kept after quitting isn't testable here, since test mode erases its
+  settings at launch `[D-ui-test-mode]`; that's a hand check.
+- `ImageSourcesTests/arrowKeysCrossSources` changed with this draft:
+  Right from the first source's last image now lands on the second
+  source's heading, so it presses Right once more.
+- **Not covered by UI tests** (test mode's sources never include
+  subfolders, and the fake Photos library has no folders here): ⌥-click
+  and ⌥←/⌥→ on a source with subheadings, subheadings' icons, a Photos
+  folder's album subheadings, and the triangle's look. Those are hand
+  checks, with a folder that includes subfolders, and are covered by
+  the unit tests' logic.
 
 #### Not covered here
 
