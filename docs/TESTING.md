@@ -1110,6 +1110,30 @@ Each with what passes:
     `rotationTurnsOffAndBackOn`, which choose items in the trigger,
     before / after / at, and Change images menus through the new
     control.
+- 2026-11-26, the beep right after the window opens (Claude, with the
+  author's go-ahead and spoken warnings; Debug build 63
+  `1795709407449-AAE1B9E1`):
+  - **Question:** the author heard a system beep at the start of a
+    `PhaseEditorTests` / `FocusTests` run, just after the window opened
+    from the menu bar (*observed*, author), the same beep that stopped
+    the name row run above.
+  - **Hypothesis:** `FocusTests.typingRightAfterOpenDoesNotRenameThePhase`
+    presses X about 1 s after the window opens, with the sidebar
+    focused; no phase starts with X, so the list's type-to-select finds
+    no match and macOS beeps, as the author found by hand on 2026-11-04
+    (EXPERIMENTS.md `[L-menubar-overflow]`).
+  - **Run:** that test alone, twice (12:18:51, author away; 12:33:03).
+    Both passed; "Focused on open" named the sidebar outline both times.
+    On the second, the author heard the beep (*verified*, author).
+  - **Answer:** the beep is the test's own X press reaching the sidebar,
+    as the test intends. Not a failure; nothing changed. *Not checked:*
+    that the beep in the earlier runs came from this test rather than
+    another; it's the only step that presses an unmatched key right after
+    the window opens.
+  - *Option, not taken:* pressing the first letter of the starting
+    phase's name instead of X would likely keep the selection and not
+    beep (*recalled*, untested), and would still catch a focused Name
+    field. Left for the author.
 
 ### Sandbox checks (draft 58)
 
