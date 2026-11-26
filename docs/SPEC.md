@@ -1,4 +1,4 @@
-# Phases — Specification (draft 63)
+# Phases — Specification (draft 64)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -361,21 +361,110 @@ when there's more than one choice.
   source heading still shows, so the grid looks the same however many
   sources there are. Click toggles an image in or out
   of the selection, ⇧-click selects a range, plus Select All / Select None buttons
-  (in the pinned image header from draft 63, `[D-image-header]`). Headings
-  can't be collapsed; collapsing them is GitHub issue #37, kept out of the
-  editor redesign (author, 2026-11-25).
+  (in the pinned image header from draft 63, `[D-image-header]`). Every
+  heading can collapse `[D-grid-collapse]` (draft 64).
+- `[D-grid-collapse]` **Every heading in the grid can collapse,** source
+  headings and subheadings (subfolders, "Top Level", and the albums of a
+  Photos folder) alike, the way Finder's list view folds folders (GitHub
+  issue #37; the author's answers of 2026-11-26).
+  - **The triangle:** each heading starts with a disclosure triangle,
+    pointing right when collapsed and down when expanded, the one Finder
+    and System Settings use (`chevron.right`, turned 90° when expanded).
+    Clicking the triangle or anywhere on the heading's line toggles it.
+    The triangle turns with a short animation; the images below appear
+    or go at once.
+    - *Why at once:* animating hundreds of thumbnails in a lazy grid may
+      stutter (*hypothesis*, not tested). If it doesn't, the author can
+      ask for the images to animate too.
+  - **Collapsing a source** hides its subheadings and all its images.
+    Its subheadings keep their own state, so expanding the source shows
+    them as they were, as Finder does (*recalled*).
+  - **Subheadings stay flat.** A subfolder heading names the whole path
+    (`Winter/Snow`), and `Winter` and `Winter/Snow` are separate
+    headings at the same level, as now. Collapsing `Winter` hides only
+    the images directly in `Winter`.
+    - *Why:* nesting the headings into a tree would be a grid redesign of
+      its own; the author asked for collapsible subfolders, not a tree
+      (Claude's reading, for the author to confirm).
+  - **⌥-click** on a source heading collapses or expands it and all its
+    subheadings together, as ⌥-click does on a Finder triangle
+    (*recalled*). On a subheading it does what a plain click does.
+    (Claude's proposal, for the author to confirm.)
+  - **A collapsed heading shows its count** after its name, in secondary
+    text: "12 of 80 selected" when any of its images are selected,
+    otherwise "80 images" ("80 photos" for Photos, as in Settings
+    `[D-photos-sources]`). A collapsed source counts every image under
+    it, its subfolders' too. Expanded headings show no count; their
+    images are in view.
+    - *Why:* a collapsed section shouldn't hide what's selected in it
+      (author, 2026-11-26).
+  - **Kept:** the state is saved and stays after the window closes and
+    after quitting `[D-grid-collapse-saved]`.
+  - **One state for the whole grid,** not per phase or per display tab:
+    it's about the library, not a phase. Switching phases or display tabs
+    leaves headings as they were.
+  - **New sources and subfolders start expanded.** So does a subfolder
+    or album that's renamed, since its heading is a new one; accepted.
+  - **Select All and Select None act on every image, collapsed or not,**
+    and the "9 of 293 selected" count includes collapsed images
+    (author, 2026-11-26). *Why:* otherwise collapsing a section would
+    quietly change what Select All means.
+  - **⇧-click and ⇧-Space skip collapsed images:** a range selects (or
+    deselects) only the images showing between the two ends (author,
+    2026-11-26). If the last toggled image is now in a collapsed section,
+    ⇧-click acts as a plain click, since the range has no visible start
+    (Claude's proposal, for the author to confirm).
+  - **VoiceOver** reads a heading as a heading with its name, whether
+    it's collapsed or expanded, and its count when collapsed; its action
+    toggles it. Each heading has an accessibility identifier for the UI
+    tests `[D-ui-test-ids]`.
+  - **Icons:** source headings keep their symbols: `folder` for a
+    folder, `rectangle.stack` for a Photos album (the symbol Photos uses
+    for albums, the author's choice 2026-11-26; already used since draft
+    54), and `folder` for a Photos folder of albums. Subheadings gain the
+    same symbols, in secondary color: `folder` for a subfolder and "Top
+    Level", `rectangle.stack` for an album in a Photos folder. (Adding
+    them to subheadings is Claude's proposal, so an album reads as an
+    album beside its triangle.)
+  - *Replaced:* drafts up to 63, where headings couldn't collapse
+    (collapsing was set aside from the editor redesign, author,
+    2026-11-25).
+- `[D-grid-collapse-saved]` **The collapsed headings are saved** in
+  UserDefaults with the other settings (see "Persistence"), as a list of
+  collapsed headings, each named by its source ID and subheading path
+  (`K3F9` for a source, `K3F9:Winter` for a subfolder), never by position
+  `[D-image-sources]`. Removing a source leaves its entries, so undoing
+  the removal `[D-undo-remove-source]` brings its headings back as they
+  were; entries for sources that are gone do nothing.
 - `[D-grid-one-tab-stop]` **Keyboard: the thumbnail grid is one Tab stop.**
   Tab moves into the grid and the next Tab moves past it, the way Finder's
   icon view and Photos work. Inside the grid:
-  - **Arrow keys** move a highlighted image (the cursor). Left and right
-    step through images in order, wrapping across rows. Up and down move by
-    one row in the same column, crossing source and subfolder headings; on a shorter
-    row the cursor lands on its last image.
-  - **Space** toggles the highlighted image; **⇧-Space** selects a range
-    from the last toggled image, the same as ⇧-click.
-  - The window scrolls to keep the highlighted image visible.
+  - **The cursor** (the highlighted item) is on an image or a heading.
+    Headings are stops in reading order; images in collapsed sections
+    are skipped, but the collapsed headings aren't (author, 2026-11-26,
+    `[D-grid-collapse]`).
+  - **Arrow keys on an image:** left and right step through items in
+    order (images and headings), wrapping across rows. Up and down move by
+    one row; a heading is a row of its own. Moving onto an image row
+    keeps the column the cursor was in, even after passing over
+    headings; on a shorter row the cursor lands on its last image.
+  - **Arrow keys on a heading,** as in Finder's list view: → expands a
+    collapsed heading, and on an expanded one moves to the next item. ←
+    collapses an expanded heading, and on a collapsed one moves to the
+    previous item. ⌥→ and ⌥← on a source heading expand or collapse it
+    with all its subheadings, like ⌥-click (*recalled* from Finder; Claude's
+    proposal). Up and down move by one row, as on an image.
+  - **Space** toggles the highlighted image, or expands or collapses the
+    highlighted heading (author, 2026-11-26). **⇧-Space** on an image
+    selects a range from the last toggled image, the same as ⇧-click
+    `[D-grid-collapse]`; on a heading it does what Space does.
+  - The window scrolls to keep the highlighted item visible.
   - The highlight shows only while the grid has keyboard focus. Clicking an
-    image moves the highlight there and focuses the grid.
+    image or a heading moves the highlight there and focuses the grid.
+  - Collapsing the section the cursor is in (by clicking its heading)
+    moves the cursor to that heading.
+  - *Changed in draft 64:* up to draft 63, only images were stops, and up
+    and down crossed headings in the same column.
   - Images are not individual Tab stops, and VoiceOver still sees each image
     as a toggleable button with its file name.
   - *Why:* in draft 19 each image was its own button, and Tab couldn't get
@@ -607,8 +696,8 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
     with a folder's new files.
 - **The grid** shows a Photos source like a folder: a heading with the
   album's name, and for a folder of albums a heading per album.
-  Thumbnails come from Photos. `[D-grid-one-tab-stop]` and
-  `[D-grid-release-on-close]` apply.
+  Thumbnails come from Photos. `[D-grid-one-tab-stop]`,
+  `[D-grid-collapse]`, and `[D-grid-release-on-close]` apply.
   - Thumbnails of iCloud-only photos should still show offline, since
     Photos keeps small versions locally (*recalled*, not tested).
 
@@ -2145,8 +2234,9 @@ branch) supplied the display tabs and pinned header.
     display they're choosing for, and reach Select All and Select None
     (author, 2026-11-09; still wanted 2026-11-25). With the tabs shown
     it's about 130 pt tall (*estimate*, to check on the real window).
-  - Source headings in the grid can't collapse; that's GitHub issue #37,
-    kept separate (author, 2026-11-25).
+  - Source headings and subheadings in the grid collapse
+    `[D-grid-collapse]` (draft 64, GitHub issue #37). Select All, Select
+    None, and the count include collapsed images.
 - `[D-window-pause-banner]` **While Phases has paused itself for an
   outside change `[D-outside-change-pauses]`, a pause banner sits at the
   top of the detail pane,** whatever is selected (a phase, Settings, or
@@ -2854,7 +2944,8 @@ never by hand in the project file `[D-xcode-project]`.
 
 All settings (image sources with their bookmarks and locations, or Photos album and folder IDs, phases including per-display selections,
 preferences, in-order positions (the image each selection last showed
-`[D-in-order-remembers]`), last applied phase and image per display, known
+`[D-in-order-remembers]`), the grid's collapsed headings
+`[D-grid-collapse-saved]`, last applied phase and image per display, known
 displays and their names, last location) are stored in UserDefaults as Codable
 data. Phases saved by earlier versions load unchanged (no per-display images).
 The image folder setting from draft 44 and earlier isn't carried over
