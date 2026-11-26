@@ -34,21 +34,16 @@ struct StartsRow: View {
               step: OffsetParts.step(for: parts.unit)
             )
             .labelsHidden()
-            Picker("Offset unit", selection: offsetUnit) {
-              ForEach(TimeUnit.allCases) { unit in
-                Text(unit.title).tag(unit)
-              }
-            }
-            .labelsHidden()
-            .fixedSize()
+            // [D-editor-popups]
+            SettingsPopUp(
+              title: "Offset unit", selection: offsetUnit,
+              items: TimeUnit.allCases.map { .choice($0, title: $0.title) }
+            )
           }
-          Picker("Before or after", selection: offsetDirection) {
-            ForEach(OffsetParts.Direction.allCases) { direction in
-              Text(direction.title).tag(direction)
-            }
-          }
-          .labelsHidden()
-          .fixedSize()
+          SettingsPopUp(
+            title: "Before or after", selection: offsetDirection,
+            items: OffsetParts.Direction.allCases.map { .choice($0, title: $0.title) }
+          )
           .accessibilityIdentifier("offsetDirection")
           triggerMenu
         }
@@ -57,13 +52,11 @@ struct StartsRow: View {
   }
 
   private var triggerMenu: some View {
-    Picker("Trigger", selection: kind) {
-      ForEach(TriggerKind.allCases) { kind in
-        Label(kind.title, systemImage: kind.systemImage).tag(kind)
-      }
-    }
-    .labelsHidden()
-    .fixedSize()
+    // [D-editor-popups]
+    SettingsPopUp(
+      title: "Trigger", selection: kind,
+      items: TriggerKind.allCases.map { .choice($0, title: $0.title, systemImage: $0.systemImage) }
+    )
     .accessibilityIdentifier("startTrigger")
   }
 

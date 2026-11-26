@@ -182,6 +182,18 @@ From `[X-memory]` unless noted: macOS 27.2, two or three displays.
 - `[L-mock-known-displays]` **The known-displays list grows without
   bound;** show a disconnected display only when the phase gives it
   images. Observed. Record: `[X-ui-mockup]`.
+- `[L-settings-popup-look]` Promoted to `[Q-settings-popup-look]`
+  (2026-11-26). Record: `[X-settings-popup-look]`.
+- `[L-menu-label-dead-zones]` **A SwiftUI `Menu` drawn as a custom
+  pop-up (`.menuStyle(.button)`, `.buttonStyle(.plain)`, hover box drawn
+  outside it) had dead zones and opened like a pull-down.** Clicks
+  between its text and chevron, on the chevron, and in the box's margins
+  did nothing; the menu opened below the control, not over it with the
+  current choice under the pointer. Observed (author's screen
+  recording, 2026-11-26); the cause (a plain label takes clicks only
+  where it draws, and the margins sat outside the `Menu`) is a
+  hypothesis. A real `NSPopUpButton` has neither problem. Record:
+  `[X-settings-popup-look]`.
 
 ## Other investigations
 
