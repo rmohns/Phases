@@ -1088,6 +1088,13 @@ Each with what passes:
     *verified*). An earlier run of the same build was stopped after the
     author heard a system beep and their own input may have landed in
     it; which step beeped wasn't found.
+  - **8 pt and the mini switch** (author's choices): the highlight
+    starts 8 pt after the last letter; the switch measures 35.5 × 15.5
+    pt (was 53.5 × 23.5), its right edge unmoved, and "On" keeps its
+    size and its 9.5 pt from the switch. The rows below sit back where
+    they were before the highlight (the 0.5 pt drop is gone). All
+    *verified* from screenshots. `PhaseEditorTests` and `FocusTests` 8
+    of 8 (93.0 s, *verified*).
 
 ### Sandbox checks (draft 58)
 

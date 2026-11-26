@@ -1963,23 +1963,29 @@ branch) supplied the display tabs and pinned header.
         (*verified* by Claude, 2026-11-26, screenshots with and without
         the pointer over it).
       The pencil stays centered on the name's capitals, level with the
-      switch, and the highlight starts about 9 pt after the name's last
-      letter, leaving room for the insertion point when editing.
+      switch, and the highlight starts 8 pt after the name's last letter,
+      leaving room for the insertion point when editing.
       - *Why:* a bare symbol gave no sign that clicking it does anything
         (author, 2026-11-26).
-      - *Why 9 pt:* the first build with the highlight left 17.5 pt,
+      - *Why 8 pt:* the first build with the highlight left 17.5 pt,
         which looked detached from the name (author, 2026-11-26); 5.5 pt
-        nearly touched the last letter. At 9 pt the pencil symbol sits
-        3 pt further right than before the highlight, the style draws it
-        about 1.5 pt smaller, and the row and all below it sit 0.5 pt
-        lower (*verified* by Claude, 2026-11-26, screenshots of a test
-        copy).
+        nearly touched the last letter; 9 pt looked right, and the author
+        chose 8 pt, an even number. At 8 pt the pencil symbol sits 2 pt
+        further right than before the highlight, and the style draws it
+        about 1.5 pt smaller (*verified* by Claude, 2026-11-26,
+        screenshots of a test copy).
     - `[D-initial-focus-sidebar]` still applies: the window opens with
       the sidebar focused, never the name field.
     - *Why in place:* the mockup's pencil could have opened a separate
       editor; editing the name where it's shown is simpler, and works
       the same from the keyboard and with VoiceOver (Claude's suggestion,
       approved by the author 2026-11-25).
+  - **The switch is mini size** (`.controlSize(.mini)`, about 35 × 15 pt,
+    *verified* by Claude 2026-11-26; the size System Settings' switches
+    look like, *recalled*), with its On/Off text at the form's text
+    size.
+    - *Why:* the regular switch (about 53 × 23 pt) gave the row undue
+      emphasis (author, 2026-11-26).
   - **The switch** is labelled **On** or **Off**, to match its state, with
     "Use this phase" as its VoiceOver label and `phaseIsOn` as its
     accessibility identifier, as now. When it's off, "This phase is

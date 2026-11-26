@@ -12,7 +12,7 @@ struct PhaseNameRow: View {
   private let font = Font.title2.weight(.semibold)
 
   var body: some View {
-    // No spacing, so the pencil's highlight starts about 5.5 pt after the
+    // No spacing, so the pencil's highlight can start 8 pt after the
     // name's last letter; 17.5 pt, with spacing 8 and padding 6, looked
     // detached (author, 2026-11-26).
     HStack(spacing: 0) {
@@ -60,7 +60,9 @@ struct PhaseNameRow: View {
           dimensions[.firstTextBaseline]
             - NSFont.preferredFont(forTextStyle: .title3).capHeight / 2
         }
-        .padding(.leading, 3)
+        // With the field's 2 pt, the highlight starts 8 pt after the
+        // name's last letter [D-name-row].
+        .padding(.leading, 2)
         .help("Edit the name")
         // The field itself is what VoiceOver uses to edit the name.
         .accessibilityHidden(true)
@@ -71,9 +73,14 @@ struct PhaseNameRow: View {
 
       Toggle(isOn: $isOn) {
         Text(isOn ? "On" : "Off")
+          // The text keeps the size it had before the switch shrank.
+          .font(.body)
           .foregroundStyle(.secondary)
       }
       .toggleStyle(.switch)
+      // The regular switch gave the row undue emphasis (author,
+      // 2026-11-26) [D-name-row].
+      .controlSize(.mini)
       .accessibilityLabel("Use this phase")
       .accessibilityIdentifier("phaseIsOn")
     }
