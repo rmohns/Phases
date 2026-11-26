@@ -10,6 +10,10 @@ struct PhaseNameRow: View {
   @State private var nameBeforeEditing: String?
 
   private let font = Font.title2.weight(.semibold)
+  /// The cap height of `font`, to center the row on the name's capitals.
+  private static var nameCapHeight: CGFloat {
+    NSFont.preferredFont(forTextStyle: .title2).capHeight
+  }
 
   var body: some View {
     HStack(spacing: 8) {
@@ -36,6 +40,12 @@ struct PhaseNameRow: View {
             .accessibilityLabel("Name")
             // [D-ui-test-ids]
             .accessibilityIdentifier("phaseName")
+        }
+        // Center the pencil and switch on the name's capitals, not its
+        // line box, which reaches below for descenders and so sat the
+        // name visibly higher than both (author, 2026-11-26).
+        .alignmentGuide(VerticalAlignment.center) { dimensions in
+          dimensions[.firstTextBaseline] - Self.nameCapHeight / 2
         }
         .layoutPriority(1)
 
