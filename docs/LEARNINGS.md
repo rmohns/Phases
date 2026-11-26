@@ -248,7 +248,9 @@ From `[X-memory]` unless noted: macOS 27.2, two or three displays.
   `[D-bundle-id-settings-move]`. Record: `[X-convert-xcode-project]`.
 - `[L-photos-bitrig-vs-installed]` **Photos access can read "blocked" in
   the app while System Settings shows Phases allowed, when a Bitrig build
-  runs alongside an installed copy of Phases.** Observed by the author,
+  runs alongside an installed copy of Phases.** (2026-11-26: it's how
+  the build is started; a Bitrig build started with `open` gets Photos,
+  one started by Bitrig's Run doesn't; see the result below.) Observed by the author,
   more than once (latest 2026-11-22, draft 59 Bitrig build). Why is a
   hypothesis, perhaps the per-build grant of `[L-photos-grant-per-build]`.
   The test: install to /Applications and see whether it clears (GitHub
@@ -286,6 +288,17 @@ From `[X-memory]` unless noted: macOS 27.2, two or three displays.
     Photos permission, not Phases'. That would fit every report: an
     installed copy started from Finder works, a Bitrig-started one
     doesn't. Test: start the same Bitrig build from Finder instead.
+  - **Result:** the same build (`1795716003463-0CBF54A1`, draft 64),
+    quit and started with `open` from Terminal instead of Bitrig's Run,
+    asked for Photos access; the author allowed it and Photos sources
+    worked from then on. *Verified* by the author, 2026-11-26, once.
+    So how the build is started decides it, not its signature or its
+    saved permission. That Bitrig's Run makes Bitrig the responsible
+    process is still the *hypothesis* that fits; not checked (the
+    parent process wasn't captured).
+  - **Workaround for Photos checks:** start the Bitrig build with
+    `open <path to the build's Phases.app>` (or from Finder), not with
+    Bitrig's Run.
 
 ## Photos library (issue #33)
 
