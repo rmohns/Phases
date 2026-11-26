@@ -39,12 +39,24 @@ final class ImageLibrary {
   /// Mirrors the provider's access, so views update when it's answered.
   private(set) var photosAccess = PhotosAccess.notDetermined
 
+  /// [D-grid-collapse] [D-grid-collapse-saved] The grid's collapsed
+  /// headings, by `GridOutline.Heading.key`: one state for the whole grid,
+  /// kept across launches. Removing a source leaves its entries, so undo
+  /// brings its headings back as they were.
+  private(set) var collapsedHeadings: Set<String> = [] {
+    didSet { SettingsStore.defaults.set(collapsedHeadings.sorted(), forKey: Keys.collapsedHeadings) }
+  }
+
   private enum Keys {
     static let sources = "imageSources"
     static let order = "imageSourceOrder"
+    static let collapsedHeadings = "collapsedGridHeadings"
   }
 
   init() {
+    // Read in test mode too: its store lasts while the instance runs
+    // [D-ui-test-mode].
+    collapsedHeadings = Set(SettingsStore.defaults.stringArray(forKey: Keys.collapsedHeadings) ?? [])
     if UITestMode.isOn {
       // [D-ui-test-mode] The harness's folders, never the user's.
       sources = UITestMode.imageSources
@@ -84,6 +96,19 @@ final class ImageLibrary {
 
   var names: [String] { listing.names }
   var groups: [LibraryListing.Group] { listing.groups }
+
+  /// The grid with collapsed headings folded away [D-grid-collapse].
+  var outline: GridOutline {
+    GridOutline(groups: listing.groups, collapsed: collapsedHeadings)
+  }
+
+  /// [D-grid-collapse] Collapses or expands headings in the grid.
+  func setCollapsed(_ headings: [GridOutline.Heading], _ isCollapsed: Bool) {
+    let keys = headings.map(\.key)
+    var updated = collapsedHeadings
+    if isCollapsed { updated.formUnion(keys) } else { updated.subtract(keys) }
+    if updated != collapsedHeadings { collapsedHeadings = updated }
+  }
 
   func contains(_ name: String) -> Bool {
     listing.contains(name)
