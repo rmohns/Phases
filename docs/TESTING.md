@@ -1095,6 +1095,21 @@ Each with what passes:
     they were before the highlight (the 0.5 pt drop is gone). All
     *verified* from screenshots. `PhaseEditorTests` and `FocusTests` 8
     of 8 (93.0 s, *verified*).
+- 2026-11-26, System Settings pop-ups `[D-editor-popups]` (branch
+  `fix/editor-spec-gaps`, commit `e2e4c7b`; Claude, with the author's
+  go-ahead and spoken warnings):
+  - Hands-on checks in test copies: the look at rest and under the
+    pointer, a nine-click sweep across Change images, and its width
+    with "minutes" chosen. All *verified*; details in EXPERIMENTS.md
+    `[X-settings-popup-look]`. The author checked the Dawn and Dusk
+    row's menus in the preview (*observed*).
+  - The preview copy was still running when the run was due; the author
+    quit it first, as `[L-menubar-overflow]` advises.
+  - `PhaseEditorTests` and `FocusTests` 8 of 8 (94.5 s, *verified*),
+    including `startsRowFollowsTheTrigger` and
+    `rotationTurnsOffAndBackOn`, which choose items in the trigger,
+    before / after / at, and Change images menus through the new
+    control.
 
 ### Sandbox checks (draft 58)
 
