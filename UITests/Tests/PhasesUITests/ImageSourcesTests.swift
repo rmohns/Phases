@@ -31,7 +31,20 @@ extension PhasesUITests {
           if second != nil { break }
           try await app.press(.downArrow)
         }
-        let heading = try #require(second, "The second source's heading never appeared; scrolled with Down")
+        _ = try #require(second, "The second source's heading never appeared; scrolled with Down")
+
+        // From draft 64 Down stops on the heading [D-grid-one-tab-stop], so
+        // the images under it may not be loaded yet: Down onto them.
+        // Required, so the order check can't be skipped silently.
+        var found: AXNode?
+        for _ in 0..<3 {
+          found = Self.element(app, named: "Second Image 01.png")
+          if found != nil { break }
+          try await app.press(.downArrow)
+        }
+        let firstOfSecond = try #require(found, "Second Image 01.png never appeared under its heading; pressed Down 3 times")
+        let heading = try #require(
+          Self.element(app, named: TestImages.secondFolderName), "The second heading left the grid while pressing Down")
 
         // Whatever of the neighbors is on screen now: the heading sits below
         // the first source's last image and above the second's first.
@@ -39,11 +52,6 @@ extension PhasesUITests {
         if let lastOfFirst = Self.element(app, named: "Test Image 60.png"), let top = lastOfFirst.frame?.minY {
           #expect(headingTop > top, "The second heading (\(headingTop)) isn't below the first source's last image (\(top))")
         }
-        // Realized with the heading, since they share its section; required,
-        // so the order check can't be skipped silently.
-        let firstOfSecond = try #require(
-          Self.element(app, named: "Second Image 01.png"), "Second Image 01.png isn't in the grid with its heading"
-        )
         let secondTop = try #require(firstOfSecond.frame?.minY)
         #expect(headingTop < secondTop, "The second heading (\(headingTop)) isn't above the second source's first image (\(secondTop))")
       }

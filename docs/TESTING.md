@@ -510,7 +510,7 @@ run the same day (see Runs, below):
 
 UI tests for collapsible grid headings (GitHub issue #37), in
 `GridCollapseTests.swift`, fast suite. Written 2026-11-26 by Claude;
-not run yet. A heading is one AX element with identifier
+first run the same day (see Runs, at the end of this section). A heading is one AX element with identifier
 `gridHeading`, its name as label, and "Expanded" or "Collapsed,
 <count>" as value.
 
@@ -542,6 +542,32 @@ not run yet. A heading is one AX element with identifier
   folder's album subheadings, and the triangle's look. Those are hand
   checks, with a folder that includes subfolders, and are covered by
   the unit tests' logic.
+
+##### Runs
+
+- 2026-11-26, first run (Claude, with the author's yes; branch
+  `bitrig/add-collapsible-folders-and-albums`; Debug build 64
+  `1795717573778-874A84D1` on every launch, *verified* from the
+  printout; the author's own copy of the same build was running
+  alongside, not in test mode), fast suite, 343 s: **40 of 41 passed**
+  (*verified*), all five `GridCollapseTests` and the changed
+  `arrowKeysCrossSources` among them.
+  - `ImageSourcesTests/eachSourceHasAHeadingInOrder` failed: "Second
+    Image 01.png" wasn't in the grid when the second source's heading
+    first appeared. The test assumed a section's images load with its
+    heading. Likely cause (*inferred*, not proven): from draft 64 Down
+    stops on the heading, so the window scrolls only to the heading and
+    the lazy grid hasn't loaded the images under it; until draft 63
+    Down skipped the heading and landed on the image. A test
+    assumption, not the app's. The test now presses Down up to 3 more
+    times until the image appears, then reads both positions. Re-run
+    alone: passed (*verified*, same build).
+- Also *verified* by the author the same day, by hand with real Photos
+  (the build started with `open`), of the hand checks Claude listed
+  (album icons, a Photos folder's album subheadings, ⌥-click and
+  ⌥←/⌥→, collapsed counts, the triangle, kept after quitting):
+  "Functionally, all that seems to work" (*observed*, per-check results
+  not recorded). The tightened spacing looked right ("Beautiful").
 
 #### Not covered here
 
