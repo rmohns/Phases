@@ -10,7 +10,7 @@ import PhasesUIDriver
 //   swift run phases-drive where            pointer position
 //   swift run phases-drive move <x> <y>     global points, top-left origin
 //   swift run phases-drive click <x> <y>
-//   swift run phases-drive key tab|down|x [shift] [cmd] [opt] [ctrl]
+//   swift run phases-drive key tab|down|right|x [shift] [cmd] [opt] [ctrl]
 //   swift run phases-drive flags            modifiers the system reads as held
 //                                           (sends no input)
 
@@ -30,7 +30,7 @@ func describe(_ modifiers: [SyntheticInput.Modifier]) -> String {
   modifiers.isEmpty ? "none" : modifiers.map(\.description).joined(separator: ", ")
 }
 
-let usage = "usage: phases-drive where | move <x> <y> | click <x> <y> | key tab|down|x [shift] [cmd] [opt] [ctrl] | flags"
+let usage = "usage: phases-drive where | move <x> <y> | click <x> <y> | wheel <x> <y> <lines> | swipe <x> <y> <pixels> | key tab|down|right|x [shift] [cmd] [opt] [ctrl] | flags"
 let modifierNames: [String: SyntheticInput.Modifier] = ["shift": .shift, "cmd": .command, "opt": .option, "ctrl": .control]
 
 let args = CommandLine.arguments.dropFirst()
@@ -47,7 +47,7 @@ case "click":
   try await SyntheticInput.click(at: target)
   print("click at \(Int(target.x)),\(Int(target.y))")
 case "key":
-  let keys: [String: SyntheticInput.Key] = ["tab": .tab, "down": .downArrow, "x": .x]
+  let keys: [String: SyntheticInput.Key] = ["tab": .tab, "down": .downArrow, "right": .rightArrow, "x": .x]
   guard let name = args.dropFirst().first, let key = keys[name] else { fail(usage) }
   var modifiers = Set<SyntheticInput.Modifier>()
   for word in args.dropFirst(2) {
@@ -57,6 +57,20 @@ case "key":
   let ordered = SyntheticInput.Modifier.allCases.filter(modifiers.contains)
   try await SyntheticInput.press(key, modifiers: modifiers)
   print("key \(name) with \(describe(ordered)); held afterward: \(describe(SyntheticInput.heldModifiers()))")
+case "wheel":
+  let rest = Array(args.dropFirst())
+  guard rest.count == 3, let target = point(rest.prefix(2)), let lines = Int32(rest[2]) else {
+    fail("usage: wheel <x> <y> <lines>")
+  }
+  try await SyntheticInput.wheel(at: target, lines: lines)
+  print("wheel at \(Int(target.x)),\(Int(target.y)), \(lines) lines")
+case "swipe":
+  let rest = Array(args.dropFirst())
+  guard rest.count == 3, let target = point(rest.prefix(2)), let pixels = Int32(rest[2]) else {
+    fail("usage: swipe <x> <y> <pixels>")
+  }
+  try await SyntheticInput.swipe(at: target, pixels: pixels)
+  print("swipe at \(Int(target.x)),\(Int(target.y)), \(pixels) px sideways")
 case "flags":
   print("held: \(describe(SyntheticInput.heldModifiers()))")
 default:

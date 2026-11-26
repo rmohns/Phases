@@ -8,6 +8,8 @@ private let windowDiagLog = Diagnostics.logger("window")
 /// the selected item's editor in the detail area.
 struct PhasesWindow: View {
   static let windowID = "phases"
+  /// [D-window-min-size] The editor pane's minimum width (460 pt through draft 62).
+  static let detailMinWidth: CGFloat = 550
 
   var scheduler: WallpaperScheduler
   @State private var selection: SidebarItem?
@@ -98,8 +100,11 @@ struct PhasesWindow: View {
             windowDiagLog.log("detail top safe area \(top, privacy: .public) pt, paused=\(scheduler.isPaused, privacy: .public)")
           }
           // [D-window-min-size] The editor never gets narrower than this,
-          // whatever the sidebar's width.
-          .navigationSplitViewColumnWidth(min: 460, ideal: 720)
+          // whatever the sidebar's width. The frame is what the window's
+          // `.contentMinSize` sees; the column width alone didn't stop the
+          // draft 63 editor, a scroll view, from being clipped.
+          .frame(minWidth: Self.detailMinWidth)
+          .navigationSplitViewColumnWidth(min: Self.detailMinWidth, ideal: 720)
       }
     }
     // [D-window-min-size]

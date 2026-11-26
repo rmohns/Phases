@@ -72,4 +72,29 @@ enum DisabledReason: Equatable {
     case .noLocationYet: "No location yet, so this phase is skipped."
     }
   }
+
+  /// [D-phase-status-inline] The editor row whose control fixes this.
+  var editorRow: MessageRow {
+    self == .turnedOff ? .name : .starts
+  }
+
+  /// Location access off gets an Open System Settings… button. No location
+  /// yet doesn't: Phases asks on its own [D-location-on-demand].
+  var offersLocationSettings: Bool {
+    self == .locationOff
+  }
+}
+
+/// [D-phase-status-inline] The phase editor rows a message can sit under.
+enum MessageRow: Equatable {
+  case name, starts
+}
+
+extension PhaseAvailability {
+  /// [D-phase-status-inline] The message to show under `row`, if any.
+  /// Turned off wins, so a phase that's off shows nothing under Starts.
+  func editorMessage(under row: MessageRow) -> DisabledReason? {
+    guard case .disabled(let reason) = self, reason.editorRow == row else { return nil }
+    return reason
+  }
 }

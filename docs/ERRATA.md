@@ -704,6 +704,11 @@ copy in Applications.
 - **Top edge:** the row's top inset is 20 pt (measured: the form starts
   about 16 pt lower than the panel did with a 4 pt inset), so the panel's
   top lines up with the first grouped row in the detail form.
+  - From draft 63 the phase editor is a scroll view, not a form, so its
+    first row (the name row) gets the same 20 pt as top padding in
+    `PhaseEditor.swift`. *Observed* 2026-11-25 by Claude, one test-mode
+    screenshot: the panel's top and the name text's top within about
+    3 pt. Settings is still a form and unchanged.
 - Recheck both if a macOS update moves the traffic lights, row icons, or
   form.
 

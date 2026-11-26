@@ -32,15 +32,18 @@ func withPhases(
 
 /// The window size for `expectSidebarLimitsHold` (GitHub issue #49). The
 /// sidebar can only reach its 320 pt maximum if the detail pane keeps its
-/// 460 pt minimum beside it [D-sidebar-width] [D-window-min-size], so the
-/// window needs at least 780 pt; at the 700 pt minimum the divider can't
-/// move right at all. Aims for 1000 pt, narrower on a narrow screen (a
-/// portrait monitor, say), and throws if the screen can't fit 780.
+/// 550 pt minimum beside it [D-sidebar-width] [D-window-min-size] (460 pt
+/// through draft 62), so the window needs at least 870 pt; at the 790 pt
+/// minimum the divider can't move right at all. Aims for 1000 pt, narrower
+/// on a narrow screen (a portrait monitor, say), and throws if the screen
+/// can't fit 870.
 /// `SavedLayout.setWindowSize` puts the window 100 pt in from the left of
 /// the main screen's visible frame, so that much is taken off.
+let sidebarLimitsWindowWidth: CGFloat = 870
+
 @MainActor
 func sidebarLimitsWindowSize() throws -> CGSize {
-  let needed: CGFloat = 780
+  let needed = sidebarLimitsWindowWidth
   let preferred: CGFloat = 1000
   guard let screen = NSScreen.main?.visibleFrame else {
     throw UITestFailure("No main screen to size the window for.")
@@ -70,6 +73,15 @@ func expectSidebarLimitsHold(_ app: PhasesApp) async throws {
     try await Task.sleep(for: .milliseconds(600))
   }
   try await Task.sleep(for: .seconds(2))
+  // The saved frame isn't always honored: on 2026-11-25 the window opened
+  // 790, then 963 pt wide for a saved 1000 (TESTING.md "Phase editor
+  // tests", Runs). Widen it directly when it's short of what the limits
+  // need; only that much, since it may sit against the screen's edge.
+  let opened = try app.window().frame
+  if let opened, opened.width < sidebarLimitsWindowWidth {
+    print("The window opened \(opened.width) pt wide; resizing it to \(sidebarLimitsWindowWidth) pt")
+    try await app.setWindowSize(CGSize(width: sidebarLimitsWindowWidth, height: opened.height))
+  }
   try await app.dragDivider(toWindowX: 20)
   let narrow = try app.sidebarWidth()
   try await app.dragDivider(toWindowX: 700)

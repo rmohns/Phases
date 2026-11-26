@@ -1,4 +1,4 @@
-# Phases — Specification (draft 62)
+# Phases — Specification (draft 63)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
@@ -47,11 +47,12 @@ Each phase has:
 |---|---|
 | Name | e.g. "Morning", "Night" |
 | Start trigger | When the phase begins (see "Start triggers") |
-| Images (All Displays) | Images chosen from the library (multi-select). Used by every display that doesn't have its own selection (see "Per-display images") |
-| Images (per display) | Optional: a separate selection for a specific display, used instead of the All Displays images on that display (see "Per-display images") |
+| Images (Shared) | Images chosen from the library (multi-select). Used by every display that doesn't have its own selection (see "Per-display images"). Called **All Displays** through draft 62 |
+| Images (per display) | Optional: a separate selection for a specific display, used instead of the Shared images on that display (see "Per-display images") |
+| Display sharing | Whether the displays using the Shared images all show the same image, or each a different one `[D-sharing-per-phase]` (a phase setting from draft 63) |
 | Order | Random or In order |
 | Rotation | Optional: change to the next image every N minutes or hours while the phase is active |
-| Appearance | Only in: **Any** (default), **Light**, or **Dark** mode (see "Light and Dark Mode") |
+| Appearance | Use in: **Any** (default), **Light Mode**, or **Dark Mode** (see "Light and Dark Mode") |
 | On | Whether the phase is used; on by default. A phase turned off is skipped `[D-phase-turn-off]` |
 
 **Which phase is active:** among phases whose appearance condition matches the
@@ -76,7 +77,7 @@ active, and they need no location.
 the "Always" trigger plus a rotation interval.
 
 **When a phase starts**, each display changes immediately to an image from
-the selection it uses (its own, or All Displays): In order, the one after
+the selection it uses (its own, or Shared): In order, the one after
 the image that selection last showed `[D-in-order-remembers]`; Random, a
 random one. Rotation then continues within the phase.
 
@@ -89,7 +90,7 @@ when there's more than one choice.
 
 - `[D-in-order-remembers]` **In order remembers the last image it showed
   and moves to the next one.** Each phase keeps, for each selection it
-  uses (All Displays, and each display with its own images), the name of
+  uses (Shared, and each display with its own images), the name of
   the image it last showed. Every change, scheduled or Change Now, shows
   the image after that one in the selection's library order, wrapping
   from the last image to the first. The position is kept across
@@ -142,7 +143,9 @@ when there's more than one choice.
 
 ## Light and Dark Mode
 
-- Each phase has an **Only in** setting: Any, Light, or Dark.
+- Each phase has a **Use in** setting: Any, Light Mode, or Dark Mode.
+  Called **Only in** (Any, Light, Dark) through draft 62; "Only in… Any"
+  read oddly (author, 2026-11-25, GitHub issue #27).
 - The app listens for system appearance changes (including Auto switching) and
   re-evaluates immediately. If the switch makes a different phase active, the
   wallpaper changes right away; otherwise nothing happens.
@@ -357,7 +360,10 @@ when there's more than one choice.
   subfolder when that source includes subfolders. With one source, the
   source heading still shows, so the grid looks the same however many
   sources there are. Click toggles an image in or out
-  of the selection, ⇧-click selects a range, plus Select All / Select None buttons.
+  of the selection, ⇧-click selects a range, plus Select All / Select None buttons
+  (in the pinned image header from draft 63, `[D-image-header]`). Headings
+  can't be collapsed; collapsing them is GitHub issue #37, kept out of the
+  editor redesign (author, 2026-11-25).
 - `[D-grid-one-tab-stop]` **Keyboard: the thumbnail grid is one Tab stop.**
   Tab moves into the grid and the next Tab moves past it, the way Finder's
   icon view and Photos work. Inside the grid:
@@ -394,6 +400,10 @@ when there's more than one choice.
   or can't be opened, it's skipped and the phase editor marks it as
   missing. A phase with no available images is skipped (the wallpaper
   stays as it is).
+  - The editor says how many: "2 selected images are missing", with a
+    **Remove Missing** button that takes them out of the selection. The
+    line shows only when something is missing; from draft 63 it's in
+    the pinned image header, above the count line `[D-image-header]`.
 
 ### Photos albums
 
@@ -605,41 +615,154 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
 ## Displays
 
 ### Per-display images
-- Each phase has one image selection for **All Displays**, plus optional
-  selections for specific displays. Schedule, order, and rotation are shared:
-  every display changes at the same moments.
-- In the phase editor's Images section, a **Display** picker lists All Displays
-  plus each known display. It appears only when more than one display is known,
-  so single-display setups look and behave as before.
-- Choosing a specific display shows a **Use different images on this display**
-  toggle. When on, that display gets its own thumbnail grid and draws only from
-  its own selection (e.g. ultrawide images for an ultrawide monitor, portrait
-  images for a portrait one). When off, it uses the All Displays selection.
+- Each phase has one image selection called **Shared** (**All Displays**
+  through draft 62), plus optional selections for specific displays.
+  Schedule, order, and rotation are shared: every display changes at the
+  same moments.
+  - *Why "Shared":* the selection isn't used by all displays once one has
+    its own images, so "All Displays" stopped being true (draft 51 on the
+    abandoned `feature/compact-editor` branch; author, 2026-11-25, issue
+    #27).
+- `[D-display-tabs]` **The phase editor picks a display with a row of
+  display tabs** at the top of the Images section, in place of draft 62's
+  **Display** pop-up menu. The row is part of the pinned image header
+  `[D-image-header]`.
+  - **Tabs, left to right:** **Shared**, a thin vertical divider, then each
+    connected display `[D-connected-displays-only]`, in macOS's display
+    order (*recalled*: the main display first).
+  - **Each tab** is a display picture over the display's name, with a
+    caption under it in secondary text:
+    - Shared: two overlapping screens, in the accent color; caption
+      "18 images" (its selection count, the same number as the count line
+      under the tabs).
+    - A display: its outline `[D-display-tab-shapes]`.
+    - A display using the Shared images: caption "Uses Shared". With its
+      own images: "Own · 1 image".
+  - Tabs have a fixed width. A name too long for it wraps to a second
+    line, then truncates at the end; the tooltip shows the full name.
+    *Why:* an earlier mockup truncated in the middle ("Built-in…a
+    Display"), which reads badly (Claude, 2026-11-09).
+  - The selected tab gets a rounded, filled background.
+  - **Overflow:** Shared and the divider stay put; the display tabs to
+    their right scroll sideways when they don't fit, with the edge faded
+    on any side that has tabs out of view.
+    - *Why:* the fade shows there's more without a scroll bar, and
+      keeping Shared in place means it's always one click away. A mouse's
+      scroll wheel may not scroll a sideways row without ⇧ (*recalled*,
+      not tested here); a trackpad does. Approved by the author
+      2026-11-25.
+  - Shared is selected whenever a phase is opened. If the selected
+    display disconnects while the editor is open, Shared is selected.
+  - **Accessibility:** the tabs are one selection control, one Tab stop,
+    with arrow keys moving between tabs (scrolling the row to keep the
+    chosen tab in view). VoiceOver reads each as its name and caption,
+    plus "selected" on the chosen one. They aren't a row of separate
+    buttons.
+  - *Why:* a pop-up menu hides which displays have their own images until
+    it's opened. The tabs show every display and its state at a glance,
+    and the divider sets Shared apart as a different kind of choice
+    (author's design, 2026-11-09, kept in the 2026-11-25 mockups;
+    draft 51 added the divider and the author found it helped a lot).
+- `[D-display-tab-shapes]` **A display's tab draws its outline at its
+  real proportions:** a rounded rectangle at the display's current
+  aspect ratio, as arranged in System Settings, so a rotated display is
+  drawn tall and an ultrawide drawn wide. The outlines share one height
+  (32 pt), and one too wide for the tab is scaled down to fit, keeping
+  its proportions, so a very wide display is drawn shorter.
+  - *Why:* per-display images exist mostly for portrait and ultrawide
+    displays, so the shape is what tells the tabs apart. Only connected
+    displays are listed, so the shape is always known (author's mockup,
+    2026-11-25; Claude's review the same day).
+  - *Replaced:* draft 51's laptop and monitor symbols, which made no
+    attempt to draw a display's real shape.
+- `[D-display-tabs-visibility]` **The tab row shows when more than one
+  display is connected,** or when exactly one is connected and it has its
+  own images in this phase (then the row is Shared plus that display).
+  Otherwise it's hidden, and the editor shows the Shared selection, so a
+  one-display Mac looks and behaves as before.
+  - *Why the exception:* with only connected displays shown, a laptop
+    given its own images while docked would hide the row once undocked.
+    The editor would then show the Shared grid while the laptop actually
+    uses its own images, with no way to see or undo that (found in review,
+    Claude, 2026-11-09).
+- **A display's tab** shows a **Use different images on this display**
+  checkbox in the image header `[D-image-header]`. When on, that display
+  gets its own thumbnail grid and draws only from its own selection (e.g.
+  ultrawide images for an ultrawide monitor, portrait images for a
+  portrait one). When off, it uses the Shared selection, and in place of
+  the grid the editor says so: "Uses the Shared images" with "This
+  display shows the images chosen under Shared. Turn on “Use different
+  images on this display” to choose different ones for it." centered
+  below, in secondary text.
+- `[D-own-images-start-from-shared]` **Turning "Use different images on
+  this display" on starts from a copy of the Shared selection,** not an
+  empty one.
+  - *Why:* an empty selection makes the display keep its current wallpaper
+    and stop changing `[D-own-images-no-fallback]`, which looks like a
+    bug. Starting from Shared changes nothing until the user edits it
+    (Claude's call, approved by the author 2026-11-09; confirmed
+    2026-11-25).
+  - *Replaced:* through draft 62, turning it on started from an empty
+    selection.
 - `[D-own-images-no-fallback]` If a display has its own selection but none
   of those images are available,
-  that display keeps its current wallpaper; it does not fall back to All Displays.
-- Turning the toggle off discards that display's selection for that phase.
+  that display keeps its current wallpaper; it does not fall back to Shared.
+- Turning the checkbox off discards that display's selection for that phase.
 
 ### Display identity
 - `[D-display-uuid]` Displays are identified by their hardware UUID, so settings survive
   unplugging, reconnecting, and rearranging. Phases remembers each display's
-  name. Disconnected displays stay in the picker, marked "(not connected)", and
-  keep their selections.
+  name.
+- `[D-connected-displays-only]` **Only connected displays are shown.** A
+  display that isn't connected has no tab; it reappears, with its
+  selections, when it's connected again.
+  - If its tab was chosen when it disconnected, Shared is chosen
+    instead, and stays chosen when the display comes back: the editor
+    doesn't jump back to a tab on its own (author, 2026-11-25, after
+    the Phase editor checks found it returning selected).
+  - *Why:* through draft 62 every display ever seen stayed in the picker,
+    marked "(not connected)", so one hotel projector became a permanent
+    entry. Showing only what's connected also removes the need for a
+    "disconnected" warning (author, 2026-11-09; confirmed 2026-11-25,
+    issue #27).
+  - *Replaced:* `[D-display-uuid]`'s "Disconnected displays stay in the
+    picker, marked "(not connected)", and keep their selections" (drafts
+    up to 62). They still keep their selections.
+- `[D-keep-display-settings]` **Saved display settings are never pruned.**
+  A display's selections are kept however long it's been away.
+  - *Why:* a saved display is its UUID, its name, and lists of image
+    names, a few hundred bytes to a few KB (*recalled* estimate, not
+    measured). Pruning would add code and lose the settings of a monitor
+    used once a year. System Settings seems to keep displays the same way
+    (author's observation, 2026-11-09).
+  - Removing a source treats these saved selections like any other: its
+    images show as missing (see "Image library").
 
-### Displays sharing the All Displays images
-- Preference, applying only to displays **without** their own images in the
-  active phase: **Same image everywhere** (default) or **Different picks per
-  display** (each draws its own pick from the All Displays images).
-- `[D-sharing-no-interface]` **From draft 60 this preference has no
-  control.** It left Settings in the Settings cleanup (GitHub issue #2)
-  and moves into each phase's editor in a later change. Until then the
-  saved value keeps applying and the logic is unchanged; only the
-  Displays section in Settings is gone.
-  - *Why:* it makes more sense per phase than app-wide (author,
-    2026-11-24, issue #2; the per-phase move was GitHub issue #26, closed
-    in favor of #2).
+### Displays sharing the Shared images
+- `[D-sharing-per-phase]` **A setting of each phase,** applying only to
+  displays **without** their own images in that phase: same image
+  everywhere (default), or each display shows a different image (each
+  draws its own pick from the Shared images).
+  - Shown on the Shared tab as an **Each display shows a different image**
+    checkbox in the image header `[D-image-header]`, only when the tab row
+    is shown. It's dimmed when fewer than two connected displays use the
+    Shared images in this phase.
+  - *Why:* it's an image decision, so it belongs beside the image picker,
+    and a phase is where image decisions live (author, 2026-11-09 and
+    2026-11-25; GitHub issues #2 and #26).
+  - **Upgrading** from draft 62 or earlier copies the app-wide preference
+    (**Same image everywhere** / **Different picks per display**) into
+    every phase, so nothing changes on the desktop. The app-wide value is
+    then no longer read. New and duplicated phases: a new phase starts with
+    the same image everywhere; a duplicate copies its phase's setting
+    `[D-duplicate-phase]`.
+  - *Replaced:* `[D-sharing-no-interface]` (drafts 60–62): the app-wide
+    preference had no control after it left Settings in the Settings
+    cleanup (GitHub issue #2), and was to move into each phase's editor
+    in a later change, this one. Through draft 59 it was one app
+    preference in Settings.
 - In order: each display's selection (or the shared one) advances in step. With
-  Different picks, sharing displays are offset by one from each other: the
+  different images, sharing displays are offset by one from each other: the
   shared selection remembers the image on the first sharing display (the
   main display first) `[D-in-order-remembers]`, and the others show the
   images after it.
@@ -1270,8 +1393,9 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
     shows the cause.** The sidebar row says "Phase disabled" for every
     reason Phases can't run a phase, the one exception being a phase the
     user turned off, which reads "Off" `[D-phase-turn-off]`. The phase
-    editor's warning names the reason ("Location access is off, so this
-    phase is skipped." or "No location yet, so this phase is skipped.").
+    editor's message names the reason ("Location access is off, so this
+    phase is skipped." or "No location yet, so this phase is skipped."),
+    under the row that fixes it `[D-phase-status-inline]` (draft 63).
     - *Why:* the row is for scanning the schedule; clicking it shows why.
       One status also covers any later reason a phase can't run without
       changing the row (author's call, 2026-11-05). Replaces the first
@@ -1288,11 +1412,15 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
     Its row is dimmed like any phase that can't run, and its trigger line
     ends with **Off** `[D-row-status-not-cause]`.
     VoiceOver reads "Off".
-    - **Controls:** a **Use this phase** switch in the editor's first
-      section, under Name; and **Turn Off** (or **Turn On**) in both the
-      action menu and the row's context menu `[D-phase-actions]`, after
-      Duplicate.
-    - **Editor message:** "This phase is turned off, so it's skipped."
+    - **Controls:** a switch at the trailing end of the editor's name
+      row `[D-name-row]`, labelled **On** or **Off** to match its state,
+      with "Use this phase" as its VoiceOver label; and **Turn Off** (or
+      **Turn On**) in both the action menu and the row's context menu
+      `[D-phase-actions]`, after Duplicate.
+      - *Replaced:* through draft 62, a **Use this phase** switch in the
+        editor's first section, under Name.
+    - **Editor message:** "This phase is turned off, so it's skipped.",
+      under the name row `[D-phase-status-inline]`.
     - **Turned off wins.** A phase that is both turned off and missing a
       location names only "turned off" in the editor, since turning it
       back on is the first thing the user would do (author, 2026-11-06).
@@ -1307,6 +1435,11 @@ On launch, wake from sleep, screen unlock, and time zone / clock changes, the ap
       lose its settings (GitHub issue #21). "Use this phase" says what
       the switch does in the editor's own terms; a bare "On" or
       "Enabled" next to the name could read as a status.
+    - *Why On/Off from draft 63:* the author's 2026-11-25 mockup puts the
+      switch beside the name, where "Use this phase" won't fit. A label
+      that follows the switch does read as a status, but here the status
+      is the point, and the "turned off" message under the row says what
+      Off means (author, 2026-11-25). VoiceOver keeps "Use this phase".
   - The rule ("can this phase run, and if not, why") lives in a small model
     function next to `ScheduleEngine`, not in the view, so the unit tests
     can check it (see TESTING.md). The schedule and the sidebar use the
@@ -1439,10 +1572,16 @@ extras don't show them. No global hotkey.
          (found in review, 2026-10-28). Once `[D-tall-toolbar]` moved the
          traffic lights right, their edge and the row icons' edge coincide,
          so one line serves both.
-       - **Top edge:** the panel's top lines up with the top of the first
-         grouped row in the detail form (the Name row, or Settings' first
-         row), so the sidebar and detail start content on one line under
-         the toolbar `[D-tall-toolbar]`.
+       - **Top edge:** the panel's top lines up with the top of the
+         detail pane's first content (the phase editor's name row
+         `[D-name-row]`, or Settings' header `[D-settings-order]`), so the sidebar and
+         detail start content on one line under the toolbar
+         `[D-tall-toolbar]`.
+         - The name row sits where draft 62's first grouped row (Name)
+           did, so the panel doesn't move. Through draft 62 the rule
+           named "the first grouped row in the detail form"; from draft
+           63 the phase editor's first row isn't grouped (author's
+           question and Claude's answer, 2026-11-25).
        - The insets that achieve this depend on macOS's own list padding;
          see `[Q-list-row-padding]` and ERRATA.md "Branding panel insets".
      - the app icon, about 52 pt
@@ -1664,9 +1803,12 @@ extras don't show them. No global hotkey.
     (found in testing, 2026-10-27). 320 pt leaves room for long phase names
     while keeping the editor the primary area.
 - `[D-window-min-size]` **Minimum window size.** The editor pane can't
-  be made narrower than **460 pt**, so the window's minimum width is the
-  sidebar's current width plus 460 pt (700 pt with the sidebar at its
-  240 pt minimum `[D-sidebar-width]`). The window can't be made shorter
+  be made narrower than **550 pt** (460 pt through draft 62), so the
+  window's minimum width is the sidebar's current width plus 550 pt
+  (790 pt with the sidebar at its 240 pt minimum `[D-sidebar-width]`).
+  The pane's content reports that minimum itself, so the window can't
+  open or be dragged narrower than what the editor needs, whichever pane
+  is showing. The window can't be made shorter
   than **480 pt**. The window opens at 960 × 680 pt, as before. A saved
   window frame smaller than the minimum opens at the minimum.
   - *Why:* without a minimum, the window could be dragged down to a
@@ -1678,12 +1820,38 @@ extras don't show them. No global hotkey.
     in" picker, and two or three thumbnail columns; 480 pt shows the Name
     and Starts sections plus part of the next. Adjust after a look at the
     real window.
+  - *Draft 63:* the widest editor row is now Starts with a dawn or dusk
+    offset, "Starts [30] [minutes] [before] [Dawn]" `[D-starts-row]`,
+    about 420 pt with the form's padding (*estimate*), and "Any | Light
+    Mode | Dark Mode" is wider than draft 62's segments. Both must fit at
+    460 pt; check on the real window before changing the minimum.
+  - *Draft 63, after the first build:* at 460 pt they didn't fit. The
+    Starts label was pushed out of view, "Change images" truncated, and
+    the controls ran past the pane's edge (*observed* by the author,
+    2026-11-25, two screenshots). The author set the minimum to about
+    540–550 pt; 550 it is.
+  - *Draft 63, also found then:* the window could be narrower than the
+    editor's content. The draft 62 editor was a `Form`, which tells the
+    window its minimum width; the draft 63 editor is a scroll view, which
+    doesn't, so its controls were clipped at the pane's edge instead. Once
+    Settings (still a form) had been shown, the window kept the larger
+    minimum (*observed* by the author; the cause is Claude's hypothesis,
+    not traced in AppKit). *Verified* by Claude the same day, AX resize of
+    a test-mode window: the 700 pt minimum held, so the window wasn't
+    going below its minimum; the minimum was too small for the content.
 - `[D-tall-toolbar]` **Full-height toolbar over the detail pane only.** The
   window keeps macOS's tall unified toolbar, like System Settings and
   Bitrig, even though it has no toolbar buttons. The sidebar stays full
-  height beside it. The toolbar title always names the sidebar selection:
-  the phase name, "Settings", or the window name "Phases" when nothing is
-  selected.
+  height beside it. `[D-window-title-phases]` The toolbar title is always
+  **Phases**, the window's name; what's selected is named by the pane's
+  own header: the phase editor's name row `[D-name-row]`, or Settings'
+  header `[D-settings-order]`.
+  - *Why:* the draft 63 editor puts the phase's name in its name row, so
+    a title naming it too showed the name twice (author, 2026-11-25).
+    Settings got a header the same way, so both panes match.
+  - *Replaced:* drafts up to 62, and draft 63's first builds, titled the
+    toolbar with the selection: the phase name, "Settings", or "Phases"
+    when nothing was selected.
   - *Why:* removing the sidebar toggle left the toolbar empty, and the
     window fell back to a short title bar. The traffic lights moved up and
     the form's top crowded into the title area (found in review,
@@ -1726,8 +1894,189 @@ extras don't show them. No global hotkey.
       them once isn't enough; see `[Q-split-item-rewrite]`. No polling,
       because an idle menu bar app shouldn't use CPU (the author's standing
       requirement; see also `[D-single-timer]`).
-- **Phase selected:** editor with name, trigger, offset, appearance condition,
-  order, rotation, and the Images section (Display picker and thumbnail grid).
+- **Phase selected:** the phase editor, next.
+
+#### Phase editor
+
+Draft 63 (GitHub issue #27). The design is the author's mockups of
+2026-11-25; the review notes are Claude's from the same day, approved by
+the author. Draft 51's version (the abandoned `feature/compact-editor`
+branch) supplied the display tabs and pinned header.
+
+- `[D-editor-layout]` **The phase editor is a name row, one block of
+  settings, then the images.** Top to bottom:
+  1. the name row `[D-name-row]`;
+  2. the settings block, one grouped box of four rows: **Starts**
+     `[D-starts-row]`, **Use in**, **Change images** `[D-rotation-row]`,
+     and **Show images** `[D-order-row]`;
+  3. the images block, a second grouped box: the pinned image header
+     `[D-image-header]`, then the thumbnail grid with its source headings.
+  - Text uses the system sizes the form uses now; the mockups' larger
+    text isn't intended (author, 2026-11-25).
+  - Each group of controls holds what it controls, and each message sits
+    under the row that fixes it `[D-phase-status-inline]`: the name row
+    manages the phase, the settings block says when it runs and how it
+    changes, and the images block chooses images for each display.
+  - *Why:* draft 62 gave nearly every setting its own row under its own
+    section heading (Name, Starts, Wallpaper, Images), so on a laptop the
+    grid started near or below the bottom of the window. The four-row
+    block keeps every setting visible with a label while taking about
+    half the height (author's side-by-side screenshot of draft 62 and the
+    mockups, 2026-11-25, *observed*). Draft 51's two-row version was
+    shorter still, but packed several settings into each row and needed
+    explaining; the author wants the editor to explain itself without
+    help text (2026-11-25).
+  - *Replaced:* draft 62's sections Name (Name, Use this phase), Starts
+    (Trigger, Time or offset, Only in), Wallpaper (Order, Rotate images
+    during this phase, Every), and Images (Display, the grid).
+- `[D-editor-labels]` **Row labels are plain words with no trailing "…"**
+  ("Starts", not "Starts at…"). On the Mac a trailing ellipsis marks a
+  command that asks for more before it acts, like "Save As…", not a label
+  (HIG, *recalled*). Approved by the author 2026-11-25.
+- `[D-name-row]` **The name row:** the phase's name as a title, a pencil
+  after it, and the On/Off switch at the trailing edge `[D-phase-turn-off]`.
+  - **The name is a text field drawn without a border,** in a larger
+    title style than the form's text (a system text style, no fixed
+    size). Clicking the pencil starts editing in place with the text
+    selected; clicking the name puts the insertion point where it was
+    clicked, as in any text field. Return or clicking elsewhere ends
+    editing, and Escape puts back the name it had when editing started.
+    The sidebar row follows the name as it's typed, as in draft 62. (The
+    toolbar title is always "Phases" `[D-window-title-phases]`.)
+    - *Changed while building* (Claude, 2026-11-25): the approved draft
+      said clicking the name also selected the text, and that the name
+      was saved on Return. A click in a text field places the insertion
+      point, and the name already saved with each keystroke in draft 62;
+      matching both keeps the field ordinary, and Escape still undoes
+      the edit.
+    - The pencil (`square.and.pencil`) is only a hint that the name can
+      be edited; VoiceOver sees one text field labelled "Name". It keeps
+      the `phaseName` accessibility identifier `[D-ui-test-ids]`.
+    - `[D-initial-focus-sidebar]` still applies: the window opens with
+      the sidebar focused, never the name field.
+    - *Why in place:* the mockup's pencil could have opened a separate
+      editor; editing the name where it's shown is simpler, and works
+      the same from the keyboard and with VoiceOver (Claude's suggestion,
+      approved by the author 2026-11-25).
+  - **The switch** is labelled **On** or **Off**, to match its state, with
+    "Use this phase" as its VoiceOver label and `phaseIsOn` as its
+    accessibility identifier, as now. When it's off, "This phase is
+    turned off, so it's skipped." shows under the row
+    `[D-phase-status-inline]`.
+- `[D-starts-row]` **The Starts row reads as a sentence, so its controls
+  change with the trigger.** The trigger menu lists **Clock Time**,
+  **Dawn**, **Dusk**, and **Always**, each with the same symbol the
+  sidebar rows use. Its place in the row moves with the trigger, on
+  purpose, so each reads naturally (author, 2026-11-25):
+  - **Clock Time:** "Starts [Clock Time] [9:00 AM]": the trigger menu,
+    then a time field with a stepper.
+  - **Dawn or Dusk:** "Starts [30] [minutes] [before] [Dawn]": a number
+    field with a stepper, a **minutes / hours** menu, a **before / after /
+    at** menu, then the trigger menu.
+    - **at** means exactly at dawn or dusk: the number and unit hide, and
+      the row reads "Starts [at] [Dawn]". Choosing before or after again
+      starts from 30 minutes.
+    - Limits stay −12 h to +12 h (see "Start triggers"): 1–720 minutes
+      or 1–12 hours. A typed number past the limit becomes the limit.
+      The minutes stepper moves by 5, the hours stepper by 1. Changing
+      the unit keeps the number (clamped), so 30 minutes becomes 12
+      hours, not half an hour.
+    - The offset is stored in minutes; it's shown in the largest unit
+      that divides it evenly, so 120 minutes shows as 2 hours and 90 as
+      90 minutes.
+    - Today's start time shows under the row `[D-start-readout]`.
+  - **Always:** "Starts [Always]", with "Used when no timed phase
+    applies." under the row in secondary text, always shown.
+    - *Replaced:* draft 62's longer note, shown only when there was more
+      than one phase: "An “Always” phase is used only when no timed phase
+      applies. Use “Only in” to switch between Always phases with Light
+      and Dark Mode."
+  - *Why:* the 2026-11-25 mockup's number-and-stepper fields replace
+    draft 51's preset menus: they cover any offset in minutes or hours
+    without a Custom… step, and two hours no longer means typing 120 as
+    in draft 62. The **at** choice gives the zero offset a natural
+    reading; "[0] minutes before Dawn" read oddly (Claude's review,
+    2026-11-25).
+  - *Replaced:* draft 62's Trigger, Time, and offset rows ("[before, by]
+    [30] minutes", minutes only).
+- `[D-start-readout]` **A dawn or dusk phase says when it starts today,**
+  in secondary text under the Starts row: "Today 6:12 AM (dawn 6:42 AM)",
+  or "Today 6:42 AM" at dawn exactly. If dawn or dusk doesn't happen
+  today (far north or south): "No dawn today" or "No dusk today". It
+  follows the day, the location, and the time zone, as the schedule does
+  (see "Start triggers").
+  - Without a usable location, the location message shows in its place
+    `[D-phase-status-inline]`.
+  - *Why:* it's the only way to check an offset without doing the math
+    (draft 51; approved again by the author 2026-11-25).
+- **Use in:** a segmented control, **Any | Light Mode | Dark Mode**
+  (see "Light and Dark Mode"). Words, not sun and moon symbols: the
+  author doesn't want meaning carried by an icon nothing explains (see
+  `[D-active-badge]`).
+- `[D-rotation-row]` **Change images:** "Change images every [30]
+  [minutes]": a number field with a stepper (1–999), then a menu of
+  **minutes**, **hours**, a separator, and **Only when the phase
+  starts**. Choosing that last item turns rotation off: "every" and the
+  number hide, and the row reads "Change images [Only when the phase
+  starts]". Choosing minutes or hours again turns it back on with the
+  interval it had.
+  - *Why:* the mockup's "Change every [30] [minutes]" had no way to turn
+    rotation off, which draft 62 allows (Claude's review, 2026-11-25).
+    Putting "off" in the unit menu costs no extra control; the label
+    became "Change images" so the off state reads as a sentence. Claude's
+    proposal in this draft, for the author to confirm.
+  - *Replaced:* draft 62's **Rotate images during this phase** switch and
+    a separate **Every** row.
+- `[D-order-row]` **Show images:** a segmented control, **In Order |
+  Randomly**. It stays separate from rotation: order still matters with
+  rotation off, since it decides the phase's first image (In order: the
+  next one `[D-in-order-remembers]`; Random: a random one).
+  - *Why separate:* found in review of draft 51 (Claude, 2026-11-09) and
+    confirmed by the author 2026-11-25; one "in order / randomly / never"
+    menu would lose a combination.
+- `[D-phase-status-inline]` **Why a phase can't run shows under the row
+  that fixes it,** in secondary text, with no banner:
+  - Turned off: "This phase is turned off, so it's skipped." under the
+    name row, which holds the switch.
+  - Location access off: "Location access is off, so this phase is
+    skipped." under the Starts row, with an **Open System Settings…**
+    button that opens Privacy & Security › Location Services.
+  - No location yet: "No location yet, so this phase is skipped." under
+    the Starts row, with no button (Phases asks on its own
+    `[D-location-on-demand]`).
+  - Turned off wins, as before `[D-phase-turn-off]`: when a phase is
+    both off and missing a location, only the name row's message shows.
+  - The window-wide pause banner is unchanged `[D-window-pause-banner]`.
+  - *Why:* status beside its fix, the rule the pause banner already
+    follows. A phase-level banner would cost a row and say less (Claude's
+    call, approved by the author 2026-11-09; confirmed 2026-11-25).
+  - The **Open System Settings…** button is new in draft 63 (from
+    draft 51).
+  - *Replaced:* draft 62's orange warning with a triangle symbol, at the
+    end of the Starts section for every reason, including turned off.
+- `[D-image-header]` **The image header pins to the top of the editor
+  while the grid scrolls.** Once the settings block has scrolled out of
+  view, the header stays under the toolbar and the grid scrolls beneath
+  it. Top to bottom:
+  1. The display tabs `[D-display-tabs]`, when shown
+     `[D-display-tabs-visibility]`.
+  2. When the tabs are shown, a checkbox line: on the Shared tab, **Each
+     display shows a different image** `[D-sharing-per-phase]`; on a
+     display's tab, **Use different images on this display**.
+  3. When selected images are missing: "2 selected images are missing"
+     and **Remove Missing** (see "Image library").
+  4. "9 of 293 selected", then **Select All** and **Select None**. Hidden
+     on a display that uses the Shared images, where there's no grid to
+     select in.
+  5. A divider, then the grid.
+  - The header has an opaque background, so thumbnails never show
+    through it `[D-content-vs-tools]`.
+  - *Why:* scrolled down a long grid, the user still has to see which
+    display they're choosing for, and reach Select All and Select None
+    (author, 2026-11-09; still wanted 2026-11-25). With the tabs shown
+    it's about 130 pt tall (*estimate*, to check on the real window).
+  - Source headings in the grid can't collapse; that's GitHub issue #37,
+    kept separate (author, 2026-11-25).
 - `[D-window-pause-banner]` **While Phases has paused itself for an
   outside change `[D-outside-change-pauses]`, a pause banner sits at the
   top of the detail pane,** whatever is selected (a phase, Settings, or
@@ -1798,6 +2147,10 @@ extras don't show them. No global hotkey.
     view.
 - `[D-settings-order]` **Settings selected,** top to bottom (GitHub issue
   #2, draft 60):
+  0. From draft 63, a **Settings** header in the same title style as the
+     phase editor's name row `[D-name-row]`, in the same place, scrolling
+     with the form. The toolbar title is "Phases"
+     `[D-window-title-phases]` (author, 2026-11-25).
   1. The pause switch `[D-settings-pause-switch]`.
   2. **Image Sources** `[D-image-sources]`.
   3. **Transition:** None / Crossfade and duration, with the Reduce
@@ -1810,8 +2163,9 @@ extras don't show them. No global hotkey.
      quitting** with a note that says what quitting will do
      `[D-restore-on-quit]`, and **Ask before quitting** `[D-quit-confirm]`.
   6. **About** `[D-version-in-settings]`.
-  - No Displays section: display sharing has no control for now
-    `[D-sharing-no-interface]`.
+  - No Displays section: display sharing is a phase setting, in the
+    phase editor `[D-sharing-per-phase]` (draft 63). Drafts 60–62 had no
+    control for it at all (`[D-sharing-no-interface]`, replaced).
   - No Quit button: Quit lives in the app menu `[D-app-menu]` (draft 24
     and earlier had a Quit Phases button here).
   - *Why Launch & Quit is one section:* both are about Phases starting and

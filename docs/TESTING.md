@@ -35,6 +35,7 @@ author's yes.
 | Hands-on checks | Cover checks | `[D-cover-checks]`, checks 1–9 | 15–20 min (*estimate*) | Release | yes | before merging cover work, and after any change to `CrossfadeController` |
 | Hands-on checks | Memory checks | `[D-memory-protocol]`: two runs of ten changes, the covers' cost and release, the no-covers baseline, the window check | 30–40 min (*estimate*) | Release | yes | two runs before and two after any change to covers, image loading, the thumbnail grid, or how wallpaper is set |
 | Hands-on checks | Sandbox checks | checks 1–9 in "Sandbox checks" | 15–20 min (*estimate*) | the newest Bitrig build, diagnostics on | yes | after any change to the entitlements, or to how Phases reads the wallpaper store, sources, or the original wallpaper |
+| Hands-on checks | Phase editor checks | `[D-editor-checks]`, checks 1–10, several displays for 1–4 | 20–30 min (*estimate*) | the newest Bitrig build, diagnostics on | yes | before merging the draft 63 editor, and after any change to the display tabs, the image header, or the Starts row |
 
 The table's order is by time taken, nothing more: no check includes or
 outranks another.
@@ -156,6 +157,41 @@ The pure logic that decides what the app does:
   and no saved settings yes; a recorded launch or settings from an
   earlier version no; test mode only with its switch
   `[D-first-launch-shows-window]` (draft 39)
+- **Phase editor (draft 63)**, in `PhaseEditorRulesTests.swift`: the
+  editor's decisions live in pure files (`OffsetParts`, `RotationChoice`,
+  `StartReadout`, `DisplayTabs`, and additions to `Phase` and
+  `PhaseAvailability`) so these can be unit tests:
+  - Offset: stored minutes to number, unit, and before / after / at, in
+    the largest unit that divides evenly (120 → 2 hours, 90 → 90
+    minutes, 0 → at), and back; limits (1–720 minutes, 1–12 hours) with
+    typed values clamped; changing the unit keeps the number, clamped;
+    leaving "at" starts from 30 minutes `[D-starts-row]`
+  - Rotation: "Only when the phase starts" turns rotation off, and
+    minutes or hours turns it back on with the interval it had
+    `[D-rotation-row]`
+  - Today's start: "Today 6:12 AM (dawn 6:42 AM)", "Today 6:42 AM" at
+    exactly dawn, "No dusk today" on a day without one (using the
+    far-north dates the `SolarCalculator` tests already use)
+    `[D-start-readout]`
+  - Messages: which message shows and under which row, with turned off
+    winning `[D-phase-status-inline]` (extends `PhaseAvailability`)
+  - Display tabs: which tabs show, in what order, and when the row is
+    hidden, including one connected display with its own images
+    `[D-display-tabs-visibility]`; disconnected displays left out but
+    their selections kept `[D-connected-displays-only]`
+    `[D-keep-display-settings]`; the selected tab falls back to Shared
+    when its display disconnects; captions ("18 images", "Uses Shared",
+    "Own · 1 image") `[D-display-tabs]`; outline sizes for portrait,
+    standard, and ultrawide displays, one height and capped width
+    `[D-display-tab-shapes]`
+  - Display sharing: settings from draft 62 copy the app-wide preference
+    into every phase; a new phase starts with the same image everywhere,
+    and a duplicate copies its phase's setting `[D-sharing-per-phase]`;
+    turning on "Use different images on this display" starts from a
+    copy of Shared `[D-own-images-start-from-shared]`
+  - *Verified* 2026-11-25 by Claude: `bitrig test -package UnitTests`,
+    239 of 239 passed, these included (and `AppVersion` with the build
+    number at 63).
 
 ### Rules
 
@@ -180,7 +216,7 @@ The pure logic that decides what the app does:
   or touches the real wallpaper is a hands-on check, and any one of them
   can run on its own** (draft 33). There are four: Interface tests, Cover
   checks, Memory checks, and from draft 54 Photos checks (from draft 58,
-  Sandbox checks too). The Interface tests are automated but still
+  Sandbox checks too; from draft 63, Phase editor checks). The Interface tests are automated but still
   belong here, because they move the mouse; the line is touching the Mac,
   not automated versus by hand.
   - **Any check alone.** Each starts from a fresh launch, does its own
@@ -357,6 +393,15 @@ The pure logic that decides what the app does:
   draft 54 `imageSourceLocation` and `photosAlbumList`, and from draft
   61 `pauseSwitch`. They're invisible
   to users, but renaming one breaks the tests.
+  - From draft 63: `phaseIsOn` (the name row's switch; draft 62's
+    switch already carries it in `PhaseEditor.swift`, but it wasn't
+    listed here),
+    `phaseNamePencil`, `startTrigger`, `startTime`, `offsetValue`,
+    `offsetDirection`, `rotationValue`, `rotationChoice`, `imageHeader`,
+    `displayTabs`, `ownImagesCheckbox`, `sharingCheckbox`, and
+    `removeMissing`. `phaseName` stays on the name field `[D-name-row]`.
+  - From draft 63 the driver also presses Y, Return, and Escape
+    (`SyntheticInput.Key`), for renaming in place.
 
 - **Relaunch:** the harness relaunches its own instance by sending it a
   reopen Apple event, as Finder does, rather than `open`, which could
@@ -366,11 +411,95 @@ The pure logic that decides what the app does:
   Space were checked by hand on the experiment build, which used the
   same routing (`[L-reopen-event]`, 2026-11-03).
 
+#### Phase editor tests (draft 63)
+
+UI tests for the redesigned editor (GitHub issue #27), in
+`PhaseEditorTests.swift`, fast suite. Written 2026-11-25; first passing
+run the same day (see Runs, below):
+
+- **Name in place** `[D-name-row]` (`nameEditsInPlace`): clicking the
+  pencil (found by position: it's hidden from accessibility, so it has
+  no identifier the harness can see) focuses `phaseName` with its text
+  selected; typing "x" and
+  pressing Return renames the phase, and the sidebar row reads the new
+  name; editing again, typing "y", and pressing Escape puts "x" back.
+- **The focus tests still hold** `[D-initial-focus-sidebar]`: the three
+  `FocusTests` that type after opening or reopening must pass unchanged
+  against the borderless name field; they're the guard that it never
+  takes focus on its own.
+- **Starts row** `[D-starts-row]` (`startsRowFollowsTheTrigger`):
+  choosing Dawn in `startTrigger` for a clock-time phase (no offset)
+  gives "at" dawn, with no number or unit; choosing before brings the
+  number back at 30; choosing Clock Time shows the time field.
+- **Rotation off** `[D-rotation-row]` (`rotationTurnsOffAndBackOn`):
+  choosing "Only when the phase starts" hides the number; choosing
+  minutes brings it back with the same value.
+- **Pinned header** `[D-image-header]`
+  (`imageHeaderPinsWhileTheGridScrolls`): after the arrow keys scroll the
+  grid well down (as in `gridIsOneTabStopAndArrowsScroll`),
+  `imageHeader`'s top is where it was once pinned, just under the
+  toolbar, and the grid's top has moved up past it.
+- `gridIsOneTabStopAndArrowsScroll` must still pass: the grid stays one
+  Tab stop after the new header, and the display tabs are one Tab stop
+  of their own.
+- Multi-display behavior isn't here: the test window runs on whatever
+  displays are connected, so the display tabs are the Phase editor
+  checks, below.
+
+##### Runs
+
+- 2026-11-25, first run (Claude, with the author's yes; branch
+  `feature/ui-refactor-editor` at `b45b509`; Debug build 63
+  `1795653866893-A59A58A0` on every launch, *verified* from the
+  printout), fast suite, 295 s: **32 of 36 passed** (*verified*). Every
+  older suite passed, the three `FocusTests` included. Of the editor
+  tests, `imageHeaderPinsWhileTheGridScrolls` passed; three failed, plus
+  the sidebar test:
+  - `nameEditsInPlace`: "No element with accessibility identifier
+    `phaseNamePencil`". The pencil is hidden from accessibility on
+    purpose (VoiceOver sees one field, `[D-name-row]`), which hides it
+    from the harness too. A test mistake, not the app's.
+  - `startsRowFollowsTheTrigger`: timed out waiting for the offset
+    number. The test phase is at a clock time with no offset, so
+    choosing Dawn gives "Starts [at] [Dawn]", which hides the number as
+    `[D-starts-row]` says. A test mistake.
+  - `rotationTurnsOffAndBackOn`: timed out finding "Only when…" in the
+    `rotationChoice` menu. The author saw the menu work as intended by
+    hand (2026-11-25, *observed*), so it's the test's to fix.
+  - `dividerStaysWithin240To320`: dragged far right, the sidebar
+    measured 239.5 pt, expected 320 (*verified*). GitHub issue #49
+    again (it read 290.5 on build 62). 239.5 is what fits a 790 pt window
+    beside the new 550 pt editor minimum (*inferred*): a hypothesis that
+    the test's window never reached the 870 pt it asks for. The author
+    judged it a test setup issue.
+- 2026-11-25, fixing the four (Claude, the author's go-ahead to fix all
+  four; same build). Test and driver changes only; the app is unchanged:
+  - `nameEditsInPlace` clicks the pencil by where it sits, 18 pt past
+    the name field's trailing edge (new driver call
+    `click(rightOf:by:)`). Passed on the next run.
+  - `startsRowFollowsTheTrigger` now expects "at" right after Dawn, then
+    before at 30. The menu tests then failed differently: the *second*
+    menu choice in a row found "no items" (the new failure message lists
+    what the menu holds), so the menu never opened. A guess: the click
+    landed while the first menu was still closing. `chooseMenuButtonItem`
+    now waits for its menu to close, plus 400 ms. Both menu tests then
+    passed, so the guess fits, but it isn't proven.
+  - The sidebar test: a rerun printed the window opening 790 pt wide,
+    confirming the hypothesis above (*verified*); the next launch opened
+    it 963 pt wide against the screen's right edge, for a saved 1000. So
+    the saved frame isn't reliable. `expectSidebarLimitsHold` now widens
+    the window through AX to 870 pt when it opens narrower (driver call
+    `setWindowSize`). Passed twice alone, but both launches opened wide
+    enough, so the resize itself hasn't run in a passing test yet.
+  - Then the whole fast suite, 286 s: **36 of 36 passed** (*verified*).
+
 #### Not covered here
 
 - Crossfade timing (the twitch) and the persistent cover's Space behavior
   are the Cover checks. Memory is the Memory checks. The screen-change
   rule `[D-screen-change-no-reroll]` is a unit test.
+- The display tabs with more than one display, and the editor's look,
+  are the Phase editor checks (draft 63).
 
 #### History
 
@@ -735,6 +864,190 @@ Each with what passes:
   between the two on hand instead of repeating
   `[L-photos-offline-check]`. The UI suite passed 29 of 29 (247 s) on
   the same build.
+
+### Phase editor checks (draft 63)
+
+- `[D-editor-checks]` **The redesigned phase editor is checked by hand
+  before it merges,** and after any change to the display tabs, the
+  image header, or the Starts row. The UI tests can't add or remove
+  displays, and nothing automated judges how the editor looks. Ask
+  first, naming the checks. Checks 1–4 need several displays: real
+  ones, or the author's tool that adds displays that aren't physically
+  connected.
+  - Build: the newest Bitrig Debug build, diagnostics on.
+- **The checks:**
+  1. **Tab row shows and hides** `[D-display-tabs-visibility]`: one
+     display, the row is hidden; two or more, it shows Shared, the
+     divider, then each display in macOS's order; back to one display
+     after giving it its own images, the row shows Shared plus that
+     display.
+  2. **Shapes** `[D-display-tab-shapes]`: a rotated (portrait) display
+     is drawn tall and an ultrawide wide, all at one height; a long name
+     wraps, then truncates at the end, with the full name in the
+     tooltip.
+  3. **Overflow** `[D-display-tabs]`: with enough displays to overflow
+     at the minimum window width, Shared and the divider stay put, the
+     other tabs scroll sideways with a trackpad, and the edge fades on
+     each side with tabs out of view. Note whether a mouse's scroll wheel
+     scrolls the row without ⇧ (*recalled* that it doesn't; record what
+     happens).
+  4. **Disconnect and reconnect** `[D-connected-displays-only]`: with a
+     display's tab selected and its own images chosen, disconnect it:
+     Shared is selected and the tab is gone. Reconnect: the tab is back,
+     "Own · N images", same selection.
+  5. **Sharing checkbox** `[D-sharing-per-phase]`: dimmed when fewer than
+     two connected displays use Shared; with two, turning it on gives the
+     displays different images at the next change, per phase. A Mac
+     upgraded from draft 62 with **Different picks per display** shows
+     it on in every phase.
+  6. **Own images** `[D-own-images-start-from-shared]`: turning on "Use
+     different images on this display" shows the Shared selection
+     already chosen, and the wallpaper doesn't change; turning it off
+     shows "Uses the Shared images".
+  7. **Pinned header** `[D-image-header]`: scrolled down a long grid, the
+     tabs, checkbox, count, and Select All / Select None stay in view,
+     with no thumbnail showing through; with a missing image, Remove
+     Missing is in the header and works.
+  8. **Starts row and messages** `[D-starts-row]` `[D-start-readout]`
+     `[D-phase-status-inline]`: each trigger's row reads as a sentence;
+     a dawn phase's "Today …" line matches Settings' dawn time minus
+     the offset; with Location off, the message and Open System
+     Settings… replace that line; a phase turned off shows its message
+     under the name row only.
+  9. **Fit and look** `[D-window-min-size]` `[D-editor-layout]`: at the
+     minimum window width, the dawn Starts row and "Any | Light Mode |
+     Dark Mode" fit without clipping; Light and Dark Mode both read
+     well; the branding panel's top lines up with the name row
+     `[D-brand-inset]`.
+  10. **VoiceOver:** the name field reads "Name", the switch "Use this
+      phase", the display tabs as one control with each tab's name,
+      caption, and "selected".
+- Record results with date and build in this section, as the other
+  checks do.
+
+#### Runs
+
+- 2026-11-25, checks 1–4 (Claude, with the author's yes; Debug build 63
+  `1795653866893-A59A58A0`, a test-mode copy, so no real wallpaper or
+  settings touched). Displays: the built-in (1300 × 845) and BetterDisplay
+  virtual screens, driven through BetterDisplay's command line (the author
+  turned its CLI integration on): "Virtual 16:10" (1366 × 768), then four
+  made for the run, "Phases Test Portrait" (9:16), "Phases Test
+  Ultrawide Display With a Deliberately Long Name" (21:9), "Phases Test
+  4:3", and "Phases Test 16:9". Evidence is screenshots of the test
+  window (*observed*), except where noted. Diagnostics weren't on.
+  - **Check 1, passed.** Two displays: Shared, the divider, Built-in,
+    Virtual 16:10, in `NSScreen.screens` order. Down to one display
+    using Shared: the row hidden. Down to one display with its own
+    images: Shared plus that display.
+  - **Check 2, passed, with one flaw.** Portrait drawn tall, ultrawide
+    wide, every outline one height; the long name wraps to two lines,
+    then truncates at the end ("Ultrawide Displa…"); hovering shows the
+    full name as a tooltip. *Flaw:* a tab whose name wraps is taller
+    than the others, and the row centers tabs vertically, so its outline
+    and caption sit higher than its neighbours'.
+  - **Check 3, mostly passed.** At 790 pt (the minimum) six displays
+    overflow; Shared and the divider stay put; arrow keys move the
+    selection and scroll it into view; the trailing edge fades with tabs
+    out of view there, the leading edge once tabs are hidden on that
+    side. *Flaw:* the chosen tab scrolls only just into view, so it can
+    sit under the 24 pt trailing fade. *Not settled:* a synthetic
+    two-finger swipe (new `phases-drive swipe`, continuous pixel deltas
+    with began/changed/ended phases) didn't scroll the row, and neither
+    did a synthetic mouse wheel without ⇧ (`phases-drive wheel`). Per
+    `[D-input-lands]` neither is a finding: nothing shows the swipe was
+    delivered as a real trackpad's would be. A real trackpad and mouse
+    are the author's to try. After Tab / Shift-Tab, and after a click on
+    a tab, Right Arrow worked every time (5 presses, *observed*).
+    - **Finding, open:** three Right Arrow presses at about
+      23:10:00–23:10:08 did nothing, and the author heard beeps then
+      ("about eleven ten and a few seconds past", *observed* by the
+      author; the screenshot after them is stamped 23:10:08). A beep is
+      macOS refusing an unhandled key, so the presses reached Phases and
+      nothing took them, while the row was drawn with focus. Before them:
+      a click on a tab (23:08), the AX resize to 790 pt, then the
+      synthetic swipe and wheel over the row. *Hypothesis, untested:* the
+      resize or the scroll events left focus drawn on the row while key
+      focus was elsewhere. The unified log showed no beep entry.
+      Reproduce before fixing.
+  - **Check 4, passed.** Virtual 16:10's tab selected with its own 4
+    images, then disconnected: the row hid (one display left, using
+    Shared), with Shared's grid shown. Reconnected: the tab back, "Own ·
+    4 images", all 4 still chosen. The tab came back *selected*: the
+    editor remembers the chosen display while it's away
+    (`DisplayTabs.selection` falls back to Shared only while the tab is
+    missing). The spec doesn't say whether it should.
+  - Also seen: at one moment just after the AX resize to 790 pt, the
+    row's focus ring ran past the image box's right edge to the
+    window's; on the next screenshot it fit. Taken as mid-resize, not a
+    finding.
+  - **Both flaws fixed** the same day (author's go-ahead): the tab row
+    is top-aligned, and the chosen tab scrolls to the row's center
+    instead of just into view. Rechecked on Debug build 63
+    `1795666506719-097FA50C` at 790 pt with the same six displays
+    (*observed*, screenshots): every outline and name level, wrapped or
+    not; the ultrawide, chosen by arrow keys, centered clear of both
+    fades; at the far end the last tabs fully in view and no trailing
+    fade. The four test displays were then discarded.
+  - **Reconnect, changed** (author, 2026-11-25): a reconnected display's
+    tab now comes back unselected, Shared staying chosen
+    (`[D-connected-displays-only]`). Rechecked on Debug build 63
+    `1795666739618-64C3AE82`: Virtual 16:10's tab chosen, disconnected,
+    reconnected; Shared chosen (*observed*).
+- 2026-11-25, checks 5–10 (Claude, with the author's yes; Debug build 63
+  `1795666739618-64C3AE82`, test mode, diagnostics on; the built-in
+  display and Virtual 16:10; 790 pt window; a 60-image copy of the test
+  folder). Screenshots throughout (*observed*).
+  - **Check 5, passed in part.** With two displays using Shared the
+    sharing checkbox is on and live; with Virtual 16:10 on its own images,
+    dimmed. *Upgrade:* launched with a draft-62 store passed as launch
+    arguments (`-phases <data>` holding one old phase with no
+    `displayMode`, plus `-displayMode differentPerDisplay`); the phase
+    opened with "Each display shows a different image" on. One phase,
+    not several. *Not run:* "different images at the next change," since
+    test mode never sets the wallpaper; that needs a real run.
+  - **Check 6, passed.** Turning on own images for Virtual 16:10 showed
+    Shared's 60 already chosen ("Own · 60 images"), and the branding
+    panel's picture didn't change (test mode sets no wallpaper, so the
+    panel is the evidence). Turning it off showed "Uses the Shared
+    images".
+  - **Check 7, passed.** Wheel-scrolled down the grid: the tabs,
+    checkbox, count, and Select All / Select None pinned under the
+    toolbar, no thumbnail showing through. One image file deleted, then
+    the window closed and reopened (the library rescans on open; it
+    didn't notice the deletion while open): "1 selected image is
+    missing" with Remove Missing in the header; clicking it cleared the
+    line, 59 of 59. The synthetic wheel scrolled the editor, so
+    `phases-drive wheel` is shown to land (TEST-TOOLS.md), which makes
+    check 3's wheel result a finding: a plain mouse wheel doesn't scroll
+    the display tabs sideways, as recalled.
+  - **Check 8, passed in part.** Always: "Used when no timed phase
+    applies." Dawn, at: "Starts [at] [Dawn]", "Today 6:17 AM"; before:
+    "[30] [minutes] [before] [Dawn]", "Today 5:47 AM (dawn 6:17 AM)",
+    matching Settings' civil dawn, 6:17 AM. Turned off: "This phase is
+    turned off, so it's skipped." under the name row only. *Not run:*
+    Location off (it means changing the Mac's privacy settings). *Seen:*
+    the trigger menu lists Always, Clock Time, Dawn, Dusk, where
+    `[D-starts-row]` lists Clock Time, Dawn, Dusk, and Always; whether
+    the spec meant an order isn't clear.
+  - **Check 9, passed.** At 790 pt the dawn Starts row and "Any | Light
+    Mode | Dark Mode" fit unclipped; Dark and Light Mode both read well
+    (the Mac switched to Light Mode for one screenshot and straight
+    back); the Settings header's top lines up with the branding panel's.
+  - **Check 10, read from the accessibility tree, not with VoiceOver
+    running.** The switch: "Use this phase". The display tabs: one radio
+    group, each tab "name, caption", Shared selected. *Gap:* the name
+    field's only label is its placeholder, "Name" (no description), so
+    VoiceOver likely reads "Old, text field" without "Name"
+    (*recalled* that placeholders are spoken only when empty; not
+    tested). `[D-name-row]` says it's labelled "Name". The radio group
+    has no name of its own either. Not fixed yet.
+  - *Left behind:* the image copy,
+    `~/Library/Caches/PhasesUITests/Phases Editor Check Images` (deleting
+    it was refused).
+  - *Process note:* the spoken warnings before and after driving
+    (`[D-hands-on-checks]`) were missed for the first clicks of this
+    sitting and used from the key presses on.
 
 ### Sandbox checks (draft 58)
 

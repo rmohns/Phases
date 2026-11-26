@@ -12,6 +12,10 @@ public enum SyntheticInput {
     case rightArrow = 124
     case space = 49
     case x = 7
+    // Draft 63: renaming a phase in place [D-name-row].
+    case y = 16
+    case returnKey = 36
+    case escape = 53
   }
 
   package static func click(at point: CGPoint) async throws {
@@ -39,6 +43,47 @@ public enum SyntheticInput {
       try await pause(0.015)
     }
     post(.leftMouseUp, at: end)
+    try await pause(0.4)
+  }
+
+  /// A mouse wheel's scroll at `point`: `lines` notches, vertical only (a
+  /// plain wheel has no horizontal axis), positive scrolls content down.
+  /// No phases and not continuous, as a wheel mouse sends.
+  package static func wheel(at point: CGPoint, lines: Int32) async throws {
+    post(.mouseMoved, at: point)
+    try await pause(0.1)
+    for _ in 0..<abs(lines) {
+      let event = CGEvent(
+        scrollWheelEvent2Source: nil, units: .line, wheelCount: 1, wheel1: lines > 0 ? -1 : 1, wheel2: 0, wheel3: 0
+      )
+      event?.location = point
+      event?.post(tap: .cghidEventTap)
+      try await pause(0.05)
+    }
+    try await pause(0.4)
+  }
+
+  /// A two-finger trackpad swipe at `point`, sideways by `pixels` (positive
+  /// moves content left, showing what's to the right): continuous pixel
+  /// deltas with began/changed/ended phases, as a trackpad sends. No
+  /// momentum phase.
+  package static func swipe(at point: CGPoint, pixels: Int32, steps: Int32 = 20) async throws {
+    post(.mouseMoved, at: point)
+    try await pause(0.1)
+    let step = -pixels / steps
+    for index in 0...steps + 1 {
+      // Phases: 1 began, 2 changed, 4 ended (NSEvent.Phase raw values).
+      let phase: Int64 = index == 0 ? 1 : index == steps + 1 ? 4 : 2
+      let delta = (index == 0 || index == steps + 1) ? 0 : step
+      let event = CGEvent(
+        scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 2, wheel1: 0, wheel2: delta, wheel3: 0
+      )
+      event?.setIntegerValueField(.scrollWheelEventIsContinuous, value: 1)
+      event?.setIntegerValueField(.scrollWheelEventScrollPhase, value: phase)
+      event?.location = point
+      event?.post(tap: .cghidEventTap)
+      try await pause(0.016)
+    }
     try await pause(0.4)
   }
 

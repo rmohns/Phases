@@ -93,7 +93,7 @@ extension ImageSource {
 }
 
 extension Phase {
-  /// Whether any of the phase's selections (All Displays or per display)
+  /// Whether any of the phase's selections (Shared or per display)
   /// has an image from the source; removing it asks first [D-image-sources].
   func uses(source id: String) -> Bool {
     (imageNames + displayImageNames.values.joined()).contains { StoredImageName.source(of: $0) == id }

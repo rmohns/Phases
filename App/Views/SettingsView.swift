@@ -18,11 +18,18 @@ struct SettingsView: View {
           .disabled(scheduler.isPausedForOutsideChange)
           // [D-ui-test-ids]
           .accessibilityIdentifier("pauseSwitch")
+      } header: {
+        // [D-settings-order] The pane's header, in the phase editor's
+        // name-row style [D-name-row].
+        Text("Settings")
+          .font(.title2.weight(.semibold))
+          .foregroundStyle(.primary)
+          .accessibilityAddTraits(.isHeader)
       }
 
       ImageSourcesSection(scheduler: scheduler)
 
-      // [D-sharing-no-interface] Display sharing has no control for now; the preference still applies.
+      // [D-sharing-per-phase] Display sharing is set in each phase's editor.
 
       Section("Transition") {
         // [D-reduce-motion-note] Dimmed, values kept, while Reduce Motion is on.
@@ -128,7 +135,8 @@ struct SettingsView: View {
       }
     }
     .formStyle(.grouped)
-    .navigationTitle("Settings")
+    // [D-window-title-phases] The header names the pane; the toolbar keeps
+    // the window's name.
     .onAppear { memoryFootprint = MemoryUse.footprint() }
     .alert("Launch Phases at login?", isPresented: $isConfirmingLaunchAtLogin) {
       Button("Add Login Item") { scheduler.launchAtLogin.enable() }

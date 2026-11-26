@@ -19,20 +19,8 @@ struct ImageGrid: View {
   private let columns = [GridItem(.adaptive(minimum: minimumCellWidth), spacing: spacing)]
 
   var body: some View {
-    // The spec marks missing selections whatever else the grid shows, even
-    // with no sources or none that can be opened.
-    if !missing.isEmpty {
-      HStack {
-        Label(
-          missing.count == 1 ? "1 selected image is missing" : "\(missing.count) selected images are missing",
-          systemImage: "exclamationmark.triangle"
-        )
-        .foregroundStyle(.orange)
-        Spacer()
-        Button("Remove Missing") { selection.removeAll { missing.contains($0) } }
-      }
-    }
-
+    // Missing images, the count, and Select All / Select None are in the
+    // pinned image header [D-image-header].
     if library.sources.isEmpty {
       Text("Add an image folder or Photos album in Settings.")
         .foregroundStyle(.secondary)
@@ -40,14 +28,6 @@ struct ImageGrid: View {
       Text(emptyMessage)
         .foregroundStyle(.secondary)
     } else {
-      HStack {
-        Text("\(selectedCount) of \(library.names.count) selected")
-          .foregroundStyle(.secondary)
-        Spacer()
-        Button("Select All") { selection = library.names }
-        Button("Select None") { selection = [] }
-      }
-
       let groups = library.groups
       LazyVGrid(columns: columns, alignment: .leading, spacing: Self.spacing) {
         ForEach(groups.indices, id: \.self) { index in
@@ -156,14 +136,6 @@ struct ImageGrid: View {
       return many ? "No photos in these albums." : "No photos in this album."
     }
     return many ? "No JPEG, PNG, HEIC, or TIFF images in these folders." : "No JPEG, PNG, HEIC, or TIFF images in this folder."
-  }
-
-  private var selectedCount: Int {
-    selection.filter(library.contains).count
-  }
-
-  private var missing: [String] {
-    selection.filter { !library.contains($0) }
   }
 
   private func toggle(_ name: String, extendingRange: Bool) {

@@ -89,6 +89,11 @@ final class ImageLibrary {
     listing.contains(name)
   }
 
+  /// How many of `names` are in the library now; missing ones don't count.
+  func availableCount(of names: [String]) -> Int {
+    names.filter(contains).count
+  }
+
   func url(for name: String) -> URL? {
     listing.url(for: name)
   }

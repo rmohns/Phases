@@ -4,7 +4,7 @@ import Foundation
 /// selection last showed, in library order. Pure, so the unit tests can
 /// reach it.
 enum InOrderPicker {
-  /// The position key for the All Displays selection; displays with their
+  /// The position key for the Shared selection; displays with their
   /// own images use their display UUID.
   static let sharedKey = "all"
 
