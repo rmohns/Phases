@@ -1061,6 +1061,33 @@ Each with what passes:
   - *Process note:* the spoken warnings before and after driving
     (`[D-hands-on-checks]`) were missed for the first clicks of this
     sitting and used from the key presses on.
+- 2026-11-26, name row polish (branch `fix/editor-spec-gaps`; Claude
+  measured screenshots of test copies, 2× pixels halved to points):
+  - **Alignment:** the name's capitals sat 1.25 pt above the switch and
+    the pencil's square 1.5 pt below the capitals. A first fix (a
+    cap-height guide on the name, caa133e) moved nothing (*verified*,
+    the author's screenshot). Putting the field on the sizing text's
+    baseline and centering the pencil on its cap height brought all
+    four (capitals, pencil, "On", switch) within 0.5 pt (*verified*).
+  - **Pencil highlight:** `.accessoryBarAction` drew a gray box at rest
+    that didn't change under the pointer; `.accessoryBar` shows nothing
+    at rest and a highlight under the pointer (*verified*, screenshots
+    with the pointer moved by `phases-drive move`).
+  - **Gap:** the highlight started 17.5 pt after the name's last letter;
+    5.5 pt nearly touched it; 9 pt settled (author asked to pull it in).
+    While editing, the insertion point fits after the last letter
+    (*observed*, a screenshot frame caught it).
+  - **UI tests:** `nameEditsInPlace` first failed at launch, before any
+    input, timing out on the test copy's menu bar item while the
+    author's own copy was running. With it quit, it passed (*observed*;
+    hypothesis: the author's copy's item crowded the menu bar,
+    `[L-menubar-overflow]`, not tested). One rerun to read that error
+    was started without the spoken warning (it failed at the same
+    launch step, sending no input).
+  - At 9 pt, `PhaseEditorTests` and `FocusTests` 8 of 8 (93.9 s,
+    *verified*). An earlier run of the same build was stopped after the
+    author heard a system beep and their own input may have landed in
+    it; which step beeped wasn't found.
 
 ### Sandbox checks (draft 58)
 

@@ -1962,10 +1962,18 @@ branch) supplied the display tabs and pinned header.
         `.accessoryBar` shows nothing until the pointer is over it
         (*verified* by Claude, 2026-11-26, screenshots with and without
         the pointer over it).
-      The name row's layout doesn't change: the pencil stays centered on
-      the name's capitals, and the name, pencil, and switch don't move.
+      The pencil stays centered on the name's capitals, level with the
+      switch, and the highlight starts about 9 pt after the name's last
+      letter, leaving room for the insertion point when editing.
       - *Why:* a bare symbol gave no sign that clicking it does anything
         (author, 2026-11-26).
+      - *Why 9 pt:* the first build with the highlight left 17.5 pt,
+        which looked detached from the name (author, 2026-11-26); 5.5 pt
+        nearly touched the last letter. At 9 pt the pencil symbol sits
+        3 pt further right than before the highlight, the style draws it
+        about 1.5 pt smaller, and the row and all below it sit 0.5 pt
+        lower (*verified* by Claude, 2026-11-26, screenshots of a test
+        copy).
     - `[D-initial-focus-sidebar]` still applies: the window opens with
       the sidebar focused, never the name field.
     - *Why in place:* the mockup's pencil could have opened a separate
