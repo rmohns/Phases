@@ -1952,6 +1952,20 @@ branch) supplied the display tabs and pinned header.
     - The pencil (`square.and.pencil`) is only a hint that the name can
       be edited; VoiceOver sees one text field labelled "Name". It keeps
       the `phaseName` accessibility identifier `[D-ui-test-ids]`.
+    - **The pencil shows it can be clicked:** when the pointer is over
+      it, a rounded highlight appears behind it, using a standard macOS
+      button style that does this (`.accessoryBar`, the style of the
+      buttons in accessory bars), not a custom effect.
+      - *Changed while building* (Claude, 2026-11-26): the approved
+        draft named `.accessoryBarAction`; in a test copy it drew a gray
+        box all the time that didn't change under the pointer.
+        `.accessoryBar` shows nothing until the pointer is over it
+        (*verified* by Claude, 2026-11-26, screenshots with and without
+        the pointer over it).
+      The name row's layout doesn't change: the pencil stays centered on
+      the name's capitals, and the name, pencil, and switch don't move.
+      - *Why:* a bare symbol gave no sign that clicking it does anything
+        (author, 2026-11-26).
     - `[D-initial-focus-sidebar]` still applies: the window opens with
       the sidebar focused, never the name field.
     - *Why in place:* the mockup's pencil could have opened a separate

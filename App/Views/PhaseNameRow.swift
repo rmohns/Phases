@@ -44,7 +44,9 @@ struct PhaseNameRow: View {
 
       Button("Edit Name", systemImage: "square.and.pencil") { isEditing = true }
         .labelStyle(.iconOnly)
-        .buttonStyle(.borderless)
+        // Highlights under the pointer, so it reads as clickable
+        // [D-name-row].
+        .buttonStyle(.accessoryBar)
         .font(.title3)
         .foregroundStyle(.secondary)
         // Centered on its cap height, as the symbol sits beside text;
