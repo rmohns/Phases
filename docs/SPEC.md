@@ -1570,7 +1570,7 @@ extras don't show them. No global hotkey.
          so one line serves both.
        - **Top edge:** the panel's top lines up with the top of the
          detail pane's first content (the phase editor's name row
-         `[D-name-row]`, or Settings' first row), so the sidebar and
+         `[D-name-row]`, or Settings' header `[D-settings-order]`), so the sidebar and
          detail start content on one line under the toolbar
          `[D-tall-toolbar]`.
          - The name row sits where draft 62's first grouped row (Name)
@@ -1838,9 +1838,16 @@ extras don't show them. No global hotkey.
 - `[D-tall-toolbar]` **Full-height toolbar over the detail pane only.** The
   window keeps macOS's tall unified toolbar, like System Settings and
   Bitrig, even though it has no toolbar buttons. The sidebar stays full
-  height beside it. The toolbar title always names the sidebar selection:
-  the phase name, "Settings", or the window name "Phases" when nothing is
-  selected.
+  height beside it. `[D-window-title-phases]` The toolbar title is always
+  **Phases**, the window's name; what's selected is named by the pane's
+  own header: the phase editor's name row `[D-name-row]`, or Settings'
+  header `[D-settings-order]`.
+  - *Why:* the draft 63 editor puts the phase's name in its name row, so
+    a title naming it too showed the name twice (author, 2026-11-25).
+    Settings got a header the same way, so both panes match.
+  - *Replaced:* drafts up to 62, and draft 63's first builds, titled the
+    toolbar with the selection: the phase name, "Settings", or "Phases"
+    when nothing was selected.
   - *Why:* removing the sidebar toggle left the toolbar empty, and the
     window fell back to a short title bar. The traffic lights moved up and
     the form's top crowded into the title area (found in review,
@@ -1930,8 +1937,8 @@ branch) supplied the display tabs and pinned header.
     selected; clicking the name puts the insertion point where it was
     clicked, as in any text field. Return or clicking elsewhere ends
     editing, and Escape puts back the name it had when editing started.
-    The sidebar row and the toolbar title `[D-tall-toolbar]` follow the
-    name as it's typed, as in draft 62.
+    The sidebar row follows the name as it's typed, as in draft 62. (The
+    toolbar title is always "Phases" `[D-window-title-phases]`.)
     - *Changed while building* (Claude, 2026-11-25): the approved draft
       said clicking the name also selected the text, and that the name
       was saved on Return. A click in a text field places the insertion
@@ -2136,6 +2143,10 @@ branch) supplied the display tabs and pinned header.
     view.
 - `[D-settings-order]` **Settings selected,** top to bottom (GitHub issue
   #2, draft 60):
+  0. From draft 63, a **Settings** header in the same title style as the
+     phase editor's name row `[D-name-row]`, in the same place, scrolling
+     with the form. The toolbar title is "Phases"
+     `[D-window-title-phases]` (author, 2026-11-25).
   1. The pause switch `[D-settings-pause-switch]`.
   2. **Image Sources** `[D-image-sources]`.
   3. **Transition:** None / Crossfade and duration, with the Reduce

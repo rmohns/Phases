@@ -44,7 +44,8 @@ struct PhaseEditor: View {
         .padding(.bottom, 20)
       }
     }
-    .navigationTitle(phase.wrappedValue.name)
+    // [D-window-title-phases] No title of its own: the name row names the
+    // phase, and the toolbar keeps the window's name.
     .onChange(of: phaseID) { chosenDisplay = nil }
   }
 
