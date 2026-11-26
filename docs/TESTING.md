@@ -989,6 +989,62 @@ Each with what passes:
     not; the ultrawide, chosen by arrow keys, centered clear of both
     fades; at the far end the last tabs fully in view and no trailing
     fade. The four test displays were then discarded.
+  - **Reconnect, changed** (author, 2026-11-25): a reconnected display's
+    tab now comes back unselected, Shared staying chosen
+    (`[D-connected-displays-only]`). Rechecked on Debug build 63
+    `1795666739618-64C3AE82`: Virtual 16:10's tab chosen, disconnected,
+    reconnected; Shared chosen (*observed*).
+- 2026-11-25, checks 5–10 (Claude, with the author's yes; Debug build 63
+  `1795666739618-64C3AE82`, test mode, diagnostics on; the built-in
+  display and Virtual 16:10; 790 pt window; a 60-image copy of the test
+  folder). Screenshots throughout (*observed*).
+  - **Check 5, passed in part.** With two displays using Shared the
+    sharing checkbox is on and live; with Virtual 16:10 on its own images,
+    dimmed. *Upgrade:* launched with a draft-62 store passed as launch
+    arguments (`-phases <data>` holding one old phase with no
+    `displayMode`, plus `-displayMode differentPerDisplay`); the phase
+    opened with "Each display shows a different image" on. One phase,
+    not several. *Not run:* "different images at the next change," since
+    test mode never sets the wallpaper; that needs a real run.
+  - **Check 6, passed.** Turning on own images for Virtual 16:10 showed
+    Shared's 60 already chosen ("Own · 60 images"), and the branding
+    panel's picture didn't change (test mode sets no wallpaper, so the
+    panel is the evidence). Turning it off showed "Uses the Shared
+    images".
+  - **Check 7, passed.** Wheel-scrolled down the grid: the tabs,
+    checkbox, count, and Select All / Select None pinned under the
+    toolbar, no thumbnail showing through. One image file deleted, then
+    the window closed and reopened (the library rescans on open; it
+    didn't notice the deletion while open): "1 selected image is
+    missing" with Remove Missing in the header; clicking it cleared the
+    line, 59 of 59. The synthetic wheel scrolled the editor, so
+    `phases-drive wheel` is shown to land (TEST-TOOLS.md), which makes
+    check 3's wheel result a finding: a plain mouse wheel doesn't scroll
+    the display tabs sideways, as recalled.
+  - **Check 8, passed in part.** Always: "Used when no timed phase
+    applies." Dawn, at: "Starts [at] [Dawn]", "Today 6:17 AM"; before:
+    "[30] [minutes] [before] [Dawn]", "Today 5:47 AM (dawn 6:17 AM)",
+    matching Settings' civil dawn, 6:17 AM. Turned off: "This phase is
+    turned off, so it's skipped." under the name row only. *Not run:*
+    Location off (it means changing the Mac's privacy settings). *Seen:*
+    the trigger menu lists Always, Clock Time, Dawn, Dusk, where
+    `[D-starts-row]` lists Clock Time, Dawn, Dusk, and Always; whether
+    the spec meant an order isn't clear.
+  - **Check 9, passed.** At 790 pt the dawn Starts row and "Any | Light
+    Mode | Dark Mode" fit unclipped; Dark and Light Mode both read well
+    (the Mac switched to Light Mode for one screenshot and straight
+    back); the Settings header's top lines up with the branding panel's.
+  - **Check 10, read from the accessibility tree, not with VoiceOver
+    running.** The switch: "Use this phase". The display tabs: one radio
+    group, each tab "name, caption", Shared selected. *Gap:* the name
+    field's only label is its placeholder, "Name" (no description), so
+    VoiceOver likely reads "Old, text field" without "Name"
+    (*recalled* that placeholders are spoken only when empty; not
+    tested). `[D-name-row]` says it's labelled "Name". The radio group
+    has no name of its own either. Not fixed yet.
+  - *Left behind:* the image copy,
+    `~/Library/Caches/PhasesUITests/Phases Editor Check Images` (deleting
+    it was refused).
   - *Process note:* the spoken warnings before and after driving
     (`[D-hands-on-checks]`) were missed for the first clicks of this
     sitting and used from the key presses on.

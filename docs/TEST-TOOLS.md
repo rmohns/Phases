@@ -33,10 +33,11 @@ Used by both groups. Reference, not steps.
   - From 2026-11-25 (Phase editor checks): `… wheel <x> <y> <lines>`, a
     mouse wheel's line scroll, vertical only; and `… swipe <x> <y>
     <pixels>`, a sideways two-finger swipe (continuous pixel deltas with
-    began/changed/ended phases, no momentum). Neither has been shown to
-    land yet: on their first use neither scrolled the display tabs, and
-    whether a real trackpad would have is unknown (TESTING.md "Phase
-    editor checks", Runs). Treat a no-op as unproven, not as a finding.
+    began/changed/ended phases, no momentum). `wheel` lands: it scrolled
+    the phase editor (2026-11-25, *observed*). `swipe` hasn't been shown
+    to land: it didn't scroll the display tabs, and whether a real
+    trackpad would have is unknown (TESTING.md "Phase editor checks",
+    Runs). Treat a `swipe` no-op as unproven, not as a finding.
     Points are global, top-left origin, the same as accessibility
     positions. It's a hands-on check `[D-hands-on-checks]`; prove each
     action landed `[D-input-lands]`.

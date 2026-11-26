@@ -47,6 +47,12 @@ struct PhaseEditor: View {
     // [D-window-title-phases] No title of its own: the name row names the
     // phase, and the toolbar keeps the window's name.
     .onChange(of: phaseID) { chosenDisplay = nil }
+    // [D-connected-displays-only] A chosen tab that goes away is
+    // forgotten, so Shared stays chosen when its display comes back.
+    .onChange(of: DisplayTabs.tabs(connected: scheduler.connectedDisplays, phase: phaseBinding.wrappedValue)) {
+      _, tabs in
+      chosenDisplay = DisplayTabs.selection(chosenDisplay, among: tabs)
+    }
   }
 
   private func settings(_ phase: Binding<Phase>, availability: PhaseAvailability) -> some View {

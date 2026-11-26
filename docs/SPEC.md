@@ -716,6 +716,10 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
 - `[D-connected-displays-only]` **Only connected displays are shown.** A
   display that isn't connected has no tab; it reappears, with its
   selections, when it's connected again.
+  - If its tab was chosen when it disconnected, Shared is chosen
+    instead, and stays chosen when the display comes back: the editor
+    doesn't jump back to a tab on its own (author, 2026-11-25, after
+    the Phase editor checks found it returning selected).
   - *Why:* through draft 62 every display ever seen stayed in the picker,
     marked "(not connected)", so one hotel projector became a permanent
     entry. Showing only what's connected also removes the need for a
