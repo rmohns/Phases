@@ -130,6 +130,7 @@ struct PhaseEditor: View {
     HStack(spacing: 6) {
       if phase.wrappedValue.isRotating {
         Text("every")
+          .fixedSize()
         TextField("Interval", value: rotationValue(phase), format: .number)
           .labelsHidden()
           .frame(width: 44)
@@ -146,8 +147,8 @@ struct PhaseEditor: View {
         Text(RotationChoice.onlyAtStart.title).tag(RotationChoice.onlyAtStart)
       }
       .labelsHidden()
-      .fixedSize()
       .accessibilityIdentifier("rotationChoice")
+      .popUpWidth(fitting: phase.wrappedValue.rotationChoice.title)
     }
   }
 

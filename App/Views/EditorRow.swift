@@ -14,9 +14,11 @@ struct EditorRow<Content: View>: View {
 
   var body: some View {
     HStack(spacing: 12) {
+      // Never truncated or pushed out; the pane's minimum width leaves
+      // room for the widest row's controls [D-window-min-size].
       Text(label)
         .lineLimit(1)
-        .layoutPriority(1)
+        .fixedSize()
       Spacer(minLength: 0)
       content
     }

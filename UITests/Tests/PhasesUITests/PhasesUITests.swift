@@ -32,15 +32,16 @@ func withPhases(
 
 /// The window size for `expectSidebarLimitsHold` (GitHub issue #49). The
 /// sidebar can only reach its 320 pt maximum if the detail pane keeps its
-/// 460 pt minimum beside it [D-sidebar-width] [D-window-min-size], so the
-/// window needs at least 780 pt; at the 700 pt minimum the divider can't
-/// move right at all. Aims for 1000 pt, narrower on a narrow screen (a
-/// portrait monitor, say), and throws if the screen can't fit 780.
+/// 550 pt minimum beside it [D-sidebar-width] [D-window-min-size] (460 pt
+/// through draft 62), so the window needs at least 870 pt; at the 790 pt
+/// minimum the divider can't move right at all. Aims for 1000 pt, narrower
+/// on a narrow screen (a portrait monitor, say), and throws if the screen
+/// can't fit 870.
 /// `SavedLayout.setWindowSize` puts the window 100 pt in from the left of
 /// the main screen's visible frame, so that much is taken off.
 @MainActor
 func sidebarLimitsWindowSize() throws -> CGSize {
-  let needed: CGFloat = 780
+  let needed: CGFloat = 870
   let preferred: CGFloat = 1000
   guard let screen = NSScreen.main?.visibleFrame else {
     throw UITestFailure("No main screen to size the window for.")

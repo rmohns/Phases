@@ -1799,9 +1799,12 @@ extras don't show them. No global hotkey.
     (found in testing, 2026-10-27). 320 pt leaves room for long phase names
     while keeping the editor the primary area.
 - `[D-window-min-size]` **Minimum window size.** The editor pane can't
-  be made narrower than **460 pt**, so the window's minimum width is the
-  sidebar's current width plus 460 pt (700 pt with the sidebar at its
-  240 pt minimum `[D-sidebar-width]`). The window can't be made shorter
+  be made narrower than **550 pt** (460 pt through draft 62), so the
+  window's minimum width is the sidebar's current width plus 550 pt
+  (790 pt with the sidebar at its 240 pt minimum `[D-sidebar-width]`).
+  The pane's content reports that minimum itself, so the window can't
+  open or be dragged narrower than what the editor needs, whichever pane
+  is showing. The window can't be made shorter
   than **480 pt**. The window opens at 960 × 680 pt, as before. A saved
   window frame smaller than the minimum opens at the minimum.
   - *Why:* without a minimum, the window could be dragged down to a
@@ -1818,6 +1821,20 @@ extras don't show them. No global hotkey.
     about 420 pt with the form's padding (*estimate*), and "Any | Light
     Mode | Dark Mode" is wider than draft 62's segments. Both must fit at
     460 pt; check on the real window before changing the minimum.
+  - *Draft 63, after the first build:* at 460 pt they didn't fit. The
+    Starts label was pushed out of view, "Change images" truncated, and
+    the controls ran past the pane's edge (*observed* by the author,
+    2026-11-25, two screenshots). The author set the minimum to about
+    540–550 pt; 550 it is.
+  - *Draft 63, also found then:* the window could be narrower than the
+    editor's content. The draft 62 editor was a `Form`, which tells the
+    window its minimum width; the draft 63 editor is a scroll view, which
+    doesn't, so its controls were clipped at the pane's edge instead. Once
+    Settings (still a form) had been shown, the window kept the larger
+    minimum (*observed* by the author; the cause is Claude's hypothesis,
+    not traced in AppKit). *Verified* by Claude the same day, AX resize of
+    a test-mode window: the 700 pt minimum held, so the window wasn't
+    going below its minimum; the minimum was too small for the content.
 - `[D-tall-toolbar]` **Full-height toolbar over the detail pane only.** The
   window keeps macOS's tall unified toolbar, like System Settings and
   Bitrig, even though it has no toolbar buttons. The sidebar stays full
