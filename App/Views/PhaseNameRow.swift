@@ -10,10 +10,6 @@ struct PhaseNameRow: View {
   @State private var nameBeforeEditing: String?
 
   private let font = Font.title2.weight(.semibold)
-  /// The cap height of `font`, to center the row on the name's capitals.
-  private static var nameCapHeight: CGFloat {
-    NSFont.preferredFont(forTextStyle: .title2).capHeight
-  }
 
   var body: some View {
     HStack(spacing: 8) {
@@ -24,7 +20,10 @@ struct PhaseNameRow: View {
         .lineLimit(1)
         .padding(.trailing, 6)
         .hidden()
-        .overlay(alignment: .leading) {
+        // On the hidden text's baseline: centered in its frame, the field
+        // drew its text about 1.25 pt above the pencil and switch
+        // (measured by Claude, 2026-11-26).
+        .overlay(alignment: Alignment(horizontal: .leading, vertical: .firstTextBaseline)) {
           TextField("Name", text: $name)
             .textFieldStyle(.plain)
             .font(font)
@@ -41,12 +40,6 @@ struct PhaseNameRow: View {
             // [D-ui-test-ids]
             .accessibilityIdentifier("phaseName")
         }
-        // Center the pencil and switch on the name's capitals, not its
-        // line box, which reaches below for descenders and so sat the
-        // name visibly higher than both (author, 2026-11-26).
-        .alignmentGuide(VerticalAlignment.center) { dimensions in
-          dimensions[.firstTextBaseline] - Self.nameCapHeight / 2
-        }
         .layoutPriority(1)
 
       Button("Edit Name", systemImage: "square.and.pencil") { isEditing = true }
@@ -54,6 +47,13 @@ struct PhaseNameRow: View {
         .buttonStyle(.borderless)
         .font(.title3)
         .foregroundStyle(.secondary)
+        // Centered on its cap height, as the symbol sits beside text;
+        // centered on its frame, its square sat 1.5 pt below the name's
+        // capitals (measured by Claude, 2026-11-26).
+        .alignmentGuide(VerticalAlignment.center) { dimensions in
+          dimensions[.firstTextBaseline]
+            - NSFont.preferredFont(forTextStyle: .title3).capHeight / 2
+        }
         .help("Edit the name")
         // The field itself is what VoiceOver uses to edit the name.
         .accessibilityHidden(true)
