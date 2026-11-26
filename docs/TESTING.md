@@ -1134,6 +1134,8 @@ Each with what passes:
     phase's name instead of X would likely keep the selection and not
     beep (*recalled*, untested), and would still catch a focused Name
     field. Left for the author.
+  - **Decided** (author, 2026-11-26): keep X and the beep; the test
+    stays as it is.
 
 ### Sandbox checks (draft 58)
 
