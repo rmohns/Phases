@@ -432,6 +432,42 @@ public final class PhasesApp {
     try await SyntheticInput.click(at: try center(of: node))
   }
 
+  /// Clicks `distance` points past the node's trailing edge, level with its
+  /// middle, for a control that's hidden from accessibility on purpose
+  /// (the name row's pencil, `[D-name-row]`). Refuses a point outside the
+  /// window.
+  public func click(rightOf node: AXNode, by distance: CGFloat) async throws {
+    try await ensureFrontmost()
+    guard let frame = node.frame else { throw UITestFailure("No frame for \(node.summary)") }
+    let point = CGPoint(x: frame.maxX + distance, y: frame.midY)
+    guard try window().frame?.contains(point) == true else {
+      throw UITestFailure("\(distance) pt right of \(node.summary) is outside the window; sent no click")
+    }
+    try await SyntheticInput.click(at: point)
+  }
+
+  /// Resizes the window through AX, keeping its top-left corner, and waits
+  /// until it reads back that size (within a point). A saved frame alone
+  /// isn't enough: the window may open at its minimum instead.
+  public func setWindowSize(_ size: CGSize) async throws {
+    let window = try window()
+    var wanted = size
+    guard let value = AXValueCreate(.cgSize, &wanted) else { throw UITestFailure("Couldn't make an AX size") }
+    let error = AXUIElementSetAttributeValue(window.element, kAXSizeAttribute as CFString, value)
+    guard error == .success else { throw UITestFailure("Resizing the window failed: AX error \(error.rawValue)") }
+    do {
+      try await waitUntil("the window to be \(Int(size.width)) × \(Int(size.height))") {
+        guard let frame = try? self.window().frame else { return false }
+        return abs(frame.width - size.width) <= 1 && abs(frame.height - size.height) <= 1
+      }
+    } catch {
+      let frame = try? self.window().frame
+      throw UITestFailure(
+        "Asked for a \(Int(size.width)) × \(Int(size.height)) window; it reads \(frame.map { "\($0)" } ?? "no frame")"
+      )
+    }
+  }
+
   /// Chooses a main menu item with real clicks, the way a person does: a
   /// click on the menu's title in the menu bar, then on the item whose
   /// title starts with `prefix`. Real clicks because a closed menu's items
@@ -465,15 +501,32 @@ public final class PhasesApp {
     try await click(button)
     // Let the menu open before reading its items' frames.
     try await Task.sleep(for: .milliseconds(500))
-    let item = try await waitFor("“\(prefix)…” in the \(identifier) menu", timeout: .seconds(5)) {
-      let matches: (AXNode) -> Bool = {
-        $0.role == kAXMenuItemRole && ($0.title ?? "").hasPrefix(prefix) && $0.isEnabled
-          && ($0.frame.map { $0.width > 0 && $0.height > 0 } ?? false)
+    let matches: (AXNode) -> Bool = {
+      $0.role == kAXMenuItemRole && ($0.title ?? "").hasPrefix(prefix) && $0.isEnabled
+        && ($0.frame.map { $0.width > 0 && $0.height > 0 } ?? false)
+    }
+    let item: AXNode
+    do {
+      item = try await waitFor("“\(prefix)…” in the \(identifier) menu", timeout: .seconds(5)) {
+        button.first(where: matches) ?? app.first(where: matches)
       }
-      return button.first(where: matches) ?? app.first(where: matches)
+    } catch {
+      // Say what the menu did hold, so a failure can be read without a rerun.
+      let shown = button.descendants().filter { $0.role == kAXMenuItemRole }
+        .map { "“\($0.title ?? "")”\($0.isEnabled ? "" : " (dimmed)")\(($0.frame?.width ?? 0) > 0 ? "" : " (no frame)")" }
+      throw UITestFailure(
+        "Timed out waiting for “\(prefix)…” in the \(identifier) menu; it holds \(shown.isEmpty ? "no items" : shown.joined(separator: ", ")); button \(button.summary)"
+      )
     }
     let shown = item.title ?? prefix
     try await clickOwnElement(item, what: "“\(shown)”")
+    // Let the menu finish closing: a click on another pop-up while it
+    // faded out opened nothing (a guess from 2026-11-25's run; TESTING.md
+    // "Phase editor tests", Runs).
+    try await waitUntil("the \(identifier) menu to close", timeout: .seconds(2)) {
+      button.first { $0.role == kAXMenuItemRole && ($0.frame.map { $0.width > 0 } ?? false) } == nil
+    }
+    try await Task.sleep(for: .milliseconds(400))
     return shown
   }
 

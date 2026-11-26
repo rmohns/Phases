@@ -39,9 +39,11 @@ func withPhases(
 /// can't fit 870.
 /// `SavedLayout.setWindowSize` puts the window 100 pt in from the left of
 /// the main screen's visible frame, so that much is taken off.
+let sidebarLimitsWindowWidth: CGFloat = 870
+
 @MainActor
 func sidebarLimitsWindowSize() throws -> CGSize {
-  let needed: CGFloat = 870
+  let needed = sidebarLimitsWindowWidth
   let preferred: CGFloat = 1000
   guard let screen = NSScreen.main?.visibleFrame else {
     throw UITestFailure("No main screen to size the window for.")
@@ -71,6 +73,15 @@ func expectSidebarLimitsHold(_ app: PhasesApp) async throws {
     try await Task.sleep(for: .milliseconds(600))
   }
   try await Task.sleep(for: .seconds(2))
+  // The saved frame isn't always honored: on 2026-11-25 the window opened
+  // 790, then 963 pt wide for a saved 1000 (TESTING.md "Phase editor
+  // tests", Runs). Widen it directly when it's short of what the limits
+  // need; only that much, since it may sit against the screen's edge.
+  let opened = try app.window().frame
+  if let opened, opened.width < sidebarLimitsWindowWidth {
+    print("The window opened \(opened.width) pt wide; resizing it to \(sidebarLimitsWindowWidth) pt")
+    try await app.setWindowSize(CGSize(width: sidebarLimitsWindowWidth, height: opened.height))
+  }
   try await app.dragDivider(toWindowX: 20)
   let narrow = try app.sidebarWidth()
   try await app.dragDivider(toWindowX: 700)

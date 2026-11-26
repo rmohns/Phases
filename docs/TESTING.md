@@ -414,11 +414,13 @@ The pure logic that decides what the app does:
 #### Phase editor tests (draft 63)
 
 UI tests for the redesigned editor (GitHub issue #27), in
-`PhaseEditorTests.swift`, fast suite. Written 2026-11-25 and compiled;
-not yet run (each run needs the author's yes):
+`PhaseEditorTests.swift`, fast suite. Written 2026-11-25; first passing
+run the same day (see Runs, below):
 
 - **Name in place** `[D-name-row]` (`nameEditsInPlace`): clicking the
-  pencil focuses `phaseName` with its text selected; typing "x" and
+  pencil (found by position: it's hidden from accessibility, so it has
+  no identifier the harness can see) focuses `phaseName` with its text
+  selected; typing "x" and
   pressing Return renames the phase, and the sidebar row reads the new
   name; editing again, typing "y", and pressing Escape puts "x" back.
 - **The focus tests still hold** `[D-initial-focus-sidebar]`: the three
@@ -426,9 +428,9 @@ not yet run (each run needs the author's yes):
   against the borderless name field; they're the guard that it never
   takes focus on its own.
 - **Starts row** `[D-starts-row]` (`startsRowFollowsTheTrigger`):
-  choosing Dawn in `startTrigger` shows the offset controls; choosing
-  **at** hides the number and unit, and choosing before brings it back
-  at 30; choosing Clock Time shows the time field.
+  choosing Dawn in `startTrigger` for a clock-time phase (no offset)
+  gives "at" dawn, with no number or unit; choosing before brings the
+  number back at 30; choosing Clock Time shows the time field.
 - **Rotation off** `[D-rotation-row]` (`rotationTurnsOffAndBackOn`):
   choosing "Only when the phase starts" hides the number; choosing
   minutes brings it back with the same value.
@@ -443,6 +445,53 @@ not yet run (each run needs the author's yes):
 - Multi-display behavior isn't here: the test window runs on whatever
   displays are connected, so the display tabs are the Phase editor
   checks, below.
+
+##### Runs
+
+- 2026-11-25, first run (Claude, with the author's yes; branch
+  `feature/ui-refactor-editor` at `b45b509`; Debug build 63
+  `1795653866893-A59A58A0` on every launch, *verified* from the
+  printout), fast suite, 295 s: **32 of 36 passed** (*verified*). Every
+  older suite passed, the three `FocusTests` included. Of the editor
+  tests, `imageHeaderPinsWhileTheGridScrolls` passed; three failed, plus
+  the sidebar test:
+  - `nameEditsInPlace`: "No element with accessibility identifier
+    `phaseNamePencil`". The pencil is hidden from accessibility on
+    purpose (VoiceOver sees one field, `[D-name-row]`), which hides it
+    from the harness too. A test mistake, not the app's.
+  - `startsRowFollowsTheTrigger`: timed out waiting for the offset
+    number. The test phase is at a clock time with no offset, so
+    choosing Dawn gives "Starts [at] [Dawn]", which hides the number as
+    `[D-starts-row]` says. A test mistake.
+  - `rotationTurnsOffAndBackOn`: timed out finding "Only when…" in the
+    `rotationChoice` menu. The author saw the menu work as intended by
+    hand (2026-11-25, *observed*), so it's the test's to fix.
+  - `dividerStaysWithin240To320`: dragged far right, the sidebar
+    measured 239.5 pt, expected 320 (*verified*). GitHub issue #49
+    again (it read 290.5 on build 62). 239.5 is what fits a 790 pt window
+    beside the new 550 pt editor minimum (*inferred*): a hypothesis that
+    the test's window never reached the 870 pt it asks for. The author
+    judged it a test setup issue.
+- 2026-11-25, fixing the four (Claude, the author's go-ahead to fix all
+  four; same build). Test and driver changes only; the app is unchanged:
+  - `nameEditsInPlace` clicks the pencil by where it sits, 18 pt past
+    the name field's trailing edge (new driver call
+    `click(rightOf:by:)`). Passed on the next run.
+  - `startsRowFollowsTheTrigger` now expects "at" right after Dawn, then
+    before at 30. The menu tests then failed differently: the *second*
+    menu choice in a row found "no items" (the new failure message lists
+    what the menu holds), so the menu never opened. A guess: the click
+    landed while the first menu was still closing. `chooseMenuButtonItem`
+    now waits for its menu to close, plus 400 ms. Both menu tests then
+    passed, so the guess fits, but it isn't proven.
+  - The sidebar test: a rerun printed the window opening 790 pt wide,
+    confirming the hypothesis above (*verified*); the next launch opened
+    it 963 pt wide against the screen's right edge, for a saved 1000. So
+    the saved frame isn't reliable. `expectSidebarLimitsHold` now widens
+    the window through AX to 870 pt when it opens narrower (driver call
+    `setWindowSize`). Passed twice alone, but both launches opened wide
+    enough, so the resize itself hasn't run in a passing test yet.
+  - Then the whole fast suite, 286 s: **36 of 36 passed** (*verified*).
 
 #### Not covered here
 

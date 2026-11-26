@@ -14,7 +14,7 @@ extension PhasesUITests {
       try await withPhases { app in
         let before = try #require(try app.element("phaseName").value)
 
-        try await app.click(app.element("phaseNamePencil"))
+        try await clickPencil(app)
         try await waitUntil("the name field to have focus") {
           (try? app.focusedElement()?.isInside(app.element("phaseName"))) == true
         }
@@ -26,7 +26,7 @@ extension PhasesUITests {
         #expect(try app.selectedRowText()?.contains("x") == true, "The sidebar row didn't follow the new name")
         #expect(try app.row(named: before) == nil, "The sidebar still shows \(before)")
 
-        try await app.click(app.element("phaseNamePencil"))
+        try await clickPencil(app)
         try await waitUntil("the name field to have focus again") {
           (try? app.focusedElement()?.isInside(app.element("phaseName"))) == true
         }
@@ -47,14 +47,12 @@ extension PhasesUITests {
       try await withPhases { app in
         #expect((try? app.element("startTime")) != nil, "A clock-time phase shows no time field")
 
+        // A clock-time phase has no offset, so Dawn starts "at" dawn, with
+        // no number [D-starts-row].
         try await app.chooseMenuButtonItem("startTrigger", startingWith: "Dawn")
-        try await waitUntil("the offset controls to show") {
-          (try? app.element("offsetDirection")) != nil && (try? app.element("offsetValue")) != nil
-        }
+        try await waitUntil("the before/after/at menu to show") { (try? app.element("offsetDirection")) != nil }
         #expect((try? app.element("startTime")) == nil, "The time field stayed for a dawn phase")
-
-        try await app.chooseMenuButtonItem("offsetDirection", startingWith: "at")
-        try await waitUntil("“at” to hide the number") { (try? app.element("offsetValue")) == nil }
+        #expect((try? app.element("offsetValue")) == nil, "“at” dawn shows a number")
 
         try await app.chooseMenuButtonItem("offsetDirection", startingWith: "before")
         try await waitUntil("the number to come back at 30") {
@@ -64,6 +62,13 @@ extension PhasesUITests {
         try await app.chooseMenuButtonItem("startTrigger", startingWith: "Clock Time")
         try await waitUntil("the time field to come back") { (try? app.element("startTime")) != nil }
       }
+    }
+
+    /// The pencil is hidden from accessibility on purpose (VoiceOver sees
+    /// one Name field, [D-name-row]), so it's found by where it sits: 8 pt
+    /// after the name field, about 20 pt wide.
+    private func clickPencil(_ app: PhasesApp) async throws {
+      try await app.click(rightOf: app.element("phaseName"), by: 18)
     }
 
     /// [D-rotation-row] "Only when the phase starts" hides the number;
