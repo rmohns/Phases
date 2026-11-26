@@ -376,6 +376,14 @@ when there's more than one choice.
     - *Why at once:* animating hundreds of thumbnails in a lazy grid may
       stutter (*hypothesis*, not tested). If it doesn't, the author can
       ask for the images to animate too.
+  - **Spacing: tight.** Every subheading sits 6 pt below what's above
+    it: the source heading, or the section before (its images, or its
+    collapsed heading) (author, 2026-11-26). *Why:* the first build put
+    the first subheading 6 pt under the source heading but later ones
+    about 20 pt apart (*observed* by the author; the 20 is from the
+    code: the grid's 12 pt row spacing plus 8 pt). They ought to match,
+    "everything tight, not everything loose" (author). A first fix
+    loosened them all to 20 pt instead; replaced the same day.
   - **Collapsing a source** hides its subheadings and all its images.
     Its subheadings keep their own state, so expanding the source shows
     them as they were, as Finder does (*recalled*).

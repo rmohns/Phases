@@ -20,6 +20,8 @@ struct ImageGrid: View {
 
   private static let minimumCellWidth: CGFloat = 112
   private static let spacing: CGFloat = 12
+  /// The space above every subheading [D-grid-collapse].
+  private static let subheadingGap: CGFloat = 6
   private let columns = [GridItem(.adaptive(minimum: minimumCellWidth), spacing: spacing)]
 
   var body: some View {
@@ -108,14 +110,19 @@ struct ImageGrid: View {
   /// (or albums). [D-grid-collapse] Each one collapses.
   @ViewBuilder
   private func header(for section: GridOutline.Section, isFirst: Bool, in outline: GridOutline) -> some View {
-    VStack(alignment: .leading, spacing: 6) {
+    // [D-grid-collapse] Every subheading sits `subheadingGap` below what's
+    // above it: the source heading, or the section before (its images, or
+    // its collapsed heading). The grid puts its row spacing above each
+    // section's header, so a header without a source heading takes back
+    // the difference.
+    VStack(alignment: .leading, spacing: Self.subheadingGap) {
       if let heading = section.sourceHeading {
         headingLine(heading, in: outline)
           .padding(.top, isFirst ? 0 : 12)
       }
       if let heading = section.subheading {
         headingLine(heading, in: outline)
-          .padding(.top, section.sourceHeading == nil ? 8 : 0)
+          .padding(.top, section.sourceHeading == nil ? Self.subheadingGap - Self.spacing : 0)
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)

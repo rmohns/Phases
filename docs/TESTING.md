@@ -864,6 +864,12 @@ Each with what passes:
   photo cache. The fake library `[D-fake-photos]` can't show what
   PhotoKit, iCloud, and the wallpaper do. Ask first, naming the checks;
   some change the real wallpaper and need the author at the Mac.
+- **Start the build with `open`, not Bitrig's Run:** quit Phases, then
+  `open "<the build's folder>/Phases.app"` in Terminal (or open it from
+  Finder). Started by Bitrig's Run, the build reads Photos access as
+  refused and never asks, whatever System Settings says; started with
+  `open`, it asks and works (*verified* by the author, 2026-11-26;
+  `[L-photos-bitrig-vs-installed]`). Approved by the author 2026-11-26.
 - **The checks**, on the author's library:
   1. **Permission:** a fresh build, Add Photos Album… shows the prompt;
      Don't Allow shows the sheet's message and every Photos row "Can't
