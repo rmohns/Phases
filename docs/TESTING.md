@@ -981,6 +981,14 @@ Each with what passes:
     row's focus ring ran past the image box's right edge to the
     window's; on the next screenshot it fit. Taken as mid-resize, not a
     finding.
+  - **Both flaws fixed** the same day (author's go-ahead): the tab row
+    is top-aligned, and the chosen tab scrolls to the row's center
+    instead of just into view. Rechecked on Debug build 63
+    `1795666506719-097FA50C` at 790 pt with the same six displays
+    (*observed*, screenshots): every outline and name level, wrapped or
+    not; the ultrawide, chosen by arrow keys, centered clear of both
+    fades; at the far end the last tabs fully in view and no trailing
+    fade. The four test displays were then discarded.
   - *Process note:* the spoken warnings before and after driving
     (`[D-hands-on-checks]`) were missed for the first clicks of this
     sitting and used from the key presses on.

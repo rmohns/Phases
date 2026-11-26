@@ -18,13 +18,17 @@ struct DisplayTabsRow: View {
   private static let outlineHeight: CGFloat = 32
 
   var body: some View {
-    HStack(spacing: 6) {
+    // Top-aligned, so a tab whose name wraps to two lines keeps its
+    // outline and name level with its neighbours' (Phase editor checks,
+    // 2026-11-25).
+    HStack(alignment: .top, spacing: 6) {
       tab(for: nil)
       Divider()
         .frame(height: 64)
+        .padding(.top, 12)
       ScrollViewReader { proxy in
         ScrollView(.horizontal) {
-          HStack(spacing: 6) {
+          HStack(alignment: .top, spacing: 6) {
             ForEach(displays) { display in
               tab(for: display).id(display.uuid)
             }
@@ -50,7 +54,11 @@ struct DisplayTabsRow: View {
         }
         .onChange(of: selection) {
           guard let selection else { return }
-          withAnimation(.smooth) { proxy.scrollTo(selection) }
+          // Centered, so the chosen tab never stops under an edge's fade;
+          // scrolled only far enough, it sat half faded (Phase editor
+          // checks, 2026-11-25). At either end the row can't scroll past
+          // its content, and that edge has no fade.
+          withAnimation(.smooth) { proxy.scrollTo(selection, anchor: .center) }
         }
       }
     }
