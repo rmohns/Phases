@@ -925,6 +925,66 @@ Each with what passes:
 - Record results with date and build in this section, as the other
   checks do.
 
+#### Runs
+
+- 2026-11-25, checks 1–4 (Claude, with the author's yes; Debug build 63
+  `1795653866893-A59A58A0`, a test-mode copy, so no real wallpaper or
+  settings touched). Displays: the built-in (1300 × 845) and BetterDisplay
+  virtual screens, driven through BetterDisplay's command line (the author
+  turned its CLI integration on): "Virtual 16:10" (1366 × 768), then four
+  made for the run, "Phases Test Portrait" (9:16), "Phases Test
+  Ultrawide Display With a Deliberately Long Name" (21:9), "Phases Test
+  4:3", and "Phases Test 16:9". Evidence is screenshots of the test
+  window (*observed*), except where noted. Diagnostics weren't on.
+  - **Check 1, passed.** Two displays: Shared, the divider, Built-in,
+    Virtual 16:10, in `NSScreen.screens` order. Down to one display
+    using Shared: the row hidden. Down to one display with its own
+    images: Shared plus that display.
+  - **Check 2, passed, with one flaw.** Portrait drawn tall, ultrawide
+    wide, every outline one height; the long name wraps to two lines,
+    then truncates at the end ("Ultrawide Displa…"); hovering shows the
+    full name as a tooltip. *Flaw:* a tab whose name wraps is taller
+    than the others, and the row centers tabs vertically, so its outline
+    and caption sit higher than its neighbours'.
+  - **Check 3, mostly passed.** At 790 pt (the minimum) six displays
+    overflow; Shared and the divider stay put; arrow keys move the
+    selection and scroll it into view; the trailing edge fades with tabs
+    out of view there, the leading edge once tabs are hidden on that
+    side. *Flaw:* the chosen tab scrolls only just into view, so it can
+    sit under the 24 pt trailing fade. *Not settled:* a synthetic
+    two-finger swipe (new `phases-drive swipe`, continuous pixel deltas
+    with began/changed/ended phases) didn't scroll the row, and neither
+    did a synthetic mouse wheel without ⇧ (`phases-drive wheel`). Per
+    `[D-input-lands]` neither is a finding: nothing shows the swipe was
+    delivered as a real trackpad's would be. A real trackpad and mouse
+    are the author's to try. After Tab / Shift-Tab, and after a click on
+    a tab, Right Arrow worked every time (5 presses, *observed*).
+    - **Finding, open:** three Right Arrow presses at about
+      23:10:00–23:10:08 did nothing, and the author heard beeps then
+      ("about eleven ten and a few seconds past", *observed* by the
+      author; the screenshot after them is stamped 23:10:08). A beep is
+      macOS refusing an unhandled key, so the presses reached Phases and
+      nothing took them, while the row was drawn with focus. Before them:
+      a click on a tab (23:08), the AX resize to 790 pt, then the
+      synthetic swipe and wheel over the row. *Hypothesis, untested:* the
+      resize or the scroll events left focus drawn on the row while key
+      focus was elsewhere. The unified log showed no beep entry.
+      Reproduce before fixing.
+  - **Check 4, passed.** Virtual 16:10's tab selected with its own 4
+    images, then disconnected: the row hid (one display left, using
+    Shared), with Shared's grid shown. Reconnected: the tab back, "Own ·
+    4 images", all 4 still chosen. The tab came back *selected*: the
+    editor remembers the chosen display while it's away
+    (`DisplayTabs.selection` falls back to Shared only while the tab is
+    missing). The spec doesn't say whether it should.
+  - Also seen: at one moment just after the AX resize to 790 pt, the
+    row's focus ring ran past the image box's right edge to the
+    window's; on the next screenshot it fit. Taken as mid-resize, not a
+    finding.
+  - *Process note:* the spoken warnings before and after driving
+    (`[D-hands-on-checks]`) were missed for the first clicks of this
+    sitting and used from the key presses on.
+
 ### Sandbox checks (draft 58)
 
 - **When:** after any change to the entitlements `[D-sandbox-entitlements]`,
