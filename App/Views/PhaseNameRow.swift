@@ -30,6 +30,10 @@ struct PhaseNameRow: View {
               if let nameBeforeEditing { name = nameBeforeEditing }
               isEditing = false
             }
+            // VoiceOver hears "Name"; the placeholder alone is spoken
+            // only while the field is empty (Phase editor checks,
+            // 2026-11-25).
+            .accessibilityLabel("Name")
             // [D-ui-test-ids]
             .accessibilityIdentifier("phaseName")
         }

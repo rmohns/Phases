@@ -1042,6 +1042,19 @@ Each with what passes:
     (*recalled* that placeholders are spoken only when empty; not
     tested). `[D-name-row]` says it's labelled "Name". The radio group
     has no name of its own either. Not fixed yet.
+- 2026-11-25, follow-ups (author's answers; branch
+  `fix/editor-spec-gaps`):
+  - **Trackpad:** scrolling the display tabs sideways works with a real
+    trackpad (*observed* by the author). Check 3 is complete.
+  - **The arrow-key beeps** (check 3's open finding): dropped by the
+    author, not pursued.
+  - **Fixed to match the spec:** the name field carries the
+    accessibility label "Name" (read back from the accessibility tree,
+    *observed*); the trigger menu lists Clock Time, Dawn, Dusk, Always,
+    as `[D-starts-row]` does (screenshot, *observed*). Debug build 63
+    `1795667585641-33B38DA7`: unit tests 239 of 239, and the
+    `PhaseEditorTests` and `FocusTests` UI tests 8 of 8 (94 s,
+    *verified*).
   - *Left behind:* the image copy,
     `~/Library/Caches/PhasesUITests/Phases Editor Check Images` (deleting
     it was refused).
