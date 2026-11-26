@@ -73,7 +73,14 @@ The pure logic that decides what the app does:
     (*recalled*, not checked against a source). The tests allow ±10
     minutes, which catches real breakage (wrong day, wrong time zone,
     AM/PM swapped) without depending on the almanac's exact rounding.
-- `ImageGridNavigation`: arrow-key movement `[D-grid-one-tab-stop]`
+- `ImageGridNavigation`: arrow-key movement `[D-grid-one-tab-stop]`,
+  including headings as stops, the column kept across them, and ←/→
+  (and ⌥←/⌥→) folding headings `[D-grid-collapse]` (draft 64)
+- `GridOutline` (draft 64): what the grid shows with headings collapsed
+  `[D-grid-collapse]`: sections and subheadings, flat subheadings, the
+  saved heading keys `[D-grid-collapse-saved]`, counts under a heading,
+  ⇧ ranges that skip collapsed images, and where the cursor goes when
+  its section folds
 - `PhaseListSelection`: which phase is selected after a delete
   `[D-delete-selects-next]`
 - `PhaseAvailability`: whether a phase can run and why not
@@ -402,6 +409,12 @@ The pure logic that decides what the app does:
     `removeMissing`. `phaseName` stays on the name field `[D-name-row]`.
   - From draft 63 the driver also presses Y, Return, and Escape
     (`SyntheticInput.Key`), for renaming in place.
+  - From draft 64: `gridHeading`, on every heading in the image grid
+    (one per heading; tests tell them apart by label, the heading's
+    name) `[D-grid-collapse]`. The driver also presses ← (`leftArrow`)
+    and clicks with modifiers held (`app.click(_:modifiers:)`, for
+    ⇧-click and ⌥-click), each modifier pressed as a key of its own and
+    checked afterward as `press` does `[D-input-modifier-keys]`.
 
 - **Relaunch:** the harness relaunches its own instance by sending it a
   reopen Apple event, as Finder does, rather than `open`, which could
@@ -492,6 +505,69 @@ run the same day (see Runs, below):
     `setWindowSize`). Passed twice alone, but both launches opened wide
     enough, so the resize itself hasn't run in a passing test yet.
   - Then the whole fast suite, 286 s: **36 of 36 passed** (*verified*).
+
+#### Grid collapse tests (draft 64)
+
+UI tests for collapsible grid headings (GitHub issue #37), in
+`GridCollapseTests.swift`, fast suite. Written 2026-11-26 by Claude;
+first run the same day (see Runs, at the end of this section). A heading is one AX element with identifier
+`gridHeading`, its name as label, and "Expanded" or "Collapsed,
+<count>" as value.
+
+- **Click** `[D-grid-collapse]`
+  (`clickingAHeadingFoldsItsImagesAndShowsItsCount`): clicking the first
+  source's heading removes its images from the grid and its value reads
+  "Collapsed, 60 images"; clicking again brings them back.
+- **Keyboard** `[D-grid-one-tab-stop]`
+  (`keyboardFoldsAndUnfoldsAHeading`): from the first image, ← moves to
+  its heading; Space collapses and expands it; ← collapses, → expands;
+  → on the open heading moves to the first image, which Space selects.
+- **Select All** (`selectAllIncludesCollapsedImages`): with the first
+  source collapsed, Select All gives "64 of 64 selected" and the heading
+  reads "Collapsed, 60 of 60 selected".
+- **⇧-click** (`shiftClickRangeSkipsCollapsedImages`): three sources,
+  Nested (2), the second folder (4, collapsed), the big folder (60);
+  Nested Image 01 then ⇧-click Test Image 01 selects 3, not 7.
+- **Kept** `[D-grid-collapse-saved]`
+  (`collapsedHeadingStaysAfterTheWindowCloses`): collapsed, the window
+  closed and reopened by a relaunch, the heading is still collapsed.
+  Kept after quitting isn't testable here, since test mode erases its
+  settings at launch `[D-ui-test-mode]`; that's a hand check.
+- `ImageSourcesTests/arrowKeysCrossSources` changed with this draft:
+  Right from the first source's last image now lands on the second
+  source's heading, so it presses Right once more.
+- **Not covered by UI tests** (test mode's sources never include
+  subfolders, and the fake Photos library has no folders here): ⌥-click
+  and ⌥←/⌥→ on a source with subheadings, subheadings' icons, a Photos
+  folder's album subheadings, and the triangle's look. Those are hand
+  checks, with a folder that includes subfolders, and are covered by
+  the unit tests' logic.
+
+##### Runs
+
+- 2026-11-26, first run (Claude, with the author's yes; branch
+  `bitrig/add-collapsible-folders-and-albums`; Debug build 64
+  `1795717573778-874A84D1` on every launch, *verified* from the
+  printout; the author's own copy of the same build was running
+  alongside, not in test mode), fast suite, 343 s: **40 of 41 passed**
+  (*verified*), all five `GridCollapseTests` and the changed
+  `arrowKeysCrossSources` among them.
+  - `ImageSourcesTests/eachSourceHasAHeadingInOrder` failed: "Second
+    Image 01.png" wasn't in the grid when the second source's heading
+    first appeared. The test assumed a section's images load with its
+    heading. Likely cause (*inferred*, not proven): from draft 64 Down
+    stops on the heading, so the window scrolls only to the heading and
+    the lazy grid hasn't loaded the images under it; until draft 63
+    Down skipped the heading and landed on the image. A test
+    assumption, not the app's. The test now presses Down up to 3 more
+    times until the image appears, then reads both positions. Re-run
+    alone: passed (*verified*, same build).
+- Also *verified* by the author the same day, by hand with real Photos
+  (the build started with `open`), of the hand checks Claude listed
+  (album icons, a Photos folder's album subheadings, ⌥-click and
+  ⌥←/⌥→, collapsed counts, the triangle, kept after quitting):
+  "Functionally, all that seems to work" (*observed*, per-check results
+  not recorded). The tightened spacing looked right ("Beautiful").
 
 #### Not covered here
 
@@ -814,6 +890,12 @@ Each with what passes:
   photo cache. The fake library `[D-fake-photos]` can't show what
   PhotoKit, iCloud, and the wallpaper do. Ask first, naming the checks;
   some change the real wallpaper and need the author at the Mac.
+- **Start the build with `open`, not Bitrig's Run:** quit Phases, then
+  `open "<the build's folder>/Phases.app"` in Terminal (or open it from
+  Finder). Started by Bitrig's Run, the build reads Photos access as
+  refused and never asks, whatever System Settings says; started with
+  `open`, it asks and works (*verified* by the author, 2026-11-26;
+  `[L-photos-bitrig-vs-installed]`). Approved by the author 2026-11-26.
 - **The checks**, on the author's library:
   1. **Permission:** a fresh build, Add Photos Album… shows the prompt;
      Don't Allow shows the sheet's message and every Photos row "Can't

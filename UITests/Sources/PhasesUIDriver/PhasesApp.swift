@@ -432,6 +432,13 @@ public final class PhasesApp {
     try await SyntheticInput.click(at: try center(of: node))
   }
 
+  /// A ⇧-click or ⌥-click on the node's center (draft 64,
+  /// [D-grid-collapse]).
+  public func click(_ node: AXNode, modifiers: Set<SyntheticInput.Modifier>) async throws {
+    try await ensureFrontmost()
+    try await SyntheticInput.click(at: try center(of: node), modifiers: modifiers)
+  }
+
   /// Clicks `distance` points past the node's trailing edge, level with its
   /// middle, for a control that's hidden from accessibility on purpose
   /// (the name row's pencil, `[D-name-row]`). Refuses a point outside the

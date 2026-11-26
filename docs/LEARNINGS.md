@@ -248,11 +248,57 @@ From `[X-memory]` unless noted: macOS 27.2, two or three displays.
   `[D-bundle-id-settings-move]`. Record: `[X-convert-xcode-project]`.
 - `[L-photos-bitrig-vs-installed]` **Photos access can read "blocked" in
   the app while System Settings shows Phases allowed, when a Bitrig build
-  runs alongside an installed copy of Phases.** Observed by the author,
+  runs alongside an installed copy of Phases.** (2026-11-26: it's how
+  the build is started; a Bitrig build started with `open` gets Photos,
+  one started by Bitrig's Run doesn't; see the result below.) Observed by the author,
   more than once (latest 2026-11-22, draft 59 Bitrig build). Why is a
   hypothesis, perhaps the per-build grant of `[L-photos-grant-per-build]`.
   The test: install to /Applications and see whether it clears (GitHub
   issue #43). Record: `[X-convert-xcode-project]`.
+  - *Seen again* 2026-11-26 by the author: the draft 64 Bitrig build's
+    Add Photos Album… sheet says "Phases doesn't have access to Photos",
+    with no prompt, while the installed copy has access. *Verified* by
+    Claude the same day (`codesign -dv`, `-dr`, `--entitlements`): the
+    running build (`DerivedData/Build/Products/Debug/Phases.app`, build
+    64), the newest Bitrig build, and `/Applications/Phases.app` are all
+    `com.robertmohns.phases`, signed with team `Y382W2CA47`, with the
+    same designated requirement (Apple Development certificate), and the
+    running build has the sandbox and `photos-library` entitlements. So
+    the per-build hash pinning of `[L-photos-grant-per-build]` (ad hoc
+    builds) can't be the cause here: a grant should match both copies.
+    Cause still unknown. Claude couldn't read the TCC log this time:
+    `log show` from Bitrig's shell returned only its header, even for
+    the last 2 minutes (*observed*).
+  - Same day, the author's tries (*observed* by the author): quitting
+    both copies and relaunching only the Bitrig build changed nothing.
+    System Settings › Photos lists one Phases (plus a UI test copy kept
+    in the home folder). `tccutil reset Photos com.robertmohns.phases`
+    printed "Successfully reset…" seven times, and the Bitrig build,
+    started with Bitrig's Run, still showed no access and no prompt.
+    Phases asks only when PhotoKit reports "not determined"
+    (`PhotosAlbumSheet.load`), so after the reset PhotoKit still
+    reported denied or restricted to that process (*inferred* from the
+    code). Launch Services lists over a dozen registered copies of
+    Phases, from Bitrig's build folders of this and older project IDs
+    (*verified* by Claude, `lsregister -dump`); whether that explains
+    the seven lines is a *hypothesis*.
+  - *Hypothesis* (Claude, 2026-11-26): macOS checks privacy permissions
+    against the process *responsible* for an app (*recalled*), so a
+    Phases started by Bitrig's Run may be checked against Bitrig's
+    Photos permission, not Phases'. That would fit every report: an
+    installed copy started from Finder works, a Bitrig-started one
+    doesn't. Test: start the same Bitrig build from Finder instead.
+  - **Result:** the same build (`1795716003463-0CBF54A1`, draft 64),
+    quit and started with `open` from Terminal instead of Bitrig's Run,
+    asked for Photos access; the author allowed it and Photos sources
+    worked from then on. *Verified* by the author, 2026-11-26, once.
+    So how the build is started decides it, not its signature or its
+    saved permission. That Bitrig's Run makes Bitrig the responsible
+    process is still the *hypothesis* that fits; not checked (the
+    parent process wasn't captured).
+  - **Workaround for Photos checks:** start the Bitrig build with
+    `open <path to the build's Phases.app>` (or from Finder), not with
+    Bitrig's Run.
 
 ## Photos library (issue #33)
 
