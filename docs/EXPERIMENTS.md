@@ -2350,6 +2350,16 @@ the window and bringing it to the front), each with click state 1 down,
   failed with the candidates set back to every entry (display 1 read
   `.system`, decided by the Space default) and passed with the
   refinement; all 278 unit tests passed (Claude). Hands-on rerun below.
+- **Run 5 setup** (11:31–11:45). Claude stopped the run-4 Phases with
+  `pkill` (no Quit, so no restore; the saved restore point from 11:27:53
+  was reloaded) and started the refined build at 11:31:45 with `open`.
+  At 11:45:14 Phases set `eclipse_2024_robert_mohns-09.jpg` on display 1
+  and `Peter Lik - Eternal Beauty.jpg` on display 25, both from folder
+  sources. Opening System Settings › Wallpaper, the author saw a dashed
+  box with "?" as the built-in display's thumbnail; the virtual
+  display's thumbnail was normal, and the eclipse image was on screen
+  (all *observed* by the author). Not explained; see
+  `[L-settings-thumbnail-placeholder]`.
 - **Not explained:** why check 2 passed on 2026-11-22 (draft 58). Perhaps
   which entries had the newest `LastUse` then; not recorded.
 
