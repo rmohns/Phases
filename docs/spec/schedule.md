@@ -33,7 +33,8 @@ dawn, at 2 am "Night" is active. If no timed phase qualifies, the first matching
 
 `[D-starter-phases]` **A new user starts with three phases:** Morning
 (7:00 AM), Afternoon (12:00 PM), and Evening (6:00 PM), all Clock Time
-triggers with no images yet. They cover the whole day, so one is always
+triggers with no images yet, each changing images every 30 minutes
+(author, 2026-11-27; until then rotation was off). They cover the whole day, so one is always
 active, and they need no location.
 - *Why:* they show at a glance how phases divide the day, and give a new
   user something to fill in rather than an empty list (author,

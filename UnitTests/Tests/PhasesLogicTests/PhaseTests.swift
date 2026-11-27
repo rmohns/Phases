@@ -28,6 +28,22 @@ struct PhaseTests {
     #expect(engine.activePhase(at: TestCalendar.date(2026, 11, 6, 3, 0))?.phase.name == "Evening")
   }
 
+  /// `[D-new-phase-now]` `[D-starter-phases]` New and starter phases change
+  /// images every 30 minutes; a saved phase without the setting loads off.
+  @Test func newAndStarterPhasesRotateEveryThirtyMinutes() throws {
+    let calendar = TestCalendar.newYork
+    let added = Phase.newPhase(at: TestCalendar.date(2026, 11, 6, 14, 37), calendar: calendar)
+    #expect(added.name == "New Phase")
+    #expect(added.trigger == .clockTime(minutes: 14 * 60 + 35))
+    for phase in [added] + Phase.starterPhases {
+      #expect(phase.rotationChoice == .every(.minutes))
+      #expect(phase.rotationSeconds == TimeInterval(30 * 60))
+    }
+    let saved = #"[{"id":"\#(UUID().uuidString)","name":"Old","trigger":{"always":{}}}]"#
+    let loaded = try Phase.decodeSaved(Data(saved.utf8), legacyDisplayMode: .sameOnAll)
+    #expect(loaded.first?.isRotating == false)
+  }
+
   /// `[D-duplicate-phase]`
   @Test func duplicateCopiesEverySettingWithANewIDAndName() {
     var original = Phase(name: "Morning", trigger: .solar(.dawn, offsetMinutes: 30))

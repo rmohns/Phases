@@ -263,7 +263,7 @@ final class WallpaperScheduler {
 
   func addPhase() -> Phase {
     // [D-new-phase-now] Starts now, so it usually becomes active at once.
-    let phase = Phase(name: "New Phase", trigger: .clockTime(roundingDown: Date()))
+    let phase = Phase.newPhase(at: Date())
     phases.append(phase)
     return phase
   }
