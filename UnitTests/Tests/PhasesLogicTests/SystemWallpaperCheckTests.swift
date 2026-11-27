@@ -84,6 +84,39 @@ struct SystemWallpaperCheckTests {
     #expect(readings[1]?.entryCount == 4)
   }
 
+  @Test func anotherDisplaysPickInTheSpaceDefaultDoesNotDecide() throws {
+    // [Q-store-kind-lastset] Regression, Sandbox check 2 run 4
+    // (2026-11-27): a still picked on display A, then an Aerial on display
+    // B. macOS stamps the Space's Default with B's pick, later than A's
+    // own entry; ranked together, A read as a system wallpaper.
+    let store: [String: Any] = [
+      "Displays": [
+        uuidA: desktop(image, lastSet: earlier, lastUse: later),
+        uuidB: desktop(aerialDefault, lastSet: later, lastUse: later),
+      ],
+      "Spaces": [
+        "S1": [
+          "Default": desktop(aerialDefault, lastSet: later, lastUse: later),
+          "Displays": [uuidB: desktop(aerialDefault, lastSet: later, lastUse: later)],
+        ]
+      ],
+    ]
+    let readings = SystemWallpaperCheck.readings(storeData: try storeData(store), displays: [1: uuidA, 2: uuidB])
+    #expect(readings[1]?.kind == .image)
+    #expect(readings[1]?.decidedBy?.place == "Displays")
+    #expect(readings[2]?.kind == .system)
+  }
+
+  @Test func aSpaceDefaultDecidesWhenTheDisplayHasNoEntryOfItsOwn() throws {
+    let store: [String: Any] = [
+      "AllSpacesAndDisplays": desktop(image, lastSet: earlier, lastUse: earlier),
+      "Spaces": ["S1": ["Default": desktop(aerial, lastSet: later, lastUse: later)]],
+    ]
+    let readings = SystemWallpaperCheck.readings(storeData: try storeData(store), displays: [1: uuidA])
+    #expect(readings[1]?.kind == .system)
+    #expect(readings[1]?.decidedBy?.place == "Space S1 Default")
+  }
+
   @Test func lastUseBreaksATieInLastSet() throws {
     let store: [String: Any] = [
       "Displays": [uuidA: desktop(aerialDefault, lastSet: later, lastUse: later)],

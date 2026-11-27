@@ -39,10 +39,14 @@ enum SystemWallpaperCheck {
     return displays.mapValues { uuid in
       guard let uuid else { return KindReading(kind: .unchecked, decidedBy: nil, entryCount: 0) }
       let entries = desktopEntries(in: store, displayUUID: uuid)
-      // [Q-store-kind-lastset] The latest pick decides: LastSet, not
-      // LastUse, which macOS moves on many entries at once. LastUse only
-      // breaks ties.
-      let latest = entries.max { ($0.lastSet, $0.lastUse) < ($1.lastSet, $1.lastUse) }
+      // [Q-store-kind-lastset] The display's own entries decide; a Space's
+      // default also takes the latest pick on any other display, so it
+      // counts only when the display has none of its own.
+      let own = entries.filter(\.isPerDisplay)
+      let candidates = own.isEmpty ? entries : own
+      // The latest pick decides: LastSet, not LastUse, which macOS moves
+      // on many entries at once. LastUse only breaks ties.
+      let latest = candidates.max { ($0.lastSet, $0.lastUse) < ($1.lastSet, $1.lastUse) }
       guard let latest else { return KindReading(kind: .unchecked, decidedBy: nil, entryCount: 0) }
       return KindReading(kind: latest.provider == imageProvider ? .image : .system, decidedBy: latest, entryCount: entries.count)
     }
@@ -82,20 +86,24 @@ enum SystemWallpaperCheck {
     var provider: String
     var lastSet: Date
     var lastUse: Date
+    /// The display's own entry, not the all-displays one or a Space default.
+    var isPerDisplay: Bool
   }
 
   /// Every desktop configuration that could apply to the display: all-displays,
   /// per-display, and per-Space settings. The format is undocumented
   /// [Q-wallpaper-store], so this is best-effort.
   private static func desktopEntries(in store: [String: Any], displayUUID: String) -> [DesktopEntry] {
-    var containers: [(String, Any?)] = [("AllSpacesAndDisplays", store["AllSpacesAndDisplays"])]
-    containers.append(("Displays", (store["Displays"] as? [String: Any])?[displayUUID]))
+    var containers: [(place: String, perDisplay: Bool, entry: Any?)] = [
+      ("AllSpacesAndDisplays", false, store["AllSpacesAndDisplays"]),
+      ("Displays", true, (store["Displays"] as? [String: Any])?[displayUUID]),
+    ]
     for case let (spaceID, space as [String: Any]) in (store["Spaces"] as? [String: Any]) ?? [:] {
       let name = spaceID.isEmpty ? "\"\"" : String(spaceID.prefix(8))
-      containers.append(("Space \(name) Default", space["Default"]))
-      containers.append(("Space \(name) Displays", (space["Displays"] as? [String: Any])?[displayUUID]))
+      containers.append(("Space \(name) Default", false, space["Default"]))
+      containers.append(("Space \(name) Displays", true, (space["Displays"] as? [String: Any])?[displayUUID]))
     }
-    return containers.compactMap { place, container in
+    return containers.compactMap { place, perDisplay, container in
       guard let desktop = (container as? [String: Any])?["Desktop"] as? [String: Any],
         let content = desktop["Content"] as? [String: Any],
         let choice = (content["Choices"] as? [[String: Any]])?.first,
@@ -105,7 +113,8 @@ enum SystemWallpaperCheck {
         place: place,
         provider: provider,
         lastSet: desktop["LastSet"] as? Date ?? .distantPast,
-        lastUse: desktop["LastUse"] as? Date ?? .distantPast
+        lastUse: desktop["LastUse"] as? Date ?? .distantPast,
+        isPerDisplay: perDisplay
       )
     }
   }

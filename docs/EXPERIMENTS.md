@@ -2344,6 +2344,12 @@ the window and bringing it to the front), each with click state 1 down,
     and use defaults only when the display has none. Runs 3 and 4 both
     read right that way, as far as the logged entries show. Asked the
     author before changing the fix.
+- **Refinement** (approved by the author, 2026-11-27): rank only the
+  display's own entries, defaults only when it has none.
+  `anotherDisplaysPickInTheSpaceDefaultDoesNotDecide` (run 4's shape)
+  failed with the candidates set back to every entry (display 1 read
+  `.system`, decided by the Space default) and passed with the
+  refinement; all 278 unit tests passed (Claude). Hands-on rerun below.
 - **Not explained:** why check 2 passed on 2026-11-22 (draft 58). Perhaps
   which entries had the newest `LastUse` then; not recorded.
 

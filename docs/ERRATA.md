@@ -208,11 +208,21 @@ would stop being true if a future macOS fixed the underlying behavior.
     Aerial-specific name (*verified*, same dump). Phases treats every
     provider other than `com.apple.wallpaper.choice.image` as a system
     wallpaper, so this changes nothing.
-  - Shapes `[D-aerials-untouched]`: `SystemWallpaperCheck` takes, among
-    every entry that could apply to a display, the one with the latest
-    `LastSet`, with `LastUse` only breaking ties. Until 2026-11-27 it took
-    the latest `LastUse`, and Quit put a still frame over an Aerial
-    (regressions list).
+  - **A pick on one display also stamps the showing Space's `Default`
+    entry** with that pick and its `LastSet` (*verified* 2026-11-27 by
+    Claude from the diagnostics log, run 4 of `[X-43-aerial-kind]`: an
+    Aerial picked on the virtual display made `Space ACE71C78 Default` the
+    latest-set entry for the built-in, which showed a still picked 11 s
+    earlier). So a Space default speaks for the last display picked on,
+    not for every display.
+  - Shapes `[D-aerials-untouched]`: `SystemWallpaperCheck` ranks only the
+    display's own entries (`Displays`, and each Space's per-display
+    entry), falling back to the all-displays and Space defaults only when
+    the display has none, and takes the one with the latest `LastSet`,
+    with `LastUse` only breaking ties. Until 2026-11-27 it took the latest
+    `LastUse` across all of them, and Quit put a still frame over an
+    Aerial (regressions list). That no display ever lacks its own entry
+    is *not* known; the fallback keeps the old behavior for that case.
   - **Known limit, accepted; not a bug to fix** (author, 2026-11-27). The
     store doesn't say which Space is showing, and no public API does
     (*recalled*). So if a still was picked on *another* Space later than
@@ -947,4 +957,4 @@ the fix, or, if none is practical, the reason and the manual procedure
 | 2026-10-29 (found by the UI tests) | A long image folder name squeezed Settings' Choose… button to a 16 pt sliver: the name's `.layoutPriority(1)` takes its full width first | `.fixedSize()` on Choose… | `AppearanceTests/imageFolderNameScreenshot` (button at least 60 pt); failed on the old build at 16 pt, passed on the fix, 2026-10-29 |
 | 2026-11-07 (draft 48, issue #29) | An app going full screen, or a new desktop in Mission Control, paused Phases as if a wallpaper had been picked `[Q-new-space-copies-entry]` | A new store entry counts only when set later than everything in the earlier reading `[D-outside-change-rule]` | `OutsideChangeRuleTests/newSpaceCopyingTheDisplayDoesNotCount` (unit test); failed on the old rule, passed on the fix, 2026-11-07. The watcher's wiring to the rule isn't tested; hands-on check: full screen and a new desktop don't pause, a pick on a fresh desktop does (*verified* 2026-11-07 by the author, draft 48 build) |
 | 2026-11-07 (draft 49, issue #30) | Opening the window while paused by an outside change drew everything shifted up: the banner above the window, the branding panel under the traffic lights `[Q-fixed-size-text-rigid-split]` | No `.fixedSize` on the banner's reason text | `PauseBannerTests/windowOpenedWhilePausedByOutsideChangeStartsBelowTheToolbar` (700 × 600 pt window, `[D-test-paused-by-outside-change]`); failed on the old build (both checks; one element 93.5 pt above the window's top), passed on the fix, 2026-11-07 |
-| 2026-11-27 (draft 64, issue #43, Sandbox check 2) | With an Aerial on one display and a still picked on the other, Quit restored `DefaultDesktop.heic` over the Aerial instead of leaving it alone: the display was read as a still image `[Q-store-kind-lastset]` | Decide each display's kind by the store entry with the latest `LastSet`, not `LastUse` | `SystemWallpaperCheckTests/anAerialPickOutranksOlderStillsUsedSince` (unit test); failed on the old ranking, passed on the fix, 2026-11-27 (Claude). Hands-on: TESTING.md "Sandbox checks" 2 |
+| 2026-11-27 (draft 64, issue #43, Sandbox check 2) | With an Aerial on one display and a still picked on the other, Quit restored `DefaultDesktop.heic` over the Aerial instead of leaving it alone: the display was read as a still image `[Q-store-kind-lastset]`. A first fix showed a second case: an Aerial picked on one display made the other display, showing a still, read as a system wallpaper | Decide each display's kind by its own store entries (Space defaults only as a fallback), taking the latest `LastSet`, not `LastUse` | `SystemWallpaperCheckTests/anAerialPickOutranksOlderStillsUsedSince` and `anotherDisplaysPickInTheSpaceDefaultDoesNotDecide` (unit tests); each failed with its part of the fix taken out, passed with it, 2026-11-27 (Claude). Hands-on: TESTING.md "Sandbox checks" 2, both ways round |

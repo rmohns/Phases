@@ -1281,11 +1281,17 @@ Each with what passes:
     entries"), but Quit logged "display 1 restored: DefaultDesktop.heic"
     for the built-in display's Aerial instead of "left alone on quit:
     system wallpaper"; the other display was "restored" correctly. Cause
-    `[Q-store-kind-lastset]`, record `[X-43-aerial-kind]`. To rerun on
-    the fix from `fix/aerial-kind-lastset`.
-  - 3, log half **passes** (*verified* by Claude): "found by its
-    bookmark" for both folder sources at three launches (10:51, 11:00,
-    11:03). Whether the folders open in the app is still to check.
+    `[Q-store-kind-lastset]`, record `[X-43-aerial-kind]`.
+  - 2 on the first fix (`fix/aerial-kind-lastset` at `0499087`), Aerial
+    on the virtual display: that display **passes** ("left alone on quit:
+    system wallpaper"), but the built-in display, showing a still, was
+    also read as a system wallpaper (left alone for the wrong reason;
+    no visible harm this time). Refined on the same branch; rerun to
+    come.
+  - 3 **passes**: "found by its bookmark" for both folder sources at
+    every launch (10:51, 11:00, 11:03, 11:20, 11:27; *verified* by
+    Claude), and both folders show their images in the app after
+    relaunching (*verified* by the author).
 
 ## When a fixed bug comes back
 
