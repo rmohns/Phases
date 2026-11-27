@@ -2360,6 +2360,22 @@ the window and bringing it to the front), each with click state 1 down,
   display's thumbnail was normal, and the eclipse image was on screen
   (all *observed* by the author). Not explained; see
   `[L-settings-thumbnail-placeholder]`.
+  - The eclipse folder is `~/Pictures/Desktop Pictures/Eclipse 2024 web
+    share photos`, a copy put there to test subfolders. `~/Pictures`
+    itself is also a source (added about 2026-11-26), so everything in
+    `Desktop Pictures` appears twice in the source list (author). The
+    author thinks timing (the pane opened seconds after Phases' set) the
+    likeliest cause; untested.
+- **Run 5** (refined build, 11:49–11:56), Aerial on the built-in, a
+  still on the virtual display, verified by Claude from the log:
+  - 11:55:50, Aerial picked: display 1 `kind system: Displays, default`
+    (set 16:55:50), display 25 `kind image: Displays` (right).
+  - 11:55:59, still picked (`Ergo Proxy Re-L wallhaven-0ww93p.jpg`):
+    display 1 still `kind system: Displays` (no Space default took
+    over), display 25 `kind image: Displays` (right).
+  - Quit 11:56:33: display 1 "left alone on quit: system wallpaper",
+    display 25 "restored: Ergo Proxy Re-L wallhaven-0ww93p.jpg".
+    **Passes.**
 - **Not explained:** why check 2 passed on 2026-11-22 (draft 58). Perhaps
   which entries had the newest `LastUse` then; not recorded.
 
