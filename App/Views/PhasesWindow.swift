@@ -8,8 +8,9 @@ private let windowDiagLog = Diagnostics.logger("window")
 /// the selected item's editor in the detail area.
 struct PhasesWindow: View {
   static let windowID = "phases"
-  /// [D-window-min-size] The editor pane's minimum width (460 pt through draft 62).
-  static let detailMinWidth: CGFloat = 550
+  /// [D-window-min-size] The editor pane's minimum width (460 pt through
+  /// draft 62, 550 pt until 2026-11-27).
+  static let detailMinWidth: CGFloat = 490
 
   var scheduler: WallpaperScheduler
   @State private var selection: SidebarItem?

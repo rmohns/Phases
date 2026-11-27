@@ -45,10 +45,11 @@ extension PhasesUITests {
     /// A menu pause's one-line reason never did it; nor did the default
     /// 960 pt window, where the reason may fit on one line.
     @Test func windowOpenedWhilePausedByOutsideChangeStartsBelowTheToolbar() async throws {
-      // [D-window-min-size] The minimum width: the editor at 550 pt (460
-      // through draft 62, at 700 pt), where the reason wraps.
+      // [D-window-min-size] The minimum width: the editor at 490 pt (460
+      // through draft 62, at 700 pt; 550 until 2026-11-27, at 790 pt),
+      // where the reason wraps.
       let app = try await PhasesApp.launch(
-        opensWindow: false, pausedByOutsideChange: true, windowSize: CGSize(width: 790, height: 600)
+        opensWindow: false, pausedByOutsideChange: true, windowSize: CGSize(width: 730, height: 600)
       )
       defer { app.quit() }
       try await app.reopenWindow()
