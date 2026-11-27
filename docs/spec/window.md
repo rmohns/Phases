@@ -155,6 +155,11 @@ The interface-wide rule `[D-content-vs-tools]`: [interface.md](interface.md).
   - `[D-new-phase-now]` **A new phase starts at the current time,** as a
     Clock Time trigger rounded down to the nearest 5 minutes (2:37 PM
     becomes 2:35 PM), named "New Phase", and selected.
+    - It changes images every 30 minutes `[D-rotation-row]`, not "Only
+      when the phase starts" (author, 2026-11-27). So do the starter
+      phases `[D-starter-phases]`. Phases already saved keep their own
+      setting, and a saved phase with no rotation setting still loads
+      with rotation off.
     - Starting now usually makes it the active phase at once, so the
       wallpaper may change as soon as it has images. That's intended: if
       the user then moves its start, the schedule re-evaluates and

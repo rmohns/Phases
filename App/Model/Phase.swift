@@ -28,12 +28,19 @@ struct Phase: Identifiable, Codable, Hashable {
 
   /// [D-starter-phases] What a new user starts with: three clock-time
   /// phases covering the day, so one is always active without a location.
+  /// They change images every 30 minutes, like a new phase.
   static var starterPhases: [Phase] {
     [
-      Phase(name: "Morning", trigger: .clockTime(minutes: 7 * 60)),
-      Phase(name: "Afternoon", trigger: .clockTime(minutes: 12 * 60)),
-      Phase(name: "Evening", trigger: .clockTime(minutes: 18 * 60)),
+      Phase(name: "Morning", trigger: .clockTime(minutes: 7 * 60), isRotating: true),
+      Phase(name: "Afternoon", trigger: .clockTime(minutes: 12 * 60), isRotating: true),
+      Phase(name: "Evening", trigger: .clockTime(minutes: 18 * 60), isRotating: true),
     ]
+  }
+
+  /// [D-new-phase-now] What + adds: "New Phase", starting at `date`
+  /// rounded down to 5 minutes, changing images every 30 minutes.
+  static func newPhase(at date: Date, calendar: Calendar = .current) -> Phase {
+    Phase(name: "New Phase", trigger: .clockTime(roundingDown: date, calendar: calendar), isRotating: true)
   }
 
   /// [D-duplicate-phase] Every setting, a new ID, and a Finder-style name.
