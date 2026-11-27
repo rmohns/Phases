@@ -23,6 +23,20 @@ enum SystemWallpaperInspector {
       data = nil
     }
     let displays = Dictionary(displayIDs.map { ($0, DisplayIdentity.uuid(for: $0)) }, uniquingKeysWith: { a, _ in a })
-    return SystemWallpaperCheck.kinds(storeData: data, displays: displays)
+    let readings = SystemWallpaperCheck.readings(storeData: data, displays: displays)
+    if Diagnostics.isEnabled {
+      // [Q-store-kind-lastset] Which entry decided, so a wrong kind can be
+      // traced from the log alone.
+      for (displayID, reading) in readings.sorted(by: { $0.key < $1.key }) {
+        if let entry = reading.decidedBy {
+          diagLog.log(
+            "display \(displayID) kind \(reading.kind.rawValue, privacy: .public): \(entry.place, privacy: .public), \(entry.provider, privacy: .public), set \(entry.lastSet, privacy: .public), used \(entry.lastUse, privacy: .public) (of \(reading.entryCount) entries)"
+          )
+        } else {
+          diagLog.log("display \(displayID) kind \(reading.kind.rawValue, privacy: .public): no store entry")
+        }
+      }
+    }
+    return readings.mapValues(\.kind)
   }
 }

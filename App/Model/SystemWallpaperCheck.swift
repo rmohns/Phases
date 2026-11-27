@@ -24,17 +24,27 @@ enum SystemWallpaperCheck {
   ///   - storeData: the store file's contents, or nil if it couldn't be read.
   ///   - displays: display ID to hardware UUID; nil when the UUID is unknown.
   static func kinds(storeData: Data?, displays: [UInt32: String?]) -> [UInt32: WallpaperKind] {
+    readings(storeData: storeData, displays: displays).mapValues(\.kind)
+  }
+
+  /// Each display's kind, with the store entry that decided it (for the
+  /// diagnostics log).
+  static func readings(storeData: Data?, displays: [UInt32: String?]) -> [UInt32: KindReading] {
     // [D-store-unreadable-safe] Couldn't read is not "no Aerials".
     guard let storeData,
       let store = try? PropertyListSerialization.propertyList(from: storeData, format: nil) as? [String: Any]
     else {
-      return displays.mapValues { _ in .unchecked }
+      return displays.mapValues { _ in KindReading(kind: .unchecked, decidedBy: nil, entryCount: 0) }
     }
     return displays.mapValues { uuid in
-      guard let uuid else { return .unchecked }
-      let latest = desktopEntries(in: store, displayUUID: uuid).max { $0.lastUse < $1.lastUse }
-      guard let latest else { return .unchecked }
-      return latest.provider == imageProvider ? .image : .system
+      guard let uuid else { return KindReading(kind: .unchecked, decidedBy: nil, entryCount: 0) }
+      let entries = desktopEntries(in: store, displayUUID: uuid)
+      // [Q-store-kind-lastset] The latest pick decides: LastSet, not
+      // LastUse, which macOS moves on many entries at once. LastUse only
+      // breaks ties.
+      let latest = entries.max { ($0.lastSet, $0.lastUse) < ($1.lastSet, $1.lastUse) }
+      guard let latest else { return KindReading(kind: .unchecked, decidedBy: nil, entryCount: 0) }
+      return KindReading(kind: latest.provider == imageProvider ? .image : .system, decidedBy: latest, entryCount: entries.count)
     }
   }
 
@@ -65,8 +75,12 @@ enum SystemWallpaperCheck {
 
   // MARK: - Reading the store
 
-  private struct DesktopEntry {
+  /// One desktop configuration from the store.
+  struct DesktopEntry: Equatable {
+    /// Where in the store it sits, such as `Displays` or `Space <id> Default`.
+    var place: String
     var provider: String
+    var lastSet: Date
     var lastUse: Date
   }
 
@@ -74,22 +88,36 @@ enum SystemWallpaperCheck {
   /// per-display, and per-Space settings. The format is undocumented
   /// [Q-wallpaper-store], so this is best-effort.
   private static func desktopEntries(in store: [String: Any], displayUUID: String) -> [DesktopEntry] {
-    var containers: [Any?] = [store["AllSpacesAndDisplays"]]
-    containers.append((store["Displays"] as? [String: Any])?[displayUUID])
-    for case let space as [String: Any] in (store["Spaces"] as? [String: Any])?.values ?? [:].values {
-      containers.append(space["Default"])
-      containers.append((space["Displays"] as? [String: Any])?[displayUUID])
+    var containers: [(String, Any?)] = [("AllSpacesAndDisplays", store["AllSpacesAndDisplays"])]
+    containers.append(("Displays", (store["Displays"] as? [String: Any])?[displayUUID]))
+    for case let (spaceID, space as [String: Any]) in (store["Spaces"] as? [String: Any]) ?? [:] {
+      let name = spaceID.isEmpty ? "\"\"" : String(spaceID.prefix(8))
+      containers.append(("Space \(name) Default", space["Default"]))
+      containers.append(("Space \(name) Displays", (space["Displays"] as? [String: Any])?[displayUUID]))
     }
-    return containers.compactMap { container in
+    return containers.compactMap { place, container in
       guard let desktop = (container as? [String: Any])?["Desktop"] as? [String: Any],
         let content = desktop["Content"] as? [String: Any],
         let choice = (content["Choices"] as? [[String: Any]])?.first,
         let provider = choice["Provider"] as? String
       else { return nil }
-      let lastUse = desktop["LastUse"] as? Date ?? desktop["LastSet"] as? Date ?? .distantPast
-      return DesktopEntry(provider: provider, lastUse: lastUse)
+      return DesktopEntry(
+        place: place,
+        provider: provider,
+        lastSet: desktop["LastSet"] as? Date ?? .distantPast,
+        lastUse: desktop["LastUse"] as? Date ?? .distantPast
+      )
     }
   }
+}
+
+/// A display's kind and the store entry that decided it.
+struct KindReading: Equatable {
+  var kind: WallpaperKind
+  /// Nil when the store couldn't be read or had no entry for the display.
+  var decidedBy: SystemWallpaperCheck.DesktopEntry?
+  /// How many entries could apply to the display.
+  var entryCount: Int
 }
 
 /// [D-store-unreadable-safe] A display's wallpaper as far as the store says.

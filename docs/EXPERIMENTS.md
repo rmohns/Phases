@@ -2249,6 +2249,79 @@ the window and bringing it to the front), each with click state 1 down,
   failed, the author asked that it act like the old pop-up and accepted
   that a later macOS may need another look (2026-11-26).
 
+## Sandbox check 2 on draft 64 (issue #43)
+
+### `[X-43-aerial-kind]` Why did Quit restore a still over an Aerial?
+
+- **Question:** in TESTING.md "Sandbox checks" 2, the Aerial display
+  logged "restored: DefaultDesktop.heic" instead of "left alone on quit:
+  system wallpaper". Why?
+- **When, on what:** 2026-11-27, macOS 27.2, two displays (built-in,
+  display 1, UUID `37D8832A…`; a virtual display, 25, `271DBFDB…`). The
+  author picked wallpapers and quit; Claude read the diagnostics log and
+  the code. The build: `main` at `c163148`, the app from `bitrig build`,
+  started with `open`. That build compiled nothing new, and its binary
+  carries Nov 26 13:26.
+- **Branch:** `fix/aerial-kind-lastset` (the fix; it merges, so no
+  archive tag of its own beyond the usual one after the merge).
+- **Outcome:** cause found; promoted to `[Q-store-kind-lastset]`, fix on
+  the branch above.
+- **Run 1** (10:51–10:56 local). Launch log: both folder sources "found
+  by its bookmark", "watching the store: 1046 entries". The author picked
+  an Aerial on the built-in display (10:55:15, logged "outside change on
+  37D8832A…: system wallpaper" plus "on all displays: system wallpaper")
+  and a JPEG on the virtual one (10:55:44, "outside change on 271DBFDB…:
+  Ergo Proxy Re-L wallhaven-dp6733.jpg" plus "on all displays: …"). Quit
+  at 10:56:03: "display 1 restored: DefaultDesktop.heic" (wrong),
+  "display 25 restored: Ergo Proxy…jpg" (right).
+  - First hypothesis (Claude), wrong: the "all displays" entry
+    (`AllSpacesAndDisplays`) stamped with the JPEG outranked display 1's
+    Aerial. The store dump in run 3 showed `AllSpacesAndDisplays` is
+    `$null`.
+  - Claude's read-only dump of the store from Bitrig's shell was refused
+    by Claude Code's permission check, so the author dumped it instead.
+- **Run 2** (11:00–11:02). The author started Phases with Bitrig's Run
+  menu, which launched an older build (Nov 26 13:26, from
+  `DerivedData`). Not a test of the fix: its quit restored display 1 to
+  `DefaultDesktop.heic` correctly, because run 1's quit had already put
+  that still there. This launch logged although no launch argument was
+  given, so the `PhasesDiagnostics` switch was already saved in Phases'
+  container (*observed*); Claude had wrongly said it was off.
+- **Run 3** (11:03–11:10), the same build as run 1, started with `open`.
+  Aerial picked on the built-in (11:06:04; the first in the Aerial row,
+  San Francisco sunset), a still on the virtual one (11:06:18, "Angelie's
+  Cloudgame is Strong - Dusk - Oct 2026.jpg"). Before quitting, the
+  author ran `plutil -p` on the store (38,504 lines). Quit at 11:10:29:
+  "display 1 restored: DefaultDesktop.heic" (wrong again), display 25
+  restored to the Dusk still (right). Failure reproduced.
+- **The store, as dumped** (UTC; local is −5 h), entries that could
+  apply to display 1:
+  - `Displays/37D8832A`: provider `default`, LastSet 16:06:04, LastUse
+    16:06:20
+  - Space `D37B581D` Default and its `37D8832A` entry: `default`,
+    LastSet 16:06:04, LastUse 16:06:20
+  - Space `""` Default and its `37D8832A` entry: image, LastSet Nov 13
+    03:37:02, LastUse 16:06:20
+  - Space `7BDB3B2B` Default and its `37D8832A` entry: image, LastSet
+    Nov 23 17:36:39, LastUse 16:06:20
+  - `SystemDefault`: `default`, LastSet 16:06:04, LastUse 16:06:20
+  - Many more Spaces hold entries for `37D8832A` with older dates.
+- **Reading:** one write at 16:06:20 moved `LastUse` on every entry
+  shown above, still images included. `LastUse` can't tell which is
+  showing, and `LastSet` marks the pick, as `[Q-wallpaper-store]`
+  already said. Which entry actually won at Phases' captures (11:06:04
+  and 11:06:18) isn't known, because the store had been rewritten by the
+  time of the dump. That a still-image Space entry had the latest
+  `LastUse` at one of them is a hypothesis, but either way the ranking
+  rested on a field that doesn't identify the pick. The fix logs the
+  deciding entry from now on.
+- **Fix test:** `SystemWallpaperCheckTests/anAerialPickOutranksOlderStillsUsedSince`
+  failed with the ranking line set back to `LastUse` (kind came out
+  `.image`, deciding entry not `Displays`) and passed with the fix; all
+  276 unit tests passed (Claude, 2026-11-27).
+- **Not explained:** why check 2 passed on 2026-11-22 (draft 58). Perhaps
+  which entries had the newest `LastUse` then; not recorded.
+
 ## Retired designs
 
 Designs that were on `main` and have since been replaced. Moved here

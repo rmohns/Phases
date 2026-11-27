@@ -1273,6 +1273,19 @@ Each with what passes:
   the store read ("watching the store: 988 entries"), and the author
   *verified* settings and folder sources after Locate… in the app
   (SPEC.md `[D-bundle-id-settings-move]`).
+- 2026-11-27, checks 1–3 from GitHub issue #43, on `main` at `c163148`
+  (draft 64), a Bitrig Debug build started with `open`, diagnostics on,
+  two displays:
+  - 1 **passes** (*verified* by the author in the app).
+  - 2 **fails**, twice: the store read fine ("watching the store: 1046
+    entries"), but Quit logged "display 1 restored: DefaultDesktop.heic"
+    for the built-in display's Aerial instead of "left alone on quit:
+    system wallpaper"; the other display was "restored" correctly. Cause
+    `[Q-store-kind-lastset]`, record `[X-43-aerial-kind]`. To rerun on
+    the fix from `fix/aerial-kind-lastset`.
+  - 3, log half **passes** (*verified* by Claude): "found by its
+    bookmark" for both folder sources at three launches (10:51, 11:00,
+    11:03). Whether the folders open in the app is still to check.
 
 ## When a fixed bug comes back
 
