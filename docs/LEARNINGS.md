@@ -346,6 +346,24 @@ From `[X-memory]` unless noted: macOS 27.2, two or three displays.
   sandbox.** Verified. Record: `[X-33-sandbox]`.
 - `[L-sandbox-x4-container-wallpaper]` Promoted to
   `[Q-sandbox-set-unreadable-file]` (2026-11-22). Record: `[X-33-sandbox]`.
+- `[L-aerial-kind-lastuse]` Promoted to `[Q-store-kind-lastset]`
+  (2026-11-27). Record: `[X-43-aerial-kind]`.
+- `[L-diagnostics-switch-saved]` **Phases' saved `PhasesDiagnostics`
+  switch can be on while `defaults` in Bitrig's shell says the domain
+  doesn't exist.** Observed 2026-11-27: a launch with no arguments
+  logged, and `defaults read` and `write` both failed on the container
+  (`[L-defaults-container-blocked]`). The log is the way to tell whether
+  diagnostics are on. Record: `[X-43-aerial-kind]`, run 2.
+- `[L-settings-thumbnail-placeholder]` **System Settings › Wallpaper can
+  show a "?" placeholder (dashed box) instead of the display's thumbnail
+  while a Phases still from a folder source is showing.** Observed once,
+  2026-11-27 ~11:45, by the author: built-in display showing
+  `eclipse_2024_robert_mohns-09.jpg` (folder source, set by Phases at
+  11:45:14, refined `fix/aerial-kind-lastset` build), while the virtual
+  display's folder image (`Peter Lik - Eternal Beauty.jpg`) got a normal
+  thumbnail. Claude's first hypothesis, a Photos-cache file in Phases'
+  container that System Settings can't read, is *ruled out*: the image
+  is from a folder. Open; cause unknown. Record: `[X-43-aerial-kind]`.
 - `[L-photos-grant-needs-relaunch]` **Allowing Phases in System Settings ›
   Photos didn't reach a running Phases; a relaunch did.** Observed once;
   why is a hypothesis (perhaps `[L-photos-grant-per-build]`). Record:

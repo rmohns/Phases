@@ -8,8 +8,10 @@ struct SystemWallpaperCheckTests {
   private let uuidA = "AAAAAAAA-0000-0000-0000-000000000001"
   private let uuidB = "BBBBBBBB-0000-0000-0000-000000000002"
 
-  private func desktop(_ provider: String, lastUse: Date) -> [String: Any] {
-    ["Desktop": ["Content": ["Choices": [["Provider": provider]]], "LastUse": lastUse]]
+  private func desktop(_ provider: String, lastSet: Date? = nil, lastUse: Date) -> [String: Any] {
+    var entry: [String: Any] = ["Content": ["Choices": [["Provider": provider]]], "LastUse": lastUse]
+    entry["LastSet"] = lastSet
+    return ["Desktop": entry]
   }
 
   private func storeData(_ store: [String: Any]) throws -> Data {
@@ -20,6 +22,11 @@ struct SystemWallpaperCheckTests {
   private let aerial = "com.apple.wallpaper.choice.aerials"
   private let earlier = Date(timeIntervalSinceReferenceDate: 800_000_000)
   private let later = Date(timeIntervalSinceReferenceDate: 800_000_100)
+  private let latest = Date(timeIntervalSinceReferenceDate: 800_000_200)
+  /// The provider macOS 27.2 stored for the first Aerial in System
+  /// Settings' Aerial row (San Francisco sunset; 2026-11-27, Sandbox
+  /// check 2).
+  private let aerialDefault = "default"
 
   // MARK: Reading the store
 
@@ -46,10 +53,89 @@ struct SystemWallpaperCheckTests {
     #expect(kinds == [1: .image])
   }
 
-  @Test func mostRecentlyUsedEntryWins() throws {
+  @Test func withNoLastSetTheMostRecentlyUsedEntryWins() throws {
     let store: [String: Any] = [
       "AllSpacesAndDisplays": desktop(aerial, lastUse: earlier),
       "Spaces": ["S1": ["Displays": [uuidA: desktop(image, lastUse: later)]]],
+    ]
+    let kinds = SystemWallpaperCheck.kinds(storeData: try storeData(store), displays: [1: uuidA])
+    #expect(kinds == [1: .image])
+  }
+
+  @Test func anAerialPickOutranksOlderStillsUsedSince() throws {
+    // [Q-store-kind-lastset] Regression, Sandbox check 2 (2026-11-27): an
+    // Aerial picked on the display, and other Spaces' still-image entries
+    // whose LastUse macOS moved later (as a pick on another display does).
+    // Ranked by LastUse, the stills won and Quit put a still frame over
+    // the Aerial.
+    let store: [String: Any] = [
+      "Displays": [uuidA: desktop(aerialDefault, lastSet: later, lastUse: later)],
+      "Spaces": [
+        "": [
+          "Default": desktop(image, lastSet: earlier, lastUse: latest),
+          "Displays": [uuidA: desktop(image, lastSet: earlier, lastUse: latest)],
+        ],
+        "S2": ["Default": desktop(image, lastSet: earlier, lastUse: latest)],
+      ],
+    ]
+    let readings = SystemWallpaperCheck.readings(storeData: try storeData(store), displays: [1: uuidA])
+    #expect(readings[1]?.kind == .system)
+    #expect(readings[1]?.decidedBy?.place == "Displays")
+    #expect(readings[1]?.entryCount == 4)
+  }
+
+  @Test func anotherDisplaysPickInTheSpaceDefaultDoesNotDecide() throws {
+    // [Q-store-kind-lastset] Regression, Sandbox check 2 run 4
+    // (2026-11-27): a still picked on display A, then an Aerial on display
+    // B. macOS stamps the Space's Default with B's pick, later than A's
+    // own entry; ranked together, A read as a system wallpaper.
+    let store: [String: Any] = [
+      "Displays": [
+        uuidA: desktop(image, lastSet: earlier, lastUse: later),
+        uuidB: desktop(aerialDefault, lastSet: later, lastUse: later),
+      ],
+      "Spaces": [
+        "S1": [
+          "Default": desktop(aerialDefault, lastSet: later, lastUse: later),
+          "Displays": [uuidB: desktop(aerialDefault, lastSet: later, lastUse: later)],
+        ]
+      ],
+    ]
+    let readings = SystemWallpaperCheck.readings(storeData: try storeData(store), displays: [1: uuidA, 2: uuidB])
+    #expect(readings[1]?.kind == .image)
+    #expect(readings[1]?.decidedBy?.place == "Displays")
+    #expect(readings[2]?.kind == .system)
+  }
+
+  @Test func aSpaceDefaultDecidesWhenTheDisplayHasNoEntryOfItsOwn() throws {
+    let store: [String: Any] = [
+      "AllSpacesAndDisplays": desktop(image, lastSet: earlier, lastUse: earlier),
+      "Spaces": ["S1": ["Default": desktop(aerial, lastSet: later, lastUse: later)]],
+    ]
+    let readings = SystemWallpaperCheck.readings(storeData: try storeData(store), displays: [1: uuidA])
+    #expect(readings[1]?.kind == .system)
+    #expect(readings[1]?.decidedBy?.place == "Space S1 Default")
+  }
+
+  @Test func lastUseBreaksATieInLastSet() throws {
+    let store: [String: Any] = [
+      "Displays": [uuidA: desktop(aerialDefault, lastSet: later, lastUse: later)],
+      "Spaces": ["S1": ["Displays": [uuidA: desktop(image, lastSet: later, lastUse: latest)]]],
+    ]
+    let kinds = SystemWallpaperCheck.kinds(storeData: try storeData(store), displays: [1: uuidA])
+    #expect(kinds == [1: .image])
+  }
+
+  @Test func knownLimitAStillPickedLaterOnAnotherSpaceWins() throws {
+    // [Q-store-kind-lastset] Accepted limit (author, 2026-11-27): the store
+    // doesn't say which Space is showing, so a still picked later on
+    // another Space outranks an Aerial picked earlier on this one. This
+    // test pins the limit down; it is not a bug to fix.
+    let store: [String: Any] = [
+      "Spaces": [
+        "Showing": ["Displays": [uuidA: desktop(aerial, lastSet: earlier, lastUse: latest)]],
+        "Other": ["Displays": [uuidA: desktop(image, lastSet: later, lastUse: later)]],
+      ]
     ]
     let kinds = SystemWallpaperCheck.kinds(storeData: try storeData(store), displays: [1: uuidA])
     #expect(kinds == [1: .image])

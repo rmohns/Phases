@@ -1273,6 +1273,31 @@ Each with what passes:
   the store read ("watching the store: 988 entries"), and the author
   *verified* settings and folder sources after Locate… in the app
   (SPEC.md `[D-bundle-id-settings-move]`).
+- 2026-11-27, checks 1–3 from GitHub issue #43, on `main` at `c163148`
+  (draft 64), a Bitrig Debug build started with `open`, diagnostics on,
+  two displays:
+  - 1 **passes** (*verified* by the author in the app).
+  - 2 **fails**, twice: the store read fine ("watching the store: 1046
+    entries"), but Quit logged "display 1 restored: DefaultDesktop.heic"
+    for the built-in display's Aerial instead of "left alone on quit:
+    system wallpaper"; the other display was "restored" correctly. Cause
+    `[Q-store-kind-lastset]`, record `[X-43-aerial-kind]`.
+  - 2 on the first fix (`fix/aerial-kind-lastset` at `0499087`), Aerial
+    on the virtual display: that display **passes** ("left alone on quit:
+    system wallpaper"), but the built-in display, showing a still, was
+    also read as a system wallpaper (left alone for the wrong reason;
+    no visible harm this time). Refined on the same branch.
+  - 2 on the refined fix (`fix/aerial-kind-lastset` at `2b1dd1a`)
+    **passes both ways round** (*verified* by Claude from the log; picks
+    by the author): Aerial on the built-in (Quit 11:56:33: built-in "left
+    alone on quit: system wallpaper", virtual "restored"), then Aerial on
+    the virtual display (Quit 11:58:51: virtual left alone, built-in
+    "restored"). The new `kind` lines named each display's own entry at
+    every pick. Record `[X-43-aerial-kind]`, runs 5 and 6.
+  - 3 **passes**: "found by its bookmark" for both folder sources at
+    every launch (10:51, 11:00, 11:03, 11:20, 11:27; *verified* by
+    Claude), and both folders show their images in the app after
+    relaunching (*verified* by the author).
 
 ## When a fixed bug comes back
 
