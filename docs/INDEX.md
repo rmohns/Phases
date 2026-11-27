@@ -218,107 +218,107 @@ tests"). Line numbers are as of the last run.
 | Tag | Where | Says | Cited in code |
 |---|---|---|---|
 | `[L-aerial-kind-lastuse]` | LEARNINGS.md:349 "Photos library (issue #33)" (pointer) | *Pointer:* Promoted to `[Q-store-kind-lastset]` (2026-11-27) |  |
-| `[L-backdrop-private-store]` | EXPERIMENTS.md:244 "Notes outside any experiment"<br>LEARNINGS.md:76 "Wallpaper, covers, and the menu bar" | Backdrop (Cindori) puts video on the lock screen by registering entries in macOS's private wallpaper store |  |
-| `[L-background-prominence-mac-list]` | EXPERIMENTS.md:543 "`[X-active-badge-highlight]` The Active badge on the selection highlight" (pointer)<br>LEARNINGS.md:136 "Sidebar rows" (pointer) | *Pointer:* Promoted to `[Q-tint-on-highlight]` (2026-11-06) |  |
-| `[L-classic-mac-layout]` | EXPERIMENTS.md:870 "`[X-ui-mockup]` Interface mockup"<br>LEARNINGS.md:176 "UI mockup (issues #2, #3, #26, #27)" | Old-style Mac layouts were tried and dropped |  |
+| `[L-backdrop-private-store]` | EXPERIMENTS.md:45 "Notes outside any experiment"<br>LEARNINGS.md:76 "Wallpaper, covers, and the menu bar" | Backdrop (Cindori) puts video on the lock screen by registering entries in macOS's private wallpaper store |  |
+| `[L-background-prominence-mac-list]` | LEARNINGS.md:136 "Sidebar rows" (pointer)<br>experiments/X-active-badge-highlight.md:30 "`[X-active-badge-highlight]` The Active badge on the selection highlight" (pointer) | *Pointer:* Promoted to `[Q-tint-on-highlight]` (2026-11-06) |  |
+| `[L-classic-mac-layout]` | LEARNINGS.md:176 "UI mockup (issues #2, #3, #26, #27)"<br>experiments/X-ui-mockup.md:23 "`[X-ui-mockup]` Interface mockup" | Old-style Mac layouts were tried and dropped |  |
 | `[L-click-state-not-needed]` | LEARNINGS.md:447 "Test tools" | Phases' clicks work with click state 0 on mouse up; the driver doesn't need to set it | SyntheticInput.swift |
-| `[L-closed-menu-stale]` | EXPERIMENTS.md:1811 "`[X-33-image-sources]` Image sources: findings from merge 1 of issue #33"<br>LEARNINGS.md:393 "Image sources (issue #33, merge 1)" | A closed menu's items, read through AX, keep the title and enabled state from when the menu last opened |  |
+| `[L-closed-menu-stale]` | LEARNINGS.md:393 "Image sources (issue #33, merge 1)"<br>experiments/X-33-image-sources.md:30 "`[X-33-image-sources]` Image sources: findings from merge 1 of issue #33" | A closed menu's items, read through AX, keep the title and enabled state from when the menu last opened |  |
 | `[L-convert-xcode-project]` | LEARNINGS.md:231 "Other investigations" | `bitrig convert-to-xcode-project` carried every Project.json setting over, added two sandbox build settings, and lost team signing |  |
-| `[L-cover-all-spaces]` | EXPERIMENTS.md:62 "`[X-persistent-cover]` Keeping a cover up between changes"<br>LEARNINGS.md:30 "Wallpaper, covers, and the menu bar" | A cover with `.canJoinAllSpaces` and `.stationary` shows on every Space and in Mission Control, and slides with each Space during a swipe… |  |
-| `[L-cover-alpha-later]` | EXPERIMENTS.md:1490 "Still open"<br>LEARNINGS.md:401 "Open questions" | Could the 99% cover go to 100% once the menu bar has restyled, and does it matter? |  |
+| `[L-cover-all-spaces]` | LEARNINGS.md:30 "Wallpaper, covers, and the menu bar"<br>experiments/X-persistent-cover.md:46 "`[X-persistent-cover]` Keeping a cover up between changes" | A cover that joins all Spaces shows on every Space and in Mission Control, and slides with each Space like a real wallpaper |  |
+| `[L-cover-alpha-later]` | EXPERIMENTS.md:130 "Still open"<br>LEARNINGS.md:401 "Open questions" | Could the 99% cover go to 100% once the menu bar has restyled, and does it matter? |  |
 | `[L-cover-check-driving]` | TEST-TOOLS.md:539 "Driving and measuring the Mac in tests" | What the 2026-11-03 cover checks needed |  |
-| `[L-cover-memory]` | EXPERIMENTS.md:96 "`[X-persistent-cover]` Keeping a cover up between changes"<br>LEARNINGS.md:46 "Wallpaper, covers, and the menu bar" | One full-screen cover image costs about 23 MB at 3024 × 1964, and the experiment held it about three times |  |
-| `[L-cover-own-space]` | EXPERIMENTS.md:154 "`[X-persistent-cover]` Keeping a cover up between changes"<br>LEARNINGS.md:57 "Wallpaper, covers, and the menu bar" | A cover without `.canJoinAllSpaces` stays on its own Space, and can be removed when you leave it with nothing visible |  |
+| `[L-cover-memory]` | LEARNINGS.md:46 "Wallpaper, covers, and the menu bar"<br>experiments/X-persistent-cover.md:80 "`[X-persistent-cover]` Keeping a cover up between changes" | One full-screen cover image cost about 23 MB, held about three times over, and the spike leaked on every change |  |
+| `[L-cover-own-space]` | LEARNINGS.md:57 "Wallpaper, covers, and the menu bar"<br>experiments/X-persistent-cover.md:138 "`[X-persistent-cover]` Keeping a cover up between changes" | A cover that stays on its own Space can be removed unseen when you leave it |  |
 | `[L-cover-settle-delay]` | LEARNINGS.md:81 "Wallpaper, covers, and the menu bar" | Before draft 33, the cover came off 1.5 s after the set, clearing macOS's motion at 0.55–0.65 s; 0.5 s brought the twitch back |  |
-| `[L-cover-three-displays]` | EXPERIMENTS.md:139 "`[X-persistent-cover]` Keeping a cover up between changes"<br>LEARNINGS.md:53 "Wallpaper, covers, and the menu bar" | The 99% cover held up on three displays |  |
+| `[L-cover-three-displays]` | LEARNINGS.md:53 "Wallpaper, covers, and the menu bar"<br>experiments/X-persistent-cover.md:123 "`[X-persistent-cover]` Keeping a cover up between changes" | The 99% cover held up on three displays |  |
 | `[L-defaults-container-blocked]` | LEARNINGS.md:241 "Other investigations" | From Bitrig's shell, `defaults` can't read a sandboxed app's container: `defaults export` for the old ID wrote an empty plist (42 bytes, … |  |
-| `[L-desktop-through-cover]` | EXPERIMENTS.md:82 "`[X-persistent-cover]` Keeping a cover up between changes"<br>LEARNINGS.md:40 "Wallpaper, covers, and the menu bar" | Desktop features work through a cover |  |
+| `[L-desktop-through-cover]` | LEARNINGS.md:40 "Wallpaper, covers, and the menu bar"<br>experiments/X-persistent-cover.md:66 "`[X-persistent-cover]` Keeping a cover up between changes" | Desktop icons, widgets, the desktop menu, and click-to-show-desktop all work through a cover |  |
 | `[L-detail-scroll-short]` | LEARNINGS.md:460 "Test tools" | In a 645 pt tall window, the detail pane hardly scrolls: the image grid's first row stays below the window's bottom edge |  |
 | `[L-diagnostics-switch-saved]` | LEARNINGS.md:351 "Photos library (issue #33)" | Phases' saved `PhasesDiagnostics` switch can be on while `defaults` in Bitrig's shell says the domain doesn't exist |  |
 | `[L-divider-drag-right]` | LEARNINGS.md:417 "Test tools" | In the first fast-suite run on the sandboxed build, dragging the sidebar divider far right left the sidebar at 239.5 pt, not 320 |  |
-| `[L-first-launch-activation]` | EXPERIMENTS.md:1484 "`[X-first-launch-activation]` First-launch window staying behind"<br>LEARNINGS.md:229 "Other investigations" (pointer) | First-launch window staying behind: promoted to `[Q-launch-activate-refused]` (2026-11-06) |  |
-| `[L-hdr-wallpaper]` | EXPERIMENTS.md:1361 "`[X-hdr-wallpaper]` HDR photos as wallpaper"<br>LEARNINGS.md:220 "Other investigations" | How does macOS draw an HDR photo (an iPhone HEIC with a gain map) as wallpaper: SDR, or with HDR headroom? | CoverSurface.swift |
-| `[L-lockscreen-uses-real-wallpaper]` | EXPERIMENTS.md:71 "`[X-persistent-cover]` Keeping a cover up between changes"<br>LEARNINGS.md:34 "Wallpaper, covers, and the menu bar" | The lock screen and the login window show the real wallpaper of the Space you were on, not anything drawn by an app |  |
-| `[L-login-dims-wallpaper]` | EXPERIMENTS.md:77 "`[X-persistent-cover]` Keeping a cover up between changes"<br>LEARNINGS.md:37 "Wallpaper, covers, and the menu bar" | At logout, macOS redraws the wallpaper for the login window, slightly darkened, with a visible twitch |  |
-| `[L-main-memory]` | EXPERIMENTS.md:287 "`[X-memory]` Where Phases' memory goes"<br>LEARNINGS.md:95 "Memory" | The installed Release build of `main` measured 179 MB with its window closed |  |
-| `[L-mem-ca-copy-test]` | ERRATA.md:247 "Wallpaper and menu bar (macOS)"<br>EXPERIMENTS.md:340 "`[X-memory]` Where Phases' memory goes" (pointer)<br>LEARNINGS.md:104 "Memory" (pointer) | Core Animation copied every CGImage we gave it, whatever its format; an IOSurface it used as is |  |
-| `[L-mem-ca-copy]` | EXPERIMENTS.md:318 "`[X-memory]` Where Phases' memory goes"<br>LEARNINGS.md:102 "Memory" | Core Animation keeps its own full-screen copy of each cover image, and it outlives the window |  |
-| `[L-mem-cover-windows-freed]` | EXPERIMENTS.md:313 "`[X-memory]` Where Phases' memory goes"<br>LEARNINGS.md:100 "Memory" | `main`'s cover windows are freed after each fade |  |
-| `[L-mem-decode]` | EXPERIMENTS.md:394 "`[X-memory]` Where Phases' memory goes"<br>LEARNINGS.md:114 "Memory" | Each cover also decodes the file at full size first |  |
-| `[L-mem-draft33-runs]` | EXPERIMENTS.md:493 "`[X-memory]` Where Phases' memory goes"<br>LEARNINGS.md:129 "Memory" | `[D-memory-protocol]` runs of draft 33 (persistent covers), 2026-11-03 |  |
-| `[L-mem-fix-ideas]` | EXPERIMENTS.md:417 "`[X-memory]` Where Phases' memory goes"<br>LEARNINGS.md:123 "Memory" | Recommended fix, in order (agreed with the author 2026-10-30; untested in Phases) |  |
-| `[L-mem-fix-runs]` | EXPERIMENTS.md:439 "`[X-memory]` Where Phases' memory goes"<br>LEARNINGS.md:126 "Memory" | `[D-memory-protocol]` runs of the fix, 2026-10-30 |  |
-| `[L-mem-freed-held]` | EXPERIMENTS.md:386 "`[X-memory]` Where Phases' memory goes"<br>LEARNINGS.md:111 "Memory" | Freed full-screen buffers stay in the process for minutes |  |
-| `[L-mem-iosurface-color]` | ERRATA.md:290 "Wallpaper and menu bar (macOS)"<br>EXPERIMENTS.md:341 "`[X-memory]` Where Phases' memory goes" (pointer)<br>LEARNINGS.md:105 "Memory" (pointer) | An IOSurface needs its color space attached, or colors come out wrong; attached, it matches the CGImage and still isn't copied |  |
-| `[L-mem-no-upscale]` | EXPERIMENTS.md:381 "`[X-memory]` Where Phases' memory goes"<br>LEARNINGS.md:109 "Memory" | `loadImage` never scales an image up |  |
-| `[L-mem-pressure-relief]` | EXPERIMENTS.md:342 "`[X-memory]` Where Phases' memory goes"<br>LEARNINGS.md:106 "Memory" | `malloc_zone_pressure_relief` didn't release the freed-but-held blocks |  |
-| `[L-mem-reconcile]` | EXPERIMENTS.md:410 "`[X-memory]` Where Phases' memory goes"<br>LEARNINGS.md:121 "Memory" | This accounts for the earlier figures |  |
-| `[L-mem-thumbnails]` | EXPERIMENTS.md:408 "`[X-memory]` Where Phases' memory goes"<br>LEARNINGS.md:119 "Memory" | Thumbnails are small |  |
-| `[L-mem-timeline]` | EXPERIMENTS.md:304 "`[X-memory]` Where Phases' memory goes"<br>LEARNINGS.md:98 "Memory" | Footprint rises and falls with crossfades; it isn't a steady leak on `main` |  |
-| `[L-mem-window]` | EXPERIMENTS.md:400 "`[X-memory]` Where Phases' memory goes"<br>LEARNINGS.md:116 "Memory" | Opening the window adds about 25 MB that stays after it closes |  |
+| `[L-first-launch-activation]` | experiments/X-first-launch-activation.md:23 "`[X-first-launch-activation]` First-launch window staying behind"<br>LEARNINGS.md:229 "Other investigations" (pointer) | First-launch window staying behind: promoted to `[Q-launch-activate-refused]` (2026-11-06) |  |
+| `[L-hdr-wallpaper]` | LEARNINGS.md:220 "Other investigations"<br>experiments/X-hdr-wallpaper.md:23 "`[X-hdr-wallpaper]` HDR photos as wallpaper" | macOS shows an HDR photo as wallpaper in SDR | CoverSurface.swift |
+| `[L-lockscreen-uses-real-wallpaper]` | LEARNINGS.md:34 "Wallpaper, covers, and the menu bar"<br>experiments/X-persistent-cover.md:55 "`[X-persistent-cover]` Keeping a cover up between changes" | The lock screen and login window show the real wallpaper, never an app's drawing |  |
+| `[L-login-dims-wallpaper]` | LEARNINGS.md:37 "Wallpaper, covers, and the menu bar"<br>experiments/X-persistent-cover.md:61 "`[X-persistent-cover]` Keeping a cover up between changes" | At logout macOS redraws the wallpaper, slightly darkened, with a twitch |  |
+| `[L-main-memory]` | LEARNINGS.md:95 "Memory"<br>experiments/X-memory.md:41 "`[X-memory]` Where Phases' memory goes" | `main` at 179 MB with the window closed was mostly crossfade images plus the window's lasting cost |  |
+| `[L-mem-ca-copy-test]` | ERRATA.md:247 "Wallpaper and menu bar (macOS)"<br>LEARNINGS.md:104 "Memory" (pointer)<br>experiments/X-memory.md:94 "`[X-memory]` Where Phases' memory goes" (pointer) | Core Animation copied every CGImage we gave it, whatever its format; an IOSurface it used as is |  |
+| `[L-mem-ca-copy]` | LEARNINGS.md:102 "Memory"<br>experiments/X-memory.md:72 "`[X-memory]` Where Phases' memory goes" | Core Animation kept its own full-screen copy of each cover image, outliving the window |  |
+| `[L-mem-cover-windows-freed]` | LEARNINGS.md:100 "Memory"<br>experiments/X-memory.md:67 "`[X-memory]` Where Phases' memory goes" | `main`'s cover windows were freed after each fade |  |
+| `[L-mem-decode]` | LEARNINGS.md:114 "Memory"<br>experiments/X-memory.md:148 "`[X-memory]` Where Phases' memory goes" | Each cover also decoded the file at full size first: a peak, purged within 40 s |  |
+| `[L-mem-draft33-runs]` | LEARNINGS.md:129 "Memory"<br>experiments/X-memory.md:247 "`[X-memory]` Where Phases' memory goes" | **Draft 33's persistent covers passed every |  |
+| `[L-mem-fix-ideas]` | LEARNINGS.md:123 "Memory"<br>experiments/X-memory.md:171 "`[X-memory]` Where Phases' memory goes" | The agreed fix order: tagged IOSurface covers, decode once, release the grid, measure ten changes per run |  |
+| `[L-mem-fix-runs]` | LEARNINGS.md:126 "Memory"<br>experiments/X-memory.md:193 "`[X-memory]` Where Phases' memory goes" | The fix held covers flat (2–3 MB over ten changes); the window still failed its check, and the grid isn't most of the window's cost |  |
+| `[L-mem-freed-held]` | LEARNINGS.md:111 "Memory"<br>experiments/X-memory.md:140 "`[X-memory]` Where Phases' memory goes" | Freed full-screen buffers stayed in the process for minutes and counted in `footprint` |  |
+| `[L-mem-iosurface-color]` | ERRATA.md:290 "Wallpaper and menu bar (macOS)"<br>LEARNINGS.md:105 "Memory" (pointer)<br>experiments/X-memory.md:95 "`[X-memory]` Where Phases' memory goes" (pointer) | An IOSurface needs its color space attached, or colors come out wrong; attached, it matches the CGImage and still isn't copied |  |
+| `[L-mem-no-upscale]` | LEARNINGS.md:109 "Memory"<br>experiments/X-memory.md:135 "`[X-memory]` Where Phases' memory goes" | `loadImage` never scales an image up |  |
+| `[L-mem-pressure-relief]` | LEARNINGS.md:106 "Memory"<br>experiments/X-memory.md:96 "`[X-memory]` Where Phases' memory goes" | `malloc_zone_pressure_relief` released nothing |  |
+| `[L-mem-reconcile]` | LEARNINGS.md:121 "Memory"<br>experiments/X-memory.md:164 "`[X-memory]` Where Phases' memory goes" | The mechanisms above account for the earlier figures |  |
+| `[L-mem-thumbnails]` | LEARNINGS.md:119 "Memory"<br>experiments/X-memory.md:162 "`[X-memory]` Where Phases' memory goes" | Thumbnails are small (4–9 MB for 22 images) |  |
+| `[L-mem-timeline]` | LEARNINGS.md:98 "Memory"<br>experiments/X-memory.md:58 "`[X-memory]` Where Phases' memory goes" | Footprint rose and fell with crossfades; not a steady leak |  |
+| `[L-mem-window]` | LEARNINGS.md:116 "Memory"<br>experiments/X-memory.md:154 "`[X-memory]` Where Phases' memory goes" | Opening the window once added about 25 MB that stayed after closing |  |
 | `[L-memory-tools]` | TEST-TOOLS.md:497 "Driving and measuring the Mac in tests" | Measuring memory |  |
 | `[L-menu-label-dead-zones]` | LEARNINGS.md:187 "UI mockup (issues #2, #3, #26, #27)" | A SwiftUI `Menu` drawn as a custom pop-up (`.menuStyle(.button)`, `.buttonStyle(.plain)`, hover box drawn outside it) had dead zones and … |  |
-| `[L-menubar-launcher-setting]` | EXPERIMENTS.md:1235 "`[X-menubar-launcher-setting]` Missing menu bar icon under Bitrig"<br>LEARNINGS.md:212 "Other investigations" | A Phases launched by Bitrig follows Bitrig's own switch in System Settings → Menu Bar |  |
-| `[L-menubar-lazy-restyle]` | EXPERIMENTS.md:123 "`[X-persistent-cover]` Keeping a cover up between changes"<br>LEARNINGS.md:49 "Wallpaper, covers, and the menu bar" | macOS sometimes leaves menu bar text the wrong color for the wallpaper, with no cover involved, in either direction |  |
-| `[L-menubar-overflow]` | EXPERIMENTS.md:1278 "`[X-menubar-overflow]` Menu bar overflow and the test harness"<br>LEARNINGS.md:216 "Other investigations" | Is Phases' menu bar icon hidden when the menu bar runs out of room? |  |
-| `[L-misfire-not-seen]` | EXPERIMENTS.md:224 "`[X-set-target-read]` Which Space a set reaches during a swipe"<br>LEARNINGS.md:69 "Wallpaper, covers, and the menu bar" | With `[D-reset-on-quick-return]` in, the misfire didn't happen in 24 informative trials |  |
-| `[L-mock-known-displays]` | EXPERIMENTS.md:893 "`[X-ui-mockup]` Interface mockup"<br>LEARNINGS.md:182 "UI mockup (issues #2, #3, #26, #27)" | The known-displays list grows without bound |  |
-| `[L-motion-waits-for-reveal]` | EXPERIMENTS.md:51 "`[X-persistent-cover]` Keeping a cover up between changes"<br>LEARNINGS.md:26 "Wallpaper, covers, and the menu bar" | macOS seems to hold its wallpaper-change motion until the new wallpaper is first visible, not play it on a timer |  |
-| `[L-nas-bookmark-rename]` | EXPERIMENTS.md:1801 "`[X-33-image-sources]` Image sources: findings from merge 1 of issue #33"<br>LEARNINGS.md:389 "Image sources (issue #33, merge 1)" | A security-scoped bookmark to a folder on a file server doesn't follow a rename; one to a local folder does |  |
-| `[L-new-space-pauses]` | EXPERIMENTS.md:1035 "`[X-new-space-pauses]` A new Space read as an outside change"<br>LEARNINGS.md:203 "Other investigations" | Does a new Space read as an outside change? | OutsideChangeRuleTests.swift |
+| `[L-menubar-launcher-setting]` | LEARNINGS.md:212 "Other investigations"<br>experiments/X-menubar-launcher-setting.md:22 "`[X-menubar-launcher-setting]` Missing menu bar icon under Bitrig" | A Phases launched by Bitrig follows Bitrig's switch in System Settings → Menu Bar |  |
+| `[L-menubar-lazy-restyle]` | LEARNINGS.md:49 "Wallpaper, covers, and the menu bar"<br>experiments/X-persistent-cover.md:107 "`[X-persistent-cover]` Keeping a cover up between changes" | macOS sometimes leaves menu bar text the wrong colour with no cover involved; a click in the menu bar corrects it |  |
+| `[L-menubar-overflow]` | LEARNINGS.md:216 "Other investigations"<br>experiments/X-menubar-overflow.md:26 "`[X-menubar-overflow]` Menu bar overflow and the test harness" | On macOS 27.2 a crowded menu bar hides Phases' icon behind a chevron, still reachable; macOS 26 untested |  |
+| `[L-misfire-not-seen]` | LEARNINGS.md:69 "Wallpaper, covers, and the menu bar"<br>experiments/X-set-target-read.md:52 "`[X-set-target-read]` Which Space a set reaches during a swipe" | With `[D-reset-on-quick-return]` in, the misfire didn't happen in 24 trials |  |
+| `[L-mock-known-displays]` | LEARNINGS.md:182 "UI mockup (issues #2, #3, #26, #27)"<br>experiments/X-ui-mockup.md:46 "`[X-ui-mockup]` Interface mockup" | The known-displays list grows without bound; |  |
+| `[L-motion-waits-for-reveal]` | LEARNINGS.md:26 "Wallpaper, covers, and the menu bar"<br>experiments/X-persistent-cover.md:35 "`[X-persistent-cover]` Keeping a cover up between changes" | macOS seems to hold its wallpaper-change motion until the new wallpaper is first visible |  |
+| `[L-nas-bookmark-rename]` | LEARNINGS.md:389 "Image sources (issue #33, merge 1)"<br>experiments/X-33-image-sources.md:20 "`[X-33-image-sources]` Image sources: findings from merge 1 of issue #33" | A security-scoped bookmark to a folder on a file server doesn't follow a rename; one to a local folder does |  |
+| `[L-new-space-pauses]` | LEARNINGS.md:203 "Other investigations"<br>experiments/X-new-space-pauses.md:23 "`[X-new-space-pauses]` A new Space read as an outside change" | A new Space's store entries are copies, which read as outside changes | OutsideChangeRuleTests.swift |
 | `[L-no-fullscreen-apps]` | TEST-TOOLS.md:555 "Driving and measuring the Mac in tests" | Activity Monitor doesn't support full screen (it only zooms); use Calendar to test full screen |  |
-| `[L-notice-click-launches-copy]` | EXPERIMENTS.md:774 "`[X-notice-click]` What a click on the pause notification does"<br>LEARNINGS.md:167 "Notification clicks" | A click on the pause notification can launch a second copy of Phases |  |
+| `[L-notice-click-launches-copy]` | LEARNINGS.md:167 "Notification clicks"<br>experiments/X-notice-click.md:19 "`[X-notice-click]` What a click on the pause notification does" | Under development, a click on the pause notification can launch a second, differently registered copy of Phases, because `usernoted` brin… |  |
 | `[L-nswindow-screen-rect]` | TEST-TOOLS.md:487 "Driving and measuring the Mac in tests" | `NSWindow(contentRect:…, screen:)` reads the rect relative to that screen, not in global coordinates |  |
-| `[L-opaque-cover-freezes-menubar]` | ERRATA.md:66 "Wallpaper and menu bar (macOS)"<br>EXPERIMENTS.md:61 "`[X-persistent-cover]` Keeping a cover up between changes" (pointer)<br>LEARNINGS.md:29 "Wallpaper, covers, and the menu bar" (pointer) | A fully opaque full-screen cover stops the menu bar restyling for new wallpapers; a 99% opaque one doesn't |  |
-| `[L-outside-change-hidden]` | EXPERIMENTS.md:92 "`[X-persistent-cover]` Keeping a cover up between changes"<br>LEARNINGS.md:43 "Wallpaper, covers, and the menu bar" | A wallpaper set by anything else while a cover is up is hidden by the cover |  |
-| `[L-pause-banner-above-window]` | EXPERIMENTS.md:680 "`[X-pause-banner-shift]` Window content shifted up while paused"<br>LEARNINGS.md:158 "Pause banner" | With logging: the content sits above the window, the scroll positions are normal |  |
-| `[L-pause-banner-inset]` | EXPERIMENTS.md:600 "`[X-pause-banner-shift]` Window content shifted up while paused"<br>LEARNINGS.md:148 "Pause banner" | A top `.safeAreaInset` banner broke the window two ways |  |
-| `[L-pause-banner-rigid-split]` | EXPERIMENTS.md:701 "`[X-pause-banner-shift]` Window content shifted up while paused" (pointer)<br>LEARNINGS.md:161 "Pause banner" (pointer) | *Pointer:* Promoted to | PauseBannerTests.swift |
-| `[L-pause-banner-runs]` | EXPERIMENTS.md:623 "`[X-pause-banner-shift]` Window content shifted up while paused"<br>LEARNINGS.md:151 "Pause banner" | UI test runs, 2026-11-07 21:48–21:54 |  |
-| `[L-pause-banner-stack-still-shifts]` | EXPERIMENTS.md:657 "`[X-pause-banner-shift]` Window content shifted up while paused"<br>LEARNINGS.md:155 "Pause banner" | The stack fix didn't fix the shift | WindowLayoutConfigurator.swift |
-| `[L-photos-album-order]` | EXPERIMENTS.md:1596 "`[X-33-photokit]` Photos library from a not-sandboxed Phases (round A)"<br>LEARNINGS.md:327 "Photos library (issue #33)" | The default fetch follows the album's own order | PhotoKitProvider.swift |
+| `[L-opaque-cover-freezes-menubar]` | ERRATA.md:66 "Wallpaper and menu bar (macOS)"<br>LEARNINGS.md:29 "Wallpaper, covers, and the menu bar" (pointer)<br>experiments/X-persistent-cover.md:45 "`[X-persistent-cover]` Keeping a cover up between changes" (pointer) | A fully opaque full-screen cover stops the menu bar restyling for new wallpapers; a 99% opaque one doesn't |  |
+| `[L-outside-change-hidden]` | LEARNINGS.md:43 "Wallpaper, covers, and the menu bar"<br>experiments/X-persistent-cover.md:76 "`[X-persistent-cover]` Keeping a cover up between changes" | A wallpaper set by anything else while a cover is up is hidden by the cover |  |
+| `[L-pause-banner-above-window]` | LEARNINGS.md:158 "Pause banner"<br>experiments/X-pause-banner-shift.md:110 "`[X-pause-banner-shift]` Window content shifted up while paused" | The columns were placed above the window while scroll positions were normal |  |
+| `[L-pause-banner-inset]` | LEARNINGS.md:148 "Pause banner"<br>experiments/X-pause-banner-shift.md:30 "`[X-pause-banner-shift]` Window content shifted up while paused" | A top `.safeAreaInset` banner seemed to shift the window and stop following the pause |  |
+| `[L-pause-banner-rigid-split]` | LEARNINGS.md:161 "Pause banner" (pointer)<br>experiments/X-pause-banner-shift.md:131 "`[X-pause-banner-shift]` Window content shifted up while paused" (pointer) | *Pointer:* Promoted to | PauseBannerTests.swift |
+| `[L-pause-banner-runs]` | LEARNINGS.md:151 "Pause banner"<br>experiments/X-pause-banner-shift.md:53 "`[X-pause-banner-shift]` Window content shifted up while paused" | The UI tests didn't reproduce the author's shift; toolbar room arrives about 0.12 s after the first layout |  |
+| `[L-pause-banner-stack-still-shifts]` | LEARNINGS.md:155 "Pause banner"<br>experiments/X-pause-banner-shift.md:87 "`[X-pause-banner-shift]` Window content shifted up while paused" | Moving the banner into a stack didn't fix the shift; the sidebar moved too | WindowLayoutConfigurator.swift |
+| `[L-photos-album-order]` | LEARNINGS.md:327 "Photos library (issue #33)"<br>experiments/X-33-photokit.md:91 "`[X-33-photokit]` Photos library from a not-sandboxed Phases (round A)" | The default fetch follows the album's own order | PhotoKitProvider.swift |
 | `[L-photos-bitrig-vs-installed]` | LEARNINGS.md:249 "Other investigations" | Photos access can read "blocked" in the app while System Settings shows Phases allowed, when a Bitrig build runs alongside an installed c… |  |
-| `[L-photos-deleted-album-race]` | EXPERIMENTS.md:1770 "`[X-33-photos-checks]` Merge #2 Photos checks"<br>LEARNINGS.md:382 "Photos library (issue #33)" | A photo from an album the author was deleting was set as the wallpaper at 22:18:02 |  |
-| `[L-photos-formats-check]` | EXPERIMENTS.md:1762 "`[X-33-photos-checks]` Merge #2 Photos checks"<br>LEARNINGS.md:379 "Photos library (issue #33)" | An edited (cropped) photo, a Live Photo, an iPhone ProRAW+HEIC, and a Canon DSLR RAW all showed the way Photos shows them |  |
-| `[L-photos-grant-needs-relaunch]` | EXPERIMENTS.md:1720 "`[X-33-photos-checks]` Merge #2 Photos checks"<br>LEARNINGS.md:367 "Photos library (issue #33)" | Turning Phases on under Privacy & Security › Photos didn't reach a running Phases |  |
-| `[L-photos-grant-per-build]` | EXPERIMENTS.md:1732 "`[X-33-photos-checks]` Merge #2 Photos checks"<br>LEARNINGS.md:371 "Photos library (issue #33)" | Each Bitrig build loses the Photos grant |  |
-| `[L-photos-ids-stable]` | EXPERIMENTS.md:1685 "Round B: sandboxed (2026-11-12, macOS 27.2)"<br>LEARNINGS.md:345 "Photos library (issue #33)" | Photo IDs held across builds and the sandbox |  |
-| `[L-photos-new-build-asks]` | EXPERIMENTS.md:1670 "Round B: sandboxed (2026-11-12, macOS 27.2)"<br>LEARNINGS.md:339 "Photos library (issue #33)" | A new build asks for Photos again |  |
-| `[L-photos-offline-check]` | EXPERIMENTS.md:1746 "`[X-33-photos-checks]` Merge #2 Photos checks"<br>LEARNINGS.md:375 "Photos library (issue #33)" | Offline, the fallback worked, but kept landing on the same photo |  |
-| `[L-photos-x0-paths]` | EXPERIMENTS.md:1541 "`[X-33-photokit]` Photos library from a not-sandboxed Phases (round A)"<br>LEARNINGS.md:305 "Photos library (issue #33)" | Not sandboxed, every way of finding home agrees |  |
-| `[L-photos-x1-permission]` | EXPERIMENTS.md:1545 "`[X-33-photokit]` Photos library from a not-sandboxed Phases (round A)"<br>LEARNINGS.md:309 "Photos library (issue #33)" | The Photos prompt worked from the probe launch |  |
-| `[L-photos-x2-albums]` | EXPERIMENTS.md:1550 "`[X-33-photokit]` Photos library from a not-sandboxed Phases (round A)"<br>LEARNINGS.md:312 "Photos library (issue #33)" | PhotoKit lists the author's albums and folders of albums in sidebar order, nested |  |
-| `[L-photos-x3-download]` | EXPERIMENTS.md:1560 "`[X-33-photokit]` Photos library from a not-sandboxed Phases (round A)"<br>LEARNINGS.md:316 "Photos library (issue #33)" | iCloud-only photos fail fast offline and download quickly online |  |
-| `[L-photos-x4-cache-wallpaper]` | EXPERIMENTS.md:1579 "`[X-33-photokit]` Photos library from a not-sandboxed Phases (round A)"<br>LEARNINGS.md:319 "Photos library (issue #33)" | A file in `~/Library/Caches` works as a wallpaper |  |
-| `[L-photos-x5-observer]` | EXPERIMENTS.md:1589 "`[X-33-photokit]` Photos library from a not-sandboxed Phases (round A)"<br>LEARNINGS.md:322 "Photos library (issue #33)" | The change observer fires while Phases is in the background | ImageLibrary.swift |
-| `[L-photos-x6-ids]` | EXPERIMENTS.md:1593 "`[X-33-photokit]` Photos library from a not-sandboxed Phases (round A)"<br>LEARNINGS.md:324 "Photos library (issue #33)" | First record of IDs saved |  |
-| `[L-reopen-event]` | EXPERIMENTS.md:1094 "`[X-reopen-window]` Launching Phases again while it runs"<br>LEARNINGS.md:207 "Other investigations" | What happens when Phases is launched again while it's running, and can the menu bar icon's view open the window? |  |
-| `[L-row-own-selection]` | EXPERIMENTS.md:556 "`[X-active-badge-highlight]` The Active badge on the selection highlight"<br>LEARNINGS.md:141 "Sidebar rows" | Telling the row it's selected works, but the accent highlight also needs the sidebar to have focus |  |
-| `[L-row-selection-focus]` | EXPERIMENTS.md:574 "`[X-active-badge-highlight]` The Active badge on the selection highlight" (pointer)<br>LEARNINGS.md:144 "Sidebar rows" (pointer) | *Pointer:* Promoted to `[Q-tint-on-highlight]` (2026-11-06) |  |
-| `[L-row-styles-on-highlight]` | EXPERIMENTS.md:544 "`[X-active-badge-highlight]` The Active badge on the selection highlight"<br>LEARNINGS.md:137 "Sidebar rows" | What does adapt on the highlight |  |
-| `[L-sandbox-photos-works]` | EXPERIMENTS.md:1677 "Round B: sandboxed (2026-11-12, macOS 27.2)"<br>LEARNINGS.md:342 "Photos library (issue #33)" | The sandbox-only build reads Photos |  |
-| `[L-sandbox-prefs-move]` | EXPERIMENTS.md:1649 "Round B: sandboxed (2026-11-12, macOS 27.2)"<br>LEARNINGS.md:334 "Photos library (issue #33)" (pointer) | The first sandboxed launch moved Phases' preferences into the container |  |
-| `[L-sandbox-team-needed]` | EXPERIMENTS.md:1633 "Round B: sandboxed (2026-11-12, macOS 27.2)"<br>LEARNINGS.md:330 "Photos library (issue #33)" (pointer) | Bitrig won't build the Photos or the wallpaper-store entitlement without a development team |  |
-| `[L-sandbox-x0-paths]` | EXPERIMENTS.md:1641 "Round B: sandboxed (2026-11-12, macOS 27.2)"<br>LEARNINGS.md:332 "Photos library (issue #33)" (pointer) | In the sandbox, `homeDirectoryForCurrentUser` and `NSHomeDirectory()` both point into the container | SourceLocation.swift, SystemWallpaperCheckTests.swift |
-| `[L-sandbox-x1-no-entitlement]` | EXPERIMENTS.md:1661 "Round B: sandboxed (2026-11-12, macOS 27.2)"<br>LEARNINGS.md:336 "Photos library (issue #33)" | Without the Photos entitlement, the sandboxed build still got a Photos prompt |  |
-| `[L-sandbox-x4-container-wallpaper]` | EXPERIMENTS.md:1688 "Round B: sandboxed (2026-11-12, macOS 27.2)"<br>LEARNINGS.md:347 "Photos library (issue #33)" (pointer) | A sandboxed Phases can set a file in its container as the wallpaper, and put back one outside it | SystemWallpaperCheckTests.swift |
+| `[L-photos-deleted-album-race]` | LEARNINGS.md:382 "Photos library (issue #33)"<br>experiments/X-33-photos-checks.md:75 "`[X-33-photos-checks]` Merge #2 Photos checks" | A photo from an album being deleted was set as the wallpaper |  |
+| `[L-photos-formats-check]` | LEARNINGS.md:379 "Photos library (issue #33)"<br>experiments/X-33-photos-checks.md:67 "`[X-33-photos-checks]` Merge #2 Photos checks" | Edited, Live, ProRAW+HEIC, and DSLR RAW photos all showed the way Photos shows them |  |
+| `[L-photos-grant-needs-relaunch]` | LEARNINGS.md:367 "Photos library (issue #33)"<br>experiments/X-33-photos-checks.md:25 "`[X-33-photos-checks]` Merge #2 Photos checks" | Allowing Phases in System Settings › Photos didn't reach a running Phases; a relaunch did |  |
+| `[L-photos-grant-per-build]` | LEARNINGS.md:371 "Photos library (issue #33)"<br>experiments/X-33-photos-checks.md:37 "`[X-33-photos-checks]` Merge #2 Photos checks" | Each Bitrig build loses the Photos grant |  |
+| `[L-photos-ids-stable]` | LEARNINGS.md:345 "Photos library (issue #33)"<br>experiments/X-33-sandbox.md:88 "Round B: sandboxed (2026-11-12, macOS 27.2)" | Photo IDs held across builds and the sandbox |  |
+| `[L-photos-new-build-asks]` | LEARNINGS.md:339 "Photos library (issue #33)"<br>experiments/X-33-sandbox.md:73 "Round B: sandboxed (2026-11-12, macOS 27.2)" | A new build asks for Photos again |  |
+| `[L-photos-offline-check]` | LEARNINGS.md:375 "Photos library (issue #33)"<br>experiments/X-33-photos-checks.md:51 "`[X-33-photos-checks]` Merge #2 Photos checks" | Offline, the fallback worked, but kept landing on the same photo |  |
+| `[L-photos-x0-paths]` | LEARNINGS.md:305 "Photos library (issue #33)"<br>experiments/X-33-photokit.md:36 "`[X-33-photokit]` Photos library from a not-sandboxed Phases (round A)" | Not sandboxed, every way of finding home agrees |  |
+| `[L-photos-x1-permission]` | LEARNINGS.md:309 "Photos library (issue #33)"<br>experiments/X-33-photokit.md:40 "`[X-33-photokit]` Photos library from a not-sandboxed Phases (round A)" | The Photos prompt worked from the probe launch |  |
+| `[L-photos-x2-albums]` | LEARNINGS.md:312 "Photos library (issue #33)"<br>experiments/X-33-photokit.md:45 "`[X-33-photokit]` Photos library from a not-sandboxed Phases (round A)" | PhotoKit lists the author's albums and folders of albums in sidebar order, nested |  |
+| `[L-photos-x3-download]` | LEARNINGS.md:316 "Photos library (issue #33)"<br>experiments/X-33-photokit.md:55 "`[X-33-photokit]` Photos library from a not-sandboxed Phases (round A)" | iCloud-only photos fail fast offline and download quickly online |  |
+| `[L-photos-x4-cache-wallpaper]` | LEARNINGS.md:319 "Photos library (issue #33)"<br>experiments/X-33-photokit.md:74 "`[X-33-photokit]` Photos library from a not-sandboxed Phases (round A)" | A file in `~/Library/Caches` works as a wallpaper |  |
+| `[L-photos-x5-observer]` | LEARNINGS.md:322 "Photos library (issue #33)"<br>experiments/X-33-photokit.md:84 "`[X-33-photokit]` Photos library from a not-sandboxed Phases (round A)" | The change observer fires while Phases is in the background | ImageLibrary.swift |
+| `[L-photos-x6-ids]` | LEARNINGS.md:324 "Photos library (issue #33)"<br>experiments/X-33-photokit.md:88 "`[X-33-photokit]` Photos library from a not-sandboxed Phases (round A)" | First record of IDs saved |  |
+| `[L-reopen-event]` | LEARNINGS.md:207 "Other investigations"<br>experiments/X-reopen-window.md:27 "`[X-reopen-window]` Launching Phases again while it runs" | A menu bar accessory gets the reopen call; the menu bar icon's view can open the window in every case |  |
+| `[L-row-own-selection]` | LEARNINGS.md:141 "Sidebar rows"<br>experiments/X-active-badge-highlight.md:43 "`[X-active-badge-highlight]` The Active badge on the selection highlight" | Telling the row it's selected works, but the accent highlight also needs the sidebar to have focus |  |
+| `[L-row-selection-focus]` | LEARNINGS.md:144 "Sidebar rows" (pointer)<br>experiments/X-active-badge-highlight.md:61 "`[X-active-badge-highlight]` The Active badge on the selection highlight" (pointer) | *Pointer:* Promoted to `[Q-tint-on-highlight]` (2026-11-06) |  |
+| `[L-row-styles-on-highlight]` | LEARNINGS.md:137 "Sidebar rows"<br>experiments/X-active-badge-highlight.md:31 "`[X-active-badge-highlight]` The Active badge on the selection highlight" | On the selection highlight, hierarchical styles and the row's Label icon turn white; `.multicolor` and explicit colours don't adapt |  |
+| `[L-sandbox-photos-works]` | LEARNINGS.md:342 "Photos library (issue #33)"<br>experiments/X-33-sandbox.md:80 "Round B: sandboxed (2026-11-12, macOS 27.2)" | The sandbox-only build reads Photos |  |
+| `[L-sandbox-prefs-move]` | experiments/X-33-sandbox.md:52 "Round B: sandboxed (2026-11-12, macOS 27.2)"<br>LEARNINGS.md:334 "Photos library (issue #33)" (pointer) | The first sandboxed launch moved Phases' preferences into the container |  |
+| `[L-sandbox-team-needed]` | experiments/X-33-sandbox.md:36 "Round B: sandboxed (2026-11-12, macOS 27.2)"<br>LEARNINGS.md:330 "Photos library (issue #33)" (pointer) | Bitrig won't build the Photos or the wallpaper-store entitlement without a development team |  |
+| `[L-sandbox-x0-paths]` | experiments/X-33-sandbox.md:44 "Round B: sandboxed (2026-11-12, macOS 27.2)"<br>LEARNINGS.md:332 "Photos library (issue #33)" (pointer) | In the sandbox, `homeDirectoryForCurrentUser` and `NSHomeDirectory()` both point into the container | SourceLocation.swift, SystemWallpaperCheckTests.swift |
+| `[L-sandbox-x1-no-entitlement]` | LEARNINGS.md:336 "Photos library (issue #33)"<br>experiments/X-33-sandbox.md:64 "Round B: sandboxed (2026-11-12, macOS 27.2)" | Without the Photos entitlement, the sandboxed build still got a Photos prompt |  |
+| `[L-sandbox-x4-container-wallpaper]` | experiments/X-33-sandbox.md:91 "Round B: sandboxed (2026-11-12, macOS 27.2)"<br>LEARNINGS.md:347 "Photos library (issue #33)" (pointer) | A sandboxed Phases can set a file in its container as the wallpaper, and put back one outside it | SystemWallpaperCheckTests.swift |
 | `[L-select-all-outside-window]` | LEARNINGS.md:480 "Test tools" | `selectAllSelectsBothSources` now fails: the driver refuses to click Select All, judging it outside the window, and sends no click |  |
 | `[L-settings-panes]` | TEST-TOOLS.md:520 "Driving and measuring the Mac in tests" | Opening System Settings panes directly |  |
 | `[L-settings-popup-look]` | LEARNINGS.md:185 "UI mockup (issues #2, #3, #26, #27)" (pointer) | *Pointer:* Promoted to `[Q-settings-popup-look]` (2026-11-26) |  |
 | `[L-settings-thumbnail-placeholder]` | LEARNINGS.md:357 "Photos library (issue #33)" | System Settings › Wallpaper can show a "?" placeholder (dashed box) instead of the display's thumbnail while a Phases still from a folder… |  |
-| `[L-space-leave-mid-fade]` | EXPERIMENTS.md:170 "`[X-persistent-cover]` Keeping a cover up between changes"<br>LEARNINGS.md:61 "Wallpaper, covers, and the menu bar" | Leaving a Space mid-fade sends the change to the wrong Space |  |
-| `[L-space-notify-after-swipe]` | ERRATA.md:90 "Wallpaper and menu bar (macOS)"<br>EXPERIMENTS.md:169 "`[X-persistent-cover]` Keeping a cover up between changes" (pointer)<br>LEARNINGS.md:60 "Wallpaper, covers, and the menu bar" (pointer) | `activeSpaceDidChangeNotification` arrives after the swipe animation, about 0.9–1.1 s after ⌃←/⌃→, and until then `setDesktopImageURL` go… |  |
+| `[L-space-leave-mid-fade]` | LEARNINGS.md:61 "Wallpaper, covers, and the menu bar"<br>experiments/X-persistent-cover.md:154 "`[X-persistent-cover]` Keeping a cover up between changes" | Leaving a Space mid-fade sends the change to the Space you arrive on |  |
+| `[L-space-notify-after-swipe]` | ERRATA.md:90 "Wallpaper and menu bar (macOS)"<br>LEARNINGS.md:60 "Wallpaper, covers, and the menu bar" (pointer)<br>experiments/X-persistent-cover.md:153 "`[X-persistent-cover]` Keeping a cover up between changes" (pointer) | `activeSpaceDidChangeNotification` arrives after the swipe animation, about 0.9–1.1 s after ⌃←/⌃→, and until then `setDesktopImageURL` go… |  |
 | `[L-stale-app-icon]` | LEARNINGS.md:223 "Other investigations" | After an app icon change, a rebuilt development build can show the old icon in the sidebar brand panel while About shows the new one |  |
-| `[L-store-watch]` | EXPERIMENTS.md:920 "`[X-wallpaper-store-watch]` Hearing outside wallpaper changes"<br>LEARNINGS.md:200 "Other investigations" | Can Phases hear a wallpaper change made in System Settings by watching macOS's wallpaper store? | OutsideChangeRule.swift, OutsideChangeRuleTests.swift, WallpaperStoreWatcher.swift |
-| `[L-swipe-before-cover]` | EXPERIMENTS.md:232 "`[X-set-target-read]` Which Space a set reaches during a swipe"<br>LEARNINGS.md:73 "Wallpaper, covers, and the menu bar" | A swipe that starts before the cover appears takes the change with it |  |
-| `[L-swipe-set-race]` | ERRATA.md:110 "Wallpaper and menu bar (macOS)"<br>EXPERIMENTS.md:202 "`[X-set-target-read]` Which Space a set reaches during a swipe" (pointer)<br>LEARNINGS.md:65 "Wallpaper, covers, and the menu bar" (pointer) | A fade that ends during the swipe can still set the wallpaper on the arrival Space, even though the cover says its own Space is showing |  |
-| `[L-swipe-set-read]` | EXPERIMENTS.md:203 "`[X-set-target-read]` Which Space a set reaches during a swipe"<br>LEARNINGS.md:66 "Wallpaper, covers, and the menu bar" | Reading the wallpaper just before a set doesn't predict which Space the set reaches |  |
+| `[L-store-watch]` | LEARNINGS.md:200 "Other investigations"<br>experiments/X-wallpaper-store-watch.md:24 "`[X-wallpaper-store-watch]` Hearing outside wallpaper changes" | Watching the wallpaper store hears System Settings picks within about 0.3 s | OutsideChangeRule.swift, OutsideChangeRuleTests.swift, WallpaperStoreWatcher.swift |
+| `[L-swipe-before-cover]` | LEARNINGS.md:73 "Wallpaper, covers, and the menu bar"<br>experiments/X-set-target-read.md:60 "`[X-set-target-read]` Which Space a set reaches during a swipe" | A swipe that starts before the cover appears takes the change with it to the new Space |  |
+| `[L-swipe-set-race]` | ERRATA.md:110 "Wallpaper and menu bar (macOS)"<br>LEARNINGS.md:65 "Wallpaper, covers, and the menu bar" (pointer)<br>experiments/X-set-target-read.md:30 "`[X-set-target-read]` Which Space a set reaches during a swipe" (pointer) | A fade that ends during the swipe can still set the wallpaper on the arrival Space, even though the cover says its own Space is showing |  |
+| `[L-swipe-set-read]` | LEARNINGS.md:66 "Wallpaper, covers, and the menu bar"<br>experiments/X-set-target-read.md:31 "`[X-set-target-read]` Which Space a set reaches during a swipe" | Reading the wallpaper just before a set doesn't predict which Space the set reaches |  |
 | `[L-synthetic-clicks]` | TEST-TOOLS.md:531 "Driving and measuring the Mac in tests" | Synthetic input that works |  |
 | `[L-test-window-height]` | TEST-TOOLS.md:492 "Driving and measuring the Mac in tests" | A borderless 240 pt harness window came out 241 pt tall on two displays |  |
-| `[L-tint-on-highlight]` | EXPERIMENTS.md:542 "`[X-active-badge-highlight]` The Active badge on the selection highlight" (pointer)<br>LEARNINGS.md:135 "Sidebar rows" (pointer) | *Pointer:* Promoted to `[Q-tint-on-highlight]` (2026-11-06) |  |
-| `[L-toolbar-items-crash]` | EXPERIMENTS.md:880 "`[X-ui-mockup]` Interface mockup"<br>LEARNINGS.md:179 "UI mockup (issues #2, #3, #26, #27)" | SwiftUI toolbar items crashed the window on open |  |
+| `[L-tint-on-highlight]` | LEARNINGS.md:135 "Sidebar rows" (pointer)<br>experiments/X-active-badge-highlight.md:29 "`[X-active-badge-highlight]` The Active badge on the selection highlight" (pointer) | *Pointer:* Promoted to `[Q-tint-on-highlight]` (2026-11-06) |  |
+| `[L-toolbar-items-crash]` | LEARNINGS.md:179 "UI mockup (issues #2, #3, #26, #27)"<br>experiments/X-ui-mockup.md:33 "`[X-ui-mockup]` Interface mockup" | SwiftUI toolbar items crashed the window on open, likely colliding with `WindowLayoutConfigurator`'s own toolbar |  |
 | `[L-twitch-measurement]` | TEST-TOOLS.md:506 "Driving and measuring the Mac in tests" | Measuring a twitch |  |
-| `[L-twitch-returns]` | EXPERIMENTS.md:2419 "The twitch returns"<br>LEARNINGS.md:85 "Wallpaper, covers, and the menu bar" | (demoted from ERRATA.md "Design history" on 2026-11-09; text unchanged below) |  |
+| `[L-twitch-returns]` | LEARNINGS.md:85 "Wallpaper, covers, and the menu bar"<br>experiments/X-cover-settle.md:31 "The twitch returns" | On macOS 27.2 (draft 22) the twitch came back because the 0.5 s settle removed the cover just before macOS's own motion; the fix was the … |  |
 | `[L-ui-tests-sandboxed]` | LEARNINGS.md:415 "Test tools" (pointer) | *Pointer:* Promoted to TEST-TOOLS.md |  |
 | `[L-window-size-ignored]` | LEARNINGS.md:455 "Test tools" | The harness's `windowSize` didn't size the window |  |
 
@@ -326,31 +326,31 @@ tests"). Line numbers are as of the last run.
 
 | Tag | Where | Says | Cited in code |
 |---|---|---|---|
-| `[X-33-image-sources]` | EXPERIMENTS.md:1787 | Image sources: findings from merge 1 of issue #33 |  |
-| `[X-33-photokit]` | EXPERIMENTS.md:1511 | Photos library from a not-sandboxed Phases (round A) |  |
-| `[X-33-photos-checks]` | EXPERIMENTS.md:1701 | Merge #2 Photos checks |  |
-| `[X-33-sandbox]` | EXPERIMENTS.md:1603 | Photos library from a sandboxed Phases (round B) |  |
-| `[X-43-aerial-kind]` | EXPERIMENTS.md:2254 | Why did Quit restore a still over an Aerial? |  |
-| `[X-active-badge-highlight]` | EXPERIMENTS.md:528 | The Active badge on the selection highlight |  |
-| `[X-click-state]` | EXPERIMENTS.md:2065 | Do Phases' synthetic clicks need `mouseEventClickState`? |  |
-| `[X-convert-xcode-project]` | EXPERIMENTS.md:1835 | What `bitrig convert-to-xcode-project` did to Phases |  |
-| `[X-cover-settle]` | EXPERIMENTS.md:2399 | Crossfade settle timing (drafts 5–32) |  |
-| `[X-first-launch-activation]` | EXPERIMENTS.md:1473 | First-launch window staying behind |  |
-| `[X-hdr-wallpaper]` | EXPERIMENTS.md:1350 | HDR photos as wallpaper |  |
-| `[X-memory]` | EXPERIMENTS.md:266 | Where Phases' memory goes |  |
-| `[X-menubar-launcher-setting]` | EXPERIMENTS.md:1225 | Missing menu bar icon under Bitrig |  |
-| `[X-menubar-overflow]` | EXPERIMENTS.md:1264 | Menu bar overflow and the test harness |  |
-| `[X-new-space-pauses]` | EXPERIMENTS.md:1024 | A new Space read as an outside change |  |
-| `[X-notice-click]` | EXPERIMENTS.md:761 | What a click on the pause notification does |  |
-| `[X-pause-banner-shift]` | EXPERIMENTS.md:583 | Window content shifted up while paused |  |
-| `[X-persistent-cover]` | EXPERIMENTS.md:31 | Keeping a cover up between changes |  |
-| `[X-reopen-window]` | EXPERIMENTS.md:1079 | Launching Phases again while it runs |  |
-| `[X-set-target-read]` | EXPERIMENTS.md:187 | Which Space a set reaches during a swipe |  |
-| `[X-settings-popup-look]` | EXPERIMENTS.md:2134 | Can the editor's pop-ups look like System Settings'? |  |
-| `[X-stale-app-icon]` | EXPERIMENTS.md:1437 | Old app icon in the brand panel after an icon change |  |
-| `[X-ui-mockup]` | EXPERIMENTS.md:859 | Interface mockup |  |
-| `[X-ui-tests-sandboxed]` | EXPERIMENTS.md:1955 | First fast-suite run since the sandbox |  |
-| `[X-wallpaper-store-watch]` | EXPERIMENTS.md:908 | Hearing outside wallpaper changes |  |
+| `[X-33-image-sources]` | experiments/X-33-image-sources.md:1 | Image sources: findings from merge 1 of issue #33 |  |
+| `[X-33-photokit]` | experiments/X-33-photokit.md:1 | Photos library from a not-sandboxed Phases (round A) |  |
+| `[X-33-photos-checks]` | experiments/X-33-photos-checks.md:1 | Merge #2 Photos checks |  |
+| `[X-33-sandbox]` | experiments/X-33-sandbox.md:1 | Photos library from a sandboxed Phases (round B) |  |
+| `[X-43-aerial-kind]` | experiments/X-43-aerial-kind.md:1 | Why did Quit restore a still over an Aerial? |  |
+| `[X-active-badge-highlight]` | experiments/X-active-badge-highlight.md:1 | The Active badge on the selection highlight |  |
+| `[X-click-state]` | experiments/X-click-state.md:1 | Do Phases' synthetic clicks need `mouseEventClickState`? |  |
+| `[X-convert-xcode-project]` | experiments/X-convert-xcode-project.md:1 | What `bitrig convert-to-xcode-project` did to Phases |  |
+| `[X-cover-settle]` | experiments/X-cover-settle.md:1 | Crossfade settle timing (drafts 5–32) |  |
+| `[X-first-launch-activation]` | experiments/X-first-launch-activation.md:1 | First-launch window staying behind |  |
+| `[X-hdr-wallpaper]` | experiments/X-hdr-wallpaper.md:1 | HDR photos as wallpaper |  |
+| `[X-memory]` | experiments/X-memory.md:1 | Where Phases' memory goes |  |
+| `[X-menubar-launcher-setting]` | experiments/X-menubar-launcher-setting.md:1 | Missing menu bar icon under Bitrig |  |
+| `[X-menubar-overflow]` | experiments/X-menubar-overflow.md:1 | Menu bar overflow and the test harness |  |
+| `[X-new-space-pauses]` | experiments/X-new-space-pauses.md:1 | A new Space read as an outside change |  |
+| `[X-notice-click]` | experiments/X-notice-click.md:1 | What a click on the pause notification does |  |
+| `[X-pause-banner-shift]` | experiments/X-pause-banner-shift.md:1 | Window content shifted up while paused |  |
+| `[X-persistent-cover]` | experiments/X-persistent-cover.md:1 | Keeping a cover up between changes |  |
+| `[X-reopen-window]` | experiments/X-reopen-window.md:1 | Launching Phases again while it runs |  |
+| `[X-set-target-read]` | experiments/X-set-target-read.md:1 | Which Space a set reaches during a swipe |  |
+| `[X-settings-popup-look]` | experiments/X-settings-popup-look.md:1 | Can the editor's pop-ups look like System Settings'? |  |
+| `[X-stale-app-icon]` | experiments/X-stale-app-icon.md:1 | Old app icon in the brand panel after an icon change |  |
+| `[X-ui-mockup]` | experiments/X-ui-mockup.md:1 | Interface mockup |  |
+| `[X-ui-tests-sandboxed]` | experiments/X-ui-tests-sandboxed.md:1 | First fast-suite run since the sandbox |  |
+| `[X-wallpaper-store-watch]` | experiments/X-wallpaper-store-watch.md:1 | Hearing outside wallpaper changes |  |
 
 ## Retired tags
 
@@ -358,7 +358,7 @@ No longer defined; mentioned as replaced or retired. The mention says what repla
 
 | Tag | Mentioned in |
 |---|---|
-| `[D-cover-settle]` | EXPERIMENTS.md:2405, spec/transitions.md:323, spec/transitions.md:99 |
+| `[D-cover-settle]` | experiments/X-cover-settle.md:17, spec/transitions.md:323, spec/transitions.md:99 |
 | `[D-quit-in-window]` | spec/interface.md:213 |
 | `[D-relative-paths]` | spec/image-library.md:155 |
 | `[D-settings-schedule-switch]` | spec/window.md:421 |
