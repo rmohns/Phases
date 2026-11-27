@@ -2319,6 +2319,31 @@ the window and bringing it to the front), each with click state 1 down,
   failed with the ranking line set back to `LastUse` (kind came out
   `.image`, deciding entry not `Displays`) and passed with the fix; all
   276 unit tests passed (Claude, 2026-11-27).
+- **Run 4** (11:20–11:27), the fix (`fix/aerial-kind-lastset` at
+  `0499087`), started with `open`. Picks the other way round from runs
+  1 and 3: a still on the built-in (11:26:27, "Festival of Lights
+  (ultrawide) wallhaven-jelv1w.png"), the same Aerial on the virtual
+  display (11:26:38). The new lines:
+  - after the still: display 1 `kind image: Displays`, set 16:26:27;
+    display 25 `kind image: Space D37B581D Default`
+  - after the Aerial: display 25 `kind system: Displays, default`, set
+    16:26:38 (right); display 1 `kind system: Space ACE71C78 Default,
+    default`, set 16:26:38 (**wrong**: display 1 shows the still)
+  - Quit 11:26:57: both displays "left alone on quit: system
+    wallpaper". Display 25 is the check passing. Display 1 looks right
+    on screen (its recorded original was the user's own still, already
+    showing) but was left alone for the wrong reason.
+  - Relaunch 11:27:53: the same readings (display 1 still `system` from
+    `Space ACE71C78 Default`).
+  - **Reading:** a pick on one display also stamps the showing Space's
+    `Default` entry with that pick's `LastSet`, so the Space default
+    outranks the *other* display's own, older per-display pick. Ranking
+    by `LastSet` across defaults and per-display entries alike is still
+    wrong whenever displays differ. A hypothesis for the next step:
+    prefer per-display entries (`Displays`, and each Space's `Displays`)
+    and use defaults only when the display has none. Runs 3 and 4 both
+    read right that way, as far as the logged entries show. Asked the
+    author before changing the fix.
 - **Not explained:** why check 2 passed on 2026-11-22 (draft 58). Perhaps
   which entries had the newest `LastUse` then; not recorded.
 
