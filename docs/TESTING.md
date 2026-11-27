@@ -216,6 +216,34 @@ The pure logic that decides what the app does:
 - `[D-tests-carry-tags]` **Tests for a tagged decision carry its tag** in
   the test's name or a comment, so searching for `[D-…]` finds the spec, the
   code, and the test together.
+- `[D-doc-check]` **A unit test checks the docs' tags and references, and
+  keeps `docs/INDEX.md` current.** `DocIndexTests` fails when:
+  - code or a doc cites a tag that no doc defines. A tag mentioned only
+    as replaced, retired, or renamed is history, not missing; the index
+    lists it under "Retired tags".
+  - a tag is defined twice. An `[L-…]` finding's digest entry in
+    LEARNINGS.md and its full entry in the experiment's record count as
+    one definition, and a promoted or demoted entry's one-line pointer
+    doesn't count.
+  - a `FILE.md "Title"` reference matches no heading in that file.
+    `SPEC.md`, `TESTING.md`, and `EXPERIMENTS.md` stand for the front page
+    plus its folder (`docs/spec/`, `docs/testing/`, `docs/experiments/`),
+    so references written before a split still resolve `[D-refs-by-id]`.
+    A paragraph that names an `archive/…` tag describes an old layout and
+    isn't checked.
+  - a Markdown link to a file in the repository points nowhere.
+  When `docs/INDEX.md` is out of date the test rewrites it and fails
+  once, so the new index is looked at and committed with the change.
+  - *How a definition is found* (`DocIndex.swift`): the tag in backticks
+    opens a line (after any list marker, number, heading marks, or table
+    bar), followed by the statement itself (bold text, a capital letter,
+    a colon, or nothing). For a tag with no such line, its first mid-line
+    definition counts: right after a bold phrase, or opening a sentence.
+  - *Why:* nothing learned is ever dropped (CLAUDE.md). The docs get
+    split and moved as they grow; this makes "nothing lost" something the
+    tests check rather than something we hope for (author, 2026-11-27,
+    approving Claude's proposal). The test only reads files; it never
+    launches Phases `[D-tests-unhosted]`.
 
 ## Hands-on checks
 

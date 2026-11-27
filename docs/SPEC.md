@@ -2076,8 +2076,8 @@ branch) supplied the display tabs and pinned header.
         further right than before the highlight, and the style draws it
         about 1.5 pt smaller (*verified* by Claude, 2026-11-26,
         screenshots of a test copy).
-    - `[D-initial-focus-sidebar]` still applies: the window opens with
-      the sidebar focused, never the name field.
+    - Initial focus `[D-initial-focus-sidebar]` still applies: the window
+      opens with the sidebar focused, never the name field.
     - *Why in place:* the mockup's pencil could have opened a separate
       editor; editing the name where it's shown is simpler, and works
       the same from the keyboard and with VoiceOver (Claude's suggestion,
