@@ -4,7 +4,8 @@ The short version of what we've found out that doesn't (or doesn't yet)
 shape the code on `main`: one entry per finding, a line or three each.
 The full record behind every entry (setup, runs, measurements, wrong
 turns) is in EXPERIMENTS.md, under the `[X-…]` experiment each entry
-names. SPEC.md says what Phases does; ERRATA.md holds the platform
+names (from 2026-11-27, each record is its own file,
+`docs/experiments/<tag>.md`). SPEC.md says what Phases does; ERRATA.md holds the platform
 quirks the code works around; TEST-TOOLS.md holds what we know about the
 test tools.
 
@@ -476,7 +477,7 @@ the Mac in tests".
     and 766.5 pt after run 6's scrolling (*verified*, AX frames, but
     separate launches, so when it grew isn't known). Not measured over
     time; the two hypotheses above stay untested.
-- `[L-window-size-ignored]` is GitHub issue #50.
+- GitHub issue #50 tracks `[L-window-size-ignored]`.
 - `[L-select-all-outside-window]` **`selectAllSelectsBothSources` now
   fails: the driver refuses to click Select All, judging it outside the
   window, and sends no click.** Select All's AX frame was (1572, 633.5,
