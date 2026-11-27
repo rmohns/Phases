@@ -1286,8 +1286,14 @@ Each with what passes:
     on the virtual display: that display **passes** ("left alone on quit:
     system wallpaper"), but the built-in display, showing a still, was
     also read as a system wallpaper (left alone for the wrong reason;
-    no visible harm this time). Refined on the same branch; rerun to
-    come.
+    no visible harm this time). Refined on the same branch.
+  - 2 on the refined fix (`fix/aerial-kind-lastset` at `2b1dd1a`)
+    **passes both ways round** (*verified* by Claude from the log; picks
+    by the author): Aerial on the built-in (Quit 11:56:33: built-in "left
+    alone on quit: system wallpaper", virtual "restored"), then Aerial on
+    the virtual display (Quit 11:58:51: virtual left alone, built-in
+    "restored"). The new `kind` lines named each display's own entry at
+    every pick. Record `[X-43-aerial-kind]`, runs 5 and 6.
   - 3 **passes**: "found by its bookmark" for both folder sources at
     every launch (10:51, 11:00, 11:03, 11:20, 11:27; *verified* by
     Claude), and both folders show their images in the app after

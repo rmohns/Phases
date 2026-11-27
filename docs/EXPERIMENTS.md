@@ -2376,6 +2376,18 @@ the window and bringing it to the front), each with click state 1 down,
   - Quit 11:56:33: display 1 "left alone on quit: system wallpaper",
     display 25 "restored: Ergo Proxy Re-L wallhaven-0ww93p.jpg".
     **Passes.**
+- **Run 6** (refined build, 11:57–11:58), swapped: a still on the
+  built-in, the Aerial on the virtual display (run 4's order), verified
+  by Claude from the log:
+  - 11:58:25, still picked (`Tokyo wallhaven-pomle9.jpg`): display 1
+    `kind image: Displays` (set 16:58:25).
+  - 11:58:32, Aerial picked: display 1 still `kind image: Displays` (the
+    Space default no longer decides), display 25 `kind system:
+    Displays, default` (set 16:58:32).
+  - Quit 11:58:51: display 1 "restored: Tokyo wallhaven-pomle9.jpg",
+    display 25 "left alone on quit: system wallpaper". **Passes.**
+- **Outcome confirmed:** check 2 passes both ways round on the refined
+  fix.
 - **Not explained:** why check 2 passed on 2026-11-22 (draft 58). Perhaps
   which entries had the newest `LastUse` then; not recorded.
 
