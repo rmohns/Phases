@@ -2262,10 +2262,10 @@ the window and bringing it to the front), each with click state 1 down,
   the code. The build: `main` at `c163148`, the app from `bitrig build`,
   started with `open`. That build compiled nothing new, and its binary
   carries Nov 26 13:26.
-- **Branch:** `fix/aerial-kind-lastset` (the fix; it merges, so no
-  archive tag of its own beyond the usual one after the merge).
-- **Outcome:** cause found; promoted to `[Q-store-kind-lastset]`, fix on
-  the branch above.
+- **Branch:** `fix/aerial-kind-lastset`, archived as tag
+  `archive/fix/aerial-kind-lastset` (branch deleted 2026-11-27).
+- **Outcome:** cause found; promoted to `[Q-store-kind-lastset]`. The
+  fix landed on `main` as `d0391dd` (2026-11-27).
 - **Run 1** (10:51–10:56 local). Launch log: both folder sources "found
   by its bookmark", "watching the store: 1046 entries". The author picked
   an Aerial on the built-in display (10:55:15, logged "outside change on
