@@ -256,9 +256,10 @@ The interface-wide rule `[D-content-vs-tools]`: [interface.md](interface.md).
     (found in testing, 2026-10-27). 320 pt leaves room for long phase names
     while keeping the editor the primary area.
 - `[D-window-min-size]` **Minimum window size.** The editor pane can't
-  be made narrower than **550 pt** (460 pt through draft 62), so the
-  window's minimum width is the sidebar's current width plus 550 pt
-  (790 pt with the sidebar at its 240 pt minimum `[D-sidebar-width]`).
+  be made narrower than **490 pt** (460 pt through draft 62, 550 pt
+  until 2026-11-27), so the window's minimum width is the sidebar's
+  current width plus 490 pt (730 pt with the sidebar at its 240 pt
+  minimum `[D-sidebar-width]`).
   The pane's content reports that minimum itself, so the window can't
   open or be dragged narrower than what the editor needs, whichever pane
   is showing. The window can't be made shorter
@@ -283,6 +284,20 @@ The interface-wide rule `[D-content-vs-tools]`: [interface.md](interface.md).
     the controls ran past the pane's edge (*observed* by the author,
     2026-11-25, two screenshots). The author set the minimum to about
     540–550 pt; 550 it is.
+  - *2026-11-27, down to 490 pt:* 550 was a conservative pick while the
+    draft 63 layout settled; with the layout fixed, the author asked for
+    a true minimum. The Starts row with a dawn or dusk offset is still
+    the widest row. *Measured* by Claude from the author's screenshot of
+    the window at its 790 pt minimum (scale about 1.19 px per pt, checked
+    against the 44 pt offset field and the 240 + 550 pt panes; by eye,
+    about ±2 pt): "Starts [30] [minutes] [after] [Dawn]" left about 93 pt
+    between the label and the field, 12 pt of it `EditorRow`'s fixed
+    spacing, so about 81 pt to spare. The pop-ups are as wide as their
+    current choice `[D-editor-popups]`, and "before" is about 8 pt wider
+    than "after" (*estimate*), making "minutes before Dawn" the widest
+    case, about 73 pt to spare. Every other row had 150 pt or more.
+    490 pt (−60) leaves about 13 pt in the widest case; the author chose
+    it. Check "minutes before Dawn" on the real window at the minimum.
   - *Draft 63, also found then:* the window could be narrower than the
     editor's content. The draft 62 editor was a `Form`, which tells the
     window its minimum width; the draft 63 editor is a scroll view, which
