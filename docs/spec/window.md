@@ -298,6 +298,8 @@ The interface-wide rule `[D-content-vs-tools]`: [interface.md](interface.md).
     case, about 73 pt to spare. Every other row had 150 pt or more.
     490 pt (−60) leaves about 13 pt in the widest case; the author chose
     it. Check "minutes before Dawn" on the real window at the minimum.
+    *Observed* by the author on the real window at the new minimum,
+    2026-11-27: "looks perfect".
   - *Draft 63, also found then:* the window could be narrower than the
     editor's content. The draft 62 editor was a `Form`, which tells the
     window its minimum width; the draft 63 editor is a scroll view, which
