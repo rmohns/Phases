@@ -4,7 +4,8 @@ The short version of what we've found out that doesn't (or doesn't yet)
 shape the code on `main`: one entry per finding, a line or three each.
 The full record behind every entry (setup, runs, measurements, wrong
 turns) is in EXPERIMENTS.md, under the `[X-…]` experiment each entry
-names. SPEC.md says what Phases does; ERRATA.md holds the platform
+names (from 2026-11-27, each record is its own file,
+`docs/experiments/<tag>.md`). SPEC.md says what Phases does; ERRATA.md holds the platform
 quirks the code works around; TEST-TOOLS.md holds what we know about the
 test tools.
 
