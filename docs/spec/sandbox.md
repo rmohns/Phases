@@ -220,6 +220,13 @@ never by hand in the project file `[D-xcode-project]`.
     `[D-bundle-id]`. Through draft 58 they named Bitrig's placeholder,
     `app.bitrig.new.ecd0db30-b411-4419-8736-9fe3d1c96268`.
 
+## Record: Sandbox
+
+*Verified* notes and other evidence moved here, word for word, from the
+decisions above when the spec was split into files (2026-11-27), so a
+decision reads as its rule and its *Why*. Each decision keeps a dated
+pointer to its record here.
+
 ### Hands-on checks of the first sandboxed build
 
 *Verified* 2026-11-22 by the author, on a build from

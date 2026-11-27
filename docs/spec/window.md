@@ -144,11 +144,8 @@ The interface-wide rule `[D-content-vs-tools]`: [interface.md](interface.md).
        - The rule ("does this row have the colored highlight") lives in a
          small model function, `SidebarHighlight`, so the unit tests can
          check it (see TESTING.md).
-       - *Verified* 2026-11-06 by Claude on the experiment build (window
-         screenshots, Highlight Color blue): white on the colored
-         highlight; accent on the grey highlight with focus in the editor
-         and with the window in the background (LEARNINGS.md
-         `[L-row-own-selection]`, ERRATA.md `[Q-tint-on-highlight]`).
+       - *Verified* 2026-11-06; the record is under "Record for `[D-active-badge]`"
+         at the end of this file.
        - *Verified* 2026-11-06 by the author on the draft 45 build: every
          Highlight Color, in dark and light mode. Yellow, Green, and
          Graphite are a little hard to read in light mode; accepted, since
@@ -508,3 +505,18 @@ and to Settings, not to the phase editor.
     a separate constant in the code. The constant was missed in the
     draft 46 change, leaving Settings at "Draft 45" (verified 2026-11-06
     by Claude: the unit test failed on `main`).
+
+## Record: Phases window
+
+*Verified* notes and other evidence moved here, word for word, from the
+decisions above when the spec was split into files (2026-11-27), so a
+decision reads as its rule and its *Why*. Each decision keeps a dated
+pointer to its record here.
+
+### Record for `[D-active-badge]`
+
+- *Verified* 2026-11-06 by Claude on the experiment build (window
+  screenshots, Highlight Color blue): white on the colored
+  highlight; accent on the grey highlight with focus in the editor
+  and with the window in the background (LEARNINGS.md
+  `[L-row-own-selection]`, ERRATA.md `[Q-tint-on-highlight]`).

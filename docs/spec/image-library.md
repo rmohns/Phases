@@ -95,13 +95,8 @@ in detail: [photos.md](photos.md).
 - **Include subfolders** (per source, off by default). When on, the folder is
   scanned recursively, skipping hidden folders and packages (app bundles, Photos
   libraries, etc.).
-  - *Verified* 2026-11-04 by the author (`main` at `3ec6dee`, issue #15), with
-    a folder two levels deep: turning the setting on shows the subfolder
-    images at once, under one heading per folder path; rotation sets the
-    wallpaper correctly for top + first level, top + first + second, first +
-    second, and top + second; arrow keys cross subfolder headings. Symlinked
-    folders weren't followed at the time (issue #17; this note said #18 by
-    mistake until draft 35); see `[D-follow-links]`.
+  - *Verified* 2026-11-04; the record is under "Record for "Include subfolders""
+    at the end of this file.
 - Supported formats: JPEG, PNG, HEIC, TIFF.
 - `[D-follow-links]` **Symlinks and Finder aliases count as what they point
   to,** for images and for folders.
@@ -186,14 +181,8 @@ in detail: [photos.md](photos.md).
     in an app that isn't sandboxed (*recalled*, to be checked with this
     draft's build). Using them now means the sandbox change doesn't
     rewrite this code. Draft 44 and earlier saved a plain bookmark.
-  - *Verified* 2026-11-14 by the author and Claude, draft 54 build, not
-    sandboxed: a security-scoped bookmark reopens a folder after a
-    relaunch. With Phases quit, the author renamed `~/Pictures/Desktop
-    Pictures X` to `Desktop Pictures Y`, so the saved location led
-    nowhere. On relaunch the diagnostics log said "source 2872UXTY found
-    by its bookmark (stale)", and the saved location became
-    `~/Pictures/Desktop Pictures Y`. Earlier, with Phases running, a
-    rename to `Desktop Pictures X` showed up as it happened.
+  - *Verified* 2026-11-14; the record is under "Record for `[D-scoped-bookmarks]`"
+    at the end of this file.
   - From draft 58 (sandboxed `[D-sandboxed]`), new bookmarks are made
     read-only, to match the read-only folder entitlement
     `[D-sandbox-entitlements]`. Bookmarks saved earlier are kept as they
@@ -361,3 +350,31 @@ in detail: [photos.md](photos.md).
     **Remove Missing** button that takes them out of the selection. The
     line shows only when something is missing; from draft 63 it's in
     the pinned image header, above the count line `[D-image-header]`.
+
+## Record: Image library
+
+*Verified* notes and other evidence moved here, word for word, from the
+decisions above when the spec was split into files (2026-11-27), so a
+decision reads as its rule and its *Why*. Each decision keeps a dated
+pointer to its record here.
+
+### Record for "Include subfolders"
+
+- *Verified* 2026-11-04 by the author (`main` at `3ec6dee`, issue #15), with
+  a folder two levels deep: turning the setting on shows the subfolder
+  images at once, under one heading per folder path; rotation sets the
+  wallpaper correctly for top + first level, top + first + second, first +
+  second, and top + second; arrow keys cross subfolder headings. Symlinked
+  folders weren't followed at the time (issue #17; this note said #18 by
+  mistake until draft 35); see `[D-follow-links]`.
+
+### Record for `[D-scoped-bookmarks]`
+
+- *Verified* 2026-11-14 by the author and Claude, draft 54 build, not
+  sandboxed: a security-scoped bookmark reopens a folder after a
+  relaunch. With Phases quit, the author renamed `~/Pictures/Desktop
+  Pictures X` to `Desktop Pictures Y`, so the saved location led
+  nowhere. On relaunch the diagnostics log said "source 2872UXTY found
+  by its bookmark (stale)", and the saved location became
+  `~/Pictures/Desktop Pictures Y`. Earlier, with Phases running, a
+  rename to `Desktop Pictures X` showed up as it happened.

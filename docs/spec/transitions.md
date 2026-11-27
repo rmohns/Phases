@@ -111,12 +111,8 @@ by step.
   - Tested on branch `spike/persistent-cover`, now tag
     `archive/spike/persistent-cover` (docs/X-PERSISTENT-COVER.md there),
     2026-10-30, macOS 27.2, one display and three.
-  - *Verified* 2026-11-03, draft 33 Release build, macOS 27.2, three
-    displays (cover check 1): no twitch. Five changes per display, each
-    display recorded on its own; the frame 0.1 s after each fade's end
-    matched the frame 1.5 s later at 44–48 dB. The only later change is
-    a one-frame step of about one grey level some 0.65 s after the fade:
-    the real wallpaper switching behind the cover's 1%.
+  - *Verified* 2026-11-03; the record is under "Record for `[D-persistent-cover]`"
+    at the end of this file.
 - `[D-cover-per-space]` **Each Space keeps its own wallpaper.** A cover
   belongs to the Space it was made on, and is removed once that Space is
   no longer showing on its display. The Space keeps its real wallpaper,
@@ -144,12 +140,8 @@ by step.
     (`isOnActiveSpace`) whenever macOS reports a Space change. There's no
     public API that names Spaces (*recalled*), so the future per-Space
     choice needs its own investigation.
-  - *Verified* 2026-11-03, draft 33, three displays, three Spaces on the
-    main one (cover check 3): after a change on Space 1, Spaces 2 and 3
-    kept their own image and Space 1 kept the new one (read back on
-    each); the log showed Space 1's cover removed on leaving; the
-    recording shows only the four swipes, no frame change at the removal
-    or on returning.
+  - *Verified* 2026-11-03; the record is under "Record for `[D-cover-per-space]`"
+    at the end of this file.
 - `[D-change-stays-on-its-space]` **A change belongs to the Space it was
   made on, even if you leave mid-fade.** When a fade ends (or is cut short
   by another change), each display's new cover is checked:
@@ -184,14 +176,8 @@ by step.
       the change if it no longer matches the Space's image. The read
       pointed at the right Space while the set went to the other
       (LEARNINGS.md `[L-swipe-set-read]`).
-    - *Verified* 2026-11-03, Release build `3c891b6` (cover check 5, 28
-      trials, 24 informative): Space 1 showed the new image on return
-      every time and Space 2 kept its own; 23 trials logged "pending
-      again" 0.05–0.84 s after the set, then the set on return, with no
-      visible change on return (recordings). The misfire itself didn't
-      occur in these runs, so the return set after a real misfire is
-      unobserved; it's the same ordinary set, made with no swipe under
-      way (LEARNINGS.md `[L-misfire-not-seen]`).
+    - *Verified* 2026-11-03; the record is under "Record for `[D-reset-on-quick-return]`"
+      at the end of this file.
   - A cover whose fade is still running, or whose change is pending, is
     not removed on leaving its Space. The old cover under a pending one
     is removed as usual (off screen).
@@ -245,12 +231,8 @@ by step.
     announces it. In that case, whether `isOnActiveSpace` and the
     wallpaper set agree on which Space is showing is untested; if they
     disagree, the change could still land on the wrong Space.
-  - *Verified* 2026-11-03, draft 33 (cover checks 4 and 6): leaving a 3 s
-    fade about 0.5 s and 1.2 s in, the log showed the change held
-    pending, Space 2 kept its image with no cut, and on return the log
-    showed it set and Space 1 read back the new image. Setting
-    Transition to None, or quitting, while a change was pending removed
-    every cover, and Space 1 kept its old image.
+  - *Verified* 2026-11-03; the record is under "Record for `[D-change-stays-on-its-space]`"
+    at the end of this file.
   - **Fails** 2026-11-03 (cover check 5, 1 s fade, ⌃→ about 0.7 s in):
     in 1 of 6 trials they disagreed. The fade ended 0.25 s into the
     swipe; `isOnActiveSpace` still said the cover's Space was showing,
@@ -275,11 +257,8 @@ by step.
     them clean; it isn't worth its memory without them (author,
     2026-10-31). Reduce Motion counts as off because it turns every fade
     into an instant switch `[D-no-fade-cases]`.
-  - *Verified* 2026-11-03, draft 33 (cover checks 6 and 7): with
-    Transition: None, and with Crossfade plus Reduce Motion, changes cut
-    in one frame and no cover window existed. Turning Reduce Motion on,
-    or Transition to None, with covers up logged their removal and left
-    none.
+  - *Verified* 2026-11-03; the record is under "Record for `[D-cover-only-for-crossfade]`"
+    at the end of this file.
 - `[D-cover-opacity]` **The cover is 99% opaque, not 100%.**
   - *Why:* a fully opaque cover stopped the menu bar restyling for new
     wallpapers: text stayed one color through every change, and with
@@ -297,12 +276,8 @@ by step.
     moment, even 4 s after the set (*measured*, `[L-motion-waits-for-reveal]`).
   - Whether the cover could go to 100% once the menu bar has restyled is
     open and untested (`[L-cover-alpha-later]`); not part of this draft.
-  - *Verified* 2026-11-03, draft 33, three displays, "Show menu bar
-    background" on (the author's setting; cover check 2): text and
-    background restyled to each new image on every display, 0.4–0.8 s
-    after the fade ended, when macOS applied the set, with the one-frame
-    blink `[Q-menubar-blank]`. During the fade the bar keeps the old
-    image's background `[Q-menubar-bg-follows-window]`.
+  - *Verified* 2026-11-03; the record is under "Record for `[D-cover-opacity]`"
+    at the end of this file.
 - `[D-cover-follows-displays]` **Covers follow display changes.** When a
   display's frame or scale changes, its cover is redrawn at once, without
   a fade, showing the same image at the new size. A disconnected
@@ -317,16 +292,8 @@ by step.
     and the experiment didn't handle this (GitHub issue #6).
   - The redraw reads its image with source access open (draft 58,
     `[D-sandboxed]`); before that it worked only outside the sandbox.
-  - *Verified* 2026-11-03, draft 33 (cover check 8, partly): changing the
-    main display from 2580×1080 to 1720×720 points logged every
-    display's cover redrawn (the others moved in the arrangement), and
-    the main one filled the screen (screenshot). Hiding and showing the
-    Dock logged nothing. Disconnecting the Cinema HD (by the author, same
-    day, build `3c891b6`) logged its cover removed ("display 3 gone")
-    and the other two redrawn, since macOS rearranged the displays and
-    changed the main one to 2614×1094. Reconnecting restored both;
-    the other covers were redrawn again and the Cinema had no cover
-    until its next change.
+  - *Verified* 2026-11-03; the record is under "Record for `[D-cover-follows-displays]`"
+    at the end of this file.
   - Accepted by the author, 2026-11-04: a reconnected display having no
     cover until its next change is left as is. Nobody using Phases can
     see the difference.
@@ -436,11 +403,91 @@ With crossfades on `[D-cover-only-for-crossfade]`:
     with the process, leaving the real wallpaper, which matches, except
     on a Space with a pending change: that Space keeps its older image. A
     Force Quit showed nothing (*observed* 2026-10-30).
-  - *Verified* 2026-11-03, draft 33 (cover check 9): with restore on,
-    Quit was a one-frame cut back to each display's pre-launch image;
-    with restore off, nothing moved. No cover windows remained either
-    way. Quit was sent as an Apple Event, which skips the "Quit Phases?"
-    alert but runs the same termination path.
+  - *Verified* 2026-11-03; the record is under "Record for `[D-cover-pause-quit]`"
+    at the end of this file.
 - `[D-no-focus-steal]` **Phases never activates itself to force a menu bar
   restyle.** That would steal focus from the user's app. macOS sometimes
   delays the restyle; see `[Q-menubar-restyle-on-app-switch]`.
+
+## Record: Transitions
+
+*Verified* notes and other evidence moved here, word for word, from the
+decisions above when the spec was split into files (2026-11-27), so a
+decision reads as its rule and its *Why*. Each decision keeps a dated
+pointer to its record here.
+
+### Record for `[D-persistent-cover]`
+
+- *Verified* 2026-11-03, draft 33 Release build, macOS 27.2, three
+  displays (cover check 1): no twitch. Five changes per display, each
+  display recorded on its own; the frame 0.1 s after each fade's end
+  matched the frame 1.5 s later at 44–48 dB. The only later change is
+  a one-frame step of about one grey level some 0.65 s after the fade:
+  the real wallpaper switching behind the cover's 1%.
+
+### Record for `[D-cover-per-space]`
+
+- *Verified* 2026-11-03, draft 33, three displays, three Spaces on the
+  main one (cover check 3): after a change on Space 1, Spaces 2 and 3
+  kept their own image and Space 1 kept the new one (read back on
+  each); the log showed Space 1's cover removed on leaving; the
+  recording shows only the four swipes, no frame change at the removal
+  or on returning.
+
+### Record for `[D-reset-on-quick-return]`
+
+- *Verified* 2026-11-03, Release build `3c891b6` (cover check 5, 28
+  trials, 24 informative): Space 1 showed the new image on return
+  every time and Space 2 kept its own; 23 trials logged "pending
+  again" 0.05–0.84 s after the set, then the set on return, with no
+  visible change on return (recordings). The misfire itself didn't
+  occur in these runs, so the return set after a real misfire is
+  unobserved; it's the same ordinary set, made with no swipe under
+  way (LEARNINGS.md `[L-misfire-not-seen]`).
+
+### Record for `[D-change-stays-on-its-space]`
+
+- *Verified* 2026-11-03, draft 33 (cover checks 4 and 6): leaving a 3 s
+  fade about 0.5 s and 1.2 s in, the log showed the change held
+  pending, Space 2 kept its image with no cut, and on return the log
+  showed it set and Space 1 read back the new image. Setting
+  Transition to None, or quitting, while a change was pending removed
+  every cover, and Space 1 kept its old image.
+
+### Record for `[D-cover-only-for-crossfade]`
+
+- *Verified* 2026-11-03, draft 33 (cover checks 6 and 7): with
+  Transition: None, and with Crossfade plus Reduce Motion, changes cut
+  in one frame and no cover window existed. Turning Reduce Motion on,
+  or Transition to None, with covers up logged their removal and left
+  none.
+
+### Record for `[D-cover-opacity]`
+
+- *Verified* 2026-11-03, draft 33, three displays, "Show menu bar
+  background" on (the author's setting; cover check 2): text and
+  background restyled to each new image on every display, 0.4–0.8 s
+  after the fade ended, when macOS applied the set, with the one-frame
+  blink `[Q-menubar-blank]`. During the fade the bar keeps the old
+  image's background `[Q-menubar-bg-follows-window]`.
+
+### Record for `[D-cover-follows-displays]`
+
+- *Verified* 2026-11-03, draft 33 (cover check 8, partly): changing the
+  main display from 2580×1080 to 1720×720 points logged every
+  display's cover redrawn (the others moved in the arrangement), and
+  the main one filled the screen (screenshot). Hiding and showing the
+  Dock logged nothing. Disconnecting the Cinema HD (by the author, same
+  day, build `3c891b6`) logged its cover removed ("display 3 gone")
+  and the other two redrawn, since macOS rearranged the displays and
+  changed the main one to 2614×1094. Reconnecting restored both;
+  the other covers were redrawn again and the Cinema had no cover
+  until its next change.
+
+### Record for `[D-cover-pause-quit]`
+
+- *Verified* 2026-11-03, draft 33 (cover check 9): with restore on,
+  Quit was a one-frame cut back to each display's pre-launch image;
+  with restore off, nothing moved. No cover windows remained either
+  way. Quit was sent as an Apple Event, which skips the "Quit Phases?"
+  alert but runs the same termination path.
