@@ -245,8 +245,10 @@ struct DocIndex {
     var duplicates: [String: [Definition]] = [:]
     var brokenReferences: [Reference] = []
     var brokenLinks: [(path: String, line: Int, target: String)] = []
+    var repeatedHeadings: [(family: String, heading: String, places: [String])] = []
     var isEmpty: Bool {
       undefined.isEmpty && duplicates.isEmpty && brokenReferences.isEmpty && brokenLinks.isEmpty
+        && repeatedHeadings.isEmpty
     }
   }
 
@@ -323,6 +325,22 @@ struct DocIndex {
             problems.brokenLinks.append((file.path, i + 1, target))
           }
         }
+      }
+    }
+    // Section titles are unique within the spec, so a quoted title names
+    // one place `[D-refs-by-id]`. A file's own title line is exempt (it's
+    // the file's name, not a section). The testing docs and the records
+    // reuse step titles like "Setup" and "Runs" under each check, and are
+    // cited by their parent section.
+    for family in ["SPEC.md"] {
+      var seen: [String: [String]] = [:]
+      for file in filesNamed(family) {
+        for (i, line) in file.lines.enumerated() where line.hasPrefix("##") {
+          if let h = Self.headingText(line) { seen[h, default: []].append("\(file.path):\(i + 1)") }
+        }
+      }
+      for (heading, places) in seen.sorted(by: { $0.key < $1.key }) where places.count > 1 {
+        problems.repeatedHeadings.append((family, heading, places))
       }
     }
     return problems

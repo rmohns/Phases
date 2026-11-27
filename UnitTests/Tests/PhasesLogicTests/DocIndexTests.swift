@@ -34,6 +34,9 @@ struct DocIndexTests {
     for l in problems.brokenLinks {
       Issue.record("\(l.path):\(l.line) links to \(l.target), which doesn't exist")
     }
+    for h in problems.repeatedHeadings {
+      Issue.record("\"\(h.heading)\" is a section title more than once in \(h.family)'s files: \(h.places.joined(separator: ", "))")
+    }
   }
 
   /// Rewrites docs/INDEX.md when it's out of date, and fails once so the

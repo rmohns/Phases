@@ -10,159 +10,159 @@ tests"). Line numbers are as of the last run.
 
 | Tag | Where | Says | Cited in code |
 |---|---|---|---|
-| `[D-active-badge]` | SPEC.md:1775 "Phases window (one window for everything)" | The active phase is marked with the word "Active" | PhasesWindow.swift, SidebarHighlight.swift, SidebarHighlightTests.swift |
-| `[D-aerials-untouched]` | SPEC.md:2593 "Restore original wallpaper on quit" | Aerials and other system wallpapers | OutsideChangeRule.swift, RestorePoint.swift, SystemWallpaperCheck.swift, SystemWallpaperCheckTests.swift, SystemWallpaperInspector.swift |
-| `[D-app-menu]` | SPEC.md:2500 "Dock icon and app menu" | While the window is open, Phases has a standard menu bar | PhasesCommands.swift, PhasesWindow.swift, SettingsView.swift |
-| `[D-brand-egg]` | SPEC.md:1718 "Phases window (one window for everything)" | Easter egg: click the panel and it turns into a meme | PhasesWindow.swift |
-| `[D-brand-fixed-text]` | SPEC.md:1698 "Phases window (one window for everything)" | Fixed text sizes | PhasesWindow.swift |
-| `[D-brand-inset]` | SPEC.md:1667 "Phases window (one window for everything)" | Edges line up with the traffic lights and row icons | PhaseEditor.swift, PhasesWindow.swift |
-| `[D-brand-layout]` | SPEC.md:1693 "Phases window (one window for everything)" | *Why:* the first tagline ("Wallpaper sets for every phase of your day", 10 pt) wrapped awkwardly and was hard to read; with a 64 pt icon … | AppearanceTests.swift, PhasesWindow.swift |
-| `[D-brand-legibility]` | SPEC.md:1707 "Phases window (one window for everything)" | Legibility | PhasesWindow.swift |
-| `[D-brand-scrolls]` | SPEC.md:1715 "Phases window (one window for everything)" | It's the first item in the sidebar list, so it **scrolls away** when there are enough phases to scroll; it's never pinned | PhasesWindow.swift |
-| `[D-bundle-id-settings-move]` | SPEC.md:2891 "Project and bundle ID" | Settings move to the new ID once, by hand, from the shell |  |
-| `[D-bundle-id]` | SPEC.md:2878 "Project and bundle ID" | The bundle ID is `com.robertmohns.phases` |  |
-| `[D-change-stays-on-its-space]` | SPEC.md:1044 "The persistent cover" | A change belongs to the Space it was made on, even if you leave mid-fade | CrossfadeController.swift, WallpaperScheduler.swift |
-| `[D-close-stays-here]` | SPEC.md:2425 "Dock icon and app menu" | Closing the window keeps you on the current Space | FocusHandoff.swift, HandoffChoice.swift, HandoffChoiceTests.swift, PhasesApp.swift, WindowLayoutConfigurator.swift |
-| `[D-connected-displays-only]` | SPEC.md:818 "Display identity" | Only connected displays are shown | DisplayTabs.swift, PhaseEditor.swift, PhaseEditorRulesTests.swift, WallpaperScheduler.swift |
-| `[D-content-vs-tools]` | SPEC.md:1578 "Interface" | Controls stay clearly separate from content | EditorBox.swift |
-| `[D-cover-checks]` | TESTING.md:670 "Cover checks (draft 33)" | The persistent cover is checked by hand before it merges, and again after any change to `CrossfadeController` |  |
-| `[D-cover-follows-displays]` | SPEC.md:1197 "The persistent cover" | Covers follow display changes | CrossfadeController.swift, WallpaperScheduler.swift |
-| `[D-cover-iosurface]` | SPEC.md:1256 "A change, step by step" | Each cover holds one copy of its image, and only while it's up | CoverSurface.swift, CoverSurfaceTests.swift, CrossfadeController.swift |
-| `[D-cover-level]` | SPEC.md:981 "The persistent cover" | It sits just above the desktop picture and below the desktop icons, so icons and windows don't flicker | CrossfadeController.swift |
-| `[D-cover-only-for-crossfade]` | SPEC.md:1153 "The persistent cover" | No cover at all unless crossfades will actually play | CrossfadeController.swift, WallpaperScheduler.swift |
-| `[D-cover-opacity]` | SPEC.md:1174 "The persistent cover" | The cover is 99% opaque, not 100% | CrossfadeController.swift |
-| `[D-cover-pause-quit]` | SPEC.md:1316 "A change, step by step" | Pause, Quit, and crashes | CrossfadeController.swift, WallpaperScheduler.swift |
-| `[D-cover-per-space]` | SPEC.md:1011 "The persistent cover" | Each Space keeps its own wallpaper | CrossfadeController.swift, WallpaperScheduler.swift |
-| `[D-debug-test-folder]` | SPEC.md:2678 "Entitlements" | Debug builds can also read one test folder; Release builds, the ones that ship, can't | EntitlementsTests.swift, TestImages.swift |
-| `[D-delete-selects-next]` | SPEC.md:1814 "Phases window (one window for everything)" | After deleting a phase, the next phase down is selected | PhaseListSelection.swift, PhaseListSelectionTests.swift, PhaseListTests.swift, PhasesWindow.swift, UITestMode.swift |
-| `[D-denied-means-off]` | SPEC.md:1473 "Location" | Denied means no location at all, saved or fresh | LocationProvider.swift, PhaseAvailability.swift, PhaseAvailabilityTests.swift, WallpaperScheduler.swift |
+| `[D-active-badge]` | spec/window.md:129 "Phases window (one window for everything)" | The active phase is marked with the word "Active" | PhasesWindow.swift, SidebarHighlight.swift, SidebarHighlightTests.swift |
+| `[D-aerials-untouched]` | spec/launch-and-quit.md:53 "Restore original wallpaper on quit" | Aerials and other system wallpapers | OutsideChangeRule.swift, RestorePoint.swift, SystemWallpaperCheck.swift, SystemWallpaperCheckTests.swift, SystemWallpaperInspector.swift |
+| `[D-app-menu]` | spec/interface.md:188 "Dock icon and app menu" | While the window is open, Phases has a standard menu bar | PhasesCommands.swift, PhasesWindow.swift, SettingsView.swift |
+| `[D-brand-egg]` | spec/window.md:72 "Phases window (one window for everything)" | Easter egg: click the panel and it turns into a meme | PhasesWindow.swift |
+| `[D-brand-fixed-text]` | spec/window.md:52 "Phases window (one window for everything)" | Fixed text sizes | PhasesWindow.swift |
+| `[D-brand-inset]` | spec/window.md:21 "Phases window (one window for everything)" | Edges line up with the traffic lights and row icons | PhaseEditor.swift, PhasesWindow.swift |
+| `[D-brand-layout]` | spec/window.md:47 "Phases window (one window for everything)" | *Why:* the first tagline ("Wallpaper sets for every phase of your day", 10 pt) wrapped awkwardly and was hard to read; with a 64 pt icon … | AppearanceTests.swift, PhasesWindow.swift |
+| `[D-brand-legibility]` | spec/window.md:61 "Phases window (one window for everything)" | Legibility | PhasesWindow.swift |
+| `[D-brand-scrolls]` | spec/window.md:69 "Phases window (one window for everything)" | It's the first item in the sidebar list, so it **scrolls away** when there are enough phases to scroll; it's never pinned | PhasesWindow.swift |
+| `[D-bundle-id-settings-move]` | spec/project.md:48 "Project and bundle ID" | Settings move to the new ID once, by hand, from the shell |  |
+| `[D-bundle-id]` | spec/project.md:35 "Project and bundle ID" | The bundle ID is `com.robertmohns.phases` |  |
+| `[D-change-stays-on-its-space]` | spec/transitions.md:153 "The persistent cover" | A change belongs to the Space it was made on, even if you leave mid-fade | CrossfadeController.swift, WallpaperScheduler.swift |
+| `[D-close-stays-here]` | spec/interface.md:113 "Dock icon and app menu" | Closing the window keeps you on the current Space | FocusHandoff.swift, HandoffChoice.swift, HandoffChoiceTests.swift, PhasesApp.swift, WindowLayoutConfigurator.swift |
+| `[D-connected-displays-only]` | spec/displays.md:111 "Display identity" | Only connected displays are shown | DisplayTabs.swift, PhaseEditor.swift, PhaseEditorRulesTests.swift, WallpaperScheduler.swift |
+| `[D-content-vs-tools]` | spec/interface.md:13 "Interface" | Controls stay clearly separate from content | EditorBox.swift |
+| `[D-cover-checks]` | TESTING.md:672 "Cover checks (draft 33)" | The persistent cover is checked by hand before it merges, and again after any change to `CrossfadeController` |  |
+| `[D-cover-follows-displays]` | spec/transitions.md:306 "The persistent cover" | Covers follow display changes | CrossfadeController.swift, WallpaperScheduler.swift |
+| `[D-cover-iosurface]` | spec/transitions.md:365 "A change, step by step" | Each cover holds one copy of its image, and only while it's up | CoverSurface.swift, CoverSurfaceTests.swift, CrossfadeController.swift |
+| `[D-cover-level]` | spec/transitions.md:90 "The persistent cover" | It sits just above the desktop picture and below the desktop icons, so icons and windows don't flicker | CrossfadeController.swift |
+| `[D-cover-only-for-crossfade]` | spec/transitions.md:262 "The persistent cover" | No cover at all unless crossfades will actually play | CrossfadeController.swift, WallpaperScheduler.swift |
+| `[D-cover-opacity]` | spec/transitions.md:283 "The persistent cover" | The cover is 99% opaque, not 100% | CrossfadeController.swift |
+| `[D-cover-pause-quit]` | spec/transitions.md:425 "A change, step by step" | Pause, Quit, and crashes | CrossfadeController.swift, WallpaperScheduler.swift |
+| `[D-cover-per-space]` | spec/transitions.md:120 "The persistent cover" | Each Space keeps its own wallpaper | CrossfadeController.swift, WallpaperScheduler.swift |
+| `[D-debug-test-folder]` | spec/sandbox.md:81 "Entitlements" | Debug builds can also read one test folder; Release builds, the ones that ship, can't | EntitlementsTests.swift, TestImages.swift |
+| `[D-delete-selects-next]` | spec/window.md:168 "Phases window (one window for everything)" | After deleting a phase, the next phase down is selected | PhaseListSelection.swift, PhaseListSelectionTests.swift, PhaseListTests.swift, PhasesWindow.swift, UITestMode.swift |
+| `[D-denied-means-off]` | spec/schedule.md:179 "Location" | Denied means no location at all, saved or fresh | LocationProvider.swift, PhaseAvailability.swift, PhaseAvailabilityTests.swift, WallpaperScheduler.swift |
 | `[D-diagnostics-switch]` | TEST-TOOLS.md:148 "Diagnostics" | Diagnostic logging is built in and off by default | Diagnostics.swift, FocusHandoff.swift, PhasesWindow.swift, ReopenHandler.swift, WindowLayoutConfigurator.swift, WindowRequest.swift, WindowSpaceMover.swift |
-| `[D-display-tab-shapes]` | SPEC.md:768 "Per-display images" | A display's tab draws its outline at its real proportions | DisplayTabs.swift, PhaseEditorRulesTests.swift |
-| `[D-display-tabs-visibility]` | SPEC.md:780 "Per-display images" | The tab row shows when more than one display is connected | DisplayTabs.swift, PhaseEditorRulesTests.swift |
-| `[D-display-tabs]` | SPEC.md:728 "Per-display images" | The phase editor picks a display with a row of display tabs | DisplayTabs.swift, DisplayTabsRow.swift, PhaseEditor.swift, PhaseEditorRulesTests.swift, WallpaperScheduler.swift |
-| `[D-display-uuid]` | SPEC.md:815 "Display identity" | Displays are identified by their hardware UUID, so settings survive unplugging, reconnecting, and rearranging | DisplayIdentity.swift |
+| `[D-display-tab-shapes]` | spec/displays.md:61 "Per-display images" | A display's tab draws its outline at its real proportions | DisplayTabs.swift, PhaseEditorRulesTests.swift |
+| `[D-display-tabs-visibility]` | spec/displays.md:73 "Per-display images" | The tab row shows when more than one display is connected | DisplayTabs.swift, PhaseEditorRulesTests.swift |
+| `[D-display-tabs]` | spec/displays.md:21 "Per-display images" | The phase editor picks a display with a row of display tabs | DisplayTabs.swift, DisplayTabsRow.swift, PhaseEditor.swift, PhaseEditorRulesTests.swift, WallpaperScheduler.swift |
+| `[D-display-uuid]` | spec/displays.md:108 "Display identity" | Displays are identified by their hardware UUID, so settings survive unplugging, reconnecting, and rearranging | DisplayIdentity.swift |
 | `[D-doc-check]` | TESTING.md:219 "Rules" | A unit test checks the docs' tags and references, and keeps `docs/INDEX.md` current | DocIndex.swift |
-| `[D-dock-while-open]` | SPEC.md:2406 "Dock icon and app menu" | Phases shows a Dock icon, and appears in the ⌘Tab switcher, only while its window is open | DockPresence.swift, OpenPhasesWindow.swift, PhasesApp.swift, WindowLayoutConfigurator.swift |
-| `[D-duplicate-phase]` | SPEC.md:1843 "Phases window (one window for everything)" | Duplicate makes a copy of a phase | Phase.swift, PhaseEditorRulesTests.swift, PhaseTests.swift, PhasesWindow.swift, WallpaperScheduler.swift |
-| `[D-editor-checks]` | TESTING.md:980 "Phase editor checks (draft 63)" | The redesigned phase editor is checked by hand before it merges | PhaseEditorTests.swift |
-| `[D-editor-labels]` | SPEC.md:2034 "Phase editor" | Row labels are plain words with no trailing "…" | EditorRow.swift |
-| `[D-editor-layout]` | SPEC.md:2008 "Phase editor" | The phase editor is a name row, one block of settings, then the images | EditorBox.swift, EditorRow.swift, PhaseEditor.swift |
-| `[D-editor-popups]` | SPEC.md:2167 "Phase editor" | The settings block's pop-up menus look like System Settings' own | PhaseEditor.swift, SettingsPopUp.swift, StartsRow.swift |
-| `[D-fade-in]` | SPEC.md:968 "Transitions" | fading the new image in over the old one | CrossfadeController.swift |
+| `[D-dock-while-open]` | spec/interface.md:94 "Dock icon and app menu" | Phases shows a Dock icon, and appears in the ⌘Tab switcher, only while its window is open | DockPresence.swift, OpenPhasesWindow.swift, PhasesApp.swift, WindowLayoutConfigurator.swift |
+| `[D-duplicate-phase]` | spec/window.md:197 "Phases window (one window for everything)" | Duplicate makes a copy of a phase | Phase.swift, PhaseEditorRulesTests.swift, PhaseTests.swift, PhasesWindow.swift, WallpaperScheduler.swift |
+| `[D-editor-checks]` | TESTING.md:982 "Phase editor checks (draft 63)" | The redesigned phase editor is checked by hand before it merges | PhaseEditorTests.swift |
+| `[D-editor-labels]` | spec/phase-editor.md:43 "Phase editor" | Row labels are plain words with no trailing "…" | EditorRow.swift |
+| `[D-editor-layout]` | spec/phase-editor.md:17 "Phase editor" | The phase editor is a name row, one block of settings, then the images | EditorBox.swift, EditorRow.swift, PhaseEditor.swift |
+| `[D-editor-popups]` | spec/phase-editor.md:176 "Phase editor" | The settings block's pop-up menus look like System Settings' own | PhaseEditor.swift, SettingsPopUp.swift, StartsRow.swift |
+| `[D-fade-in]` | spec/transitions.md:77 "Transitions" | fading the new image in over the old one | CrossfadeController.swift |
 | `[D-fake-photos]` | TEST-TOOLS.md:241 "Launch arguments" | never touch the Photos library (draft 54) | FakePhotosProvider.swift, ImageLibrary.swift, ImageSourcesSection.swift, PhasesApp.swift, PhasesUITests.swift, PhotosProvider.swift, PhotosSourcesTests.swift, TestImages.swift, UITestMode.swift |
-| `[D-first-launch-shows-window]` | SPEC.md:2481 "Dock icon and app menu" | The first launch opens the window | FirstLaunch.swift, FirstLaunchTests.swift, FirstLaunchWindow.swift, MenuBarLabel.swift, ReopenHandler.swift, UITestMode.swift, WallpaperScheduler.swift |
-| `[D-follow-links]` | SPEC.md:251 "Image library" | Symlinks and Finder aliases count as what they point to | FolderScan.swift, FolderScanTests.swift, ImageLibrary.swift, LibraryListing.swift |
-| `[D-footer-ax-labels]` | SPEC.md:1835 "Phases window (one window for everything)" | + and − carry explicit accessibility labels | ImageSourcesSection.swift, PhasesWindow.swift |
-| `[D-grid-collapse-saved]` | SPEC.md:440 "Image library" | The collapsed headings are saved | GridCollapseTests.swift, GridOutline.swift, GridOutlineTests.swift, ImageLibrary.swift |
-| `[D-grid-collapse]` | SPEC.md:366 "Image library" | Every heading in the grid can collapse | GridCollapseTests.swift, GridOutline.swift, GridOutlineTests.swift, ImageGrid.swift, ImageGridNavigation.swift, ImageGridNavigationTests.swift, ImageLibrary.swift, ImageSourcesTests.swift, PhasesApp.swift, SyntheticInput.swift |
-| `[D-grid-one-tab-stop]` | SPEC.md:447 "Image library" | Keyboard: the thumbnail grid is one Tab stop | FocusTests.swift, GridCollapseTests.swift, GridOutline.swift, GridOutlineTests.swift, ImageGrid.swift, ImageGridNavigation.swift, ImageGridNavigationTests.swift, ImageSourcesTests.swift, PhotosProvider.swift, PhotosSourcesTests.swift |
-| `[D-grid-release-on-close]` | SPEC.md:492 "Image library" | Closing the Phases window releases the grid's thumbnails | FocusTests.swift, PhasesWindow.swift, WindowLayoutConfigurator.swift |
-| `[D-hands-on-checks]` | TESTING.md:250 "Hands-on checks" | Every check that drives the mouse and keyboard or touches the real wallpaper is a hands-on check, and any one of them can run on its own | main.swift |
-| `[D-image-header]` | SPEC.md:2229 "Phase editor" | The image header pins to the top of the editor while the grid scrolls | ImageGrid.swift, ImageHeader.swift, PhaseEditor.swift, PhaseEditorTests.swift |
-| `[D-image-sources]` | SPEC.md:159 "Image library" | The library is a list of image sources | FolderScan.swift, GridOutline.swift, ImageGrid.swift, ImageLibrary.swift, ImageSource.swift, ImageSourceTests.swift, ImageSourcesSection.swift, ImageSourcesTests.swift, LibraryListing.swift, ListFooter.swift, TestImages.swift, UITestMode.swift |
-| `[D-in-order-remembers]` | SPEC.md:91 "Core model: phases plus rotation" | In order remembers the last image it showed and moves to the next one | AppliedState.swift, FetchAhead.swift, FetchAheadTests.swift, InOrderPicker.swift, InOrderPickerTests.swift, WallpaperCheck.swift, WallpaperScheduler.swift |
-| `[D-initial-focus-sidebar]` | SPEC.md:1883 "Phases window (one window for everything)" | The sidebar list has keyboard focus when the window opens | FocusTests.swift, PhasesApp.swift, PhasesWindow.swift |
+| `[D-first-launch-shows-window]` | spec/interface.md:169 "Dock icon and app menu" | The first launch opens the window | FirstLaunch.swift, FirstLaunchTests.swift, FirstLaunchWindow.swift, MenuBarLabel.swift, ReopenHandler.swift, UITestMode.swift, WallpaperScheduler.swift |
+| `[D-follow-links]` | spec/image-library.md:106 "Image library" | Symlinks and Finder aliases count as what they point to | FolderScan.swift, FolderScanTests.swift, ImageLibrary.swift, LibraryListing.swift |
+| `[D-footer-ax-labels]` | spec/window.md:189 "Phases window (one window for everything)" | + and − carry explicit accessibility labels | ImageSourcesSection.swift, PhasesWindow.swift |
+| `[D-grid-collapse-saved]` | spec/image-library.md:295 "Image library" | The collapsed headings are saved | GridCollapseTests.swift, GridOutline.swift, GridOutlineTests.swift, ImageLibrary.swift |
+| `[D-grid-collapse]` | spec/image-library.md:221 "Image library" | Every heading in the grid can collapse | GridCollapseTests.swift, GridOutline.swift, GridOutlineTests.swift, ImageGrid.swift, ImageGridNavigation.swift, ImageGridNavigationTests.swift, ImageLibrary.swift, ImageSourcesTests.swift, PhasesApp.swift, SyntheticInput.swift |
+| `[D-grid-one-tab-stop]` | spec/image-library.md:302 "Image library" | Keyboard: the thumbnail grid is one Tab stop | FocusTests.swift, GridCollapseTests.swift, GridOutline.swift, GridOutlineTests.swift, ImageGrid.swift, ImageGridNavigation.swift, ImageGridNavigationTests.swift, ImageSourcesTests.swift, PhotosProvider.swift, PhotosSourcesTests.swift |
+| `[D-grid-release-on-close]` | spec/image-library.md:347 "Image library" | Closing the Phases window releases the grid's thumbnails | FocusTests.swift, PhasesWindow.swift, WindowLayoutConfigurator.swift |
+| `[D-hands-on-checks]` | TESTING.md:252 "Hands-on checks" | Every check that drives the mouse and keyboard or touches the real wallpaper is a hands-on check, and any one of them can run on its own | main.swift |
+| `[D-image-header]` | spec/phase-editor.md:238 "Phase editor" | The image header pins to the top of the editor while the grid scrolls | ImageGrid.swift, ImageHeader.swift, PhaseEditor.swift, PhaseEditorTests.swift |
+| `[D-image-sources]` | spec/image-library.md:13 "Image library" | The library is a list of image sources | FolderScan.swift, GridOutline.swift, ImageGrid.swift, ImageLibrary.swift, ImageSource.swift, ImageSourceTests.swift, ImageSourcesSection.swift, ImageSourcesTests.swift, LibraryListing.swift, ListFooter.swift, TestImages.swift, UITestMode.swift |
+| `[D-in-order-remembers]` | spec/schedule.md:61 "Core model: phases plus rotation" | In order remembers the last image it showed and moves to the next one | AppliedState.swift, FetchAhead.swift, FetchAheadTests.swift, InOrderPicker.swift, InOrderPickerTests.swift, WallpaperCheck.swift, WallpaperScheduler.swift |
+| `[D-initial-focus-sidebar]` | spec/window.md:237 "Phases window (one window for everything)" | The sidebar list has keyboard focus when the window opens | FocusTests.swift, PhasesApp.swift, PhasesWindow.swift |
 | `[D-input-click-state]` | TEST-TOOLS.md:130 "Input driver" | Mouse down, up and drag carry click state 1, a single click, the way a mouse sends them | SyntheticInput.swift |
 | `[D-input-driver]` | TEST-TOOLS.md:23 "Input driver" | All mouse and keyboard driving goes through `PhasesUIDriver`'s `SyntheticInput` | Package.swift, SyntheticInput.swift, main.swift |
-| `[D-input-lands]` | TESTING.md:279 "Hands-on checks" | Prove the input landed before trusting a result | main.swift |
+| `[D-input-lands]` | TESTING.md:281 "Hands-on checks" | Prove the input landed before trusting a result | main.swift |
 | `[D-input-modifier-keys]` | TEST-TOOLS.md:52 "Input driver" | A modifier is pressed as a key of its own, down before the key it modifies and up after it, the way a keyboard sends it | SyntheticInput.swift |
-| `[D-keep-display-settings]` | SPEC.md:833 "Display identity" | Saved display settings are never pruned | PhaseEditorRulesTests.swift, WallpaperScheduler.swift |
-| `[D-links-outside-refused]` | SPEC.md:2752 "What changes inside the sandbox" | Links and aliases that point outside the source folder can't be read in the sandbox | FolderScan.swift, FolderScanTests.swift, ImageLibrary.swift |
-| `[D-location-on-demand]` | SPEC.md:1440 "Location" | Uses Location Services | PhaseAvailability.swift, WallpaperScheduler.swift |
-| `[D-location-privacy-note]` | SPEC.md:1445 "Location" | The Location section always carries a note | SettingsView.swift |
-| `[D-login-consent]` | SPEC.md:2552 "Launch at login: explicit consent only" |  | LaunchAtLogin.swift, SettingsView.swift |
-| `[D-low-memory-note]` | SPEC.md:937 "Transitions" | On a Mac with less than 16 GB of memory, Settings suggests turning transitions off | LowMemoryNote.swift, LowMemoryNoteTests.swift, MemoryUse.swift, SettingsView.swift, UITestMode.swift |
-| `[D-memory-flat]` | SPEC.md:2969 "Memory" | Memory doesn't build up with wallpaper changes |  |
-| `[D-memory-in-about]` | SPEC.md:2355 "Phase editor" | Memory | LowMemoryNote.swift, LowMemoryNoteTests.swift, MemoryUse.swift, SettingsView.swift |
-| `[D-memory-protocol]` | TESTING.md:762 "Memory checks (draft 32; covers, draft 33)" | Memory is checked by hand, ten changes per run, at least two runs before a change and two after |  |
-| `[D-menu-no-shortcuts]` | SPEC.md:1648 "Menu bar menu" | The current image's filename is not shown in the menu | MenuContent.swift |
-| `[D-menu-pause-verb]` | SPEC.md:1629 "Menu bar menu" | Pause Wallpaper Changes | MenuContent.swift, PauseBanner.swift, WallpaperScheduler.swift |
-| `[D-menu-status-header]` | SPEC.md:1610 "Menu bar menu" | Kept short | MenuContent.swift |
-| `[D-menubar-icon-paused]` | SPEC.md:1601 "Icons" | While paused, for any reason, the icon shows a small pause badge | MenuBarLabel.swift, PauseBannerTests.swift |
-| `[D-menubar-icon]` | SPEC.md:1592 "Icons" | Menu bar icon | MenuBarLabel.swift |
-| `[D-missed-latest-only]` | SPEC.md:1342 "Missed changes: sleep, wake, unlock" |  | ScheduleEngineTests.swift, WallpaperCheck.swift, WallpaperCheckTests.swift |
-| `[D-name-row]` | SPEC.md:2038 "Phase editor" | The name row | PhaseEditorTests.swift, PhaseNameRow.swift, PhasesApp.swift, SettingsView.swift, SyntheticInput.swift |
-| `[D-new-phase-now]` | SPEC.md:1804 "Phases window (one window for everything)" | A new phase starts at the current time | Phase.swift, PhaseTests.swift, WallpaperScheduler.swift |
-| `[D-no-fade-cases]` | SPEC.md:1291 "A change, step by step" | No fade (instant switch) when | CrossfadeController.swift, ReduceMotionNote.swift |
-| `[D-no-focus-steal]` | SPEC.md:1335 "A change, step by step" | Phases never activates itself to force a menu bar restyle | WallpaperSetter.swift |
-| `[D-no-screenshots]` | SPEC.md:1254 "A change, step by step" | The cover is drawn from the image file | CrossfadeController.swift |
-| `[D-no-shape-matching]` | SPEC.md:873 "Not included" | Automatic matching of images to each display's shape (portrait, ultrawide, standard) |  |
-| `[D-notice-opens-window]` | SPEC.md:1415 "Wallpaper changed outside Phases" | Clicking the notification opens the Phases window | FirstLaunchWindow.swift, MenuBarLabel.swift, OpenPhasesWindow.swift, PauseNotifier.swift, WindowRequest.swift |
-| `[D-one-window]` | SPEC.md:1658 "Phases window (one window for everything)" | A single resizable window with a sidebar | App.swift, PhasesCommands.swift, PhasesWindow.swift |
-| `[D-open-here]` | SPEC.md:2439 "Dock icon and app menu" | "Open Phases…" brings the window to the Space you're on; the Dock and ⌘Tab take you to the window | OpenPhasesWindow.swift, WindowSpaceMover.swift |
-| `[D-order-row]` | SPEC.md:2160 "Phase editor" | Show images | Phase.swift |
-| `[D-outside-change-check]` | TESTING.md:867 "Outside change check (draft 37)" | Pausing for a wallpaper picked elsewhere is checked by hand |  |
-| `[D-outside-change-notice]` | SPEC.md:1409 "Wallpaper changed outside Phases" | Telling the user | MenuContent.swift, PauseNotifier.swift |
-| `[D-outside-change-pauses]` | SPEC.md:1358 "Wallpaper changed outside Phases" | When someone picks a wallpaper in System Settings (or any other app), Phases pauses everything | CrossfadeController.swift, PauseReason.swift, RestorePoint.swift, WallpaperScheduler.swift |
-| `[D-outside-change-rule]` | SPEC.md:1386 "Wallpaper changed outside Phases" | How a change is recognised | OutsideChangeRule.swift, OutsideChangeRuleTests.swift, WallpaperSetter.swift, WallpaperStoreWatcher.swift |
-| `[D-own-images-no-fallback]` | SPEC.md:809 "Per-display images" | If a display has its own selection but none of those images are available, that display keeps its current wallpaper; it does not fall bac… | WallpaperScheduler.swift |
-| `[D-own-images-start-from-shared]` | SPEC.md:799 "Per-display images" | Turning "Use different images on this display" on starts from a copy of the Shared selection | Phase.swift, PhaseEditorRulesTests.swift |
-| `[D-pause-switch-disabled]` | SPEC.md:2301 "Phase editor" | While the pause banner shows `[D-window-pause-banner]`, the switch is disabled | PauseBannerTests.swift, SettingsView.swift, WallpaperScheduler.swift |
-| `[D-persistent-cover]` | SPEC.md:974 "The persistent cover" | After a crossfade, the cover stays up for as long as its Space is showing | CrossfadeController.swift |
-| `[D-phase-actions]` | SPEC.md:1856 "Phases window (one window for everything)" | Phase actions live in two places that list the same commands | PhasesWindow.swift |
-| `[D-phase-cant-run]` | SPEC.md:1482 "Location" | A phase that can't run is flagged in the sidebar | LocationProvider.swift, PhaseAvailability.swift, PhaseAvailabilityTests.swift, PhasesWindow.swift, WallpaperScheduler.swift |
-| `[D-phase-status-inline]` | SPEC.md:2209 "Phase editor" | Why a phase can't run shows under the row that fixes it | PhaseAvailability.swift, PhaseEditor.swift, PhaseEditorRulesTests.swift, StartReadout.swift |
-| `[D-phase-turn-off]` | SPEC.md:1511 "Location" | A phase can be turned off | Phase.swift, PhaseAvailability.swift, PhaseAvailabilityTests.swift, PhaseNameRow.swift, PhasesWindow.swift, WallpaperScheduler.swift |
-| `[D-photos-cache]` | SPEC.md:658 "Photos albums" | The photo cache | CrossfadeController.swift, ImageLibrary.swift, LibraryListing.swift, PhotoCache.swift, PhotoCacheRules.swift, PhotoCacheRulesTests.swift, WallpaperScheduler.swift, WallpaperStoreWatcher.swift |
-| `[D-photos-changes]` | SPEC.md:703 "Photos albums" | Album changes show up while Phases runs | ImageLibrary.swift, PhotoKitProvider.swift, PhotosProvider.swift, WallpaperScheduler.swift |
-| `[D-photos-checks]` | TESTING.md:916 "Photos checks (draft 54)" | Real Photos behavior is checked by hand before merge #2 merges |  |
-| `[D-photos-fetch-ahead]` | SPEC.md:590 "Photos albums" | Phases fetches photos before they're needed, so scheduled changes still happen on time | ChangeRecord.swift, ChangeRecordTests.swift, FetchAhead.swift, FetchAheadTests.swift, ImageLibrary.swift, PhotoCache.swift, PhotoKitProvider.swift, WallpaperScheduler.swift |
-| `[D-photos-names]` | SPEC.md:557 "Photos albums" | A saved photo is named by its source, its album, and the photo's ID in the Photos library | FakePhotosProvider.swift, ImageLibrary.swift, ImageSource.swift, ImageSourceTests.swift, PhotosProvider.swift |
-| `[D-photos-order]` | SPEC.md:552 "Photos albums" | In order follows the album's own order | LibraryListing.swift, PhotosProvider.swift |
-| `[D-photos-permission]` | SPEC.md:685 "Photos albums" | Phases asks for Photos access the first time it's needed | ImageLibrary.swift, PhotoKitProvider.swift, PhotosAlbumSheet.swift, PhotosProvider.swift, PhotosSourcesTests.swift |
-| `[D-photos-sources]` | SPEC.md:515 "Photos albums" | A Photos album, or a folder of albums, can be an image source | ImageLibrary.swift, ImageSource.swift, ImageSourceTests.swift, ImageSourcesSection.swift, PhotoKitProvider.swift, PhotosAlbumSheet.swift, PhotosProvider.swift, PhotosSourcesTests.swift |
-| `[D-photos-version]` | SPEC.md:572 "Photos albums" | The wallpaper is the photo as it looks in Photos | PhotoCache.swift, PhotoCacheRules.swift, PhotoCacheRulesTests.swift, PhotoKitProvider.swift, PhotosProvider.swift |
-| `[D-quit-confirm]` | SPEC.md:2530 "Dock icon and app menu" | Quit Phases (⌘Q) asks first | PhasesCommands.swift, QuitConfirmation.swift, SettingsView.swift, WallpaperScheduler.swift |
-| `[D-record-after-wait]` | SPEC.md:620 "Photos albums" | A change is saved only once it shows | ChangeRecord.swift, ChangeRecordTests.swift, WallpaperScheduler.swift |
-| `[D-reduce-motion-note]` | SPEC.md:906 "Transitions" | Settings says when Reduce Motion turns transitions off | CrossfadeController.swift, ReduceMotionNote.swift, ReduceMotionNoteTests.swift, SettingsView.swift, WallpaperScheduler.swift |
-| `[D-refs-by-id]` | SPEC.md:31 "Design decisions" | Cross-references use a `[D-…]` or `[Q-…]` tag or a section title, never a section number | DocIndex.swift |
-| `[D-reopen-shows-window]` | SPEC.md:2461 "Dock icon and app menu" | Launching Phases while it's already running shows the window | App.swift, MenuBarLabel.swift, OpenPhasesWindow.swift, PhasesApp.swift, RelaunchTests.swift, ReopenHandler.swift, WindowRequest.swift |
-| `[D-reset-on-quick-return]` | SPEC.md:1054 "The persistent cover" | Left just after the set | CrossfadeController.swift |
-| `[D-restore-file-check]` | SPEC.md:2734 "What changes inside the sandbox" | Restoring checks a file is gone before skipping it | RestorePoint.swift, SystemWallpaperCheck.swift, SystemWallpaperCheckTests.swift |
-| `[D-restore-on-quit]` | SPEC.md:2573 "Restore original wallpaper on quit" | App preference: Restore original wallpaper when quitting | SettingsView.swift, WallpaperCheckTests.swift, WallpaperScheduler.swift |
-| `[D-rotation-row]` | SPEC.md:2146 "Phase editor" | Change images | PhaseEditor.swift, PhaseEditorRulesTests.swift, PhaseEditorTests.swift, RotationChoice.swift |
-| `[D-row-status-not-cause]` | SPEC.md:1494 "Location" | The row shows the status; the editor shows the cause | PhaseAvailability.swift, PhaseAvailabilityTests.swift, PhasesWindow.swift |
-| `[D-sandbox-entitlements]` | SPEC.md:2641 "Entitlements" | Only these, each for something Phases does | EntitlementsTests.swift, ImageLibrary.swift, SystemWallpaperInspector.swift, WallpaperStoreWatcher.swift |
-| `[D-sandbox-settings-move]` | SPEC.md:2777 "Settings when switching to the sandboxed build" | Existing settings carry over, by moving |  |
-| `[D-sandboxed]` | SPEC.md:2609 "Sandbox" | Phases runs in the macOS App Sandbox | CrossfadeController.swift, FolderScan.swift, ImageLibrary.swift, WallpaperScheduler.swift |
-| `[D-scan-each-folder-once]` | SPEC.md:283 "Image library" | Each folder is scanned at most once | FolderScan.swift, FolderScanTests.swift, ImageLibrary.swift |
-| `[D-scoped-bookmarks]` | SPEC.md:327 "Image library" | Source bookmarks are security-scoped | ImageLibrary.swift, ImageSource.swift, WallpaperScheduler.swift |
-| `[D-screen-change-no-reroll]` | SPEC.md:882 "When displays change" | When macOS reports a display change (connect, disconnect, resolution, arrangement, or anything else that changes screen geometry), Phases… | ChangeRecord.swift, ChangeRecordTests.swift, WallpaperCheck.swift, WallpaperCheckTests.swift, WallpaperScheduler.swift |
-| `[D-settings-at-top]` | SPEC.md:1767 "Phases window (one window for everything)" | "App" section | PhasesWindow.swift |
-| `[D-settings-order]` | SPEC.md:2321 "Phase editor" | Settings selected | SettingsView.swift |
-| `[D-settings-pause-switch]` | SPEC.md:2295 "Phase editor" | Settings starts with a Pause wallpaper changes switch | SettingsView.swift, WallpaperScheduler.swift |
-| `[D-sharing-per-phase]` | SPEC.md:844 "Displays sharing the Shared images" | A setting of each phase | DisplayTabs.swift, ImageHeader.swift, Phase.swift, PhaseEditorRulesTests.swift, SettingsView.swift, WallpaperScheduler.swift |
-| `[D-sidebar-always-visible]` | SPEC.md:1978 "Phases window (one window for everything)" | The sidebar can't be hidden | PhasesCommands.swift, PhasesUITests.swift, PhasesWindow.swift, SidebarTests.swift, WindowLayoutConfigurator.swift |
-| `[D-sidebar-footer-style]` | SPEC.md:1825 "Phases window (one window for everything)" | + / − layout matches System Settings | ImageSourcesSection.swift, ImageSourcesTests.swift, ListFooter.swift, PhasesWindow.swift |
-| `[D-sidebar-footer-view]` | SPEC.md:1876 "Phases window (one window for everything)" | The + / − buttons are their own view, bound to the sidebar selection, not inline in the window's body | PhaseListTests.swift, PhasesWindow.swift |
-| `[D-sidebar-limits-watch]` | SPEC.md:1992 "Phases window (one window for everything)" | The limits are watched and put back whenever SwiftUI changes them | PhasesUITests.swift, SidebarTests.swift, WindowLayoutConfigurator.swift |
-| `[D-sidebar-width]` | SPEC.md:1892 "Phases window (one window for everything)" | Sidebar width | PhasesApp.swift, PhasesUITests.swift, PhasesWindow.swift, WindowLayoutConfigurator.swift |
-| `[D-single-timer]` | SPEC.md:2952 "Platform notes and limitations" | Scheduling uses a single timer aimed at the next event (a change, or from draft 54 a photo fetch ahead of one `[D-photos-fetch-ahead]`), … | WallpaperScheduler.swift |
-| `[D-source-location]` | SPEC.md:316 "Image library" | Each source remembers where its folder is in two ways | ImageLibrary.swift, ImageSource.swift, ImageSourceTests.swift, SourceLocation.swift |
-| `[D-source-names]` | SPEC.md:294 "Image library" | A saved image is named by its source and its path within that source | FolderScan.swift, ImageLibrary.swift, ImageSource.swift, ImageSourceTests.swift, ImageSourcesTests.swift, LibraryListing.swift |
-| `[D-start-readout]` | SPEC.md:2132 "Phase editor" | A dawn or dusk phase says when it starts today | PhaseEditor.swift, PhaseEditorRulesTests.swift, StartReadout.swift |
-| `[D-starter-phases]` | SPEC.md:64 "Core model: phases plus rotation" | A new user starts with three phases | Phase.swift, PhaseTests.swift |
-| `[D-starts-row]` | SPEC.md:2096 "Phase editor" | The Starts row reads as a sentence, so its controls change with the trigger | OffsetParts.swift, Phase.swift, PhaseEditorRulesTests.swift, PhaseEditorTests.swift, StartReadout.swift, StartsRow.swift |
-| `[D-store-unreadable-safe]` | SPEC.md:2715 "What changes inside the sandbox" | "Couldn't read the store" is never taken for "no Aerials" | RestorePoint.swift, SystemWallpaperCheck.swift, SystemWallpaperCheckTests.swift, SystemWallpaperInspector.swift, WallpaperStoreWatcher.swift |
-| `[D-tall-toolbar]` | SPEC.md:1944 "Phases window (one window for everything)" | Full-height toolbar over the detail pane only | App.swift, AppearanceTests.swift, PauseBannerTests.swift, WindowLayoutConfigurator.swift |
+| `[D-keep-display-settings]` | spec/displays.md:126 "Display identity" | Saved display settings are never pruned | PhaseEditorRulesTests.swift, WallpaperScheduler.swift |
+| `[D-links-outside-refused]` | spec/sandbox.md:155 "What changes inside the sandbox" | Links and aliases that point outside the source folder can't be read in the sandbox | FolderScan.swift, FolderScanTests.swift, ImageLibrary.swift |
+| `[D-location-on-demand]` | spec/schedule.md:146 "Location" | Uses Location Services | PhaseAvailability.swift, WallpaperScheduler.swift |
+| `[D-location-privacy-note]` | spec/schedule.md:151 "Location" | The Location section always carries a note | SettingsView.swift |
+| `[D-login-consent]` | spec/launch-and-quit.md:12 "Launch at login: explicit consent only" |  | LaunchAtLogin.swift, SettingsView.swift |
+| `[D-low-memory-note]` | spec/transitions.md:46 "Transitions" | On a Mac with less than 16 GB of memory, Settings suggests turning transitions off | LowMemoryNote.swift, LowMemoryNoteTests.swift, MemoryUse.swift, SettingsView.swift, UITestMode.swift |
+| `[D-memory-flat]` | spec/project.md:126 "Memory" | Memory doesn't build up with wallpaper changes |  |
+| `[D-memory-in-about]` | spec/window.md:463 "Pause banner and Settings" | Memory | LowMemoryNote.swift, LowMemoryNoteTests.swift, MemoryUse.swift, SettingsView.swift |
+| `[D-memory-protocol]` | TESTING.md:764 "Memory checks (draft 32; covers, draft 33)" | Memory is checked by hand, ten changes per run, at least two runs before a change and two after |  |
+| `[D-menu-no-shortcuts]` | spec/interface.md:83 "Menu bar menu" | The current image's filename is not shown in the menu | MenuContent.swift |
+| `[D-menu-pause-verb]` | spec/interface.md:64 "Menu bar menu" | Pause Wallpaper Changes | MenuContent.swift, PauseBanner.swift, WallpaperScheduler.swift |
+| `[D-menu-status-header]` | spec/interface.md:45 "Menu bar menu" | Kept short | MenuContent.swift |
+| `[D-menubar-icon-paused]` | spec/interface.md:36 "Icons" | While paused, for any reason, the icon shows a small pause badge | MenuBarLabel.swift, PauseBannerTests.swift |
+| `[D-menubar-icon]` | spec/interface.md:27 "Icons" | Menu bar icon | MenuBarLabel.swift |
+| `[D-missed-latest-only]` | spec/schedule.md:130 "Missed changes: sleep, wake, unlock" |  | ScheduleEngineTests.swift, WallpaperCheck.swift, WallpaperCheckTests.swift |
+| `[D-name-row]` | spec/phase-editor.md:47 "Phase editor" | The name row | PhaseEditorTests.swift, PhaseNameRow.swift, PhasesApp.swift, SettingsView.swift, SyntheticInput.swift |
+| `[D-new-phase-now]` | spec/window.md:158 "Phases window (one window for everything)" | A new phase starts at the current time | Phase.swift, PhaseTests.swift, WallpaperScheduler.swift |
+| `[D-no-fade-cases]` | spec/transitions.md:400 "A change, step by step" | No fade (instant switch) when | CrossfadeController.swift, ReduceMotionNote.swift |
+| `[D-no-focus-steal]` | spec/transitions.md:444 "A change, step by step" | Phases never activates itself to force a menu bar restyle | WallpaperSetter.swift |
+| `[D-no-screenshots]` | spec/transitions.md:363 "A change, step by step" | The cover is drawn from the image file | CrossfadeController.swift |
+| `[D-no-shape-matching]` | spec/displays.md:166 "Not included" | Automatic matching of images to each display's shape (portrait, ultrawide, standard) |  |
+| `[D-notice-opens-window]` | spec/outside-change.md:69 "Wallpaper changed outside Phases" | Clicking the notification opens the Phases window | FirstLaunchWindow.swift, MenuBarLabel.swift, OpenPhasesWindow.swift, PauseNotifier.swift, WindowRequest.swift |
+| `[D-one-window]` | spec/window.md:12 "Phases window (one window for everything)" | A single resizable window with a sidebar | App.swift, PhasesCommands.swift, PhasesWindow.swift |
+| `[D-open-here]` | spec/interface.md:127 "Dock icon and app menu" | "Open Phases…" brings the window to the Space you're on; the Dock and ⌘Tab take you to the window | OpenPhasesWindow.swift, WindowSpaceMover.swift |
+| `[D-order-row]` | spec/phase-editor.md:169 "Phase editor" | Show images | Phase.swift |
+| `[D-outside-change-check]` | TESTING.md:869 "Outside change check (draft 37)" | Pausing for a wallpaper picked elsewhere is checked by hand |  |
+| `[D-outside-change-notice]` | spec/outside-change.md:63 "Wallpaper changed outside Phases" | Telling the user | MenuContent.swift, PauseNotifier.swift |
+| `[D-outside-change-pauses]` | spec/outside-change.md:11 "Wallpaper changed outside Phases" | When someone picks a wallpaper in System Settings (or any other app), Phases pauses everything | CrossfadeController.swift, PauseReason.swift, RestorePoint.swift, WallpaperScheduler.swift |
+| `[D-outside-change-rule]` | spec/outside-change.md:40 "Wallpaper changed outside Phases" | How a change is recognised | OutsideChangeRule.swift, OutsideChangeRuleTests.swift, WallpaperSetter.swift, WallpaperStoreWatcher.swift |
+| `[D-own-images-no-fallback]` | spec/displays.md:102 "Per-display images" | If a display has its own selection but none of those images are available, that display keeps its current wallpaper; it does not fall bac… | WallpaperScheduler.swift |
+| `[D-own-images-start-from-shared]` | spec/displays.md:92 "Per-display images" | Turning "Use different images on this display" on starts from a copy of the Shared selection | Phase.swift, PhaseEditorRulesTests.swift |
+| `[D-pause-switch-disabled]` | spec/window.md:409 "Pause banner and Settings" | While the pause banner shows `[D-window-pause-banner]`, the switch is disabled | PauseBannerTests.swift, SettingsView.swift, WallpaperScheduler.swift |
+| `[D-persistent-cover]` | spec/transitions.md:83 "The persistent cover" | After a crossfade, the cover stays up for as long as its Space is showing | CrossfadeController.swift |
+| `[D-phase-actions]` | spec/window.md:210 "Phases window (one window for everything)" | Phase actions live in two places that list the same commands | PhasesWindow.swift |
+| `[D-phase-cant-run]` | spec/schedule.md:188 "Location" | A phase that can't run is flagged in the sidebar | LocationProvider.swift, PhaseAvailability.swift, PhaseAvailabilityTests.swift, PhasesWindow.swift, WallpaperScheduler.swift |
+| `[D-phase-status-inline]` | spec/phase-editor.md:218 "Phase editor" | Why a phase can't run shows under the row that fixes it | PhaseAvailability.swift, PhaseEditor.swift, PhaseEditorRulesTests.swift, StartReadout.swift |
+| `[D-phase-turn-off]` | spec/schedule.md:217 "Location" | A phase can be turned off | Phase.swift, PhaseAvailability.swift, PhaseAvailabilityTests.swift, PhaseNameRow.swift, PhasesWindow.swift, WallpaperScheduler.swift |
+| `[D-photos-cache]` | spec/photos.md:158 "Photos albums" | The photo cache | CrossfadeController.swift, ImageLibrary.swift, LibraryListing.swift, PhotoCache.swift, PhotoCacheRules.swift, PhotoCacheRulesTests.swift, WallpaperScheduler.swift, WallpaperStoreWatcher.swift |
+| `[D-photos-changes]` | spec/photos.md:203 "Photos albums" | Album changes show up while Phases runs | ImageLibrary.swift, PhotoKitProvider.swift, PhotosProvider.swift, WallpaperScheduler.swift |
+| `[D-photos-checks]` | TESTING.md:918 "Photos checks (draft 54)" | Real Photos behavior is checked by hand before merge #2 merges |  |
+| `[D-photos-fetch-ahead]` | spec/photos.md:90 "Photos albums" | Phases fetches photos before they're needed, so scheduled changes still happen on time | ChangeRecord.swift, ChangeRecordTests.swift, FetchAhead.swift, FetchAheadTests.swift, ImageLibrary.swift, PhotoCache.swift, PhotoKitProvider.swift, WallpaperScheduler.swift |
+| `[D-photos-names]` | spec/photos.md:57 "Photos albums" | A saved photo is named by its source, its album, and the photo's ID in the Photos library | FakePhotosProvider.swift, ImageLibrary.swift, ImageSource.swift, ImageSourceTests.swift, PhotosProvider.swift |
+| `[D-photos-order]` | spec/photos.md:52 "Photos albums" | In order follows the album's own order | LibraryListing.swift, PhotosProvider.swift |
+| `[D-photos-permission]` | spec/photos.md:185 "Photos albums" | Phases asks for Photos access the first time it's needed | ImageLibrary.swift, PhotoKitProvider.swift, PhotosAlbumSheet.swift, PhotosProvider.swift, PhotosSourcesTests.swift |
+| `[D-photos-sources]` | spec/photos.md:15 "Photos albums" | A Photos album, or a folder of albums, can be an image source | ImageLibrary.swift, ImageSource.swift, ImageSourceTests.swift, ImageSourcesSection.swift, PhotoKitProvider.swift, PhotosAlbumSheet.swift, PhotosProvider.swift, PhotosSourcesTests.swift |
+| `[D-photos-version]` | spec/photos.md:72 "Photos albums" | The wallpaper is the photo as it looks in Photos | PhotoCache.swift, PhotoCacheRules.swift, PhotoCacheRulesTests.swift, PhotoKitProvider.swift, PhotosProvider.swift |
+| `[D-quit-confirm]` | spec/interface.md:218 "Dock icon and app menu" | Quit Phases (⌘Q) asks first | PhasesCommands.swift, QuitConfirmation.swift, SettingsView.swift, WallpaperScheduler.swift |
+| `[D-record-after-wait]` | spec/photos.md:120 "Photos albums" | A change is saved only once it shows | ChangeRecord.swift, ChangeRecordTests.swift, WallpaperScheduler.swift |
+| `[D-reduce-motion-note]` | spec/transitions.md:15 "Transitions" | Settings says when Reduce Motion turns transitions off | CrossfadeController.swift, ReduceMotionNote.swift, ReduceMotionNoteTests.swift, SettingsView.swift, WallpaperScheduler.swift |
+| `[D-refs-by-id]` | SPEC.md:32 "Design decisions" | Cross-references use a `[D-…]` or `[Q-…]` tag or a section title, never a section number | DocIndex.swift |
+| `[D-reopen-shows-window]` | spec/interface.md:149 "Dock icon and app menu" | Launching Phases while it's already running shows the window | App.swift, MenuBarLabel.swift, OpenPhasesWindow.swift, PhasesApp.swift, RelaunchTests.swift, ReopenHandler.swift, WindowRequest.swift |
+| `[D-reset-on-quick-return]` | spec/transitions.md:163 "The persistent cover" | Left just after the set | CrossfadeController.swift |
+| `[D-restore-file-check]` | spec/sandbox.md:137 "What changes inside the sandbox" | Restoring checks a file is gone before skipping it | RestorePoint.swift, SystemWallpaperCheck.swift, SystemWallpaperCheckTests.swift |
+| `[D-restore-on-quit]` | spec/launch-and-quit.md:33 "Restore original wallpaper on quit" | App preference: Restore original wallpaper when quitting | SettingsView.swift, WallpaperCheckTests.swift, WallpaperScheduler.swift |
+| `[D-rotation-row]` | spec/phase-editor.md:155 "Phase editor" | Change images | PhaseEditor.swift, PhaseEditorRulesTests.swift, PhaseEditorTests.swift, RotationChoice.swift |
+| `[D-row-status-not-cause]` | spec/schedule.md:200 "Location" | The row shows the status; the editor shows the cause | PhaseAvailability.swift, PhaseAvailabilityTests.swift, PhasesWindow.swift |
+| `[D-sandbox-entitlements]` | spec/sandbox.md:44 "Entitlements" | Only these, each for something Phases does | EntitlementsTests.swift, ImageLibrary.swift, SystemWallpaperInspector.swift, WallpaperStoreWatcher.swift |
+| `[D-sandbox-settings-move]` | spec/sandbox.md:180 "Settings when switching to the sandboxed build" | Existing settings carry over, by moving |  |
+| `[D-sandboxed]` | spec/sandbox.md:12 "Sandbox" | Phases runs in the macOS App Sandbox | CrossfadeController.swift, FolderScan.swift, ImageLibrary.swift, WallpaperScheduler.swift |
+| `[D-scan-each-folder-once]` | spec/image-library.md:138 "Image library" | Each folder is scanned at most once | FolderScan.swift, FolderScanTests.swift, ImageLibrary.swift |
+| `[D-scoped-bookmarks]` | spec/image-library.md:182 "Image library" | Source bookmarks are security-scoped | ImageLibrary.swift, ImageSource.swift, WallpaperScheduler.swift |
+| `[D-screen-change-no-reroll]` | spec/displays.md:175 "When displays change" | When macOS reports a display change (connect, disconnect, resolution, arrangement, or anything else that changes screen geometry), Phases… | ChangeRecord.swift, ChangeRecordTests.swift, WallpaperCheck.swift, WallpaperCheckTests.swift, WallpaperScheduler.swift |
+| `[D-settings-at-top]` | spec/window.md:121 "Phases window (one window for everything)" | "App" section | PhasesWindow.swift |
+| `[D-settings-order]` | spec/window.md:429 "Pause banner and Settings" | Settings selected | SettingsView.swift |
+| `[D-settings-pause-switch]` | spec/window.md:403 "Pause banner and Settings" | Settings starts with a Pause wallpaper changes switch | SettingsView.swift, WallpaperScheduler.swift |
+| `[D-sharing-per-phase]` | spec/displays.md:137 "Displays sharing the Shared images" | A setting of each phase | DisplayTabs.swift, ImageHeader.swift, Phase.swift, PhaseEditorRulesTests.swift, SettingsView.swift, WallpaperScheduler.swift |
+| `[D-sidebar-always-visible]` | spec/window.md:332 "Phases window (one window for everything)" | The sidebar can't be hidden | PhasesCommands.swift, PhasesUITests.swift, PhasesWindow.swift, SidebarTests.swift, WindowLayoutConfigurator.swift |
+| `[D-sidebar-footer-style]` | spec/window.md:179 "Phases window (one window for everything)" | + / − layout matches System Settings | ImageSourcesSection.swift, ImageSourcesTests.swift, ListFooter.swift, PhasesWindow.swift |
+| `[D-sidebar-footer-view]` | spec/window.md:230 "Phases window (one window for everything)" | The + / − buttons are their own view, bound to the sidebar selection, not inline in the window's body | PhaseListTests.swift, PhasesWindow.swift |
+| `[D-sidebar-limits-watch]` | spec/window.md:346 "Phases window (one window for everything)" | The limits are watched and put back whenever SwiftUI changes them | PhasesUITests.swift, SidebarTests.swift, WindowLayoutConfigurator.swift |
+| `[D-sidebar-width]` | spec/window.md:246 "Phases window (one window for everything)" | Sidebar width | PhasesApp.swift, PhasesUITests.swift, PhasesWindow.swift, WindowLayoutConfigurator.swift |
+| `[D-single-timer]` | spec/project.md:109 "Platform notes and limitations" | Scheduling uses a single timer aimed at the next event (a change, or from draft 54 a photo fetch ahead of one `[D-photos-fetch-ahead]`), … | WallpaperScheduler.swift |
+| `[D-source-location]` | spec/image-library.md:171 "Image library" | Each source remembers where its folder is in two ways | ImageLibrary.swift, ImageSource.swift, ImageSourceTests.swift, SourceLocation.swift |
+| `[D-source-names]` | spec/image-library.md:149 "Image library" | A saved image is named by its source and its path within that source | FolderScan.swift, ImageLibrary.swift, ImageSource.swift, ImageSourceTests.swift, ImageSourcesTests.swift, LibraryListing.swift |
+| `[D-start-readout]` | spec/phase-editor.md:141 "Phase editor" | A dawn or dusk phase says when it starts today | PhaseEditor.swift, PhaseEditorRulesTests.swift, StartReadout.swift |
+| `[D-starter-phases]` | spec/schedule.md:34 "Core model: phases plus rotation" | A new user starts with three phases | Phase.swift, PhaseTests.swift |
+| `[D-starts-row]` | spec/phase-editor.md:105 "Phase editor" | The Starts row reads as a sentence, so its controls change with the trigger | OffsetParts.swift, Phase.swift, PhaseEditorRulesTests.swift, PhaseEditorTests.swift, StartReadout.swift, StartsRow.swift |
+| `[D-store-unreadable-safe]` | spec/sandbox.md:118 "What changes inside the sandbox" | "Couldn't read the store" is never taken for "no Aerials" | RestorePoint.swift, SystemWallpaperCheck.swift, SystemWallpaperCheckTests.swift, SystemWallpaperInspector.swift, WallpaperStoreWatcher.swift |
+| `[D-tall-toolbar]` | spec/window.md:298 "Phases window (one window for everything)" | Full-height toolbar over the detail pane only | App.swift, AppearanceTests.swift, PauseBannerTests.swift, WindowLayoutConfigurator.swift |
 | `[D-test-memory-size]` | TEST-TOOLS.md:293 "Launch arguments" | act as if the Mac had `<n>` GB of memory, when launched with `-PhasesUITestMemoryGB <n>` as well (a whole number of GB, 1024³ bytes each) | LowMemoryNoteTests.swift, MemoryUse.swift, PhasesApp.swift, UITestMode.swift |
 | `[D-test-no-location-prompt]` | TEST-TOOLS.md:214 "Launch arguments" | Test launches can skip the location prompt | LocationProvider.swift |
 | `[D-test-outside-change-now]` | TEST-TOOLS.md:277 "Launch arguments" | pause as if the wallpaper had just been changed in System Settings, at any moment, when the test posts the distributed notification `Phas… | PauseBannerTests.swift, PhasesApp.swift, UITestMode.swift, WallpaperScheduler.swift |
 | `[D-test-paused-by-outside-change]` | TEST-TOOLS.md:269 "Launch arguments" | start paused as if the wallpaper had just been changed in System Settings, when launched with `-PhasesUITestPausedByOutsideChange YES` as… | PhasesApp.swift, UITestMode.swift, WallpaperScheduler.swift |
 | `[D-tests-carry-tags]` | TESTING.md:216 "Rules" | Tests for a tagged decision carry its tag |  |
 | `[D-tests-unhosted]` | TESTING.md:205 "Rules" | The tests never launch Phases | GridOutline.swift, LowMemoryNote.swift, Package.swift, PauseReason.swift, ReduceMotionNote.swift, SystemWallpaperCheck.swift |
-| `[D-ui-menubar-wide]` | TESTING.md:413 "How the tests work" | Phases' menu bar item is only clicked on a display at least 1200 points wide | PhasesApp.swift |
-| `[D-ui-test-build-pick]` | TESTING.md:376 "How the tests work" | The UI tests launch the newest Bitrig Debug build, by the time in its folder's name, and refuse it unless its build number matches the pr… | BuildPick.swift, BuildPickTests.swift, PhasesApp.swift |
-| `[D-ui-test-ids]` | TESTING.md:423 "How the tests work" | Controls the tests use carry accessibility identifiers | DisplayTabsRow.swift, GridCollapseTests.swift, ImageGrid.swift, ImageHeader.swift, ImageSourcesSection.swift, PauseBanner.swift, PhaseNameRow.swift, PhasesApp.swift, PhasesWindow.swift, SettingsView.swift |
+| `[D-ui-menubar-wide]` | TESTING.md:415 "How the tests work" | Phases' menu bar item is only clicked on a display at least 1200 points wide | PhasesApp.swift |
+| `[D-ui-test-build-pick]` | TESTING.md:378 "How the tests work" | The UI tests launch the newest Bitrig Debug build, by the time in its folder's name, and refuse it unless its build number matches the pr… | BuildPick.swift, BuildPickTests.swift, PhasesApp.swift |
+| `[D-ui-test-ids]` | TESTING.md:425 "How the tests work" | Controls the tests use carry accessibility identifiers | DisplayTabsRow.swift, GridCollapseTests.swift, ImageGrid.swift, ImageHeader.swift, ImageSourcesSection.swift, PauseBanner.swift, PhaseNameRow.swift, PhasesApp.swift, PhasesWindow.swift, SettingsView.swift |
 | `[D-ui-test-mode]` | TEST-TOOLS.md:221 "Launch arguments" | Test mode: one launch that touches nothing real | FirstLaunch.swift, GridCollapseTests.swift, ImageLibrary.swift, LocationProvider.swift, PhaseListTests.swift, PhasesApp.swift, PhasesUITests.swift, PhotoCache.swift, RestorePoint.swift, SavedLayout.swift, SettingsStore.swift, TestImages.swift, UITestMode.swift, WallpaperScheduler.swift, WallpaperSetter.swift |
-| `[D-ui-test-runner]` | TESTING.md:361 "How the tests work" | The UI tests drive Phases through the Accessibility API, not XCUITest | Package.swift, PhasesApp.swift, PhasesUITests.swift, SyntheticInput.swift |
-| `[D-undo-remove-source]` | SPEC.md:222 "Image library" | Removing a source can be undone | ImageLibrary.swift, ImageSourcesSection.swift, ImageSourcesTests.swift |
-| `[D-version-in-settings]` | SPEC.md:2349 "Phase editor" | About section | AppVersion.swift, AppVersionTests.swift, SettingsView.swift |
-| `[D-window-helper-order]` | SPEC.md:1967 "Phases window (one window for everything)" | One AppKit helper, in a fixed order | PhasesWindow.swift, SidebarTests.swift, WindowLayoutConfigurator.swift |
-| `[D-window-min-size]` | SPEC.md:1907 "Phases window (one window for everything)" | Minimum window size | App.swift, EditorRow.swift, PauseBannerTests.swift, PhasesUITests.swift, PhasesWindow.swift |
-| `[D-window-pause-banner]` | SPEC.md:2253 "Phase editor" | While Phases has paused itself for an outside change `[D-outside-change-pauses]`, a pause banner sits at the top of the detail pane | PauseBanner.swift, PauseBannerTests.swift, PauseReason.swift, PauseReasonTests.swift, PhasesWindow.swift, SettingsView.swift, WallpaperScheduler.swift, WindowLayoutConfigurator.swift |
-| `[D-window-title-phases]` | SPEC.md:1947 "Phases window (one window for everything)" | The toolbar title is always **Phases**, the window's name; what's selected is named by the pane's own header: the phase editor's name row… | PhaseEditor.swift, SettingsView.swift |
-| `[D-xcode-project]` | SPEC.md:2855 "Project and bundle ID" | Phases is an Xcode project | AppVersion.swift, AppVersionTests.swift |
+| `[D-ui-test-runner]` | TESTING.md:363 "How the tests work" | The UI tests drive Phases through the Accessibility API, not XCUITest | Package.swift, PhasesApp.swift, PhasesUITests.swift, SyntheticInput.swift |
+| `[D-undo-remove-source]` | spec/image-library.md:77 "Image library" | Removing a source can be undone | ImageLibrary.swift, ImageSourcesSection.swift, ImageSourcesTests.swift |
+| `[D-version-in-settings]` | spec/window.md:457 "Pause banner and Settings" | About section | AppVersion.swift, AppVersionTests.swift, SettingsView.swift |
+| `[D-window-helper-order]` | spec/window.md:321 "Phases window (one window for everything)" | One AppKit helper, in a fixed order | PhasesWindow.swift, SidebarTests.swift, WindowLayoutConfigurator.swift |
+| `[D-window-min-size]` | spec/window.md:261 "Phases window (one window for everything)" | Minimum window size | App.swift, EditorRow.swift, PauseBannerTests.swift, PhasesUITests.swift, PhasesWindow.swift |
+| `[D-window-pause-banner]` | spec/window.md:361 "Pause banner and Settings" | While Phases has paused itself for an outside change `[D-outside-change-pauses]`, a pause banner sits at the top of the detail pane | PauseBanner.swift, PauseBannerTests.swift, PauseReason.swift, PauseReasonTests.swift, PhasesWindow.swift, SettingsView.swift, WallpaperScheduler.swift, WindowLayoutConfigurator.swift |
+| `[D-window-title-phases]` | spec/window.md:301 "Phases window (one window for everything)" | The toolbar title is always **Phases**, the window's name; what's selected is named by the pane's own header: the phase editor's name row… | PhaseEditor.swift, SettingsView.swift |
+| `[D-xcode-project]` | spec/project.md:12 "Project and bundle ID" | Phases is an Xcode project | AppVersion.swift, AppVersionTests.swift |
 
 ## Quirks `[Q-…]`
 
@@ -358,8 +358,8 @@ No longer defined; mentioned as replaced or retired. The mention says what repla
 
 | Tag | Mentioned in |
 |---|---|
-| `[D-cover-settle]` | EXPERIMENTS.md:2405, SPEC.md:1247, SPEC.md:990 |
-| `[D-quit-in-window]` | SPEC.md:2525 |
-| `[D-relative-paths]` | SPEC.md:305 |
-| `[D-settings-schedule-switch]` | SPEC.md:2316 |
-| `[D-sharing-no-interface]` | SPEC.md:2341, SPEC.md:861 |
+| `[D-cover-settle]` | EXPERIMENTS.md:2405, spec/transitions.md:356, spec/transitions.md:99 |
+| `[D-quit-in-window]` | spec/interface.md:213 |
+| `[D-relative-paths]` | spec/image-library.md:160 |
+| `[D-settings-schedule-switch]` | spec/window.md:424 |
+| `[D-sharing-no-interface]` | spec/displays.md:154, spec/window.md:449 |

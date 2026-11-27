@@ -232,6 +232,8 @@ The pure logic that decides what the app does:
     A paragraph that names an `archive/…` tag describes an old layout and
     isn't checked.
   - a Markdown link to a file in the repository points nowhere.
+  - a section title appears twice in the spec (SPEC.md and `docs/spec/`),
+    so a quoted title always names one place.
   When `docs/INDEX.md` is out of date the test rewrites it and fails
   once, so the new index is looked at and committed with the change.
   - *How a definition is found* (`DocIndex.swift`): the tag in backticks
