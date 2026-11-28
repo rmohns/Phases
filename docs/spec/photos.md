@@ -9,8 +9,9 @@ library", in [image-library.md](image-library.md)).
 
 ## Photos albums
 
-Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
-"Photos library (issue #33)", unless noted.
+Draft 54, issue #33 merge #2; the cache rules redone in draft 65 (issue
+#35). Evidence for this section is LEARNINGS.md "Photos library (issue
+#33)", unless noted.
 
 - `[D-photos-sources]` **A Photos album, or a folder of albums, can be an
   image source,** alongside folders, in any mix and any order
@@ -163,9 +164,26 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
     its wallpaper as a file path, so it would lose its wallpaper.
     *Untested:* a wallpaper from Application Support (X4 tested Caches;
     expected to be the same, since both are ordinary files).
-  - **Limit:** 1 GB. When over it, the least recently shown files are
-    deleted first.
-  - **Never deleted,** whatever the limit:
+  - `[D-photos-cache-cleanup]` **What's deleted** (draft 65, GitHub
+    issue #35). The cache should hold about what the current sources
+    show, and give space back when the Mac needs it. Each cleanup applies
+    these rules in order:
+    1. **Gone from the sources:** a file whose photo is no longer in any
+       Photos source (taken out of its album, deleted in Photos, or its
+       source removed from Phases), and the older file of a photo edited
+       since `[D-photos-version]`. This rule is skipped while any Photos
+       source can't be opened, and at launch until every Photos source
+       has been read, so a passing failure (access off, the library not
+       ready) never empties the cache.
+    2. **Not shown in 30 days.** A file fetched but never shown counts
+       from when it was fetched.
+    3. **Over 500 MB** (500,000,000 bytes, as Finder counts): the least
+       recently shown files go first, until the cache is under it.
+    4. **Low disk:** if the disk holding the cache has less than
+       25.6 GB available, the least recently shown files go first, until
+       the cache is under a 50 MB floor (50,000,000 bytes). Settings says
+       so while it lasts `[D-cache-in-about]`.
+  - **Never deleted,** by any rule, Clear… included `[D-cache-in-about]`:
     - a file showing on any display;
     - a file any entry in macOS's wallpaper store names, which covers
       Spaces that aren't showing `[Q-wallpaper-store]`;
@@ -175,13 +193,84 @@ Draft 54, issue #33 merge #2. Evidence for this section is LEARNINGS.md
     - a file fetched ahead and waiting for its change.
   - If the wallpaper store can't be read (as in a sandboxed build
     without its exception, `[L-sandbox-x0-paths]`), files shown in the
-    last 30 days are kept too.
+    last 30 days are kept too, by every rule. Older ones may then go even
+    though a Space that isn't showing still uses them; through draft 64
+    that could happen only over the size limit. Shipping builds read the
+    store, so this is a fallback (accepted by the author 2026-11-27).
+  - **When cleanup runs:** after each change (as before draft 65), at
+    launch once the sources have been read, after a source is added or
+    removed, and after an album changes `[D-photos-changes]`. No timer of
+    its own `[D-single-timer]`: a Mac that runs short of space between
+    those moments gets its space back at the next one.
   - A cached file maps back to its photo, so Phases knows its own photo
     when it's showing: Random still avoids repeating it, and a change
     to it isn't taken for a pick made outside Phases
     `[D-outside-change-rule]`.
-  - Removing a source doesn't empty its files at once; they go by the
-    rules above.
+  - Removing a source deletes its photos' files at the cleanup that
+    follows, except those the rules above keep. Undoing the removal
+    `[D-undo-remove-source]` brings the source back, and its photos are
+    fetched again as they're needed (0.5–1.4 s each online
+    `[L-photos-x3-download]`; offline, another image on hand shows
+    instead, as for any photo that can't be fetched). Accepted by the
+    author 2026-11-27.
+  - **No size setting.** The rules above keep the cache near what's in
+    use, and Settings shows the size and can clear it
+    `[D-cache-in-about]`. A setting would ask people for a number they
+    can't really choose (Claude, accepted by the author 2026-11-27).
+  - *Why 30 days:* long enough that a desk monitor left through a usual
+    trip comes back to photos still on hand, without fetching them again
+    (author, 2026-11-27).
+  - *Why 500 MB:* rules 1 and 2 keep the cache near what's in use, so
+    the size limit is a backstop for unusual cases: a large album rotated
+    quickly on several displays, or very large originals. 500 MB is about
+    300 photos at the 1.6 MB average of the author's cache (*verified*
+    2026-11-27 by Claude: 20 photos in 31 MB). Author, 2026-11-27.
+  - *Why the low-disk rule:* when space is truly short, giving the cache
+    back is the considerate thing to do, and photos can be fetched again
+    (author, 2026-11-27: "I despise apps that waste their user's storage
+    space"). Phases does it itself rather than using `~/Library/Caches`,
+    because macOS emptying Caches wouldn't spare the files other Spaces
+    use (see **Where**), and whether and when macOS empties Caches is
+    *recalled*, not tested.
+  - *Why 25.6 GB:* 10% of the smallest startup disk an Apple Silicon Mac
+    has shipped with, 256 GB (author, 2026-11-27; the 256 GB figure is
+    *recalled*). By 5 GB free it's too late to help: macOS starts
+    failing fast by then, usually because swap is growing, and free
+    space can reach zero within minutes (author's experience,
+    *observed*, not measured here). Cleanup runs only at the moments
+    above, so the threshold has to leave room for the disk to keep
+    filling until the next one. Phases' cache is small next to that
+    (500 MB at most), but giving it back early is the point.
+    - *Cost, accepted:* a Mac that normally has less than 25.6 GB free
+      keeps the cache at the floor, so photos beyond the most recent
+      are downloaded when they're needed (0.5–1.4 s each online
+      `[L-photos-x3-download]`).
+    - *Why a 50 MB floor, not empty:* files fetched ahead are already
+      kept, so the floor is what matters offline. Rotation carries on
+      among the most recent photos (about 30 at the 1.6 MB average)
+      instead of a display keeping its wallpaper. On a disk filling
+      within minutes, freeing 450 MB instead of 500 MB makes no practical
+      difference, and 50 MB is 0.2% of the threshold. With a floor,
+      "the cache is off" is never a state Phases is in (Claude, accepted
+      by the author 2026-11-27).
+    - *Not a banner:* the author asked whether a banner like the pause
+      banner `[D-window-pause-banner]` should say the cache was off.
+      Rejected (author, 2026-11-27, on Claude's reasoning): that banner
+      is for Phases having stopped, with its fix beside it, and here
+      Phases keeps working and the fix (disk space) isn't Phases' to
+      offer. On a Mac that normally has less than 25.6 GB free it would
+      show nearly all the time and push every view down
+      `[D-brand-inset]`. The About line says it instead
+      `[D-cache-in-about]`.
+    - *Replaced:* the first version of draft 65 had 5 GB, Claude's
+      unmeasured starting point, and emptied the cache down to the files
+      that are never deleted (2026-11-27).
+  - *Replaced:* drafts 54–64 had one rule, a 1 GB limit with the least
+    recently shown files deleted first, applied only after a change.
+    1 GB was Claude's suggested default in the issue #33 plan, approved
+    2026-11-12 with cache management left to its own issue (#35). With
+    no other rule, the cache kept every photo shown until it reached
+    1 GB, including photos of removed sources.
 - `[D-photos-permission]` **Phases asks for Photos access the first time
   it's needed:** when the user chooses Add Photos Album…, never at launch.
   - The usage text: "Phases shows photos from the albums you choose as

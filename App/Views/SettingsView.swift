@@ -6,6 +6,9 @@ struct SettingsView: View {
   /// [D-memory-in-about] Read each time Settings appears, not on every
   /// body evaluation.
   @State private var memoryFootprint: UInt64?
+  /// [D-cache-in-about] Read each time Settings appears, and after Clear….
+  @State private var photoCacheUsage: PhotoCache.Usage?
+  @State private var isConfirmingClearCache = false
 
   var body: some View {
     Form {
@@ -132,12 +135,44 @@ struct SettingsView: View {
         if let memoryFootprint {
           LabeledContent("Memory", value: LowMemoryNote.memoryText(bytes: memoryFootprint))
         }
+        // [D-cache-in-about] Left out when there's no Photos source and
+        // nothing cached.
+        if let photoCacheUsage {
+          LabeledContent {
+            HStack {
+              Text(PhotoCacheRules.usageText(bytes: photoCacheUsage.bytes, photos: photoCacheUsage.photos))
+              Button("Clear…") { isConfirmingClearCache = true }
+                // [D-ui-test-ids]
+                .accessibilityIdentifier("clearPhotoCacheButton")
+            }
+          } label: {
+            Text("Photos Cache")
+            // [D-photos-cache-cleanup] The only place the low-disk rule is said.
+            if photoCacheUsage.isLowDisk {
+              Text("Kept small because the disk has less than 25.6 GB free.")
+            }
+          }
+        }
       }
     }
     .formStyle(.grouped)
     // [D-window-title-phases] The header names the pane; the toolbar keeps
     // the window's name.
-    .onAppear { memoryFootprint = MemoryUse.footprint() }
+    .onAppear {
+      memoryFootprint = MemoryUse.footprint()
+      photoCacheUsage = scheduler.photoCacheUsage()
+    }
+    .alert("Clear the Photos cache?", isPresented: $isConfirmingClearCache) {
+      Button("Clear") {
+        scheduler.clearPhotoCache()
+        photoCacheUsage = scheduler.photoCacheUsage()
+      }
+      // [D-cache-in-about] Cancel is the default.
+      Button("Cancel", role: .cancel) {}
+        .keyboardShortcut(.defaultAction)
+    } message: {
+      Text("Phases will download photos again as it needs them. Photos in use as a wallpaper are kept.")
+    }
     .alert("Launch Phases at login?", isPresented: $isConfirmingLaunchAtLogin) {
       Button("Add Login Item") { scheduler.launchAtLogin.enable() }
       Button("Cancel", role: .cancel) {}

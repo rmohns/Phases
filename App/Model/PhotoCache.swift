@@ -105,34 +105,99 @@ final class PhotoCache {
 
   // MARK: Cleanup
 
-  /// Deletes what `PhotoCacheRules` allows. `protected` holds file names
-  /// that must stay: showing, in the restore record, or fetched ahead and
-  /// waiting. `storeFileNames` is every file macOS's wallpaper store names,
-  /// or nil if it can't be read.
-  func cleanUp(protected: Set<String>, storeFileNames: Set<String>?) {
+  /// Rule 1's test [D-photos-cache-cleanup]: whether a file (its photo's ID,
+  /// its name) is a photo in a Photos source as it is now.
+  typealias SourceCheck = (_ photoID: String, _ fileName: String) -> Bool
+
+  /// Deletes what `PhotoCacheRules` allows [D-photos-cache-cleanup].
+  /// `protected` holds file names that must stay: showing, in the restore
+  /// record, or fetched ahead and waiting. `storeFileNames` is every file
+  /// macOS's wallpaper store names, or nil if it can't be read.
+  /// `isInSources` is nil while any Photos source can't be read, which
+  /// skips rule 1.
+  func cleanUp(protected: Set<String>, storeFileNames: Set<String>?, isInSources: SourceCheck?) {
+    let files = cachedFiles(isInSources: isInSources)
+    let situation = situation(protected: protected, storeFileNames: storeFileNames, sourcesRead: isInSources != nil)
+    delete(PhotoCacheRules.filesToDelete(files, in: situation), present: files, reason: "cleanup")
+  }
+
+  /// [D-cache-in-about] Clear…: deletes every file the rules may delete,
+  /// keeping the ones they never do.
+  func clear(protected: Set<String>, storeFileNames: Set<String>?) {
+    let files = cachedFiles(isInSources: nil)
+    let situation = situation(protected: protected, storeFileNames: storeFileNames, sourcesRead: false)
+    delete(PhotoCacheRules.filesToClear(files, in: situation), present: files, reason: "Clear…")
+  }
+
+  /// [D-cache-in-about] What the cache holds now, and whether the low-disk
+  /// rule applies.
+  struct Usage: Equatable {
+    var bytes: Int64
+    var photos: Int
+    var isLowDisk: Bool
+  }
+
+  func usage() -> Usage {
+    let files = cachedFiles(isInSources: nil)
+    return Usage(
+      bytes: files.reduce(0) { $0 + $1.size },
+      photos: files.count,
+      isLowDisk: PhotoCacheRules.isLowDisk(available: availableDiskSpace())
+    )
+  }
+
+  /// The photo files in the folder, without the index.
+  private func cachedFiles(isInSources: SourceCheck?) -> [PhotoCacheRules.File] {
     let keys: [URLResourceKey] = [.fileSizeKey, .contentModificationDateKey]
     let urls = (try? FileManager.default.contentsOfDirectory(
       at: folder, includingPropertiesForKeys: keys, options: [.skipsHiddenFiles]
     )) ?? []
-    let files = urls.filter { $0.lastPathComponent != Self.indexName }.map { url in
+    return urls.filter { $0.lastPathComponent != Self.indexName }.map { url in
       let values = try? url.resourceValues(forKeys: Set(keys))
+      let name = url.lastPathComponent
+      let record = index.files[name]
       return PhotoCacheRules.File(
-        fileName: url.lastPathComponent,
+        fileName: name,
         size: Int64(values?.fileSize ?? 0),
-        lastShown: index.files[url.lastPathComponent]?.lastShown ?? values?.contentModificationDate ?? .distantPast
+        // Fetched but never shown counts from the fetch, which `record` sets.
+        lastShown: record?.lastShown ?? values?.contentModificationDate ?? .distantPast,
+        // A file the index doesn't know is no photo of any source.
+        isInSources: record.map { isInSources?($0.photoID, name) ?? true } ?? false
       )
     }
-    let deleting = PhotoCacheRules.filesToDelete(
-      files, protected: protected.union(storeFileNames ?? []), storeReadable: storeFileNames != nil, now: Date()
+  }
+
+  private func situation(
+    protected: Set<String>, storeFileNames: Set<String>?, sourcesRead: Bool
+  ) -> PhotoCacheRules.Situation {
+    PhotoCacheRules.Situation(
+      protected: protected.union(storeFileNames ?? []),
+      storeReadable: storeFileNames != nil,
+      sourcesRead: sourcesRead,
+      availableDiskSpace: availableDiskSpace(),
+      now: Date()
     )
-    for name in deleting {
+  }
+
+  /// Space available on the cache's disk for things the user wants kept,
+  /// as Finder reports it; nil if it can't be read.
+  private func availableDiskSpace() -> Int64? {
+    // The folder may not exist yet; its disk is its parent's.
+    let existing = FileManager.default.fileExists(atPath: folder.path(percentEncoded: false))
+      ? folder : folder.deletingLastPathComponent()
+    let values = try? existing.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
+    return values?.volumeAvailableCapacityForImportantUsage
+  }
+
+  private func delete(_ names: [String], present files: [PhotoCacheRules.File], reason: String) {
+    for name in names {
       try? FileManager.default.removeItem(at: folder.appending(path: name))
       index.files[name] = nil
     }
     // Forget files that are gone from the folder.
     let present = Set(files.map(\.fileName))
     index.files = index.files.filter { present.contains($0.key) }
-    if !deleting.isEmpty { diagLog.log("cache: deleted \(deleting.count) files") }
+    if !names.isEmpty { diagLog.log("cache: \(reason, privacy: .public) deleted \(names.count) files") }
     saveIndex()
   }
 
