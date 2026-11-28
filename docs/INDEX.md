@@ -21,7 +21,7 @@ tests"). Line numbers are as of the last run.
 | `[D-brand-scrolls]` | spec/window.md:69 "Phases window (one window for everything)" | It's the first item in the sidebar list, so it **scrolls away** when there are enough phases to scroll; it's never pinned | PhasesWindow.swift |
 | `[D-bundle-id-settings-move]` | spec/project.md:48 "Project and bundle ID" | Settings move to the new ID once, by hand, from the shell |  |
 | `[D-bundle-id]` | spec/project.md:35 "Project and bundle ID" | The bundle ID is `com.robertmohns.phases` |  |
-| `[D-cache-in-about]` | spec/window.md:510 "Pause banner and Settings" | Photos Cache |  |
+| `[D-cache-in-about]` | spec/window.md:510 "Pause banner and Settings" | Photos Cache | PhotoCache.swift, PhotoCacheRules.swift, PhotoCacheRulesTests.swift, SettingsView.swift, WallpaperScheduler.swift |
 | `[D-change-stays-on-its-space]` | spec/transitions.md:145 "The persistent cover" | A change belongs to the Space it was made on, even if you leave mid-fade | CrossfadeController.swift, WallpaperScheduler.swift |
 | `[D-close-stays-here]` | spec/interface.md:113 "Dock icon and app menu" | Closing the window keeps you on the current Space | FocusHandoff.swift, HandoffChoice.swift, HandoffChoiceTests.swift, PhasesApp.swift, WindowLayoutConfigurator.swift |
 | `[D-connected-displays-only]` | spec/displays.md:111 "Display identity" | Only connected displays are shown | DisplayTabs.swift, PhaseEditor.swift, PhaseEditorRulesTests.swift, WallpaperScheduler.swift |
@@ -104,8 +104,8 @@ tests"). Line numbers are as of the last run.
 | `[D-phase-cant-run]` | spec/schedule.md:189 "Location" | A phase that can't run is flagged in the sidebar | LocationProvider.swift, PhaseAvailability.swift, PhaseAvailabilityTests.swift, PhasesWindow.swift, WallpaperScheduler.swift |
 | `[D-phase-status-inline]` | spec/phase-editor.md:218 "Phase editor" | Why a phase can't run shows under the row that fixes it | PhaseAvailability.swift, PhaseEditor.swift, PhaseEditorRulesTests.swift, StartReadout.swift |
 | `[D-phase-turn-off]` | spec/schedule.md:218 "Location" | A phase can be turned off | Phase.swift, PhaseAvailability.swift, PhaseAvailabilityTests.swift, PhaseNameRow.swift, PhasesWindow.swift, WallpaperScheduler.swift |
-| `[D-photos-cache-cleanup]` | spec/photos.md:167 "33)", unless noted." | What's deleted |  |
-| `[D-photos-cache]` | spec/photos.md:159 "33)", unless noted." | The photo cache | CrossfadeController.swift, ImageLibrary.swift, LibraryListing.swift, PhotoCache.swift, PhotoCacheRules.swift, PhotoCacheRulesTests.swift, WallpaperScheduler.swift, WallpaperStoreWatcher.swift |
+| `[D-photos-cache-cleanup]` | spec/photos.md:167 "33)", unless noted." | What's deleted | ImageLibrary.swift, PhotoCache.swift, PhotoCacheRules.swift, PhotoCacheRulesTests.swift, SettingsView.swift, WallpaperScheduler.swift |
+| `[D-photos-cache]` | spec/photos.md:159 "33)", unless noted." | The photo cache | CrossfadeController.swift, ImageLibrary.swift, LibraryListing.swift, PhotoCache.swift, PhotoCacheRules.swift, PhotoCacheRulesTests.swift, WallpaperStoreWatcher.swift |
 | `[D-photos-changes]` | spec/photos.md:292 "33)", unless noted." | Album changes show up while Phases runs | ImageLibrary.swift, PhotoKitProvider.swift, PhotosProvider.swift, WallpaperScheduler.swift |
 | `[D-photos-checks]` | testing/photos-checks.md:11 "Photos checks (draft 54)" | Real Photos behavior is checked by hand before merge #2 merges |  |
 | `[D-photos-fetch-ahead]` | spec/photos.md:91 "33)", unless noted." | Phases fetches photos before they're needed, so scheduled changes still happen on time | ChangeRecord.swift, ChangeRecordTests.swift, FetchAhead.swift, FetchAheadTests.swift, ImageLibrary.swift, PhotoCache.swift, PhotoKitProvider.swift, WallpaperScheduler.swift |
@@ -113,7 +113,7 @@ tests"). Line numbers are as of the last run.
 | `[D-photos-order]` | spec/photos.md:53 "33)", unless noted." | In order follows the album's own order | LibraryListing.swift, PhotosProvider.swift |
 | `[D-photos-permission]` | spec/photos.md:274 "33)", unless noted." | Phases asks for Photos access the first time it's needed | ImageLibrary.swift, PhotoKitProvider.swift, PhotosAlbumSheet.swift, PhotosProvider.swift, PhotosSourcesTests.swift |
 | `[D-photos-sources]` | spec/photos.md:16 "33)", unless noted." | A Photos album, or a folder of albums, can be an image source | ImageLibrary.swift, ImageSource.swift, ImageSourceTests.swift, ImageSourcesSection.swift, PhotoKitProvider.swift, PhotosAlbumSheet.swift, PhotosProvider.swift, PhotosSourcesTests.swift |
-| `[D-photos-version]` | spec/photos.md:73 "33)", unless noted." | The wallpaper is the photo as it looks in Photos | PhotoCache.swift, PhotoCacheRules.swift, PhotoCacheRulesTests.swift, PhotoKitProvider.swift, PhotosProvider.swift |
+| `[D-photos-version]` | spec/photos.md:73 "33)", unless noted." | The wallpaper is the photo as it looks in Photos | ImageLibrary.swift, PhotoCache.swift, PhotoCacheRules.swift, PhotoCacheRulesTests.swift, PhotoKitProvider.swift, PhotosProvider.swift |
 | `[D-quit-confirm]` | spec/interface.md:218 "Dock icon and app menu" | Quit Phases (⌘Q) asks first | PhasesCommands.swift, QuitConfirmation.swift, SettingsView.swift, WallpaperScheduler.swift |
 | `[D-record-after-wait]` | spec/photos.md:121 "33)", unless noted." | A change is saved only once it shows | ChangeRecord.swift, ChangeRecordTests.swift, WallpaperScheduler.swift |
 | `[D-reduce-motion-note]` | spec/transitions.md:15 "Transitions" | Settings says when Reduce Motion turns transitions off | CrossfadeController.swift, ReduceMotionNote.swift, ReduceMotionNoteTests.swift, SettingsView.swift, WallpaperScheduler.swift |

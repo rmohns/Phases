@@ -34,6 +34,9 @@ final class ImageLibrary {
   /// Called after Photos reports a change and the library has reloaded
   /// [D-photos-changes]; the scheduler re-evaluates.
   @ObservationIgnored var onPhotosChange: (() -> Void)?
+  /// [D-photos-cache-cleanup] Called after a source is added, removed, or
+  /// put back; the scheduler cleans up the photo cache.
+  @ObservationIgnored var onSourcesChange: (() -> Void)?
   @ObservationIgnored private var photosChangeTask: Task<Void, Never>?
   @ObservationIgnored private var photoFileNames: [String: String] = [:]
   /// Mirrors the provider's access, so views update when it's answered.
@@ -157,6 +160,22 @@ final class ImageLibrary {
   var photoCacheIsEmpty: Bool {
     ((try? FileManager.default.contentsOfDirectory(atPath: photoCache.folder.path(percentEncoded: false))) ?? [])
       .allSatisfy { $0 == "index.json" || $0.hasPrefix(".") }
+  }
+
+  /// [D-photos-cache-cleanup] Rule 1's test, or nil while any Photos source
+  /// can't be opened (access off, the library not ready), so a passing
+  /// failure never empties the cache. With no Photos sources, no file is
+  /// in one.
+  func photoCacheSourceCheck() -> PhotoCache.SourceCheck? {
+    let photoSources = sources.filter(\.isPhotos)
+    guard !photoSources.contains(where: { unreachableSources.contains($0.id) }) else { return nil }
+    guard let photos else { return photoSources.isEmpty ? { _, _ in false } : nil }
+    let inSources = Set(listing.names.compactMap { isPhoto($0) ? PhotoImageName.photo(ofStoredName: $0) : nil })
+    return { photoID, fileName in
+      guard inSources.contains(photoID), let info = photos.photoInfo(photoID) else { return false }
+      // An older file from before an edit is gone too [D-photos-version].
+      return PhotoCacheRules.isCurrentFile(fileName, photoID: photoID, modified: info.modified)
+    }
   }
 
   /// A file for each image that's on hand now: a folder's file, or a
@@ -313,6 +332,7 @@ final class ImageLibrary {
     folderURLs[source.id] = url
     save()
     reload()
+    onSourcesChange?()
     return .added(source.id)
   }
 
@@ -333,6 +353,7 @@ final class ImageLibrary {
     sources.append(source)
     save()
     reload()
+    onSourcesChange?()
     return .added(source.id)
   }
 
@@ -359,6 +380,7 @@ final class ImageLibrary {
     folderURLs[id] = nil
     save()
     reload()
+    onSourcesChange?()
     return (source, index)
   }
 
@@ -369,6 +391,7 @@ final class ImageLibrary {
     sources.insert(source, at: min(index, sources.count))
     save()
     reload()
+    onSourcesChange?()
   }
 
   func setIncludesSubfolders(_ isOn: Bool, for id: String) {

@@ -197,13 +197,23 @@ final class WallpaperScheduler {
 
     refreshDisplays()
     // [D-photos-changes] The library has already reloaded.
-    library.onPhotosChange = { [weak self] in self?.evaluate(reloadingLibrary: false) }
+    // [D-photos-cache-cleanup] An album change can take photos out of the
+    // sources, so the cache is cleaned up after it too.
+    library.onPhotosChange = { [weak self] in
+      self?.evaluate(reloadingLibrary: false)
+      self?.cleanUpPhotoCache()
+    }
+    library.onSourcesChange = { [weak self] in self?.cleanUpPhotoCache() }
     location.onChange = { [weak self] in self?.evaluate() }
     crossfade.onReduceMotionChange = { [weak self] in self?.reducesMotion = $0 }
     if needsLocation { location.refresh() }
     observeSystemEvents()
     watchForOutsideChanges()
     evaluate()
+    // [D-photos-cache-cleanup] At launch, once the sources have been read
+    // (the library reads them as it's made; rule 1 waits while any Photos
+    // source can't be opened).
+    cleanUpPhotoCache()
   }
 
   // MARK: - Derived state
@@ -550,18 +560,43 @@ final class WallpaperScheduler {
     cleanUpPhotoCache()
   }
 
-  /// [D-photos-cache] Never deletes what's showing, what the wallpaper
-  /// store names (other Spaces), the restore record's files, or what's
-  /// fetched ahead.
+  /// [D-photos-cache-cleanup] Runs after each change, at launch, after a
+  /// source is added or removed, and after an album changes. No timer of
+  /// its own [D-single-timer].
   private func cleanUpPhotoCache() {
     guard library.sources.contains(where: \.isPhotos) || !library.photoCacheIsEmpty else { return }
+    library.photoCache.cleanUp(
+      protected: protectedPhotoFiles(),
+      storeFileNames: WallpaperStoreWatcher.shared.fileNamesInStore(),
+      isInSources: library.photoCacheSourceCheck()
+    )
+  }
+
+  /// [D-cache-in-about] Clear… in Settings: everything the cleanup rules
+  /// may delete.
+  func clearPhotoCache() {
+    library.photoCache.clear(
+      protected: protectedPhotoFiles(), storeFileNames: WallpaperStoreWatcher.shared.fileNamesInStore())
+  }
+
+  /// [D-cache-in-about] What the photo cache holds, or nil when Settings
+  /// leaves the line out: no Photos source and nothing cached.
+  func photoCacheUsage() -> PhotoCache.Usage? {
+    guard library.sources.contains(where: \.isPhotos) || !library.photoCacheIsEmpty else { return nil }
+    return library.photoCache.usage()
+  }
+
+  /// [D-photos-cache-cleanup] The files no rule deletes, Clear… included:
+  /// what's showing, the restore record's files, and what's fetched ahead.
+  /// The wallpaper store's files (other Spaces) are added by the cache.
+  private func protectedPhotoFiles() -> Set<String> {
     var protected = Set(NSScreen.screens.compactMap { NSWorkspace.shared.desktopImageURL(for: $0)?.lastPathComponent })
     // Covers: the incoming file of a fade, and a change pending on a Space
     // that isn't showing [D-change-stays-on-its-space].
     protected.formUnion(crossfade.coverFileNames)
     protected.formUnion(restorePoint?.displays.compactMap { $0.imageURL?.lastPathComponent } ?? [])
     protected.formUnion(fetchedAhead?.plan.picks.values.compactMap { library.cachedFile(for: $0)?.lastPathComponent } ?? [])
-    library.photoCache.cleanUp(protected: protected, storeFileNames: WallpaperStoreWatcher.shared.fileNamesInStore())
+    return protected
   }
 
   /// Returns when every fetch has finished or `limit` has passed, whichever
