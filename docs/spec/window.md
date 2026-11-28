@@ -507,6 +507,32 @@ and to Settings, not to the phase editor.
     - *Why:* lets someone see what Phases costs, and whether the
       low-memory note `[D-low-memory-note]` is worth acting on (GitHub
       issue #2).
+  - `[D-cache-in-about]` **Photos Cache:** below Memory, the disk space
+    the photo cache `[D-photos-cache]` takes and how many photos it
+    holds, e.g. "38 MB · 20 photos", with a **Clear…** button on the
+    same line (draft 65, GitHub issue #35).
+    - Shown only when there's a Photos source or the cache isn't empty,
+      so someone using only folders never sees it.
+    - Read each time Settings appears, like Memory, and again after
+      Clear…. Reading it lives in the model, not the view.
+    - Shown in megabytes as Finder shows them (1 MB = 1000² bytes,
+      rounded; GB from 1,000 MB), so the figure matches Get Info on the
+      folder (*recalled*: Finder counts in powers of 1000). This differs
+      from Memory's 1024² on purpose: each matches the Mac tool someone
+      would check it against. The formatting is a pure function,
+      unit-tested.
+    - **Clear…** asks first: "Clear the Photos cache?", with "Phases
+      will download photos again as it needs them. Photos in use as a
+      wallpaper are kept." and the buttons **Clear** and **Cancel**
+      (Cancel the default). Clear deletes every file the cleanup rules
+      may delete; the files they never delete stay
+      `[D-photos-cache-cleanup]`. The line then shows what's left.
+    - *Why in About:* it's information, like Memory. The button makes it
+      the odd line out, but it should rarely be needed, since the cleanup
+      rules keep the cache small by themselves. It's there so nobody has
+      to dig through a hidden Library folder to get their space back
+      (author, 2026-11-27: "I despise apps that waste their user's
+      storage space").
   - *Why:* during testing, the author needs to tell which build is
     running. The build number *is* the spec draft, so Finder's Get Info,
     the standard About panel, and this section all name the same draft;

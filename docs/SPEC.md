@@ -1,4 +1,4 @@
-# Phases — Specification (draft 64)
+# Phases — Specification (draft 65)
 
 A personal macOS menu bar app that changes the desktop wallpaper on a schedule.
 Not intended for the App Store.
