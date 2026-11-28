@@ -180,7 +180,9 @@ Draft 54, issue #33 merge #2; the cache rules redone in draft 65 (issue
     3. **Over 500 MB** (500,000,000 bytes, as Finder counts): the least
        recently shown files go first, until the cache is under it.
     4. **Low disk:** if the disk holding the cache has less than
-       25.6 GB available, everything that may be deleted is deleted.
+       25.6 GB available, the least recently shown files go first, until
+       the cache is under a 50 MB floor (50,000,000 bytes). Settings says
+       so while it lasts `[D-cache-in-about]`.
   - **Never deleted,** by any rule, Clear… included `[D-cache-in-about]`:
     - a file showing on any display;
     - a file any entry in macOS's wallpaper store names, which covers
@@ -194,7 +196,7 @@ Draft 54, issue #33 merge #2; the cache rules redone in draft 65 (issue
     last 30 days are kept too, by every rule. Older ones may then go even
     though a Space that isn't showing still uses them; through draft 64
     that could happen only over the size limit. Shipping builds read the
-    store, so this is a fallback.
+    store, so this is a fallback (accepted by the author 2026-11-27).
   - **When cleanup runs:** after each change (as before draft 65), at
     launch once the sources have been read, after a source is added or
     removed, and after an album changes `[D-photos-changes]`. No timer of
@@ -209,12 +211,12 @@ Draft 54, issue #33 merge #2; the cache rules redone in draft 65 (issue
     `[D-undo-remove-source]` brings the source back, and its photos are
     fetched again as they're needed (0.5–1.4 s each online
     `[L-photos-x3-download]`; offline, another image on hand shows
-    instead, as for any photo that can't be fetched).
+    instead, as for any photo that can't be fetched). Accepted by the
+    author 2026-11-27.
   - **No size setting.** The rules above keep the cache near what's in
     use, and Settings shows the size and can clear it
     `[D-cache-in-about]`. A setting would ask people for a number they
-    can't really choose (proposed by Claude 2026-11-27, pending the
-    author's review of draft 65).
+    can't really choose (Claude, accepted by the author 2026-11-27).
   - *Why 30 days:* long enough that a desk monitor left through a usual
     trip comes back to photos still on hand, without fetching them again
     (author, 2026-11-27).
@@ -240,12 +242,29 @@ Draft 54, issue #33 merge #2; the cache rules redone in draft 65 (issue
     filling until the next one. Phases' cache is small next to that
     (500 MB at most), but giving it back early is the point.
     - *Cost, accepted:* a Mac that normally has less than 25.6 GB free
-      keeps the cache nearly empty, so most photos are downloaded when
-      they're needed (0.5–1.4 s each online `[L-photos-x3-download]`).
-      Offline, a display with no photo on hand keeps its wallpaper
-      until a later change `[D-photos-fetch-ahead]`.
+      keeps the cache at the floor, so photos beyond the most recent
+      are downloaded when they're needed (0.5–1.4 s each online
+      `[L-photos-x3-download]`).
+    - *Why a 50 MB floor, not empty:* files fetched ahead are already
+      kept, so the floor is what matters offline. Rotation carries on
+      among the most recent photos (about 30 at the 1.6 MB average)
+      instead of a display keeping its wallpaper. On a disk filling
+      within minutes, freeing 450 MB instead of 500 MB makes no practical
+      difference, and 50 MB is 0.2% of the threshold. With a floor,
+      "the cache is off" is never a state Phases is in (Claude, accepted
+      by the author 2026-11-27).
+    - *Not a banner:* the author asked whether a banner like the pause
+      banner `[D-window-pause-banner]` should say the cache was off.
+      Rejected (author, 2026-11-27, on Claude's reasoning): that banner
+      is for Phases having stopped, with its fix beside it, and here
+      Phases keeps working and the fix (disk space) isn't Phases' to
+      offer. On a Mac that normally has less than 25.6 GB free it would
+      show nearly all the time and push every view down
+      `[D-brand-inset]`. The About line says it instead
+      `[D-cache-in-about]`.
     - *Replaced:* the first version of draft 65 had 5 GB, Claude's
-      unmeasured starting point (2026-11-27).
+      unmeasured starting point, and emptied the cache down to the files
+      that are never deleted (2026-11-27).
   - *Replaced:* drafts 54–64 had one rule, a 1 GB limit with the least
     recently shown files deleted first, applied only after a change.
     1 GB was Claude's suggested default in the issue #33 plan, approved

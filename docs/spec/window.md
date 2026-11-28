@@ -513,6 +513,11 @@ and to Settings, not to the phase editor.
     same line (draft 65, GitHub issue #35).
     - Shown only when there's a Photos source or the cache isn't empty,
       so someone using only folders never sees it.
+    - **While the low-disk rule applies** `[D-photos-cache-cleanup]`, a
+      second line in secondary text under it: "Kept small because the
+      disk has less than 25.6 GB free." It goes when space comes back
+      (as of the last reading). This is the only place Phases says so:
+      not a banner (see the low-disk *Why* in `[D-photos-cache-cleanup]`).
     - Read each time Settings appears, like Memory, and again after
       Clear…. Reading it lives in the model, not the view.
     - Shown in megabytes as Finder shows them (1 MB = 1000² bytes,
