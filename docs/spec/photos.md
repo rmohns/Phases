@@ -179,8 +179,8 @@ Draft 54, issue #33 merge #2; the cache rules redone in draft 65 (issue
        from when it was fetched.
     3. **Over 500 MB** (500,000,000 bytes, as Finder counts): the least
        recently shown files go first, until the cache is under it.
-    4. **Low disk:** if the disk holding the cache has less than 5 GB
-       available, everything that may be deleted is deleted.
+    4. **Low disk:** if the disk holding the cache has less than
+       25.6 GB available, everything that may be deleted is deleted.
   - **Never deleted,** by any rule, Clear… included `[D-cache-in-about]`:
     - a file showing on any display;
     - a file any entry in macOS's wallpaper store names, which covers
@@ -229,9 +229,23 @@ Draft 54, issue #33 merge #2; the cache rules redone in draft 65 (issue
     space"). Phases does it itself rather than using `~/Library/Caches`,
     because macOS emptying Caches wouldn't spare the files other Spaces
     use (see **Where**), and whether and when macOS empties Caches is
-    *recalled*, not tested. The 5 GB threshold is a starting point
-    (Claude, 2026-11-27, not measured against when macOS itself warns of
-    a full disk).
+    *recalled*, not tested.
+  - *Why 25.6 GB:* 10% of the smallest startup disk an Apple Silicon Mac
+    has shipped with, 256 GB (author, 2026-11-27; the 256 GB figure is
+    *recalled*). By 5 GB free it's too late to help: macOS starts
+    failing fast by then, usually because swap is growing, and free
+    space can reach zero within minutes (author's experience,
+    *observed*, not measured here). Cleanup runs only at the moments
+    above, so the threshold has to leave room for the disk to keep
+    filling until the next one. Phases' cache is small next to that
+    (500 MB at most), but giving it back early is the point.
+    - *Cost, accepted:* a Mac that normally has less than 25.6 GB free
+      keeps the cache nearly empty, so most photos are downloaded when
+      they're needed (0.5–1.4 s each online `[L-photos-x3-download]`).
+      Offline, a display with no photo on hand keeps its wallpaper
+      until a later change `[D-photos-fetch-ahead]`.
+    - *Replaced:* the first version of draft 65 had 5 GB, Claude's
+      unmeasured starting point (2026-11-27).
   - *Replaced:* drafts 54–64 had one rule, a 1 GB limit with the least
     recently shown files deleted first, applied only after a change.
     1 GB was Claude's suggested default in the issue #33 plan, approved
